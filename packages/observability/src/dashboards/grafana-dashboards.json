@@ -1,0 +1,328 @@
+{
+  "SystemOverview": {
+    "id": null,
+    "title": "System Overview",
+    "tags": ["easydev", "system"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total[5m]))", "legendFormat": "Requests/sec", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "API Latency (P95)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P95 Latency", "refId": "A" }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Active WebSocket Connections",
+        "type": "stat",
+        "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 },
+        "targets": [
+          { "expr": "sum(websocket_connections_active)", "legendFormat": "Connections", "refId": "A" }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "BullMQ Backlog",
+        "type": "stat",
+        "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 },
+        "targets": [
+          { "expr": "sum(queue_backlog_total)", "legendFormat": "Backlog Jobs", "refId": "A" }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "System Memory Usage",
+        "type": "gauge",
+        "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+        "targets": [
+          { "expr": "system_memory_usage_bytes", "legendFormat": "Bytes Used", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "ApiDashboard": {
+    "id": null,
+    "title": "API Dashboard",
+    "tags": ["easydev", "api"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate by Route",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total[5m])) by (method, route)", "legendFormat": "{{method}} {{route}}", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate (5xx)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100", "legendFormat": "Error Rate %", "refId": "A" }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Latency Percentiles (P50, P90, P99)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+        "targets": [
+          { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P50 Latency", "refId": "A" },
+          { "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P90 Latency", "refId": "B" },
+          { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99 Latency", "refId": "C" }
+        ]
+      }
+    ]
+  },
+  "QueueDashboard": {
+    "id": null,
+    "title": "Queue Dashboard",
+    "tags": ["easydev", "queue"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Queue Backlog",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "queue_backlog_total", "legendFormat": "{{queue_name}} backlog", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Job Throughput",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(queue_throughput_total[5m])) by (queue_name, status)", "legendFormat": "{{queue_name}} ({{status}})", "refId": "A" }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Dead Letter Queue Failures",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+        "targets": [
+          { "expr": "sum(queue_failures_total)", "legendFormat": "Total Failed Jobs", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "WorkflowDashboard": {
+    "id": null,
+    "title": "Workflow Dashboard",
+    "tags": ["easydev", "workflow"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Workflow Execution Rate",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(queue_throughput_total{job_name=\"workflow-execution-job\"}[5m]))", "legendFormat": "Workflows/sec", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Workflow Failure Count",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(queue_failures_total{job_name=\"workflow-execution-job\"})", "legendFormat": "Failed Workflows", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "AiDashboard": {
+    "id": null,
+    "title": "AI Dashboard",
+    "tags": ["easydev", "ai"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Accumulative Cost (USD)",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(ai_cost_dollars_total)", "legendFormat": "Cost", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "AI Request Failure Rate",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 16, "x": 8, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(ai_failures_total[5m])) by (model_name, error_type)", "legendFormat": "{{model_name}} ({{error_type}})", "refId": "A" }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Cost By Tenant",
+        "type": "barplot",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+        "targets": [
+          { "expr": "sum(ai_cost_dollars_total) by (tenant_id)", "legendFormat": "Tenant {{tenant_id}}", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "ConnectorDashboard": {
+    "id": null,
+    "title": "Connector Dashboard",
+    "tags": ["easydev", "connectors"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Execution Latency (P95)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "histogram_quantile(0.95, sum(rate(connector_execution_duration_seconds_bucket[5m])) by (le, connector_type))", "legendFormat": "{{connector_type}} P95", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Connector Failures",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(connector_failures_total[5m])) by (connector_type)", "legendFormat": "{{connector_type}} Failures", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "ConversationDashboard": {
+    "id": null,
+    "title": "Conversation Dashboard",
+    "tags": ["easydev", "conversation"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Conversations Tracked",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total{route=~\"/conversations.*\"}[5m]))", "legendFormat": "Operations/sec", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Conversations By Tenant",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(http_requests_total{route=~\"/conversations.*\"}) by (tenant_id)", "legendFormat": "Tenant {{tenant_id}}", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "MessageDashboard": {
+    "id": null,
+    "title": "Message Dashboard",
+    "tags": ["easydev", "messages"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Message Dispatch Rate",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total{route=~\"/messages.*\", method=\"POST\"}[5m]))", "legendFormat": "Messages Sent/sec", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Delivery Errors",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total{route=~\"/messages.*\", status_code=~\"[45]..\"}[5m]))", "legendFormat": "Errors/sec", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "TenantDashboard": {
+    "id": null,
+    "title": "Tenant Dashboard",
+    "tags": ["easydev", "tenant"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate by Tenant",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(http_requests_total[5m])) by (tenant_id)", "legendFormat": "Tenant {{tenant_id}}", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Cache Hit Ratio",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "sum(rate(cache_hits_total[5m])) by (tenant_id) / (sum(rate(cache_hits_total[5m])) by (tenant_id) + sum(rate(cache_misses_total[5m])) by (tenant_id)) * 100", "legendFormat": "Tenant {{tenant_id}} Hit Ratio", "refId": "A" }
+        ]
+      }
+    ]
+  },
+  "InfrastructureDashboard": {
+    "id": null,
+    "title": "Infrastructure Dashboard",
+    "tags": ["easydev", "infrastructure"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Host CPU Utilization",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          { "expr": "system_cpu_usage_percentage", "legendFormat": "CPU %", "refId": "A" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Host Memory Utilization",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          { "expr": "system_memory_usage_bytes", "legendFormat": "Memory Bytes", "refId": "A" }
+        ]
+      }
+    ]
+  }
+}

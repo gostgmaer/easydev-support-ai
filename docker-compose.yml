@@ -18,6 +18,9 @@ services:
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3001
       - EASYDEV_AI_URL=http://host.docker.internal:3002
+      - ENABLE_OTEL=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
       - postgres
       - redis
@@ -37,6 +40,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_AI_URL=http://host.docker.internal:3002
+      - ENABLE_OTEL=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
       - postgres
       - redis
@@ -79,9 +85,62 @@ services:
     networks:
       - easydev-net
 
+  # 6. Prometheus (Metrics Server)
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./packages/observability/src/alerts/alert-rules.yml:/etc/prometheus/alert-rules.yml
+    networks:
+      - easydev-net
+
+  # 7. Grafana Loki (Log Aggregation)
+  loki:
+    image: grafana/loki:2.9.2
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - easydev-net
+
+  # 8. Grafana Tempo (Distributed Tracing)
+  tempo:
+    image: grafana/tempo:2.3.0
+    command: -config.file=/etc/tempo.yaml
+    volumes:
+      - ./tempo.yml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - easydev-net
+
+  # 9. Grafana (Dashboard Visualizer)
+  grafana:
+    image: grafana/grafana:10.2.2
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./packages/observability/src/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - easydev-net
+
 volumes:
   pgdata:
   redisdata:
+  grafanadata:
 
 networks:
   easydev-net:

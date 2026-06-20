@@ -1,57 +1,50 @@
-import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { LokiLogger } from '@easydev/observability';
 import { traceStorage } from './observability.middleware';
 
 @Injectable()
-export class StructuredLogger extends ConsoleLogger {
+export class StructuredLogger extends LokiLogger {
   log(message: any, context?: string) {
     const store = traceStorage.getStore();
-    const traceData = store
-      ? {
-          correlationId: store.get('correlationId'),
-          requestId: store.get('requestId'),
-          traceId: store.get('traceId'),
-        }
-      : {};
+    const traceId = store?.get('traceId');
+    const requestId = store?.get('requestId');
 
-    const logEntry = {
+    const entry = {
       level: 'info',
-      timestamp: new Date().toISOString(),
+      message: typeof message === 'string' ? message : JSON.stringify(message),
+      tenantId: store?.get('tenantId') || 'system',
+      requestId,
+      traceId,
+      userId: store?.get('userId'),
+      workflowId: store?.get('workflowId'),
+      conversationId: store?.get('conversationId'),
+      messageId: store?.get('messageId'),
       context,
-      message,
-      ...traceData,
+      payload: typeof message === 'object' ? message : undefined,
     };
 
-    if (process.env.NODE_ENV === 'production') {
-      super.log(JSON.stringify(logEntry));
-    } else {
-      const traceString = store ? ` [TraceID: ${store.get('traceId')}]` : '';
-      super.log(`${message}${traceString}`, context);
-    }
+    this.shipLog(entry).catch(() => {});
   }
 
   error(message: any, stack?: string, context?: string) {
     const store = traceStorage.getStore();
-    const traceData = store
-      ? {
-          correlationId: store.get('correlationId'),
-          requestId: store.get('requestId'),
-          traceId: store.get('traceId'),
-        }
-      : {};
+    const traceId = store?.get('traceId');
+    const requestId = store?.get('requestId');
 
-    const logEntry = {
+    const entry = {
       level: 'error',
-      timestamp: new Date().toISOString(),
+      message: typeof message === 'string' ? message : JSON.stringify(message),
+      tenantId: store?.get('tenantId') || 'system',
+      requestId,
+      traceId,
+      userId: store?.get('userId'),
+      workflowId: store?.get('workflowId'),
+      conversationId: store?.get('conversationId'),
+      messageId: store?.get('messageId'),
       context,
-      message,
-      stack,
-      ...traceData,
+      payload: { stack, ...(typeof message === 'object' ? message : {}) },
     };
 
-    if (process.env.NODE_ENV === 'production') {
-      super.error(JSON.stringify(logEntry));
-    } else {
-      super.error(message, stack, context);
-    }
+    this.shipLog(entry).catch(() => {});
   }
 }

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { MetricsService as SharedMetricsService } from '@easydev/observability';
 
 @Injectable()
-export class MetricsService {
+export class MetricsService extends SharedMetricsService {
   private metricsMap = new Map<string, number>();
 
   incrementCounter(metricName: string, value = 1) {
@@ -9,13 +10,14 @@ export class MetricsService {
     this.metricsMap.set(metricName, current + value);
   }
 
-  getMetricsString(): string {
-    let output = '';
+  async getMetricsString(): Promise<string> {
+    let customOutput = '';
     for (const [key, val] of this.metricsMap.entries()) {
-      output += `# HELP ${key} Custom metric tracked by Support AI\n`;
-      output += `# TYPE ${key} counter\n`;
-      output += `${key} ${val}\n\n`;
+      customOutput += `# HELP ${key} Custom metric tracked by Support AI\n`;
+      customOutput += `# TYPE ${key} counter\n`;
+      customOutput += `${key} ${val}\n\n`;
     }
-    return output || '# No metrics collected yet\n';
+    const sharedOutput = await this.getMetrics();
+    return sharedOutput + '\n' + customOutput;
   }
 }
