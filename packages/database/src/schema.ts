@@ -1845,3 +1845,434 @@ export const connectorRateLimits = supportAgentSchema.table(
     };
   },
 );
+
+// 59. AI Agents Table
+export const aiAgents = supportAgentSchema.table(
+  'ai_agents',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    agentType: varchar('agent_type', { length: 50 }).notNull(), // CUSTOMER_SUPPORT, SALES, RETENTION, BILLING, TECHNICAL, ONBOARDING, CUSTOM
+    status: varchar('status', { length: 50 }).default('DRAFT').notNull(), // DRAFT, ACTIVE, INACTIVE
+    defaultWorkflow: varchar('default_workflow', { length: 255 }),
+    systemPromptReference: text('system_prompt_reference'),
+    configuration: jsonb('configuration'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_agents_tenant').on(table.tenantId),
+      typeIdx: index('idx_ai_agents_type').on(table.tenantId, table.agentType),
+    };
+  },
+);
+
+// 60. AI Agent Profiles Table
+export const aiAgentProfiles = supportAgentSchema.table(
+  'ai_agent_profiles',
+  {
+    ...commonColumns,
+    agentId: uuid('agent_id')
+      .references(() => aiAgents.id, { onDelete: 'cascade' })
+      .notNull(),
+    knowledgeScope: jsonb('knowledge_scope'),
+    connectorScope: jsonb('connector_scope'),
+    languageSupport: jsonb('language_support'),
+    escalationRules: jsonb('escalation_rules'),
+    configuration: jsonb('configuration'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_agent_profiles_tenant').on(table.tenantId),
+      agentIdx: index('idx_ai_agent_profiles_agent').on(table.tenantId, table.agentId),
+    };
+  },
+);
+
+// 61. AI Conversation Sessions Table
+export const aiConversationSessions = supportAgentSchema.table(
+  'ai_conversation_sessions',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    customerId: uuid('customer_id').notNull(),
+    agentId: uuid('agent_id')
+      .references(() => aiAgents.id, { onDelete: 'cascade' })
+      .notNull(),
+    workflowExecutionId: uuid('workflow_execution_id'),
+    sessionState: jsonb('session_state'),
+    lastInteractionAt: timestamp('last_interaction_at'),
+    contextVersion: integer('context_version').default(1).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_sessions_tenant').on(table.tenantId),
+      convUnique: uniqueIndex('uq_ai_sessions_conv').on(table.tenantId, table.conversationId),
+      agentIdx: index('idx_ai_sessions_agent').on(table.tenantId, table.agentId),
+    };
+  },
+);
+
+// 62. AI Workflow Executions Table
+export const aiWorkflowExecutions = supportAgentSchema.table(
+  'ai_workflow_executions',
+  {
+    ...commonColumns,
+    workflowId: varchar('workflow_id', { length: 255 }).notNull(),
+    conversationId: uuid('conversation_id').notNull(),
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, RUNNING, COMPLETED, FAILED, RETRYING, TIMEOUT
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+    executionTimeMs: integer('execution_time_ms').default(0).notNull(),
+    tokensUsed: integer('tokens_used').default(0).notNull(),
+    estimatedCost: doublePrecision('estimated_cost').default(0.0).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_workflows_tenant').on(table.tenantId),
+      convIdx: index('idx_ai_workflows_conv').on(table.tenantId, table.conversationId),
+      statusIdx: index('idx_ai_workflows_status').on(table.tenantId, table.status),
+    };
+  },
+);
+
+// 63. AI Tool Requests Table
+export const aiToolRequests = supportAgentSchema.table(
+  'ai_tool_requests',
+  {
+    ...commonColumns,
+    workflowExecutionId: uuid('workflow_execution_id')
+      .references(() => aiWorkflowExecutions.id, { onDelete: 'cascade' })
+      .notNull(),
+    toolName: varchar('tool_name', { length: 255 }).notNull(),
+    capability: varchar('capability', { length: 255 }).notNull(),
+    payload: jsonb('payload'),
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, SUCCESS, FAILED
+    requestedAt: timestamp('requested_at').defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_tool_req_tenant').on(table.tenantId),
+      execIdx: index('idx_ai_tool_req_exec').on(table.tenantId, table.workflowExecutionId),
+    };
+  },
+);
+
+// 64. AI Tool Results Table
+export const aiToolResults = supportAgentSchema.table(
+  'ai_tool_results',
+  {
+    ...commonColumns,
+    toolRequestId: uuid('tool_request_id')
+      .references(() => aiToolRequests.id, { onDelete: 'cascade' })
+      .notNull(),
+    response: jsonb('response'),
+    status: varchar('status', { length: 50 }).default('SUCCESS').notNull(),
+    completedAt: timestamp('completed_at').defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_tool_res_tenant').on(table.tenantId),
+      reqIdx: index('idx_ai_tool_res_req').on(table.tenantId, table.toolRequestId),
+    };
+  },
+);
+
+// 65. AI Escalations Table
+export const aiEscalations = supportAgentSchema.table(
+  'ai_escalations',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    reason: text('reason').notNull(),
+    confidenceScore: doublePrecision('confidence_score'),
+    sentimentScore: doublePrecision('sentiment_score'),
+    escalatedTo: varchar('escalated_to', { length: 100 }).notNull(), // AGENT, TEAM, MANAGER
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, RESOLVED
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_escalations_tenant').on(table.tenantId),
+      convIdx: index('idx_ai_escalations_conv').on(table.tenantId, table.conversationId),
+      statusIdx: index('idx_ai_escalations_status').on(table.tenantId, table.status),
+    };
+  },
+);
+
+// 66. AI Response Logs Table
+export const aiResponseLogs = supportAgentSchema.table(
+  'ai_response_logs',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    messageId: uuid('message_id').notNull(),
+    workflowExecutionId: uuid('workflow_execution_id')
+      .references(() => aiWorkflowExecutions.id, { onDelete: 'set null' }),
+    responseType: varchar('response_type', { length: 50 }).notNull(), // AUTOMATED, CO_PILOT, SUGGESTION
+    responseTimeMs: integer('response_time_ms').default(0).notNull(),
+    confidenceScore: doublePrecision('confidence_score'),
+    tokensUsed: integer('tokens_used').default(0).notNull(),
+    cost: doublePrecision('cost').default(0.0).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_resp_logs_tenant').on(table.tenantId),
+      convIdx: index('idx_ai_resp_logs_conv').on(table.tenantId, table.conversationId),
+    };
+  },
+);
+
+// 67. AI Usage Metrics Table
+export const aiUsageMetrics = supportAgentSchema.table(
+  'ai_usage_metrics',
+  {
+    ...commonColumns,
+    agentId: uuid('agent_id')
+      .references(() => aiAgents.id, { onDelete: 'cascade' })
+      .notNull(),
+    date: varchar('date', { length: 10 }).notNull(), // YYYY-MM-DD
+    requests: integer('requests').default(0).notNull(),
+    tokens: integer('tokens').default(0).notNull(),
+    cost: doublePrecision('cost').default(0.0).notNull(),
+    workflowCount: integer('workflow_count').default(0).notNull(),
+    toolCalls: integer('tool_calls').default(0).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_usage_tenant').on(table.tenantId),
+      agentDateIdx: uniqueIndex('uq_ai_usage_agent_date').on(table.tenantId, table.agentId, table.date),
+    };
+  },
+);
+
+// 68. AI Model Configurations Table
+export const aiModelConfigurations = supportAgentSchema.table(
+  'ai_model_configurations',
+  {
+    ...commonColumns,
+    agentId: uuid('agent_id')
+      .references(() => aiAgents.id, { onDelete: 'cascade' })
+      .notNull(),
+    modelName: varchar('model_name', { length: 255 }).notNull(),
+    provider: varchar('provider', { length: 100 }).notNull(),
+    temperature: doublePrecision('temperature').default(0.7).notNull(),
+    maxTokens: integer('max_tokens').default(2048).notNull(),
+    topP: doublePrecision('top_p').default(1.0).notNull(),
+    presencePenalty: doublePrecision('presence_penalty').default(0.0).notNull(),
+    frequencyPenalty: doublePrecision('frequency_penalty').default(0.0).notNull(),
+    stopSequences: jsonb('stop_sequences'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ai_model_config_tenant').on(table.tenantId),
+      agentIdx: index('idx_ai_model_config_agent').on(table.tenantId, table.agentId),
+    };
+  },
+);
+
+// 69. Workflow Templates Table
+export const workflowTemplates = supportAgentSchema.table(
+  'workflow_templates',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    workflowType: varchar('workflow_type', { length: 50 }).notNull(), // TICKET_WORKFLOW, CONVERSATION_WORKFLOW, ESCALATION_WORKFLOW, APPROVAL_WORKFLOW, CUSTOMER_WORKFLOW, CONNECTOR_WORKFLOW, AI_WORKFLOW, SCHEDULED_WORKFLOW, CUSTOM_WORKFLOW
+    status: varchar('status', { length: 50 }).default('DRAFT').notNull(), // DRAFT, ACTIVE, PAUSED, ARCHIVED, FAILED, COMPLETED
+    isSystem: boolean('is_system').default(false).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_wf_templates_tenant').on(table.tenantId),
+      statusIdx: index('idx_wf_templates_status').on(table.tenantId, table.status),
+    };
+  },
+);
+
+// 70. Workflow Versions Table
+export const workflowVersions = supportAgentSchema.table(
+  'workflow_versions',
+  {
+    ...commonColumns,
+    workflowTemplateId: uuid('workflow_template_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    versionNumber: integer('version_number').notNull(),
+    definition: jsonb('definition').notNull(),
+    isActive: boolean('is_active').default(false).notNull(),
+  },
+  (table) => {
+    return {
+      templateIdx: index('idx_wf_versions_template').on(table.tenantId, table.workflowTemplateId),
+    };
+  },
+);
+
+// 71. Workflow Executions Table
+export const workflowExecutions = supportAgentSchema.table(
+  'workflow_executions',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    executionStatus: varchar('execution_status', { length: 50 }).default('RUNNING').notNull(), // DRAFT, ACTIVE, PAUSED, ARCHIVED, FAILED, COMPLETED
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+    executionTimeMs: integer('execution_time_ms').default(0).notNull(),
+    triggerSource: varchar('trigger_source', { length: 50 }).notNull(), // CONVERSATION_CREATED, MESSAGE_RECEIVED, etc.
+    triggerReferenceId: varchar('trigger_reference_id', { length: 255 }),
+    context: jsonb('context').notNull(),
+    result: jsonb('result'),
+    error: jsonb('error'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_wf_exec_tenant').on(table.tenantId),
+      wfIdx: index('idx_wf_exec_wf').on(table.tenantId, table.workflowId),
+      statusIdx: index('idx_wf_exec_status').on(table.tenantId, table.executionStatus),
+    };
+  },
+);
+
+// 72. Workflow Triggers Table
+export const workflowTriggers = supportAgentSchema.table(
+  'workflow_triggers',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    triggerType: varchar('trigger_type', { length: 50 }).notNull(), // CONVERSATION_CREATED, MESSAGE_RECEIVED, etc.
+    configuration: jsonb('configuration'),
+  },
+  (table) => {
+    return {
+      wfIdx: index('idx_wf_triggers_wf').on(table.tenantId, table.workflowId),
+    };
+  },
+);
+
+// 73. Workflow Conditions Table
+export const workflowConditions = supportAgentSchema.table(
+  'workflow_conditions',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    triggerId: uuid('trigger_id')
+      .references(() => workflowTriggers.id, { onDelete: 'cascade' }),
+    field: varchar('field', { length: 255 }).notNull(),
+    operator: varchar('operator', { length: 50 }).notNull(), // EQUALS, CONTAINS, GT, LT
+    value: varchar('value', { length: 255 }).notNull(),
+  },
+  (table) => {
+    return {
+      wfIdx: index('idx_wf_cond_wf').on(table.tenantId, table.workflowId),
+    };
+  },
+);
+
+// 74. Workflow Actions Table
+export const workflowActions = supportAgentSchema.table(
+  'workflow_actions',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    actionType: varchar('action_type', { length: 50 }).notNull(), // CREATE_TICKET, SEND_MESSAGE, etc.
+    configuration: jsonb('configuration').notNull(),
+    sequenceOrder: integer('sequence_order').notNull(),
+  },
+  (table) => {
+    return {
+      wfIdx: index('idx_wf_actions_wf').on(table.tenantId, table.workflowId),
+    };
+  },
+);
+
+// 75. Workflow Approvals Table
+export const workflowApprovals = supportAgentSchema.table(
+  'workflow_approvals',
+  {
+    ...commonColumns,
+    workflowExecutionId: uuid('workflow_execution_id')
+      .references(() => workflowExecutions.id, { onDelete: 'cascade' })
+      .notNull(),
+    approverId: uuid('approver_id').notNull(),
+    approvalStatus: varchar('approval_status', { length: 50 }).default('PENDING').notNull(), // PENDING, APPROVED, REJECTED
+    comments: text('comments'),
+    approvedAt: timestamp('approved_at'),
+    expiresAt: timestamp('expires_at'),
+  },
+  (table) => {
+    return {
+      execIdx: index('idx_wf_approvals_exec').on(table.tenantId, table.workflowExecutionId),
+    };
+  },
+);
+
+// 76. Workflow Schedules Table
+export const workflowSchedules = supportAgentSchema.table(
+  'workflow_schedules',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    cronExpression: varchar('cron_expression', { length: 100 }).notNull(),
+    timezone: varchar('timezone', { length: 100 }).default('UTC').notNull(),
+    nextRunAt: timestamp('next_run_at'),
+    lastRunAt: timestamp('last_run_at'),
+    isActive: boolean('is_active').default(true).notNull(),
+  },
+  (table) => {
+    return {
+      wfIdx: index('idx_wf_schedules_wf').on(table.tenantId, table.workflowId),
+    };
+  },
+);
+
+// 77. Workflow Audit Logs Table
+export const workflowAuditLogs = supportAgentSchema.table(
+  'workflow_audit_logs',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' }),
+    workflowExecutionId: uuid('workflow_execution_id')
+      .references(() => workflowExecutions.id, { onDelete: 'set null' }),
+    action: varchar('action', { length: 100 }).notNull(),
+    details: text('details'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_wf_audit_tenant').on(table.tenantId),
+      wfIdx: index('idx_wf_audit_wf').on(table.tenantId, table.workflowId),
+    };
+  },
+);
+
+// 78. Workflow Variables Table
+export const workflowVariables = supportAgentSchema.table(
+  'workflow_variables',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id')
+      .references(() => workflowTemplates.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    type: varchar('type', { length: 50 }).notNull(), // string, number, boolean, json
+    value: text('value'),
+  },
+  (table) => {
+    return {
+      wfIdx: index('idx_wf_vars_wf').on(table.tenantId, table.workflowId),
+      uqWfVar: uniqueIndex('uq_wf_var').on(table.tenantId, table.workflowId, table.name),
+    };
+  },
+);
+

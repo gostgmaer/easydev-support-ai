@@ -1074,3 +1074,145 @@ export class ConnectorHealthRestoredEvent extends DomainEvent {
     return this.connectorId;
   }
 }
+
+export class AiWorkflowStartedEvent extends DomainEvent {
+  static readonly eventName = 'ai.workflow.started';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowExecutionId: string,
+    public readonly workflowId: string,
+    public readonly conversationId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowExecutionId;
+  }
+}
+
+export class AiWorkflowCompletedEvent extends DomainEvent {
+  static readonly eventName = 'ai.workflow.completed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowExecutionId: string,
+    public readonly workflowId: string,
+    public readonly conversationId: string,
+    public readonly tokensUsed: number,
+    public readonly estimatedCost: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowExecutionId;
+  }
+}
+
+export class AiWorkflowFailedEvent extends DomainEvent {
+  static readonly eventName = 'ai.workflow.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowExecutionId: string,
+    public readonly workflowId: string,
+    public readonly conversationId: string,
+    public readonly reason: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowExecutionId;
+  }
+}
+
+export class AiToolRequestedEvent extends DomainEvent {
+  static readonly eventName = 'ai.tool.requested';
+  constructor(
+    public readonly tenantId: string,
+    public readonly toolRequestId: string,
+    public readonly workflowExecutionId: string,
+    public readonly toolName: string,
+    public readonly capability: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.toolRequestId;
+  }
+}
+
+export class AiToolCompletedEvent extends DomainEvent {
+  static readonly eventName = 'ai.tool.completed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly toolRequestId: string,
+    public readonly workflowExecutionId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.toolRequestId;
+  }
+}
+
+export class AiResponseGeneratedEvent extends DomainEvent {
+  static readonly eventName = 'ai.response.generated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly messageId: string,
+    public readonly responseType: string,
+    public readonly tokensUsed: number,
+    public readonly cost: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class AiEscalationCreatedEvent extends DomainEvent {
+  static readonly eventName = 'ai.escalation.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly escalationId: string,
+    public readonly conversationId: string,
+    public readonly reason: string,
+    public readonly escalatedTo: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.escalationId;
+  }
+}
+
+export class AiEscalationResolvedEvent extends DomainEvent {
+  static readonly eventName = 'ai.escalation.resolved';
+  constructor(
+    public readonly tenantId: string,
+    public readonly escalationId: string,
+    public readonly conversationId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.escalationId;
+  }
+}
+
+export class AiUsageRecordedEvent extends DomainEvent {
+  static readonly eventName = 'ai.usage.recorded';
+  constructor(
+    public readonly tenantId: string,
+    public readonly agentId: string,
+    public readonly date: string,
+    public readonly tokensUsed: number,
+    public readonly cost: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.agentId;
+  }
+}

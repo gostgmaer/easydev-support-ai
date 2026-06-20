@@ -1,0 +1,87 @@
+import { Processor } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
+import { BaseWorker, QueueService } from '@easydev/shared-queues';
+import { Injectable, Optional } from '@nestjs/common';
+import { AiResponseService } from '../services/ai-response.service';
+import { AiToolExecutionService } from '../services/ai-tool-execution.service';
+import { AiEscalationService } from '../services/ai-escalation.service';
+import { AiUsageService } from '../services/ai-usage.service';
+import { AiWorkflowService } from '../services/ai-workflow.service';
+
+@Processor('ai-queue')
+@Injectable()
+export class AiQueueProcessor extends BaseWorker {
+  constructor(
+    private readonly responseService: AiResponseService,
+    private readonly toolService: AiToolExecutionService,
+    private readonly escalationService: AiEscalationService,
+    private readonly usageService: AiUsageService,
+    private readonly workflowService: AiWorkflowService,
+    @Optional() queueService?: QueueService,
+  ) {
+    super('AiQueueProcessor', 'ai-queue' as any, queueService);
+  }
+
+  async handleJob(job: Job<any, any, string>): Promise<any> {
+    const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
+
+    switch (job.name) {
+      case 'ai-workflow-job':
+        this.logger.log(
+          `Processing ai-workflow-job ${job.id} for execution ${job.data.workflowExecutionId}`,
+        );
+        // Background workflow triggering or checking
+        return { success: true };
+
+      case 'ai-tool-execution-job':
+        this.logger.log(
+          `Processing ai-tool-execution-job ${job.id} for request ${job.data.toolRequestId}`,
+        );
+        return this.toolService.executeTool(
+          tenantId,
+          job.data.workflowExecutionId,
+          job.data.workflowId || 'default-workflow',
+          job.data.toolName,
+          job.data.capability,
+          job.data.payload || {},
+        );
+
+      case 'ai-escalation-job':
+        this.logger.log(
+          `Processing ai-escalation-job ${job.id} for escalation ${job.data.escalationId}`,
+        );
+        // Asynchronously process escalation notification/routing if needed
+        return { status: 'processed', escalationId: job.data.escalationId };
+
+      case 'ai-usage-job':
+        this.logger.log(
+          `Processing ai-usage-job ${job.id} for agent ${job.data.agentId}`,
+        );
+        return this.usageService.recordUsage(
+          tenantId,
+          job.data.agentId,
+          job.data.tokensUsed || 0,
+          job.data.cost || 0.0,
+          true,
+          job.data.toolCalls || 0,
+        );
+
+      case 'ai-retry-job':
+        this.logger.log(`Processing ai-retry-job ${job.id}`);
+        // Handle custom workflow retry logic
+        if (job.data.workflowId && job.data.conversationId) {
+          return this.workflowService.triggerWorkflow(
+            tenantId,
+            job.data.workflowId,
+            job.data.conversationId,
+            job.data.variables || {},
+          );
+        }
+        return { retried: false };
+
+      default:
+        this.logger.warn(`Unknown job name: ${job.name}`);
+        throw new Error(`Unknown job name: ${job.name}`);
+    }
+  }
+}
