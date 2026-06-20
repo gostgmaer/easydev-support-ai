@@ -1268,3 +1268,316 @@ export const ticketApprovals = supportAgentSchema.table(
     };
   },
 );
+
+// 42. Knowledge Categories Table
+export const knowledgeCategories = supportAgentSchema.table(
+  'knowledge_categories',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    parentCategoryId: uuid('parent_category_id'),
+    color: varchar('color', { length: 20 }),
+    sortOrder: integer('sort_order').default(0).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_categories_tenant').on(table.tenantId),
+      nameUnique: uniqueIndex('uq_knowledge_categories_name').on(
+        table.tenantId,
+        table.name,
+      ),
+      parentIdx: index('idx_knowledge_categories_parent').on(
+        table.tenantId,
+        table.parentCategoryId,
+      ),
+    };
+  },
+);
+
+// 43. Knowledge Tags Table
+export const knowledgeTags = supportAgentSchema.table(
+  'knowledge_tags',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 120 }).notNull(),
+    description: text('description'),
+    color: varchar('color', { length: 20 }),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_tags_tenant').on(table.tenantId),
+      nameUnique: uniqueIndex('uq_knowledge_tags_name').on(
+        table.tenantId,
+        table.name,
+      ),
+    };
+  },
+);
+
+// 44. Knowledge Sources Table
+export const knowledgeSources = supportAgentSchema.table(
+  'knowledge_sources',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    sourceType: varchar('source_type', { length: 50 }).notNull(), // PDF, DOCX, TXT, CSV, MARKDOWN, FAQ, WEBSITE, SITEMAP, URL, CONFLUENCE, NOTION, GOOGLE_DOC, MANUAL
+    status: varchar('status', { length: 50 }).default('ACTIVE').notNull(), // ACTIVE, PAUSED, DISABLED
+    syncStatus: varchar('sync_status', { length: 50 })
+      .default('PENDING')
+      .notNull(), // PENDING, SYNCING, SYNCED, FAILED
+    uri: text('uri'),
+    connectorId: uuid('connector_id'),
+    config: jsonb('config'),
+    documentCount: integer('document_count').default(0).notNull(),
+    lastSyncedAt: timestamp('last_synced_at'),
+    lastError: text('last_error'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_sources_tenant').on(table.tenantId),
+      typeIdx: index('idx_knowledge_sources_type').on(
+        table.tenantId,
+        table.sourceType,
+        table.status,
+      ),
+      syncIdx: index('idx_knowledge_sources_sync').on(
+        table.tenantId,
+        table.syncStatus,
+      ),
+      connectorIdx: index('idx_knowledge_sources_connector').on(
+        table.tenantId,
+        table.connectorId,
+      ),
+    };
+  },
+);
+
+// 45. Knowledge Documents Table
+export const knowledgeDocuments = supportAgentSchema.table(
+  'knowledge_documents',
+  {
+    ...commonColumns,
+    sourceId: uuid('source_id')
+      .references(() => knowledgeSources.id, { onDelete: 'cascade' })
+      .notNull(),
+    categoryId: uuid('category_id').references(() => knowledgeCategories.id, {
+      onDelete: 'set null',
+    }),
+    title: varchar('title', { length: 500 }).notNull(),
+    slug: varchar('slug', { length: 600 }).notNull(),
+    documentType: varchar('document_type', { length: 50 })
+      .default('MANUAL')
+      .notNull(), // PDF, DOCX, TXT, CSV, MARKDOWN, FAQ, HTML, WEBPAGE, MANUAL
+    status: varchar('status', { length: 50 }).default('DRAFT').notNull(), // DRAFT, PROCESSING, INDEXING, ACTIVE, ARCHIVED, FAILED
+    language: varchar('language', { length: 16 }).default('en').notNull(),
+    version: integer('doc_version').default(1).notNull(),
+    syncStatus: varchar('sync_status', { length: 50 })
+      .default('PENDING')
+      .notNull(), // PENDING, SYNCING, SYNCED, FAILED
+    ingestionStatus: varchar('ingestion_status', { length: 50 })
+      .default('PENDING')
+      .notNull(), // PENDING, INGESTING, INGESTED, FAILED
+    embeddingStatus: varchar('embedding_status', { length: 50 })
+      .default('PENDING')
+      .notNull(), // PENDING, EMBEDDING, EMBEDDED, FAILED
+    externalRef: varchar('external_ref', { length: 255 }),
+    sourceUri: text('source_uri'),
+    contentHash: varchar('content_hash', { length: 128 }),
+    chunkCount: integer('chunk_count').default(0).notNull(),
+    fileUrl: text('file_url'),
+    storageProvider: varchar('storage_provider', { length: 100 }),
+    fileSize: bigint('file_size', { mode: 'number' }),
+    mimeType: varchar('mime_type', { length: 255 }),
+    checksum: varchar('checksum', { length: 128 }),
+    tags: jsonb('tags'),
+    publishedAt: timestamp('published_at'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_documents_tenant').on(table.tenantId),
+      slugUnique: uniqueIndex('uq_knowledge_documents_slug').on(
+        table.tenantId,
+        table.slug,
+      ),
+      sourceIdx: index('idx_knowledge_documents_source').on(
+        table.tenantId,
+        table.sourceId,
+      ),
+      statusIdx: index('idx_knowledge_documents_status').on(
+        table.tenantId,
+        table.status,
+        table.language,
+      ),
+      categoryIdx: index('idx_knowledge_documents_category').on(
+        table.tenantId,
+        table.categoryId,
+      ),
+      syncIdx: index('idx_knowledge_documents_sync').on(
+        table.tenantId,
+        table.syncStatus,
+      ),
+    };
+  },
+);
+
+// 46. Knowledge Chunks Table
+export const knowledgeChunks = supportAgentSchema.table(
+  'knowledge_chunks',
+  {
+    ...commonColumns,
+    documentId: uuid('document_id')
+      .references(() => knowledgeDocuments.id, { onDelete: 'cascade' })
+      .notNull(),
+    chunkIndex: integer('chunk_index').notNull(),
+    chunkHash: varchar('chunk_hash', { length: 128 }).notNull(),
+    content: text('content').notNull(),
+    tokenCount: integer('token_count').default(0).notNull(),
+    externalRef: varchar('external_ref', { length: 255 }),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_chunks_tenant').on(table.tenantId),
+      documentIdx: index('idx_knowledge_chunks_document').on(
+        table.tenantId,
+        table.documentId,
+        table.chunkIndex,
+      ),
+      chunkUnique: uniqueIndex('uq_knowledge_chunks_index').on(
+        table.tenantId,
+        table.documentId,
+        table.chunkIndex,
+      ),
+    };
+  },
+);
+
+// 47. Knowledge Sync Jobs Table
+export const knowledgeSyncJobs = supportAgentSchema.table(
+  'knowledge_sync_jobs',
+  {
+    ...commonColumns,
+    sourceId: uuid('source_id')
+      .references(() => knowledgeSources.id, { onDelete: 'cascade' })
+      .notNull(),
+    documentId: uuid('document_id').references(() => knowledgeDocuments.id, {
+      onDelete: 'set null',
+    }),
+    jobType: varchar('job_type', { length: 50 }).notNull(), // SYNC, CRAWL, INGEST, INDEX, CLEANUP
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, RUNNING, COMPLETED, FAILED
+    totalItems: integer('total_items').default(0).notNull(),
+    processedItems: integer('processed_items').default(0).notNull(),
+    failedItems: integer('failed_items').default(0).notNull(),
+    error: text('error'),
+    stats: jsonb('stats'),
+    startedAt: timestamp('started_at'),
+    completedAt: timestamp('completed_at'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_sync_jobs_tenant').on(table.tenantId),
+      sourceIdx: index('idx_knowledge_sync_jobs_source').on(
+        table.tenantId,
+        table.sourceId,
+        table.status,
+      ),
+      statusIdx: index('idx_knowledge_sync_jobs_status').on(
+        table.tenantId,
+        table.status,
+        table.createdAt,
+      ),
+    };
+  },
+);
+
+// 48. Knowledge Versions Table
+export const knowledgeVersions = supportAgentSchema.table(
+  'knowledge_versions',
+  {
+    ...commonColumns,
+    documentId: uuid('document_id')
+      .references(() => knowledgeDocuments.id, { onDelete: 'cascade' })
+      .notNull(),
+    versionNumber: integer('version_number').notNull(),
+    changeSummary: text('change_summary'),
+    contentHash: varchar('content_hash', { length: 128 }),
+    snapshot: jsonb('snapshot'),
+    publishedBy: uuid('published_by'),
+    publishedAt: timestamp('published_at').defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_versions_tenant').on(table.tenantId),
+      documentIdx: index('idx_knowledge_versions_document').on(
+        table.tenantId,
+        table.documentId,
+        table.versionNumber,
+      ),
+      versionUnique: uniqueIndex('uq_knowledge_versions_number').on(
+        table.tenantId,
+        table.documentId,
+        table.versionNumber,
+      ),
+    };
+  },
+);
+
+// 49. Knowledge Permissions Table
+export const knowledgePermissions = supportAgentSchema.table(
+  'knowledge_permissions',
+  {
+    ...commonColumns,
+    documentId: uuid('document_id')
+      .references(() => knowledgeDocuments.id, { onDelete: 'cascade' })
+      .notNull(),
+    teamId: uuid('team_id').references(() => teams.id, {
+      onDelete: 'set null',
+    }),
+    role: varchar('role', { length: 100 }),
+    accessLevel: varchar('access_level', { length: 50 })
+      .default('READ')
+      .notNull(), // READ, WRITE, MANAGE
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_permissions_tenant').on(table.tenantId),
+      documentIdx: index('idx_knowledge_permissions_document').on(
+        table.tenantId,
+        table.documentId,
+      ),
+      grantUnique: uniqueIndex('uq_knowledge_permissions_grant').on(
+        table.tenantId,
+        table.documentId,
+        table.teamId,
+        table.role,
+      ),
+    };
+  },
+);
+
+// 50. Knowledge Search Logs Table
+export const knowledgeSearchLogs = supportAgentSchema.table(
+  'knowledge_search_logs',
+  {
+    ...commonColumns,
+    userId: uuid('user_id'),
+    query: text('query').notNull(),
+    filters: jsonb('filters'),
+    resultsCount: integer('results_count').default(0).notNull(),
+    latencyMs: integer('latency_ms').default(0).notNull(),
+    source: varchar('source', { length: 50 }).default('API').notNull(), // API, AI_AGENT, WIDGET
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_knowledge_search_logs_tenant').on(table.tenantId),
+      createdIdx: index('idx_knowledge_search_logs_created').on(
+        table.tenantId,
+        table.createdAt,
+      ),
+    };
+  },
+);

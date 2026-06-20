@@ -8,6 +8,7 @@ export const QUEUES = {
   CONVERSATION: 'conversation-queue',
   MESSAGE: 'message-queue',
   TICKET: 'ticket-queue',
+  KNOWLEDGE: 'knowledge-queue',
   CONNECTOR: 'connector-queue',
   WORKFLOW: 'workflow-queue',
   ANALYTICS: 'analytics-queue',

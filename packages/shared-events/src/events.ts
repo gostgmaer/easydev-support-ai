@@ -847,3 +847,145 @@ export class WebhookReceivedEvent extends DomainEvent {
 }
 
 
+
+export class KnowledgeSourceCreatedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.source.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly sourceId: string,
+    public readonly sourceType: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.sourceId;
+  }
+}
+
+export class KnowledgeDocumentCreatedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.document.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly sourceId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeDocumentUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.document.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeDocumentPublishedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.document.published';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly versionNumber: number,
+    public readonly publishedBy?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeDocumentArchivedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.document.archived';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly archivedBy?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeIngestionStartedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.ingestion.started';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly jobId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeIngestionCompletedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.ingestion.completed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly chunkCount: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeIngestionFailedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.ingestion.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly documentId: string,
+    public readonly reason: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.documentId;
+  }
+}
+
+export class KnowledgeSyncStartedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.sync.started';
+  constructor(
+    public readonly tenantId: string,
+    public readonly sourceId: string,
+    public readonly jobId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.sourceId;
+  }
+}
+
+export class KnowledgeSyncCompletedEvent extends DomainEvent {
+  static readonly eventName = 'knowledge.sync.completed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly sourceId: string,
+    public readonly documentsProcessed: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.sourceId;
+  }
+}
