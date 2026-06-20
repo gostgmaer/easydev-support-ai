@@ -61,7 +61,6 @@ describe('CustomerService', () => {
     const tenantId = randomUUID();
     const dto: CreateCustomerDto = {
       email: 'john@example.com',
-      firstName: 'John' as any,
       profile: {
         firstName: 'John',
         lastName: 'Doe',

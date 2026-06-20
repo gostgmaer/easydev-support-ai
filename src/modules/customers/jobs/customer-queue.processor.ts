@@ -1,7 +1,7 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker } from '@easydev/shared-queues';
-import { Injectable } from '@nestjs/common';
+import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { Injectable, Optional } from '@nestjs/common';
 import { CustomerService } from '../services/customer.service';
 import { CustomerSegmentService } from '../services/customer-segment.service';
 import { CustomerMetricsService } from '../services/customer-metrics.service';
@@ -12,9 +12,10 @@ export class CustomerQueueProcessor extends BaseWorker {
   constructor(
     private readonly customerService: CustomerService,
     private readonly segmentService: CustomerSegmentService,
-    private readonly metricsService: CustomerMetricsService
+    private readonly metricsService: CustomerMetricsService,
+    @Optional() queueService?: QueueService,
   ) {
-    super('CustomerQueueProcessor');
+    super('CustomerQueueProcessor', QUEUES.CUSTOMER, queueService);
   }
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
