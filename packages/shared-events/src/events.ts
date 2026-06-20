@@ -1443,3 +1443,129 @@ export class InboxViewCreatedEvent extends DomainEvent {
   }
 }
 
+export class AdminDashboardUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'admin.dashboard.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly dashboardId: string,
+    public readonly userId?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.dashboardId;
+  }
+}
+
+export class AdminApiKeyCreatedEvent extends DomainEvent {
+  static readonly eventName = 'admin.api_key.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly apiKeyId: string,
+    public readonly name: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.apiKeyId;
+  }
+}
+
+export class AdminApiKeyRevokedEvent extends DomainEvent {
+  static readonly eventName = 'admin.api_key.revoked';
+  constructor(
+    public readonly tenantId: string,
+    public readonly apiKeyId: string,
+    public readonly reason?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.apiKeyId;
+  }
+}
+
+export class AdminWebhookCreatedEvent extends DomainEvent {
+  static readonly eventName = 'admin.webhook.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly webhookId: string,
+    public readonly url: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.webhookId;
+  }
+}
+
+export class AdminWebhookFailedEvent extends DomainEvent {
+  static readonly eventName = 'admin.webhook.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly webhookId: string,
+    public readonly reason: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.webhookId;
+  }
+}
+
+export class AdminIncidentCreatedEvent extends DomainEvent {
+  static readonly eventName = 'admin.incident.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly incidentId: string,
+    public readonly severity: string,
+    public readonly affectedService: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.incidentId;
+  }
+}
+
+export class AdminIncidentResolvedEvent extends DomainEvent {
+  static readonly eventName = 'admin.incident.resolved';
+  constructor(
+    public readonly tenantId: string,
+    public readonly incidentId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.incidentId;
+  }
+}
+
+export class SystemHealthChangedEvent extends DomainEvent {
+  static readonly eventName = 'system.health.changed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly serviceName: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.serviceName;
+  }
+}
+
+export class TenantOverrideCreatedEvent extends DomainEvent {
+  static readonly eventName = 'tenant.override.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly overrideId: string,
+    public readonly featureKey: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.overrideId;
+  }
+}
+

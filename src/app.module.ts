@@ -25,6 +25,7 @@ import { TeamsModule } from './modules/teams/teams.module';
 import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { InboxModule } from './modules/inbox/inbox.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { IamModule } from './modules/iam/iam.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import {
@@ -154,6 +155,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     KnowledgeBaseModule,
     AnalyticsModule,
     InboxModule,
+    AdminModule,
     IamModule,
     NotificationsModule,
     AiIntegrationModule,

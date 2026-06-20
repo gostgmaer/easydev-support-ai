@@ -825,6 +825,44 @@ export class DrizzleConnectorRepository implements IConnectorRepository {
       context: log.context || null,
     });
   }
+
+  async findLogs(
+    tenantId: string,
+    connectorId: string,
+    options: { level?: string; page?: number; limit?: number } = {},
+  ): Promise<PaginatedResult<{
+    id: string;
+    connectorId: string;
+    instanceId: string | null;
+    executionId: string | null;
+    level: string;
+    message: string;
+    context: unknown;
+    createdAt: Date;
+  }>> {
+    const limit = options.limit || 25;
+    const page = options.page || 1;
+    const offset = (page - 1) * limit;
+    const conditions = [
+      eq(schema.connectorLogs.tenantId, tenantId),
+      eq(schema.connectorLogs.connectorId, connectorId),
+    ];
+    if (options.level) conditions.push(eq(schema.connectorLogs.level, options.level));
+
+    const rows = await db
+      .select()
+      .from(schema.connectorLogs)
+      .where(and(...conditions))
+      .orderBy(desc(schema.connectorLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+    const [{ count }] = await db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(schema.connectorLogs)
+      .where(and(...conditions));
+
+    return { data: rows, total: Number(count) };
+  }
 }
 
 // Re-export for downstream consumers that filter due rate-limit windows.

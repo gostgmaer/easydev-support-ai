@@ -18,6 +18,7 @@ export const QUEUES = {
   CHANNEL: 'channel-queue',
   SETTINGS: 'settings-queue',
   INBOX: 'inbox-queue',
+  ADMIN: 'admin-queue',
   DEAD_LETTER: 'dead-letter-queue',
 } as const;
 

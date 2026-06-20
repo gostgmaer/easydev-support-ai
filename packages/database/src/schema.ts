@@ -2894,5 +2894,202 @@ export const inboxActivityFeed = supportAgentSchema.table(
   }),
 );
 
+// 112. Admin Dashboards Table
+export const adminDashboards = supportAgentSchema.table(
+  'admin_dashboards',
+  {
+    ...commonColumns,
+    dashboardName: varchar('dashboard_name', { length: 255 }).notNull(),
+    layout: jsonb('layout'),
+    widgets: jsonb('widgets'),
+    defaultView: boolean('default_view').default(false).notNull(),
+    permissions: jsonb('permissions'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_dashboards_tenant').on(table.tenantId),
+    nameUnique: uniqueIndex('uq_admin_dashboards_tenant_name').on(
+      table.tenantId,
+      table.dashboardName,
+    ),
+  }),
+);
+
+// 113. Admin Widgets Table
+export const adminWidgets = supportAgentSchema.table(
+  'admin_widgets',
+  {
+    ...commonColumns,
+    dashboardId: uuid('dashboard_id').notNull(),
+    widgetType: varchar('widget_type', { length: 50 }).notNull(), // CONVERSATION_METRICS, TICKET_METRICS, AI_METRICS, WORKFLOW_METRICS, CONNECTOR_METRICS, CUSTOMER_METRICS, AGENT_METRICS, REVENUE_METRICS, SLA_METRICS, SYSTEM_HEALTH
+    title: varchar('title', { length: 255 }).notNull(),
+    position: jsonb('position'),
+    configuration: jsonb('configuration'),
+    refreshIntervalSeconds: integer('refresh_interval_seconds').default(60).notNull(),
+    isEnabled: boolean('is_enabled').default(true).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_widgets_tenant').on(table.tenantId),
+    dashboardIdx: index('idx_admin_widgets_dashboard').on(table.tenantId, table.dashboardId),
+  }),
+);
+
+// 114. Admin Announcements Table
+export const adminAnnouncements = supportAgentSchema.table(
+  'admin_announcements',
+  {
+    ...commonColumns,
+    title: varchar('title', { length: 255 }).notNull(),
+    message: text('message').notNull(),
+    severity: varchar('severity', { length: 20 }).default('INFO').notNull(), // INFO, WARNING, CRITICAL
+    audience: varchar('audience', { length: 50 }).default('ALL').notNull(), // ALL, TENANT_ADMIN, SUPPORT_AGENT
+    isActive: boolean('is_active').default(true).notNull(),
+    startsAt: timestamp('starts_at').defaultNow().notNull(),
+    endsAt: timestamp('ends_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_announcements_tenant').on(table.tenantId),
+    activeIdx: index('idx_admin_announcements_active').on(table.tenantId, table.isActive),
+  }),
+);
+
+// 115. Admin Audit Views Table
+export const adminAuditViews = supportAgentSchema.table(
+  'admin_audit_views',
+  {
+    ...commonColumns,
+    userId: uuid('user_id').notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    filterDefinition: jsonb('filter_definition').notNull(),
+    isShared: boolean('is_shared').default(false).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_audit_views_tenant').on(table.tenantId),
+    userIdx: index('idx_admin_audit_views_user').on(table.tenantId, table.userId),
+  }),
+);
+
+// 116. Admin Feature Access Table
+export const adminFeatureAccess = supportAgentSchema.table(
+  'admin_feature_access',
+  {
+    ...commonColumns,
+    featureKey: varchar('feature_key', { length: 150 }).notNull(),
+    isEnabled: boolean('is_enabled').default(true).notNull(),
+    plan: varchar('plan', { length: 50 }),
+    grantedBy: uuid('granted_by'),
+    notes: text('notes'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_feature_access_tenant').on(table.tenantId),
+    featureUnique: uniqueIndex('uq_admin_feature_access_tenant_key').on(
+      table.tenantId,
+      table.featureKey,
+    ),
+  }),
+);
+
+// 117. Admin API Keys Table
+export const adminApiKeys = supportAgentSchema.table(
+  'admin_api_keys',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    keyHash: varchar('key_hash', { length: 128 }).notNull(),
+    keyPrefix: varchar('key_prefix', { length: 16 }).notNull(),
+    scopes: jsonb('scopes').notNull(),
+    expiresAt: timestamp('expires_at'),
+    lastUsedAt: timestamp('last_used_at'),
+    status: varchar('status', { length: 20 }).default('ACTIVE').notNull(), // ACTIVE, REVOKED, EXPIRED
+    revokedAt: timestamp('revoked_at'),
+    usageCount: bigint('usage_count', { mode: 'number' }).default(0).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_api_keys_tenant').on(table.tenantId),
+    hashUnique: uniqueIndex('uq_admin_api_keys_hash').on(table.keyHash),
+    statusIdx: index('idx_admin_api_keys_status').on(table.tenantId, table.status),
+  }),
+);
+
+// 118. Admin Webhooks Table
+export const adminWebhooks = supportAgentSchema.table(
+  'admin_webhooks',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    url: varchar('url', { length: 2048 }).notNull(),
+    secretEncrypted: text('secret_encrypted').notNull(),
+    events: jsonb('events').notNull(),
+    retryPolicy: jsonb('retry_policy'),
+    status: varchar('status', { length: 20 }).default('ACTIVE').notNull(), // ACTIVE, DISABLED, FAILING
+    lastDeliveryAt: timestamp('last_delivery_at'),
+    lastDeliveryStatus: varchar('last_delivery_status', { length: 20 }),
+    consecutiveFailures: integer('consecutive_failures').default(0).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_webhooks_tenant').on(table.tenantId),
+    statusIdx: index('idx_admin_webhooks_status').on(table.tenantId, table.status),
+  }),
+);
+
+// 119. Admin Operational Incidents Table
+export const adminOperationalIncidents = supportAgentSchema.table(
+  'admin_operational_incidents',
+  {
+    ...commonColumns,
+    title: varchar('title', { length: 255 }).notNull(),
+    severity: varchar('severity', { length: 20 }).notNull(), // LOW, MEDIUM, HIGH, CRITICAL
+    status: varchar('status', { length: 20 }).default('OPEN').notNull(), // OPEN, INVESTIGATING, MONITORING, RESOLVED
+    affectedService: varchar('affected_service', { length: 100 }).notNull(),
+    description: text('description'),
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    resolvedAt: timestamp('resolved_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_incidents_tenant').on(table.tenantId),
+    statusIdx: index('idx_admin_incidents_status').on(table.tenantId, table.status),
+    severityIdx: index('idx_admin_incidents_severity').on(table.tenantId, table.severity),
+  }),
+);
+
+// 120. Admin System Health Table
+export const adminSystemHealth = supportAgentSchema.table(
+  'admin_system_health',
+  {
+    ...commonColumns,
+    serviceName: varchar('service_name', { length: 100 }).notNull(),
+    status: varchar('status', { length: 20 }).notNull(), // HEALTHY, DEGRADED, DOWN
+    latencyMs: integer('latency_ms'),
+    errorRate: doublePrecision('error_rate'),
+    lastCheckAt: timestamp('last_check_at').defaultNow().notNull(),
+    metadata: jsonb('metadata'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_system_health_tenant').on(table.tenantId),
+    serviceUnique: uniqueIndex('uq_admin_system_health_tenant_service').on(
+      table.tenantId,
+      table.serviceName,
+    ),
+  }),
+);
+
+// 121. Admin Tenant Overrides Table
+export const adminTenantOverrides = supportAgentSchema.table(
+  'admin_tenant_overrides',
+  {
+    ...commonColumns,
+    featureKey: varchar('feature_key', { length: 150 }).notNull(),
+    overrideValue: jsonb('override_value').notNull(),
+    reason: text('reason').notNull(),
+    expiresAt: timestamp('expires_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_admin_tenant_overrides_tenant').on(table.tenantId),
+    featureUnique: uniqueIndex('uq_admin_tenant_overrides_tenant_key').on(
+      table.tenantId,
+      table.featureKey,
+    ),
+  }),
+);
+
 
 
