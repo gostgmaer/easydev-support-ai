@@ -770,10 +770,7 @@ export const messages = supportAgentSchema.table(
         table.tenantId,
         table.threadId,
       ),
-      statusIdx: index('idx_messages_status').on(
-        table.tenantId,
-        table.status,
-      ),
+      statusIdx: index('idx_messages_status').on(table.tenantId, table.status),
       directionIdx: index('idx_messages_direction').on(
         table.tenantId,
         table.conversationId,
@@ -1676,7 +1673,9 @@ export const connectorCapabilities = supportAgentSchema.table(
   },
   (table) => {
     return {
-      tenantIdIdx: index('idx_connector_capabilities_tenant').on(table.tenantId),
+      tenantIdIdx: index('idx_connector_capabilities_tenant').on(
+        table.tenantId,
+      ),
       connectorIdx: index('idx_connector_capabilities_connector').on(
         table.tenantId,
         table.connectorId,
@@ -1884,7 +1883,10 @@ export const aiAgentProfiles = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_agent_profiles_tenant').on(table.tenantId),
-      agentIdx: index('idx_ai_agent_profiles_agent').on(table.tenantId, table.agentId),
+      agentIdx: index('idx_ai_agent_profiles_agent').on(
+        table.tenantId,
+        table.agentId,
+      ),
     };
   },
 );
@@ -1907,8 +1909,14 @@ export const aiConversationSessions = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_sessions_tenant').on(table.tenantId),
-      convUnique: uniqueIndex('uq_ai_sessions_conv').on(table.tenantId, table.conversationId),
-      agentIdx: index('idx_ai_sessions_agent').on(table.tenantId, table.agentId),
+      convUnique: uniqueIndex('uq_ai_sessions_conv').on(
+        table.tenantId,
+        table.conversationId,
+      ),
+      agentIdx: index('idx_ai_sessions_agent').on(
+        table.tenantId,
+        table.agentId,
+      ),
     };
   },
 );
@@ -1930,8 +1938,14 @@ export const aiWorkflowExecutions = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_workflows_tenant').on(table.tenantId),
-      convIdx: index('idx_ai_workflows_conv').on(table.tenantId, table.conversationId),
-      statusIdx: index('idx_ai_workflows_status').on(table.tenantId, table.status),
+      convIdx: index('idx_ai_workflows_conv').on(
+        table.tenantId,
+        table.conversationId,
+      ),
+      statusIdx: index('idx_ai_workflows_status').on(
+        table.tenantId,
+        table.status,
+      ),
     };
   },
 );
@@ -1953,7 +1967,10 @@ export const aiToolRequests = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_tool_req_tenant').on(table.tenantId),
-      execIdx: index('idx_ai_tool_req_exec').on(table.tenantId, table.workflowExecutionId),
+      execIdx: index('idx_ai_tool_req_exec').on(
+        table.tenantId,
+        table.workflowExecutionId,
+      ),
     };
   },
 );
@@ -1973,7 +1990,10 @@ export const aiToolResults = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_tool_res_tenant').on(table.tenantId),
-      reqIdx: index('idx_ai_tool_res_req').on(table.tenantId, table.toolRequestId),
+      reqIdx: index('idx_ai_tool_res_req').on(
+        table.tenantId,
+        table.toolRequestId,
+      ),
     };
   },
 );
@@ -1993,8 +2013,14 @@ export const aiEscalations = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_escalations_tenant').on(table.tenantId),
-      convIdx: index('idx_ai_escalations_conv').on(table.tenantId, table.conversationId),
-      statusIdx: index('idx_ai_escalations_status').on(table.tenantId, table.status),
+      convIdx: index('idx_ai_escalations_conv').on(
+        table.tenantId,
+        table.conversationId,
+      ),
+      statusIdx: index('idx_ai_escalations_status').on(
+        table.tenantId,
+        table.status,
+      ),
     };
   },
 );
@@ -2006,8 +2032,10 @@ export const aiResponseLogs = supportAgentSchema.table(
     ...commonColumns,
     conversationId: uuid('conversation_id').notNull(),
     messageId: uuid('message_id').notNull(),
-    workflowExecutionId: uuid('workflow_execution_id')
-      .references(() => aiWorkflowExecutions.id, { onDelete: 'set null' }),
+    workflowExecutionId: uuid('workflow_execution_id').references(
+      () => aiWorkflowExecutions.id,
+      { onDelete: 'set null' },
+    ),
     responseType: varchar('response_type', { length: 50 }).notNull(), // AUTOMATED, CO_PILOT, SUGGESTION
     responseTimeMs: integer('response_time_ms').default(0).notNull(),
     confidenceScore: doublePrecision('confidence_score'),
@@ -2017,7 +2045,10 @@ export const aiResponseLogs = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_resp_logs_tenant').on(table.tenantId),
-      convIdx: index('idx_ai_resp_logs_conv').on(table.tenantId, table.conversationId),
+      convIdx: index('idx_ai_resp_logs_conv').on(
+        table.tenantId,
+        table.conversationId,
+      ),
     };
   },
 );
@@ -2040,7 +2071,11 @@ export const aiUsageMetrics = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_usage_tenant').on(table.tenantId),
-      agentDateIdx: uniqueIndex('uq_ai_usage_agent_date').on(table.tenantId, table.agentId, table.date),
+      agentDateIdx: uniqueIndex('uq_ai_usage_agent_date').on(
+        table.tenantId,
+        table.agentId,
+        table.date,
+      ),
     };
   },
 );
@@ -2059,13 +2094,18 @@ export const aiModelConfigurations = supportAgentSchema.table(
     maxTokens: integer('max_tokens').default(2048).notNull(),
     topP: doublePrecision('top_p').default(1.0).notNull(),
     presencePenalty: doublePrecision('presence_penalty').default(0.0).notNull(),
-    frequencyPenalty: doublePrecision('frequency_penalty').default(0.0).notNull(),
+    frequencyPenalty: doublePrecision('frequency_penalty')
+      .default(0.0)
+      .notNull(),
     stopSequences: jsonb('stop_sequences'),
   },
   (table) => {
     return {
       tenantIdIdx: index('idx_ai_model_config_tenant').on(table.tenantId),
-      agentIdx: index('idx_ai_model_config_agent').on(table.tenantId, table.agentId),
+      agentIdx: index('idx_ai_model_config_agent').on(
+        table.tenantId,
+        table.agentId,
+      ),
     };
   },
 );
@@ -2084,7 +2124,10 @@ export const workflowTemplates = supportAgentSchema.table(
   (table) => {
     return {
       tenantIdIdx: index('idx_wf_templates_tenant').on(table.tenantId),
-      statusIdx: index('idx_wf_templates_status').on(table.tenantId, table.status),
+      statusIdx: index('idx_wf_templates_status').on(
+        table.tenantId,
+        table.status,
+      ),
     };
   },
 );
@@ -2103,7 +2146,10 @@ export const workflowVersions = supportAgentSchema.table(
   },
   (table) => {
     return {
-      templateIdx: index('idx_wf_versions_template').on(table.tenantId, table.workflowTemplateId),
+      templateIdx: index('idx_wf_versions_template').on(
+        table.tenantId,
+        table.workflowTemplateId,
+      ),
     };
   },
 );
@@ -2116,7 +2162,9 @@ export const workflowExecutions = supportAgentSchema.table(
     workflowId: uuid('workflow_id')
       .references(() => workflowTemplates.id, { onDelete: 'cascade' })
       .notNull(),
-    executionStatus: varchar('execution_status', { length: 50 }).default('RUNNING').notNull(), // DRAFT, ACTIVE, PAUSED, ARCHIVED, FAILED, COMPLETED
+    executionStatus: varchar('execution_status', { length: 50 })
+      .default('RUNNING')
+      .notNull(), // DRAFT, ACTIVE, PAUSED, ARCHIVED, FAILED, COMPLETED
     startedAt: timestamp('started_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
     executionTimeMs: integer('execution_time_ms').default(0).notNull(),
@@ -2130,7 +2178,10 @@ export const workflowExecutions = supportAgentSchema.table(
     return {
       tenantIdIdx: index('idx_wf_exec_tenant').on(table.tenantId),
       wfIdx: index('idx_wf_exec_wf').on(table.tenantId, table.workflowId),
-      statusIdx: index('idx_wf_exec_status').on(table.tenantId, table.executionStatus),
+      statusIdx: index('idx_wf_exec_status').on(
+        table.tenantId,
+        table.executionStatus,
+      ),
     };
   },
 );
@@ -2161,8 +2212,9 @@ export const workflowConditions = supportAgentSchema.table(
     workflowId: uuid('workflow_id')
       .references(() => workflowTemplates.id, { onDelete: 'cascade' })
       .notNull(),
-    triggerId: uuid('trigger_id')
-      .references(() => workflowTriggers.id, { onDelete: 'cascade' }),
+    triggerId: uuid('trigger_id').references(() => workflowTriggers.id, {
+      onDelete: 'cascade',
+    }),
     field: varchar('field', { length: 255 }).notNull(),
     operator: varchar('operator', { length: 50 }).notNull(), // EQUALS, CONTAINS, GT, LT
     value: varchar('value', { length: 255 }).notNull(),
@@ -2202,14 +2254,19 @@ export const workflowApprovals = supportAgentSchema.table(
       .references(() => workflowExecutions.id, { onDelete: 'cascade' })
       .notNull(),
     approverId: uuid('approver_id').notNull(),
-    approvalStatus: varchar('approval_status', { length: 50 }).default('PENDING').notNull(), // PENDING, APPROVED, REJECTED
+    approvalStatus: varchar('approval_status', { length: 50 })
+      .default('PENDING')
+      .notNull(), // PENDING, APPROVED, REJECTED
     comments: text('comments'),
     approvedAt: timestamp('approved_at'),
     expiresAt: timestamp('expires_at'),
   },
   (table) => {
     return {
-      execIdx: index('idx_wf_approvals_exec').on(table.tenantId, table.workflowExecutionId),
+      execIdx: index('idx_wf_approvals_exec').on(
+        table.tenantId,
+        table.workflowExecutionId,
+      ),
     };
   },
 );
@@ -2240,10 +2297,13 @@ export const workflowAuditLogs = supportAgentSchema.table(
   'workflow_audit_logs',
   {
     ...commonColumns,
-    workflowId: uuid('workflow_id')
-      .references(() => workflowTemplates.id, { onDelete: 'cascade' }),
-    workflowExecutionId: uuid('workflow_execution_id')
-      .references(() => workflowExecutions.id, { onDelete: 'set null' }),
+    workflowId: uuid('workflow_id').references(() => workflowTemplates.id, {
+      onDelete: 'cascade',
+    }),
+    workflowExecutionId: uuid('workflow_execution_id').references(
+      () => workflowExecutions.id,
+      { onDelete: 'set null' },
+    ),
     action: varchar('action', { length: 100 }).notNull(),
     details: text('details'),
     metadata: jsonb('metadata'),
@@ -2271,7 +2331,11 @@ export const workflowVariables = supportAgentSchema.table(
   (table) => {
     return {
       wfIdx: index('idx_wf_vars_wf').on(table.tenantId, table.workflowId),
-      uqWfVar: uniqueIndex('uq_wf_var').on(table.tenantId, table.workflowId, table.name),
+      uqWfVar: uniqueIndex('uq_wf_var').on(
+        table.tenantId,
+        table.workflowId,
+        table.name,
+      ),
     };
   },
 );
@@ -2308,7 +2372,10 @@ export const analyticsDailyMetrics = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_an_daily_tenant').on(table.tenantId),
-    metricIdx: index('idx_an_daily_metric').on(table.tenantId, table.metricType),
+    metricIdx: index('idx_an_daily_metric').on(
+      table.tenantId,
+      table.metricType,
+    ),
     tsIdx: index('idx_an_daily_ts').on(table.timestamp),
   }),
 );
@@ -2325,7 +2392,10 @@ export const analyticsHourlyMetrics = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_an_hourly_tenant').on(table.tenantId),
-    metricIdx: index('idx_an_hourly_metric').on(table.tenantId, table.metricType),
+    metricIdx: index('idx_an_hourly_metric').on(
+      table.tenantId,
+      table.metricType,
+    ),
     tsIdx: index('idx_an_hourly_ts').on(table.timestamp),
   }),
 );
@@ -2339,12 +2409,20 @@ export const analyticsTenantMetrics = supportAgentSchema.table(
     conversationsCount: integer('conversations_count').default(0).notNull(),
     messagesCount: integer('messages_count').default(0).notNull(),
     ticketsCount: integer('tickets_count').default(0).notNull(),
-    resolvedTicketsCount: integer('resolved_tickets_count').default(0).notNull(),
-    averageResponseTime: numeric('average_response_time').default('0').notNull(),
-    averageResolutionTime: numeric('average_resolution_time').default('0').notNull(),
+    resolvedTicketsCount: integer('resolved_tickets_count')
+      .default(0)
+      .notNull(),
+    averageResponseTime: numeric('average_response_time')
+      .default('0')
+      .notNull(),
+    averageResolutionTime: numeric('average_resolution_time')
+      .default('0')
+      .notNull(),
     csatScore: numeric('csat_score').default('0').notNull(),
     slaViolationRate: numeric('sla_violation_rate').default('0').notNull(),
-    estimatedCostSavings: numeric('estimated_cost_savings').default('0').notNull(),
+    estimatedCostSavings: numeric('estimated_cost_savings')
+      .default('0')
+      .notNull(),
   },
   (table) => ({
     tenantIdx: index('idx_an_tenant_m_tenant').on(table.tenantId),
@@ -2359,12 +2437,20 @@ export const analyticsAgentMetrics = supportAgentSchema.table(
     ...commonColumns,
     agentId: uuid('agent_id').notNull(),
     timestamp: timestamp('timestamp').notNull(),
-    assignedConversations: integer('assigned_conversations').default(0).notNull(),
-    resolvedConversations: integer('resolved_conversations').default(0).notNull(),
+    assignedConversations: integer('assigned_conversations')
+      .default(0)
+      .notNull(),
+    resolvedConversations: integer('resolved_conversations')
+      .default(0)
+      .notNull(),
     assignedTickets: integer('assigned_tickets').default(0).notNull(),
     resolvedTickets: integer('resolved_tickets').default(0).notNull(),
-    averageResponseTime: numeric('average_response_time').default('0').notNull(),
-    averageResolutionTime: numeric('average_resolution_time').default('0').notNull(),
+    averageResponseTime: numeric('average_response_time')
+      .default('0')
+      .notNull(),
+    averageResolutionTime: numeric('average_resolution_time')
+      .default('0')
+      .notNull(),
     csatScore: numeric('csat_score').default('0').notNull(),
     workload: integer('workload').default(0).notNull(),
     utilization: numeric('utilization').default('0').notNull(),
@@ -2387,13 +2473,18 @@ export const analyticsChannelMetrics = supportAgentSchema.table(
     messageCount: integer('message_count').default(0).notNull(),
     conversationCount: integer('conversation_count').default(0).notNull(),
     responseTime: numeric('response_time').default('0').notNull(),
-    deliverySuccessRate: numeric('delivery_success_rate').default('0').notNull(),
+    deliverySuccessRate: numeric('delivery_success_rate')
+      .default('0')
+      .notNull(),
     failureRate: numeric('failure_rate').default('0').notNull(),
     usageVolume: integer('usage_volume').default(0).notNull(),
   },
   (table) => ({
     tenantIdx: index('idx_an_channel_m_tenant').on(table.tenantId),
-    channelIdx: index('idx_an_channel_m_chan').on(table.tenantId, table.channelId),
+    channelIdx: index('idx_an_channel_m_chan').on(
+      table.tenantId,
+      table.channelId,
+    ),
     tsIdx: index('idx_an_channel_m_ts').on(table.timestamp),
   }),
 );
@@ -2406,13 +2497,19 @@ export const analyticsAiMetrics = supportAgentSchema.table(
     timestamp: timestamp('timestamp').notNull(),
     aiRequests: integer('ai_requests').default(0).notNull(),
     tokensUsed: bigint('tokens_used', { mode: 'number' }).default(0).notNull(),
-    promptTokens: bigint('prompt_tokens', { mode: 'number' }).default(0).notNull(),
-    completionTokens: bigint('completion_tokens', { mode: 'number' }).default(0).notNull(),
+    promptTokens: bigint('prompt_tokens', { mode: 'number' })
+      .default(0)
+      .notNull(),
+    completionTokens: bigint('completion_tokens', { mode: 'number' })
+      .default(0)
+      .notNull(),
     estimatedCost: numeric('estimated_cost').default('0').notNull(),
     responseTime: numeric('response_time').default('0').notNull(),
     escalationRate: numeric('escalation_rate').default('0').notNull(),
     aiResolutionRate: numeric('ai_resolution_rate').default('0').notNull(),
-    humanResolutionRate: numeric('human_resolution_rate').default('0').notNull(),
+    humanResolutionRate: numeric('human_resolution_rate')
+      .default('0')
+      .notNull(),
     workflowExecutions: integer('workflow_executions').default(0).notNull(),
     toolCalls: integer('tool_calls').default(0).notNull(),
   },
@@ -2504,7 +2601,9 @@ export const analyticsReportSchedules = supportAgentSchema.table(
   'analytics_report_schedules',
   {
     ...commonColumns,
-    reportId: uuid('report_id').references(() => analyticsReports.id, { onDelete: 'cascade' }).notNull(),
+    reportId: uuid('report_id')
+      .references(() => analyticsReports.id, { onDelete: 'cascade' })
+      .notNull(),
     name: varchar('name', { length: 255 }).notNull(),
     cronExpression: varchar('cron_expression', { length: 50 }).notNull(),
     timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
@@ -2548,7 +2647,9 @@ export const tenantPreferences = supportAgentSchema.table(
   {
     ...commonColumns,
     theme: varchar('theme', { length: 50 }).default('light').notNull(),
-    notificationsEnabled: boolean('notifications_enabled').default(true).notNull(),
+    notificationsEnabled: boolean('notifications_enabled')
+      .default(true)
+      .notNull(),
     autoResolveDays: integer('auto_resolve_days').default(3).notNull(),
     autoCloseDays: integer('auto_close_days').default(7).notNull(),
     metadata: jsonb('metadata'),
@@ -2565,8 +2666,12 @@ export const tenantBranding = supportAgentSchema.table(
     ...commonColumns,
     logoUrl: varchar('logo_url', { length: 500 }),
     faviconUrl: varchar('favicon_url', { length: 500 }),
-    primaryColor: varchar('primary_color', { length: 20 }).default('#000000').notNull(),
-    secondaryColor: varchar('secondary_color', { length: 20 }).default('#ffffff').notNull(),
+    primaryColor: varchar('primary_color', { length: 20 })
+      .default('#000000')
+      .notNull(),
+    secondaryColor: varchar('secondary_color', { length: 20 })
+      .default('#ffffff')
+      .notNull(),
     themeMode: varchar('theme_mode', { length: 20 }).default('LIGHT').notNull(),
     emailHeader: text('email_header'),
     emailFooter: text('email_footer'),
@@ -2583,14 +2688,19 @@ export const tenantBusinessHours = supportAgentSchema.table(
   {
     ...commonColumns,
     dayOfWeek: integer('day_of_week').notNull(), // 0 = Sunday, ..., 6 = Saturday
-    startTime: varchar('start_time', { length: 8 }).default('09:00:00').notNull(),
+    startTime: varchar('start_time', { length: 8 })
+      .default('09:00:00')
+      .notNull(),
     endTime: varchar('end_time', { length: 8 }).default('17:00:00').notNull(),
     isOpen: boolean('is_open').default(true).notNull(),
     timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
   },
   (table) => ({
     tenantIdx: index('idx_tenant_bus_hours_tenant').on(table.tenantId),
-    dayOfWeekIdx: index('idx_tenant_bus_hours_day').on(table.tenantId, table.dayOfWeek),
+    dayOfWeekIdx: index('idx_tenant_bus_hours_day').on(
+      table.tenantId,
+      table.dayOfWeek,
+    ),
   }),
 );
 
@@ -2607,7 +2717,10 @@ export const tenantHolidays = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_tenant_holidays_tenant').on(table.tenantId),
-    dateIdx: index('idx_tenant_holidays_date').on(table.tenantId, table.holidayDate),
+    dateIdx: index('idx_tenant_holidays_date').on(
+      table.tenantId,
+      table.holidayDate,
+    ),
   }),
 );
 
@@ -2623,7 +2736,10 @@ export const tenantFeatureFlags = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_tenant_feat_flags_tenant').on(table.tenantId),
-    keyIdx: uniqueIndex('uq_tenant_feat_flags_key').on(table.tenantId, table.featureKey),
+    keyIdx: uniqueIndex('uq_tenant_feat_flags_key').on(
+      table.tenantId,
+      table.featureKey,
+    ),
   }),
 );
 
@@ -2633,14 +2749,27 @@ export const tenantAiSettings = supportAgentSchema.table(
   {
     ...commonColumns,
     defaultAgent: varchar('default_agent', { length: 255 }),
-    confidenceThreshold: doublePrecision('confidence_threshold').default(0.7).notNull(),
-    escalationThreshold: doublePrecision('escalation_threshold').default(0.4).notNull(),
+    confidenceThreshold: doublePrecision('confidence_threshold')
+      .default(0.7)
+      .notNull(),
+    escalationThreshold: doublePrecision('escalation_threshold')
+      .default(0.4)
+      .notNull(),
     allowedLanguages: jsonb('allowed_languages').default('[]').notNull(),
-    defaultLanguage: varchar('default_language', { length: 10 }).default('en').notNull(),
-    autoResponseEnabled: boolean('auto_response_enabled').default(true).notNull(),
-    autoEscalationEnabled: boolean('auto_escalation_enabled').default(true).notNull(),
+    defaultLanguage: varchar('default_language', { length: 10 })
+      .default('en')
+      .notNull(),
+    autoResponseEnabled: boolean('auto_response_enabled')
+      .default(true)
+      .notNull(),
+    autoEscalationEnabled: boolean('auto_escalation_enabled')
+      .default(true)
+      .notNull(),
     costLimitDaily: numeric('cost_limit_daily', { precision: 10, scale: 2 }),
-    costLimitMonthly: numeric('cost_limit_monthly', { precision: 10, scale: 2 }),
+    costLimitMonthly: numeric('cost_limit_monthly', {
+      precision: 10,
+      scale: 2,
+    }),
     modelConfiguration: jsonb('model_configuration'),
   },
   (table) => ({
@@ -2656,12 +2785,17 @@ export const tenantChannelSettings = supportAgentSchema.table(
     channelType: varchar('channel_type', { length: 50 }).notNull(), // EMAIL, WEB_CHAT, SMS, WHATSAPP, etc.
     enabled: boolean('enabled').default(true).notNull(),
     businessHoursOnly: boolean('business_hours_only').default(false).notNull(),
-    autoAssignmentEnabled: boolean('auto_assignment_enabled').default(true).notNull(),
+    autoAssignmentEnabled: boolean('auto_assignment_enabled')
+      .default(true)
+      .notNull(),
     configuration: jsonb('configuration'),
   },
   (table) => ({
     tenantIdx: index('idx_tenant_chan_settings_tenant').on(table.tenantId),
-    typeIdx: uniqueIndex('uq_tenant_chan_settings_type').on(table.tenantId, table.channelType),
+    typeIdx: uniqueIndex('uq_tenant_chan_settings_type').on(
+      table.tenantId,
+      table.channelType,
+    ),
   }),
 );
 
@@ -2688,8 +2822,12 @@ export const tenantSlaSettings = supportAgentSchema.table(
   {
     ...commonColumns,
     responseTimeTarget: integer('response_time_target').default(3600).notNull(), // In seconds
-    resolutionTimeTarget: integer('resolution_time_target').default(86400).notNull(), // In seconds
-    escalationTimeTarget: integer('escalation_time_target').default(14400).notNull(), // In seconds
+    resolutionTimeTarget: integer('resolution_time_target')
+      .default(86400)
+      .notNull(), // In seconds
+    escalationTimeTarget: integer('escalation_time_target')
+      .default(14400)
+      .notNull(), // In seconds
     businessHoursOnly: boolean('business_hours_only').default(true).notNull(),
     configuration: jsonb('configuration'),
   },
@@ -2720,9 +2858,15 @@ export const tenantWidgetSettings = supportAgentSchema.table(
   'tenant_widget_settings',
   {
     ...commonColumns,
-    widgetName: varchar('widget_name', { length: 255 }).default('Live Support').notNull(),
-    widgetColor: varchar('widget_color', { length: 20 }).default('#1A73E8').notNull(),
-    widgetPosition: varchar('widget_position', { length: 50 }).default('BOTTOM_RIGHT').notNull(),
+    widgetName: varchar('widget_name', { length: 255 })
+      .default('Live Support')
+      .notNull(),
+    widgetColor: varchar('widget_color', { length: 20 })
+      .default('#1A73E8')
+      .notNull(),
+    widgetPosition: varchar('widget_position', { length: 50 })
+      .default('BOTTOM_RIGHT')
+      .notNull(),
     welcomeMessage: text('welcome_message'),
     offlineMessage: text('offline_message'),
     avatarUrl: varchar('avatar_url', { length: 500 }),
@@ -2745,7 +2889,9 @@ export const tenantUsageLimits = supportAgentSchema.table(
     maxWorkflows: integer('max_workflows').default(10).notNull(),
     maxConnectors: integer('max_connectors').default(5).notNull(),
     maxDocuments: integer('max_documents').default(100).notNull(),
-    maxStorage: bigint('max_storage', { mode: 'number' }).default(1073741824).notNull(), // 1 GB in bytes
+    maxStorage: bigint('max_storage', { mode: 'number' })
+      .default(1073741824)
+      .notNull(), // 1 GB in bytes
     maxAiRequests: integer('max_ai_requests').default(5000).notNull(),
   },
   (table) => ({
@@ -2777,10 +2923,19 @@ export const inboxViews = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_views_tenant').on(table.tenantId),
-    convTenantUnique: uniqueIndex('uq_inbox_views_conv_tenant').on(table.tenantId, table.conversationId),
+    convTenantUnique: uniqueIndex('uq_inbox_views_conv_tenant').on(
+      table.tenantId,
+      table.conversationId,
+    ),
     statusIdx: index('idx_inbox_views_status').on(table.tenantId, table.status),
-    agentIdx: index('idx_inbox_views_agent').on(table.tenantId, table.assignedAgentId),
-    teamIdx: index('idx_inbox_views_team').on(table.tenantId, table.assignedTeamId),
+    agentIdx: index('idx_inbox_views_agent').on(
+      table.tenantId,
+      table.assignedAgentId,
+    ),
+    teamIdx: index('idx_inbox_views_team').on(
+      table.tenantId,
+      table.assignedTeamId,
+    ),
   }),
 );
 
@@ -2812,7 +2967,10 @@ export const inboxSavedViews = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_saved_views_tenant').on(table.tenantId),
-    userViewIdx: index('idx_inbox_saved_views_user').on(table.tenantId, table.userId),
+    userViewIdx: index('idx_inbox_saved_views_user').on(
+      table.tenantId,
+      table.userId,
+    ),
   }),
 );
 
@@ -2829,7 +2987,10 @@ export const inboxAssignments = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_assignments_tenant').on(table.tenantId),
-    convIdx: index('idx_inbox_assignments_conv').on(table.tenantId, table.conversationId),
+    convIdx: index('idx_inbox_assignments_conv').on(
+      table.tenantId,
+      table.conversationId,
+    ),
   }),
 );
 
@@ -2845,7 +3006,10 @@ export const inboxPresence = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_presence_tenant').on(table.tenantId),
-    userTenantUnique: uniqueIndex('uq_inbox_presence_user_tenant').on(table.tenantId, table.userId),
+    userTenantUnique: uniqueIndex('uq_inbox_presence_user_tenant').on(
+      table.tenantId,
+      table.userId,
+    ),
   }),
 );
 
@@ -2860,7 +3024,10 @@ export const inboxSnoozes = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_snoozes_tenant').on(table.tenantId),
-    convTenantUnique: uniqueIndex('uq_inbox_snoozes_conv_tenant').on(table.tenantId, table.conversationId),
+    convTenantUnique: uniqueIndex('uq_inbox_snoozes_conv_tenant').on(
+      table.tenantId,
+      table.conversationId,
+    ),
   }),
 );
 
@@ -2874,7 +3041,11 @@ export const inboxBookmarks = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_bookmarks_tenant').on(table.tenantId),
-    userConvUnique: uniqueIndex('uq_inbox_bookmarks_user_conv').on(table.tenantId, table.userId, table.conversationId),
+    userConvUnique: uniqueIndex('uq_inbox_bookmarks_user_conv').on(
+      table.tenantId,
+      table.userId,
+      table.conversationId,
+    ),
   }),
 );
 
@@ -2890,7 +3061,10 @@ export const inboxActivityFeed = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_inbox_activity_tenant').on(table.tenantId),
-    convIdx: index('idx_inbox_activity_conv').on(table.tenantId, table.conversationId),
+    convIdx: index('idx_inbox_activity_conv').on(
+      table.tenantId,
+      table.conversationId,
+    ),
   }),
 );
 
@@ -2924,12 +3098,17 @@ export const adminWidgets = supportAgentSchema.table(
     title: varchar('title', { length: 255 }).notNull(),
     position: jsonb('position'),
     configuration: jsonb('configuration'),
-    refreshIntervalSeconds: integer('refresh_interval_seconds').default(60).notNull(),
+    refreshIntervalSeconds: integer('refresh_interval_seconds')
+      .default(60)
+      .notNull(),
     isEnabled: boolean('is_enabled').default(true).notNull(),
   },
   (table) => ({
     tenantIdx: index('idx_admin_widgets_tenant').on(table.tenantId),
-    dashboardIdx: index('idx_admin_widgets_dashboard').on(table.tenantId, table.dashboardId),
+    dashboardIdx: index('idx_admin_widgets_dashboard').on(
+      table.tenantId,
+      table.dashboardId,
+    ),
   }),
 );
 
@@ -2948,7 +3127,10 @@ export const adminAnnouncements = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_admin_announcements_tenant').on(table.tenantId),
-    activeIdx: index('idx_admin_announcements_active').on(table.tenantId, table.isActive),
+    activeIdx: index('idx_admin_announcements_active').on(
+      table.tenantId,
+      table.isActive,
+    ),
   }),
 );
 
@@ -2964,7 +3146,10 @@ export const adminAuditViews = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_admin_audit_views_tenant').on(table.tenantId),
-    userIdx: index('idx_admin_audit_views_user').on(table.tenantId, table.userId),
+    userIdx: index('idx_admin_audit_views_user').on(
+      table.tenantId,
+      table.userId,
+    ),
   }),
 );
 
@@ -3006,7 +3191,10 @@ export const adminApiKeys = supportAgentSchema.table(
   (table) => ({
     tenantIdx: index('idx_admin_api_keys_tenant').on(table.tenantId),
     hashUnique: uniqueIndex('uq_admin_api_keys_hash').on(table.keyHash),
-    statusIdx: index('idx_admin_api_keys_status').on(table.tenantId, table.status),
+    statusIdx: index('idx_admin_api_keys_status').on(
+      table.tenantId,
+      table.status,
+    ),
   }),
 );
 
@@ -3027,7 +3215,10 @@ export const adminWebhooks = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_admin_webhooks_tenant').on(table.tenantId),
-    statusIdx: index('idx_admin_webhooks_status').on(table.tenantId, table.status),
+    statusIdx: index('idx_admin_webhooks_status').on(
+      table.tenantId,
+      table.status,
+    ),
   }),
 );
 
@@ -3046,8 +3237,14 @@ export const adminOperationalIncidents = supportAgentSchema.table(
   },
   (table) => ({
     tenantIdx: index('idx_admin_incidents_tenant').on(table.tenantId),
-    statusIdx: index('idx_admin_incidents_status').on(table.tenantId, table.status),
-    severityIdx: index('idx_admin_incidents_severity').on(table.tenantId, table.severity),
+    statusIdx: index('idx_admin_incidents_status').on(
+      table.tenantId,
+      table.status,
+    ),
+    severityIdx: index('idx_admin_incidents_severity').on(
+      table.tenantId,
+      table.severity,
+    ),
   }),
 );
 
@@ -3091,5 +3288,216 @@ export const adminTenantOverrides = supportAgentSchema.table(
   }),
 );
 
+// 122. Widget Configs Table
+export const widgetConfigs = supportAgentSchema.table(
+  'widget_configs',
+  {
+    ...commonColumns,
+    widgetName: varchar('widget_name', { length: 255 }).notNull(),
+    theme: varchar('theme', { length: 50 }).default('light').notNull(),
+    primaryColor: varchar('primary_color', { length: 20 })
+      .default('#000000')
+      .notNull(),
+    secondaryColor: varchar('secondary_color', { length: 20 })
+      .default('#ffffff')
+      .notNull(),
+    position: varchar('position', { length: 20 })
+      .default('bottom-right')
+      .notNull(),
+    welcomeMessage: text('welcome_message'),
+    offlineMessage: text('offline_message'),
+    avatarUrl: varchar('avatar_url', { length: 500 }),
+    customCss: text('custom_css'),
+    customJs: text('custom_js'),
+    allowedDomains: jsonb('allowed_domains').default('[]').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_configs_tenant').on(table.tenantId),
+  }),
+);
 
+// 123. Widget Visitors Table
+export const widgetVisitors = supportAgentSchema.table(
+  'widget_visitors',
+  {
+    ...commonColumns,
+    anonymousId: varchar('anonymous_id', { length: 255 }).notNull(),
+    customerId: uuid('customer_id'),
+    email: varchar('email', { length: 255 }),
+    phone: varchar('phone', { length: 50 }),
+    name: varchar('name', { length: 255 }),
+    country: varchar('country', { length: 100 }),
+    city: varchar('city', { length: 100 }),
+    firstSeenAt: timestamp('first_seen_at').defaultNow().notNull(),
+    lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+    visitCount: integer('visit_count').default(1).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_visitors_tenant').on(table.tenantId),
+    anonIdx: uniqueIndex('uq_widget_visitors_anon').on(
+      table.tenantId,
+      table.anonymousId,
+    ),
+    emailIdx: index('idx_widget_visitors_email').on(
+      table.tenantId,
+      table.email,
+    ),
+    customerIdx: index('idx_widget_visitors_cust').on(
+      table.tenantId,
+      table.customerId,
+    ),
+  }),
+);
 
+// 124. Widget Sessions Table
+export const widgetSessions = supportAgentSchema.table(
+  'widget_sessions',
+  {
+    ...commonColumns,
+    visitorId: uuid('visitor_id').notNull(),
+    sessionToken: varchar('session_token', { length: 500 }).notNull(),
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    endedAt: timestamp('ended_at'),
+    ipAddressHash: varchar('ip_address_hash', { length: 64 }),
+    userAgent: varchar('user_agent', { length: 500 }),
+    deviceType: varchar('device_type', { length: 50 }),
+    browser: varchar('browser', { length: 50 }),
+    os: varchar('os', { length: 50 }),
+    referrer: varchar('referrer', { length: 1024 }),
+    landingPage: varchar('landing_page', { length: 1024 }),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_sessions_tenant').on(table.tenantId),
+    visitorIdx: index('idx_widget_sessions_visitor').on(table.visitorId),
+    tokenIdx: uniqueIndex('uq_widget_sessions_token').on(
+      table.tenantId,
+      table.sessionToken,
+    ),
+  }),
+);
+
+// 125. Widget Identities Table
+export const widgetIdentities = supportAgentSchema.table(
+  'widget_identities',
+  {
+    ...commonColumns,
+    visitorId: uuid('visitor_id').notNull(),
+    externalUserId: varchar('external_user_id', { length: 255 }).notNull(),
+    verificationMethod: varchar('verification_method', {
+      length: 50,
+    }).notNull(),
+    verifiedAt: timestamp('verified_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_identities_tenant').on(table.tenantId),
+    visitorIdx: index('idx_widget_identities_visitor').on(table.visitorId),
+    extUserIdx: uniqueIndex('uq_widget_identities_ext').on(
+      table.tenantId,
+      table.visitorId,
+      table.externalUserId,
+    ),
+  }),
+);
+
+// 126. Widget Leads Table
+export const widgetLeads = supportAgentSchema.table(
+  'widget_leads',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }),
+    email: varchar('email', { length: 255 }).notNull(),
+    phone: varchar('phone', { length: 50 }),
+    company: varchar('company', { length: 255 }),
+    source: varchar('source', { length: 100 }).notNull(),
+    leadScore: integer('lead_score').default(0).notNull(),
+    status: varchar('status', { length: 50 }).default('NEW').notNull(),
+    capturedAt: timestamp('captured_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_leads_tenant').on(table.tenantId),
+    emailIdx: index('idx_widget_leads_email').on(table.tenantId, table.email),
+  }),
+);
+
+// 127. Widget Events Table
+export const widgetEvents = supportAgentSchema.table(
+  'widget_events',
+  {
+    ...commonColumns,
+    sessionId: uuid('session_id').notNull(),
+    eventName: varchar('event_name', { length: 100 }).notNull(),
+    eventData: jsonb('event_data'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_events_tenant').on(table.tenantId),
+    sessionIdx: index('idx_widget_events_session').on(table.sessionId),
+  }),
+);
+
+// 128. Widget Page Views Table
+export const widgetPageViews = supportAgentSchema.table(
+  'widget_page_views',
+  {
+    ...commonColumns,
+    sessionId: uuid('session_id').notNull(),
+    url: varchar('url', { length: 2048 }).notNull(),
+    title: varchar('title', { length: 500 }),
+    timeSpentSeconds: integer('time_spent_seconds').default(0).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_pvs_tenant').on(table.tenantId),
+    sessionIdx: index('idx_widget_pvs_session').on(table.sessionId),
+  }),
+);
+
+// 129. Widget Conversations Table
+export const widgetConversations = supportAgentSchema.table(
+  'widget_conversations',
+  {
+    ...commonColumns,
+    widgetSessionId: uuid('widget_session_id').notNull(),
+    conversationId: uuid('conversation_id').notNull(),
+    linkedAt: timestamp('linked_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_convs_tenant').on(table.tenantId),
+    sessionIdx: index('idx_widget_convs_session').on(table.widgetSessionId),
+    convIdx: index('idx_widget_convs_conv').on(table.conversationId),
+  }),
+);
+
+// 130. Widget Auth Tokens Table
+export const widgetAuthTokens = supportAgentSchema.table(
+  'widget_auth_tokens',
+  {
+    ...commonColumns,
+    visitorId: uuid('visitor_id').notNull(),
+    tokenHash: varchar('token_hash', { length: 255 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    lastUsedAt: timestamp('last_used_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_tokens_tenant').on(table.tenantId),
+    visitorIdx: index('idx_widget_tokens_visitor').on(table.visitorId),
+    hashIdx: uniqueIndex('uq_widget_tokens_hash').on(table.tokenHash),
+  }),
+);
+
+// 131. Widget Installations Table
+export const widgetInstallations = supportAgentSchema.table(
+  'widget_installations',
+  {
+    ...commonColumns,
+    domain: varchar('domain', { length: 255 }).notNull(),
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(),
+    verificationToken: varchar('verification_token', { length: 255 }).notNull(),
+    verifiedAt: timestamp('verified_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_widget_installs_tenant').on(table.tenantId),
+    domainIdx: uniqueIndex('uq_widget_installs_domain').on(
+      table.tenantId,
+      table.domain,
+    ),
+  }),
+);

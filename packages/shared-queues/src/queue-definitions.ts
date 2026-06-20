@@ -19,6 +19,7 @@ export const QUEUES = {
   SETTINGS: 'settings-queue',
   INBOX: 'inbox-queue',
   ADMIN: 'admin-queue',
+  WIDGET: 'widget-queue',
   DEAD_LETTER: 'dead-letter-queue',
 } as const;
 

@@ -35,6 +35,7 @@ import {
   TypeOrmAiWorkflow,
 } from './modules/ai-integration/ai-integration.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { WidgetModule } from './modules/widget/widget.module';
 
 // Entities
 import { Customer } from './modules/customers/entities/customer.entity';
@@ -163,6 +164,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     AuditModule,
     QueueModule,
     SettingsModule,
+    WidgetModule,
   ],
   controllers: [AppController],
   providers: [

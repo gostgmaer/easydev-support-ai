@@ -1569,3 +1569,132 @@ export class TenantOverrideCreatedEvent extends DomainEvent {
   }
 }
 
+export class WidgetInstalledEvent extends DomainEvent {
+  static readonly eventName = 'widget.installed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly installationId: string,
+    public readonly domain: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.installationId;
+  }
+}
+
+export class WidgetUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'widget.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly widgetConfigId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.widgetConfigId;
+  }
+}
+
+export class WidgetVisitorCreatedEvent extends DomainEvent {
+  static readonly eventName = 'widget.visitor.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly visitorId: string,
+    public readonly anonymousId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.visitorId;
+  }
+}
+
+export class WidgetVisitorIdentifiedEvent extends DomainEvent {
+  static readonly eventName = 'widget.visitor.identified';
+  constructor(
+    public readonly tenantId: string,
+    public readonly visitorId: string,
+    public readonly externalUserId?: string,
+    public readonly email?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.visitorId;
+  }
+}
+
+export class WidgetSessionStartedEvent extends DomainEvent {
+  static readonly eventName = 'widget.session.started';
+  constructor(
+    public readonly tenantId: string,
+    public readonly sessionId: string,
+    public readonly visitorId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.sessionId;
+  }
+}
+
+export class WidgetSessionEndedEvent extends DomainEvent {
+  static readonly eventName = 'widget.session.ended';
+  constructor(
+    public readonly tenantId: string,
+    public readonly sessionId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.sessionId;
+  }
+}
+
+export class WidgetLeadCreatedEvent extends DomainEvent {
+  static readonly eventName = 'widget.lead.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly leadId: string,
+    public readonly email: string,
+    public readonly source: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.leadId;
+  }
+}
+
+export class WidgetMessageSentEvent extends DomainEvent {
+  static readonly eventName = 'widget.message.sent';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly sessionId: string,
+    public readonly visitorId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class WidgetMessageReceivedEvent extends DomainEvent {
+  static readonly eventName = 'widget.message.received';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly sessionId: string,
+    public readonly visitorId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+
