@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-ai-api
+  namespace: easydev-prod
+  labels:
+    app: support-ai-api
+spec:
+  replicas: 3 # High Availability
+  selector:
+    matchLabels:
+      app: support-ai-api
+  template:
+    metadata:
+      labels:
+        app: support-ai-api
+    spec:
+      containers:
+      - name: api
+        image: gcr.io/easydev/support-ai-api:latest
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - secretRef:
+            name: support-ai-secrets
+        - configMapRef:
+            name: support-ai-config
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: support-ai-api-hpa
+  namespace: easydev-prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: support-ai-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

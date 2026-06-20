@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # 1. NestJS API Gateway (Handles Webhooks, Socket.IO, and REST APIs)
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3001
+      - EASYDEV_AI_URL=http://host.docker.internal:3002
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - easydev-net
+
+  # 2. BullMQ Worker Node (Dedicated to background queue processing)
+  worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:worker
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EASYDEV_AI_URL=http://host.docker.internal:3002
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - easydev-net
+      
+  # 3. Next.js Frontend Operations Center
+  frontend:
+    build:
+      context: ../../UI/easydev-support-ai-web
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+    networks:
+      - easydev-net
+
+  # 4. PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5434:5432" # Mapped to 5434 to avoid conflicts with other EasyDev DBs
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=easydev_support_ai
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - easydev-net
+
+  # 5. Redis (For BullMQ and Socket.IO PubSub)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - easydev-net
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  easydev-net:
+    driver: bridge

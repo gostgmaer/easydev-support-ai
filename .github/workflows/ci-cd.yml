@@ -1,0 +1,96 @@
+name: Production Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: gcr.io/easydev
+  API_IMAGE: support-ai-api
+  WORKER_IMAGE: support-ai-worker
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm run test
+
+      - name: Build Application
+        run: npm run build
+
+  docker-build-and-push:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker
+
+      - name: Build and Push API Image
+        run: |
+          docker build -t $REGISTRY/$API_IMAGE:${{ github.sha }} -t $REGISTRY/$API_IMAGE:latest -f Dockerfile .
+          docker push $REGISTRY/$API_IMAGE:${{ github.sha }}
+          docker push $REGISTRY/$API_IMAGE:latest
+
+      - name: Build and Push Worker Image
+        run: |
+          # Use the same Dockerfile, but command is overridden in Kubernetes
+          docker build -t $REGISTRY/$WORKER_IMAGE:${{ github.sha }} -t $REGISTRY/$WORKER_IMAGE:latest -f Dockerfile .
+          docker push $REGISTRY/$WORKER_IMAGE:${{ github.sha }}
+          docker push $REGISTRY/$WORKER_IMAGE:latest
+
+  deploy-to-k8s:
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: easydev-prod-cluster
+          location: us-central1
+
+      - name: Deploy API and Workers
+        run: |
+          # Update image tags
+          sed -i "s/latest/${{ github.sha }}/g" k8s/api-deployment.yaml
+          sed -i "s/latest/${{ github.sha }}/g" k8s/worker-deployment.yaml
+          
+          # Apply configurations
+          kubectl apply -f k8s/
+          
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/support-ai-api -n easydev-prod
+          kubectl rollout status deployment/support-ai-worker -n easydev-prod
