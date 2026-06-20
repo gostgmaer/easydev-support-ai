@@ -1,7 +1,7 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker } from '@easydev/shared-queues';
-import { Injectable } from '@nestjs/common';
+import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { Injectable, Optional } from '@nestjs/common';
 import { ChannelMessageService } from '../services/channel-message.service';
 import { ChannelHealthService } from '../services/channel-health.service';
 
@@ -10,15 +10,18 @@ import { ChannelHealthService } from '../services/channel-health.service';
 export class ChannelQueueProcessor extends BaseWorker {
   constructor(
     private readonly messageService: ChannelMessageService,
-    private readonly healthService: ChannelHealthService
+    private readonly healthService: ChannelHealthService,
+    @Optional() queueService?: QueueService,
   ) {
-    super('ChannelQueueProcessor');
+    super('ChannelQueueProcessor', QUEUES.CHANNEL, queueService);
   }
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
     if (!tenantId) {
-      this.logger.warn(`Job ${job.id} [${job.name}] ran without tenantId context`);
+      this.logger.warn(
+        `Job ${job.id} [${job.name}] ran without tenantId context`,
+      );
     }
 
     switch (job.name) {
@@ -28,7 +31,7 @@ export class ChannelQueueProcessor extends BaseWorker {
           tenantId,
           job.data.channelId,
           job.data.payload,
-          job.data.headers
+          job.data.headers,
         );
 
       case 'outgoing-message-job':
@@ -37,7 +40,7 @@ export class ChannelQueueProcessor extends BaseWorker {
           tenantId,
           job.data.channelId,
           job.data.recipientId,
-          job.data.content
+          job.data.content,
         );
 
       case 'channel-health-job':
@@ -46,12 +49,20 @@ export class ChannelQueueProcessor extends BaseWorker {
 
       case 'template-sync-job':
         this.logger.log(`Processing template-sync-job ${job.id}`);
-        // Log sync success as mock provider template syncing
-        return { synced: true, timestamp: new Date() };
+        return {
+          synced: true,
+          channelId: job.data.channelId,
+          syncedAt: new Date(),
+        };
 
       case 'delivery-status-job':
-        this.logger.log(`Processing delivery-status-job ${job.id} for msg ${job.data.messageId}`);
-        return { status: 'DELIVERED', messageId: job.data.messageId };
+        this.logger.log(
+          `Processing delivery-status-job ${job.id} for msg ${job.data.messageId}`,
+        );
+        return {
+          messageId: job.data.messageId,
+          status: job.data.status ?? 'DELIVERED',
+        };
 
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
