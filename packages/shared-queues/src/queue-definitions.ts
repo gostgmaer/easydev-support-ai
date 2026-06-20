@@ -5,6 +5,7 @@ export const QUEUES = {
   WORKFLOW: 'workflow-queue',
   ANALYTICS: 'analytics-queue',
   NOTIFICATION: 'notification-queue',
+  CUSTOMER: 'customer-queue',
 } as const;
 
 export type QueueName = typeof QUEUES[keyof typeof QUEUES];

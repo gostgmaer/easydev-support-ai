@@ -120,6 +120,76 @@ export class CustomerCreatedEvent extends DomainEvent {
   }
 }
 
+export class CustomerUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'customer.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly customerId: string,
+    public readonly name: string,
+    public readonly email?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.customerId;
+  }
+}
+
+export class CustomerDeletedEvent extends DomainEvent {
+  static readonly eventName = 'customer.deleted';
+  constructor(
+    public readonly tenantId: string,
+    public readonly customerId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.customerId;
+  }
+}
+
+export class CustomerRestoredEvent extends DomainEvent {
+  static readonly eventName = 'customer.restored';
+  constructor(
+    public readonly tenantId: string,
+    public readonly customerId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.customerId;
+  }
+}
+
+export class CustomerSegmentAssignedEvent extends DomainEvent {
+  static readonly eventName = 'customer.segment_assigned';
+  constructor(
+    public readonly tenantId: string,
+    public readonly customerId: string,
+    public readonly segmentId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.customerId;
+  }
+}
+
+export class CustomerMetricsUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'customer.metrics_updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly customerId: string,
+    public readonly metrics: any,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.customerId;
+  }
+}
+
+
 export class ConnectorExecutedEvent extends DomainEvent {
   static readonly eventName = 'connector.executed';
   constructor(
