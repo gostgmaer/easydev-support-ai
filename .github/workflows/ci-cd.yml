@@ -1,96 +1,154 @@
-name: Production Deployment Pipeline
+name: Support AI CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
 
-env:
-  REGISTRY: gcr.io/easydev
-  API_IMAGE: support-ai-api
-  WORKER_IMAGE: support-ai-worker
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  test-and-build:
+  filter:
+    name: Detect Changed Components
     runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.changes.outputs.apps }}
+      packages: ${{ steps.changes.outputs.packages }}
+      modules: ${{ steps.changes.outputs.modules }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Path Filters
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            apps:
+              - 'src/**'
+              - 'package.json'
+            packages:
+              - 'packages/**'
+            modules:
+              - 'modules/**'
+
+  ci:
+    name: Continuous Integration
+    runs-on: self-hosted
+    needs: filter
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 22
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+          run_install: false
 
-      - name: Run Linter
-        run: npm run lint
+      - name: Get pnpm Store Directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --default)" >> $GITHUB_ENV
 
-      - name: Run Unit Tests
-        run: npm run test
+      - name: Cache pnpm Files
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
-      - name: Build Application
-        run: npm run build
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
-  docker-build-and-push:
-    needs: test-and-build
-    runs-on: ubuntu-latest
+      - name: Run Formatting Check
+        run: pnpm exec prettier --check "src/**/*.ts" "packages/**/*.ts"
+
+      - name: Run Linting
+        run: pnpm run lint
+
+      - name: Recompile All Packages
+        run: pnpm run build:packages
+
+      - name: Verify NestJS Build
+        run: pnpm run build
+
+      - name: Run Test Suites with Coverage
+        run: pnpm test -- --coverage --coverageThreshold='{"global":{"branches":90,"functions":90,"lines":90,"statements":90}}'
+
+      - name: Security Scanning - npm audit
+        run: pnpm audit --audit-level=high
+
+      - name: Security Scanning - Secrets Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cd:
+    name: Continuous Delivery & Deployment
+    runs-on: self-hosted
+    needs: [filter, ci]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "ENV_NAME=production" >> $GITHUB_ENV
+            echo "REGISTRY_TAG=prod-${{ github.sha }}" >> $GITHUB_ENV
+          else
+            echo "ENV_NAME=staging" >> $GITHUB_ENV
+            echo "REGISTRY_TAG=staging-${{ github.sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker
-
-      - name: Build and Push API Image
-        run: |
-          docker build -t $REGISTRY/$API_IMAGE:${{ github.sha }} -t $REGISTRY/$API_IMAGE:latest -f Dockerfile .
-          docker push $REGISTRY/$API_IMAGE:${{ github.sha }}
-          docker push $REGISTRY/$API_IMAGE:latest
-
-      - name: Build and Push Worker Image
-        run: |
-          # Use the same Dockerfile, but command is overridden in Kubernetes
-          docker build -t $REGISTRY/$WORKER_IMAGE:${{ github.sha }} -t $REGISTRY/$WORKER_IMAGE:latest -f Dockerfile .
-          docker push $REGISTRY/$WORKER_IMAGE:${{ github.sha }}
-          docker push $REGISTRY/$WORKER_IMAGE:latest
-
-  deploy-to-k8s:
-    needs: docker-build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+      - name: Build and Tag Docker Production Image
+        uses: docker/build-push-action@v5
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          context: .
+          file: Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ env.REGISTRY_TAG }}
+            ghcr.io/${{ github.repository }}:${{ env.ENV_NAME }}-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v1
+      - name: Run Trivy Security Vulnerability Scan
+        uses: aquasecurity/trivy-action@master
         with:
-          cluster_name: easydev-prod-cluster
-          location: us-central1
+          image-ref: 'ghcr.io/${{ github.repository }}:${{ env.REGISTRY_TAG }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
-      - name: Deploy API and Workers
+      - name: Trigger Blue-Green Zero-Downtime Deployment
+        env:
+          DEPLOY_ENV: ${{ env.ENV_NAME }}
+          IMAGE_TAG: ${{ env.REGISTRY_TAG }}
         run: |
-          # Update image tags
-          sed -i "s/latest/${{ github.sha }}/g" k8s/api-deployment.yaml
-          sed -i "s/latest/${{ github.sha }}/g" k8s/worker-deployment.yaml
-          
-          # Apply configurations
-          kubectl apply -f k8s/
-          
-      - name: Verify Deployment
-        run: |
-          kubectl rollout status deployment/support-ai-api -n easydev-prod
-          kubectl rollout status deployment/support-ai-worker -n easydev-prod
+          chmod +x ./deployment/deploy.sh
+          ./deployment/deploy.sh
