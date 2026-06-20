@@ -41,23 +41,57 @@ export class CustomerMetrics extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get customerId(): string { return this.props.customerId; }
-  get totalConversations(): number { return this.props.totalConversations; }
-  get totalTickets(): number { return this.props.totalTickets; }
-  get totalOrders(): number { return this.props.totalOrders; }
-  get totalSpend(): number { return this.props.totalSpend; }
-  get averageCsat(): number { return this.props.averageCsat; }
-  get averageResponseTime(): number { return this.props.averageResponseTime; }
-  get averageResolutionTime(): number { return this.props.averageResolutionTime; }
-  get sentimentScore(): number { return this.props.sentimentScore; }
-  get lifetimeValue(): number { return this.props.lifetimeValue; }
-  get riskScore(): number { return this.props.riskScore; }
-  get vipStatus(): boolean { return this.props.vipStatus; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get customerId(): string {
+    return this.props.customerId;
+  }
+  get totalConversations(): number {
+    return this.props.totalConversations;
+  }
+  get totalTickets(): number {
+    return this.props.totalTickets;
+  }
+  get totalOrders(): number {
+    return this.props.totalOrders;
+  }
+  get totalSpend(): number {
+    return this.props.totalSpend;
+  }
+  get averageCsat(): number {
+    return this.props.averageCsat;
+  }
+  get averageResponseTime(): number {
+    return this.props.averageResponseTime;
+  }
+  get averageResolutionTime(): number {
+    return this.props.averageResolutionTime;
+  }
+  get sentimentScore(): number {
+    return this.props.sentimentScore;
+  }
+  get lifetimeValue(): number {
+    return this.props.lifetimeValue;
+  }
+  get riskScore(): number {
+    return this.props.riskScore;
+  }
+  get vipStatus(): boolean {
+    return this.props.vipStatus;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
-  public update(props: Partial<Omit<CustomerMetricsProps, 'tenantId' | 'customerId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<
+      Omit<CustomerMetricsProps, 'tenantId' | 'customerId' | 'createdAt'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,
