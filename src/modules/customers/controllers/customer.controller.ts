@@ -15,6 +15,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { CustomerService } from '../services/customer.service';
 import { CustomerProfileService } from '../services/customer-profile.service';
 import { CustomerTimelineService } from '../services/customer-timeline.service';
@@ -67,6 +68,7 @@ export class CustomerController {
 
   @Get('export')
   @Roles('tenant_admin')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Export customers as CSV or JSON' })
   async export(
     @Headers('x-tenant-id') tenantId: string,
@@ -142,6 +144,7 @@ export class CustomerController {
 
   @Post('merge')
   @Roles('tenant_admin')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Merge two customers together' })
   async merge(
     @Headers('x-tenant-id') tenantId: string,
@@ -155,6 +158,7 @@ export class CustomerController {
 
   @Post('bulk-import')
   @Roles('tenant_admin')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Bulk import customers' })
   async bulkImport(
     @Headers('x-tenant-id') tenantId: string,

@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
 import databaseConfig from './config/database.config';
 
 import { AppController } from './app.controller';
@@ -56,6 +59,15 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: 'default',
+          ttl: parseInt(process.env.THROTTLE_TTL_MS || '60000', 10),
+          limit: parseInt(process.env.THROTTLE_LIMIT || '100', 10),
+        },
+      ],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -117,6 +129,12 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     QueueModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: TenantThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
