@@ -13,7 +13,10 @@ export class AnalyticsReportService {
     private readonly repository: IAnalyticsRepository,
   ) {}
 
-  async createReport(tenantId: string, dto: CreateReportDto): Promise<AnalyticsReport> {
+  async createReport(
+    tenantId: string,
+    dto: CreateReportDto,
+  ): Promise<AnalyticsReport> {
     this.logger.log(`Creating report ${dto.name} for Tenant ${tenantId}`);
     const report = new AnalyticsReport(uuidv4(), {
       tenantId,
@@ -27,7 +30,7 @@ export class AnalyticsReportService {
     });
 
     await this.repository.saveReport(report);
-    
+
     // Automatically generate and populate report data
     await this.generateReportData(tenantId, report.id);
 
@@ -42,21 +45,31 @@ export class AnalyticsReportService {
     return report;
   }
 
-  async findReports(tenantId: string, reportType?: string): Promise<AnalyticsReport[]> {
+  async findReports(
+    tenantId: string,
+    reportType?: string,
+  ): Promise<AnalyticsReport[]> {
     return this.repository.findReports(tenantId, reportType);
   }
 
-  async updateReport(tenantId: string, id: string, dto: UpdateReportDto): Promise<AnalyticsReport> {
+  async updateReport(
+    tenantId: string,
+    id: string,
+    dto: UpdateReportDto,
+  ): Promise<AnalyticsReport> {
     const report = await this.getReport(tenantId, id);
 
     const updated = new AnalyticsReport(report.id, {
       tenantId: report.tenantId,
       name: dto.name !== undefined ? dto.name : report.name,
-      description: dto.description !== undefined ? dto.description : report.description,
-      reportType: dto.reportType !== undefined ? dto.reportType : report.reportType,
+      description:
+        dto.description !== undefined ? dto.description : report.description,
+      reportType:
+        dto.reportType !== undefined ? dto.reportType : report.reportType,
       timeRange: dto.timeRange !== undefined ? dto.timeRange : report.timeRange,
       filters: dto.filters !== undefined ? dto.filters : report.filters,
-      parameters: dto.parameters !== undefined ? dto.parameters : report.parameters,
+      parameters:
+        dto.parameters !== undefined ? dto.parameters : report.parameters,
       data: dto.data !== undefined ? dto.data : report.data,
       createdAt: report.createdAt,
       updatedAt: new Date(),
@@ -90,25 +103,44 @@ export class AnalyticsReportService {
     let compiledData: Record<string, any> = {};
 
     if (report.reportType === 'Realtime Dashboard') {
-      const stats = await this.repository.getTenantMetrics(tenantId, startDate, endDate);
+      const stats = await this.repository.getTenantMetrics(
+        tenantId,
+        startDate,
+        endDate,
+      );
       compiledData = {
         summary: stats,
         totalEvents: stats.length,
       };
     } else if (report.reportType === 'AI Reports') {
-      const stats = await this.repository.getAiMetrics(tenantId, startDate, endDate);
+      const stats = await this.repository.getAiMetrics(
+        tenantId,
+        startDate,
+        endDate,
+      );
       compiledData = {
         aiMetrics: stats,
-        requestsCount: stats.reduce((acc, row) => acc + (row.aiRequests || 0), 0),
+        requestsCount: stats.reduce(
+          (acc, row) => acc + (row.aiRequests || 0),
+          0,
+        ),
       };
     } else if (report.reportType === 'Agent Reports') {
-      const stats = await this.repository.getAgentMetricsSummary(tenantId, startDate, endDate);
+      const stats = await this.repository.getAgentMetricsSummary(
+        tenantId,
+        startDate,
+        endDate,
+      );
       compiledData = {
         agentMetrics: stats,
       };
     } else {
       // Default / Tenant Reports
-      const stats = await this.repository.getTenantMetrics(tenantId, startDate, endDate);
+      const stats = await this.repository.getTenantMetrics(
+        tenantId,
+        startDate,
+        endDate,
+      );
       compiledData = {
         metrics: stats,
       };

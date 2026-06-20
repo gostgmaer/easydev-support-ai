@@ -21,30 +21,36 @@ class CustomerSegmentMapper {
 
 @Injectable()
 export class DrizzleCustomerSegmentRepository implements ICustomerSegmentRepository {
-  async findById(id: string, tenantId: string): Promise<CustomerSegment | null> {
+  async findById(
+    id: string,
+    tenantId: string,
+  ): Promise<CustomerSegment | null> {
     const [row] = await db
       .select()
       .from(schema.customerSegments)
       .where(
         and(
           eq(schema.customerSegments.id, id),
-          eq(schema.customerSegments.tenantId, tenantId)
-        )
+          eq(schema.customerSegments.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
     return CustomerSegmentMapper.toDomain(row);
   }
 
-  async findByName(name: string, tenantId: string): Promise<CustomerSegment | null> {
+  async findByName(
+    name: string,
+    tenantId: string,
+  ): Promise<CustomerSegment | null> {
     const [row] = await db
       .select()
       .from(schema.customerSegments)
       .where(
         and(
           eq(schema.customerSegments.segmentName, name),
-          eq(schema.customerSegments.tenantId, tenantId)
-        )
+          eq(schema.customerSegments.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -67,14 +73,17 @@ export class DrizzleCustomerSegmentRepository implements ICustomerSegmentReposit
       .where(
         and(
           eq(schema.customerSegments.tenantId, tenantId),
-          eq(schema.customerSegments.isActive, true)
-        )
+          eq(schema.customerSegments.isActive, true),
+        ),
       );
 
     return rows.map((r) => CustomerSegmentMapper.toDomain(r));
   }
 
-  async save(segment: CustomerSegment, tenantId: string): Promise<CustomerSegment> {
+  async save(
+    segment: CustomerSegment,
+    tenantId: string,
+  ): Promise<CustomerSegment> {
     const raw = {
       id: segment.id,
       tenantId: segment.tenantId,
@@ -93,8 +102,8 @@ export class DrizzleCustomerSegmentRepository implements ICustomerSegmentReposit
       .where(
         and(
           eq(schema.customerSegments.id, segment.id),
-          eq(schema.customerSegments.tenantId, tenantId)
-        )
+          eq(schema.customerSegments.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -104,8 +113,8 @@ export class DrizzleCustomerSegmentRepository implements ICustomerSegmentReposit
         .where(
           and(
             eq(schema.customerSegments.id, segment.id),
-            eq(schema.customerSegments.tenantId, tenantId)
-          )
+            eq(schema.customerSegments.tenantId, tenantId),
+          ),
         );
     } else {
       await db.insert(schema.customerSegments).values({
@@ -125,8 +134,8 @@ export class DrizzleCustomerSegmentRepository implements ICustomerSegmentReposit
       .where(
         and(
           eq(schema.customerSegments.id, id),
-          eq(schema.customerSegments.tenantId, tenantId)
-        )
+          eq(schema.customerSegments.tenantId, tenantId),
+        ),
       );
 
     if (!existing) return false;
@@ -136,8 +145,8 @@ export class DrizzleCustomerSegmentRepository implements ICustomerSegmentReposit
       .where(
         and(
           eq(schema.customerSegments.id, id),
-          eq(schema.customerSegments.tenantId, tenantId)
-        )
+          eq(schema.customerSegments.tenantId, tenantId),
+        ),
       );
 
     return true;

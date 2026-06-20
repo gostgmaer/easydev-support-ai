@@ -30,7 +30,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Message Attachments')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1')
@@ -40,8 +44,13 @@ export class AttachmentController {
   @Post('messages/:messageId/attachments')
   @Roles('tenant_admin', 'support_agent')
   @Throttle({ default: { limit: 60, ttl: 60000 } })
-  @ApiOperation({ summary: 'Register an uploaded file as a message attachment' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Attachment registered' })
+  @ApiOperation({
+    summary: 'Register an uploaded file as a message attachment',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Attachment registered',
+  })
   async register(
     @Headers('x-tenant-id') tenantId: string,
     @Param('messageId') messageId: string,

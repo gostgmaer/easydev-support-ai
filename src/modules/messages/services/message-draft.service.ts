@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { IMessageDraftRepository } from '../repositories/message-repository.interface';
 import { MessageDraft } from '../domain/message-draft.entity';
@@ -104,7 +99,8 @@ export class MessageDraftService {
         conversationId: draft.conversationId,
         senderId,
         senderType,
-        messageType: (draft.draftType as MessageTypeEnum) || MessageTypeEnum.TEXT,
+        messageType:
+          (draft.draftType as MessageTypeEnum) || MessageTypeEnum.TEXT,
         direction: MessageDirectionEnum.OUTBOUND,
         content: draft.draftContent,
       },

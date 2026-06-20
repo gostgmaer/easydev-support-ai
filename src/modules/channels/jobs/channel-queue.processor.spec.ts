@@ -56,7 +56,7 @@ describe('ChannelQueueProcessor', () => {
         tenantId,
         'c1',
         { text: 'hi' },
-        {}
+        {},
       );
     });
 
@@ -78,7 +78,7 @@ describe('ChannelQueueProcessor', () => {
         tenantId,
         'c1',
         'r1',
-        'hello'
+        'hello',
       );
     });
 
@@ -134,7 +134,9 @@ describe('ChannelQueueProcessor', () => {
         },
       };
 
-      await expect(processor.handleJob(job as any)).rejects.toThrow('Unknown job name: unknown-job');
+      await expect(processor.handleJob(job as any)).rejects.toThrow(
+        'Unknown job name: unknown-job',
+      );
     });
   });
 });

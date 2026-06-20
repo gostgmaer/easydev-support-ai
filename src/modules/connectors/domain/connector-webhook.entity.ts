@@ -70,7 +70,9 @@ export class ConnectorWebhook extends Entity<string> {
 
   public subscribesTo(event: string): boolean {
     const events = this.props.events || [];
-    return events.length === 0 || events.includes(event) || events.includes('*');
+    return (
+      events.length === 0 || events.includes(event) || events.includes('*')
+    );
   }
 
   public markTriggered(at: Date = new Date()): void {

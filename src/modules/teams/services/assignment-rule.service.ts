@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 export class AssignmentRuleService {
   constructor(
     @Inject('ITeamRepository')
-    private readonly teamRepo: ITeamRepository
+    private readonly teamRepo: ITeamRepository,
   ) {}
 
   async createRule(
@@ -16,7 +16,7 @@ export class AssignmentRuleService {
     teamId: string,
     ruleType: AssignmentStrategyEnum,
     priority: number,
-    configuration?: Record<string, any>
+    configuration?: Record<string, any>,
   ): Promise<AssignmentRule> {
     const team = await this.teamRepo.findById(teamId, tenantId);
     if (!team) {

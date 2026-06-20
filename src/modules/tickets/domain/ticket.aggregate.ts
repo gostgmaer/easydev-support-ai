@@ -231,7 +231,12 @@ export class Ticket extends AggregateRoot<string> {
     this.props.status = TicketStatus.create(TicketStatusEnum.ASSIGNED);
     this.touch();
     this.addDomainEvent(
-      new TicketTransferredEvent(this.tenantId, this.id, fromAgentId, toAgentId),
+      new TicketTransferredEvent(
+        this.tenantId,
+        this.id,
+        fromAgentId,
+        toAgentId,
+      ),
     );
   }
 

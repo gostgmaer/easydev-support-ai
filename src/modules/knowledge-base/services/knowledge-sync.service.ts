@@ -1,4 +1,9 @@
-import { Injectable, Inject, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  BadRequestException,
+} from '@nestjs/common';
 import type { IKnowledgeRepository } from '../repositories/knowledge-repository.interface';
 import { AIPlatformClient } from './ai-platform.client';
 import { CrawlerService } from './crawler.service';
@@ -22,14 +27,19 @@ export class KnowledgeSyncService {
     private readonly queueService: QueueService,
   ) {}
 
-  public async triggerIngestion(tenantId: string, documentId: string): Promise<void> {
+  public async triggerIngestion(
+    tenantId: string,
+    documentId: string,
+  ): Promise<void> {
     const doc = await this.repository.findById(documentId, tenantId);
     if (!doc) {
       throw new BadRequestException(`Document ${documentId} not found`);
     }
 
     if (!doc.fileUrl && !doc.sourceUri) {
-      throw new BadRequestException(`Document has no URL or URI source reference`);
+      throw new BadRequestException(
+        `Document has no URL or URI source reference`,
+      );
     }
 
     const jobId = crypto.randomUUID();
@@ -98,10 +108,15 @@ export class KnowledgeSyncService {
     }
   }
 
-  public async triggerWebsiteCrawl(tenantId: string, sourceId: string): Promise<void> {
+  public async triggerWebsiteCrawl(
+    tenantId: string,
+    sourceId: string,
+  ): Promise<void> {
     const source = await this.repository.getSourceById(sourceId, tenantId);
     if (!source || !source.uri) {
-      throw new BadRequestException(`Knowledge Source ${sourceId} has no website URL configured`);
+      throw new BadRequestException(
+        `Knowledge Source ${sourceId} has no website URL configured`,
+      );
     }
 
     const jobId = crypto.randomUUID();
@@ -125,7 +140,11 @@ export class KnowledgeSyncService {
     await this.repository.saveSource(source, tenantId);
   }
 
-  public async processCrawlJob(tenantId: string, sourceId: string, jobId: string): Promise<void> {
+  public async processCrawlJob(
+    tenantId: string,
+    sourceId: string,
+    jobId: string,
+  ): Promise<void> {
     const job = await this.repository.getSyncJobById(jobId, tenantId);
     const source = await this.repository.getSourceById(sourceId, tenantId);
 
@@ -138,7 +157,7 @@ export class KnowledgeSyncService {
       // Crawl sitemap first if configured, else fallback to recursive link scraping
       let urls: string[] = [];
       const config = source.config || {};
-      
+
       if (config.sitemapUrl) {
         urls = await this.crawlerService.parseSitemap(config.sitemapUrl);
       }
@@ -172,14 +191,19 @@ export class KnowledgeSyncService {
               storageProvider: 'website',
               mimeType: 'text/html',
               checksum: page.checksum,
-              metadata: { url: page.url, scrapedText: page.content.slice(0, 1000) },
+              metadata: {
+                url: page.url,
+                scrapedText: page.content.slice(0, 1000),
+              },
             });
 
             // Run direct ingestion on this document
             await this.triggerIngestion(tenantId, doc.id);
             successCount++;
           } catch (err: any) {
-            this.logger.error(`Failed to ingest page ${page.url}: ${err.message}`);
+            this.logger.error(
+              `Failed to ingest page ${page.url}: ${err.message}`,
+            );
           }
         }
 
@@ -198,7 +222,9 @@ export class KnowledgeSyncService {
 
         for (const url of urls) {
           try {
-            const slug = url.replace(/^https?:\/\//, '').replace(/[^a-zA-Z0-9]/g, '-');
+            const slug = url
+              .replace(/^https?:\/\//, '')
+              .replace(/[^a-zA-Z0-9]/g, '-');
             const doc = await this.documentService.createDocument(tenantId, {
               sourceId: source.id,
               title: 'Sitemap Webpage',
@@ -216,7 +242,9 @@ export class KnowledgeSyncService {
             processed++;
           } catch (err: any) {
             failed++;
-            this.logger.error(`Failed to ingest sitemap URL ${url}: ${err.message}`);
+            this.logger.error(
+              `Failed to ingest sitemap URL ${url}: ${err.message}`,
+            );
           }
 
           job.updateProgress(processed, failed, urls.length);
@@ -241,7 +269,11 @@ export class KnowledgeSyncService {
 }
 
 function anyToDocType(sourceType: string): any {
-  if (sourceType === 'WEBSITE' || sourceType === 'SITEMAP' || sourceType === 'URL') {
+  if (
+    sourceType === 'WEBSITE' ||
+    sourceType === 'SITEMAP' ||
+    sourceType === 'URL'
+  ) {
     return DocumentTypeEnum.WEBPAGE;
   }
   return DocumentTypeEnum.MANUAL;

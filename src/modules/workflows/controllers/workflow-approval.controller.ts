@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Headers, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Headers,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -30,7 +39,10 @@ export class WorkflowApprovalController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('executionId') executionId: string,
   ) {
-    const approvals = await this.approvalService.getApprovalsForExecution(tenantId, executionId);
+    const approvals = await this.approvalService.getApprovalsForExecution(
+      tenantId,
+      executionId,
+    );
     return approvals.map((a) => a.toJSON());
   }
 
@@ -43,7 +55,11 @@ export class WorkflowApprovalController {
     @Req() req: any,
   ) {
     const approverId = req.user?.id || '00000000-0000-0000-0000-000000000000';
-    const approval = await this.approvalService.approve(tenantId, id, dto.comments);
+    const approval = await this.approvalService.approve(
+      tenantId,
+      id,
+      dto.comments,
+    );
     await this.engineService.resumeExecution(
       tenantId,
       approval.workflowExecutionId,
@@ -63,7 +79,11 @@ export class WorkflowApprovalController {
     @Req() req: any,
   ) {
     const approverId = req.user?.id || '00000000-0000-0000-0000-000000000000';
-    const approval = await this.approvalService.reject(tenantId, id, dto.comments);
+    const approval = await this.approvalService.reject(
+      tenantId,
+      id,
+      dto.comments,
+    );
     await this.engineService.resumeExecution(
       tenantId,
       approval.workflowExecutionId,

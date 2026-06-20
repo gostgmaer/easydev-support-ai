@@ -1,5 +1,11 @@
 import { Controller, Get, Headers, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -19,7 +25,10 @@ export class AnalyticsRealtimeController {
 
   @Get('live-counters')
   @Roles('tenant_admin', 'manager', 'support_agent')
-  @ApiOperation({ summary: 'Get live activity counters (active conversations, queued tickets)' })
+  @ApiOperation({
+    summary:
+      'Get live activity counters (active conversations, queued tickets)',
+  })
   @ApiResponse({ status: 200, description: 'Live counters JSON object' })
   async getLiveCounters(@Headers('x-tenant-id') tenantId: string) {
     return this.realtimeService.getLiveCounters(tenantId);
@@ -35,7 +44,9 @@ export class AnalyticsRealtimeController {
 
   @Get('live-ai')
   @Roles('tenant_admin', 'manager')
-  @ApiOperation({ summary: 'Get live AI resolution and prompt/token rate metrics' })
+  @ApiOperation({
+    summary: 'Get live AI resolution and prompt/token rate metrics',
+  })
   @ApiResponse({ status: 200, description: 'Live AI statistics object' })
   async getLiveAi(@Headers('x-tenant-id') tenantId: string) {
     return this.realtimeService.getLiveAiMetrics(tenantId);

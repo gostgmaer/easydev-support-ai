@@ -37,12 +37,18 @@ export class AnalyticsService {
 
   async getExecutiveOverview(tenantId: string) {
     this.logger.debug(`Generating executive overview for ${tenantId}`);
-    const metrics = await this.dashboardService.getDashboardMetrics(tenantId, 'Last 30 Days');
+    const metrics = await this.dashboardService.getDashboardMetrics(
+      tenantId,
+      'Last 30 Days',
+    );
     return {
       activeConversations: metrics.conversationsCount || 0,
       aiResolutionRate: metrics.aiResolutionRate || 0,
       openTickets: metrics.ticketsCount || 0,
-      slaBreaches: Math.floor(metrics.conversationsCount * (metrics.slaViolationRate / 100)) || 0,
+      slaBreaches:
+        Math.floor(
+          metrics.conversationsCount * (metrics.slaViolationRate / 100),
+        ) || 0,
     };
   }
 }

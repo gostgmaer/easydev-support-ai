@@ -18,7 +18,10 @@ export class AiConversationService {
     customerId: string,
     agentId: string,
   ): Promise<AiConversationSession> {
-    let session = await this.repository.getSessionByConversationId(conversationId, tenantId);
+    let session = await this.repository.getSessionByConversationId(
+      conversationId,
+      tenantId,
+    );
     if (!session) {
       const sessionId = crypto.randomUUID();
       session = new AiConversationSession(sessionId, {
@@ -38,7 +41,10 @@ export class AiConversationService {
     conversationId: string,
     state: Record<string, any>,
   ): Promise<AiConversationSession> {
-    const session = await this.repository.getSessionByConversationId(conversationId, tenantId);
+    const session = await this.repository.getSessionByConversationId(
+      conversationId,
+      tenantId,
+    );
     if (!session) {
       throw new Error(`Session for conversation ${conversationId} not found`);
     }
@@ -51,7 +57,10 @@ export class AiConversationService {
     conversationId: string,
     workflowExecutionId: string,
   ): Promise<AiConversationSession> {
-    const session = await this.repository.getSessionByConversationId(conversationId, tenantId);
+    const session = await this.repository.getSessionByConversationId(
+      conversationId,
+      tenantId,
+    );
     if (!session) {
       throw new Error(`Session for conversation ${conversationId} not found`);
     }
@@ -59,11 +68,18 @@ export class AiConversationService {
     return this.repository.saveSession(session, tenantId);
   }
 
-  public async recallMemory(tenantId: string, query: string, key?: string): Promise<any> {
+  public async recallMemory(
+    tenantId: string,
+    query: string,
+    key?: string,
+  ): Promise<any> {
     return this.aiClient.recallMemory(tenantId, query, key);
   }
 
-  public async getConversationContext(tenantId: string, conversationId: string): Promise<any> {
+  public async getConversationContext(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<any> {
     return this.aiClient.getConversationContext(tenantId, conversationId);
   }
 }

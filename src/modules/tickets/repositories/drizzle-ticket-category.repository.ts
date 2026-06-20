@@ -6,9 +6,7 @@ import { ITicketCategoryRepository } from './ticket-repository.interface';
 import { TicketMapper } from './ticket.mapper';
 
 @Injectable()
-export class DrizzleTicketCategoryRepository
-  implements ITicketCategoryRepository
-{
+export class DrizzleTicketCategoryRepository implements ITicketCategoryRepository {
   async findById(
     id: string,
     tenantId: string,

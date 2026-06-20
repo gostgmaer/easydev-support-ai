@@ -1,5 +1,19 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsObject, IsArray, IsUrl, IsNumber, IsUUID } from 'class-validator';
-import { SourceTypeEnum, DocumentTypeEnum, DocumentStatusEnum } from '../domain/value-objects';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsArray,
+  IsUrl,
+  IsNumber,
+  IsUUID,
+} from 'class-validator';
+import {
+  SourceTypeEnum,
+  DocumentTypeEnum,
+  DocumentStatusEnum,
+} from '../domain/value-objects';
 
 export class CreateSourceDto {
   @IsString()

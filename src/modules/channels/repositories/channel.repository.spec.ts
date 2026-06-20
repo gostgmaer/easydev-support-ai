@@ -5,7 +5,13 @@ import { ChannelConfiguration } from '../domain/channel-configuration.entity';
 import { ChannelWebhook } from '../domain/channel-webhook.entity';
 import { ChannelTemplate } from '../domain/channel-template.entity';
 import { ChannelRateLimit } from '../domain/channel-rate-limit.entity';
-import { ChannelType, ChannelStatus, ChannelProvider, ChannelTypeEnum, ChannelStatusEnum } from '../domain/value-objects';
+import {
+  ChannelType,
+  ChannelStatus,
+  ChannelProvider,
+  ChannelTypeEnum,
+  ChannelStatusEnum,
+} from '../domain/value-objects';
 import { randomUUID } from 'crypto';
 
 let mockResults: any[] = [];
@@ -38,11 +44,37 @@ jest.mock('@easydev/database', () => {
       transaction: jest.fn((cb) => cb(queryBuilder)),
     },
     schema: {
-      channels: { id: 'channels.id', tenantId: 'channels.tenant_id', name: 'channels.name', deletedAt: 'channels.deleted_at', type: 'channels.type', status: 'channels.status', provider: 'channels.provider', createdAt: 'channels.created_at' },
-      channelConfigurations: { id: 'channel_configs.id', tenantId: 'channel_configs.tenant_id', channelId: 'channel_configs.channel_id' },
-      channelWebhooks: { id: 'channel_webhooks.id', tenantId: 'channel_webhooks.tenant_id', channelId: 'channel_webhooks.channel_id' },
-      channelTemplates: { id: 'channel_templates.id', tenantId: 'channel_templates.tenant_id', channelId: 'channel_templates.channel_id', templateName: 'channel_templates.template_name' },
-      channelRateLimits: { id: 'channel_rate_limits.id', tenantId: 'channel_rate_limits.tenant_id', channelId: 'channel_rate_limits.channel_id' },
+      channels: {
+        id: 'channels.id',
+        tenantId: 'channels.tenant_id',
+        name: 'channels.name',
+        deletedAt: 'channels.deleted_at',
+        type: 'channels.type',
+        status: 'channels.status',
+        provider: 'channels.provider',
+        createdAt: 'channels.created_at',
+      },
+      channelConfigurations: {
+        id: 'channel_configs.id',
+        tenantId: 'channel_configs.tenant_id',
+        channelId: 'channel_configs.channel_id',
+      },
+      channelWebhooks: {
+        id: 'channel_webhooks.id',
+        tenantId: 'channel_webhooks.tenant_id',
+        channelId: 'channel_webhooks.channel_id',
+      },
+      channelTemplates: {
+        id: 'channel_templates.id',
+        tenantId: 'channel_templates.tenant_id',
+        channelId: 'channel_templates.channel_id',
+        templateName: 'channel_templates.template_name',
+      },
+      channelRateLimits: {
+        id: 'channel_rate_limits.id',
+        tenantId: 'channel_rate_limits.tenant_id',
+        channelId: 'channel_rate_limits.channel_id',
+      },
     },
   };
 });
@@ -61,11 +93,49 @@ describe('Channel Drizzle Repository', () => {
   describe('findById & findByName', () => {
     it('should find channel and resolve configurations, webhooks, templates, and rate limits', async () => {
       mockResults.push(
-        [{ id: channelId, tenantId, name: 'WA Meta', type: 'WHATSAPP', status: 'ACTIVE', provider: 'META' }], // rawChannel
-        [{ id: 'c1', tenantId, channelId, authenticationType: 'API_KEY', configuration: {}, credentials: {} }], // rawConfig
+        [
+          {
+            id: channelId,
+            tenantId,
+            name: 'WA Meta',
+            type: 'WHATSAPP',
+            status: 'ACTIVE',
+            provider: 'META',
+          },
+        ], // rawChannel
+        [
+          {
+            id: 'c1',
+            tenantId,
+            channelId,
+            authenticationType: 'API_KEY',
+            configuration: {},
+            credentials: {},
+          },
+        ], // rawConfig
         [{ id: 'w1', tenantId, channelId, webhookUrl: 'https://webhook' }], // rawWebhook
-        [{ id: 't1', tenantId, channelId, templateName: 'temp', templateType: 'TEXT', templateContent: 'Hi', isActive: true }], // rawTemplates
-        [{ id: 'r1', tenantId, channelId, providerLimit: 10, tenantLimit: 5, currentUsage: 0, resetAt: new Date() }] // rawRateLimit
+        [
+          {
+            id: 't1',
+            tenantId,
+            channelId,
+            templateName: 'temp',
+            templateType: 'TEXT',
+            templateContent: 'Hi',
+            isActive: true,
+          },
+        ], // rawTemplates
+        [
+          {
+            id: 'r1',
+            tenantId,
+            channelId,
+            providerLimit: 10,
+            tenantLimit: 5,
+            currentUsage: 0,
+            resetAt: new Date(),
+          },
+        ], // rawRateLimit
       );
 
       const result = await repo.findById(channelId, tenantId);
@@ -87,7 +157,16 @@ describe('Channel Drizzle Repository', () => {
     it('should find channel by name', async () => {
       mockResults.push(
         [{ id: channelId }], // name query selects raw id
-        [{ id: channelId, tenantId, name: 'WA Meta', type: 'WHATSAPP', status: 'ACTIVE', provider: 'META' }] // findById query
+        [
+          {
+            id: channelId,
+            tenantId,
+            name: 'WA Meta',
+            type: 'WHATSAPP',
+            status: 'ACTIVE',
+            provider: 'META',
+          },
+        ], // findById query
       );
 
       const result = await repo.findByName('WA Meta', tenantId);
@@ -100,7 +179,16 @@ describe('Channel Drizzle Repository', () => {
     it('should findAll channels', async () => {
       mockResults.push(
         [{ id: channelId }], // findAll rows
-        [{ id: channelId, tenantId, name: 'WA Meta', type: 'WHATSAPP', status: 'ACTIVE', provider: 'META' }] // findById query
+        [
+          {
+            id: channelId,
+            tenantId,
+            name: 'WA Meta',
+            type: 'WHATSAPP',
+            status: 'ACTIVE',
+            provider: 'META',
+          },
+        ], // findById query
       );
 
       const result = await repo.findAll(tenantId);
@@ -111,7 +199,16 @@ describe('Channel Drizzle Repository', () => {
       mockResults.push(
         [{ id: channelId }], // findPaginated rows
         [{ count: 1 }], // count rows
-        [{ id: channelId, tenantId, name: 'WA Meta', type: 'WHATSAPP', status: 'ACTIVE', provider: 'META' }] // findById query
+        [
+          {
+            id: channelId,
+            tenantId,
+            name: 'WA Meta',
+            type: 'WHATSAPP',
+            status: 'ACTIVE',
+            provider: 'META',
+          },
+        ], // findById query
       );
 
       const result = await repo.findPaginated(tenantId, {
@@ -139,9 +236,23 @@ describe('Channel Drizzle Repository', () => {
         isDefault: false,
       });
 
-      const config = new ChannelConfiguration('c1', { tenantId, channelId, authenticationType: 'API_KEY', configuration: {}, credentials: {} });
-      const webhook = new ChannelWebhook('w1', { tenantId, channelId, webhookUrl: 'https://site' });
-      const rateLimit = new ChannelRateLimit('r1', { tenantId, channelId, resetAt: new Date() });
+      const config = new ChannelConfiguration('c1', {
+        tenantId,
+        channelId,
+        authenticationType: 'API_KEY',
+        configuration: {},
+        credentials: {},
+      });
+      const webhook = new ChannelWebhook('w1', {
+        tenantId,
+        channelId,
+        webhookUrl: 'https://site',
+      });
+      const rateLimit = new ChannelRateLimit('r1', {
+        tenantId,
+        channelId,
+        resetAt: new Date(),
+      });
 
       channel.setConfiguration(config);
       channel.setWebhook(webhook);
@@ -151,7 +262,7 @@ describe('Channel Drizzle Repository', () => {
         [], // select channel -> insert
         [], // select config -> insert
         [], // select webhook -> insert
-        [] // select rateLimit -> insert
+        [], // select rateLimit -> insert
       );
 
       const saved = await repo.save(channel, tenantId);
@@ -170,14 +281,20 @@ describe('Channel Drizzle Repository', () => {
         isActive: true,
         isDefault: false,
       });
-      const config = new ChannelConfiguration('c1', { tenantId, channelId, authenticationType: 'API_KEY', configuration: {}, credentials: {} });
+      const config = new ChannelConfiguration('c1', {
+        tenantId,
+        channelId,
+        authenticationType: 'API_KEY',
+        configuration: {},
+        credentials: {},
+      });
       channel.setConfiguration(config);
 
       mockResults.push(
         [{ id: channelId }], // select channel -> found
-        [],                  // update channel (awaited)
-        [{ id: 'c1' }],      // select config -> found
-        []                   // update config (awaited)
+        [], // update channel (awaited)
+        [{ id: 'c1' }], // select config -> found
+        [], // update config (awaited)
       );
 
       await repo.save(channel, tenantId);
@@ -202,22 +319,59 @@ describe('Channel Drizzle Repository', () => {
     const templateName = 'welcome';
 
     it('should findTemplatesByChannelId and findTemplateByName', async () => {
-      mockResults.push([{ id: 't1', tenantId, channelId, templateName, templateType: 'TEXT', templateContent: 'Hi', isActive: true }]);
-      const templates = await repo.findTemplatesByChannelId(channelId, tenantId);
+      mockResults.push([
+        {
+          id: 't1',
+          tenantId,
+          channelId,
+          templateName,
+          templateType: 'TEXT',
+          templateContent: 'Hi',
+          isActive: true,
+        },
+      ]);
+      const templates = await repo.findTemplatesByChannelId(
+        channelId,
+        tenantId,
+      );
       expect(templates.length).toBe(1);
 
-      mockResults.push([{ id: 't1', tenantId, channelId, templateName, templateType: 'TEXT', templateContent: 'Hi', isActive: true }]);
-      const template = await repo.findTemplateByName(channelId, templateName, tenantId);
+      mockResults.push([
+        {
+          id: 't1',
+          tenantId,
+          channelId,
+          templateName,
+          templateType: 'TEXT',
+          templateContent: 'Hi',
+          isActive: true,
+        },
+      ]);
+      const template = await repo.findTemplateByName(
+        channelId,
+        templateName,
+        tenantId,
+      );
       expect(template?.templateName).toBe(templateName);
 
       // Template not found
       mockResults.push([]);
-      const nullTemplate = await repo.findTemplateByName(channelId, 'missing', tenantId);
+      const nullTemplate = await repo.findTemplateByName(
+        channelId,
+        'missing',
+        tenantId,
+      );
       expect(nullTemplate).toBeNull();
     });
 
     it('should save template (insert/update) and delete template', async () => {
-      const template = new ChannelTemplate('t1', { tenantId, channelId, templateName, templateType: 'TEXT', templateContent: 'Hi' });
+      const template = new ChannelTemplate('t1', {
+        tenantId,
+        channelId,
+        templateName,
+        templateType: 'TEXT',
+        templateContent: 'Hi',
+      });
 
       mockResults.push([]); // select empty -> insert
       await repo.saveTemplate(template, tenantId);
@@ -235,7 +389,18 @@ describe('Channel Drizzle Repository', () => {
   describe('Config, Webhook & Rate Limit operations', () => {
     it('should findConfigByChannelId, saveConfig (insert/update)', async () => {
       // findConfigByChannelId returning row
-      mockResults.push([{ id: 'c1', tenantId, channelId, authenticationType: 'API_KEY', configuration: {}, credentials: {}, settings: {}, healthStatus: 'HEALTHY' }]);
+      mockResults.push([
+        {
+          id: 'c1',
+          tenantId,
+          channelId,
+          authenticationType: 'API_KEY',
+          configuration: {},
+          credentials: {},
+          settings: {},
+          healthStatus: 'HEALTHY',
+        },
+      ]);
       const config = await repo.findConfigByChannelId(channelId, tenantId);
       expect(config?.id).toBe('c1');
 
@@ -246,7 +411,13 @@ describe('Channel Drizzle Repository', () => {
 
       // saveConfig (insert)
       mockResults.push([]); // select empty -> insert
-      const newConfig = new ChannelConfiguration('c2', { tenantId, channelId, authenticationType: 'API_KEY', configuration: {}, credentials: {} });
+      const newConfig = new ChannelConfiguration('c2', {
+        tenantId,
+        channelId,
+        authenticationType: 'API_KEY',
+        configuration: {},
+        credentials: {},
+      });
       await repo.saveConfig(newConfig, tenantId);
       expect(db.insert).toHaveBeenCalled();
 
@@ -258,18 +429,35 @@ describe('Channel Drizzle Repository', () => {
 
     it('should findWebhookByChannelId, saveWebhook (insert/update)', async () => {
       // findWebhookByChannelId returning row
-      mockResults.push([{ id: 'w1', tenantId, channelId, webhookUrl: 'https://site', webhookSecret: 'sec', verificationToken: 'tok', status: 'ACTIVE' }]);
+      mockResults.push([
+        {
+          id: 'w1',
+          tenantId,
+          channelId,
+          webhookUrl: 'https://site',
+          webhookSecret: 'sec',
+          verificationToken: 'tok',
+          status: 'ACTIVE',
+        },
+      ]);
       const webhook = await repo.findWebhookByChannelId(channelId, tenantId);
       expect(webhook?.id).toBe('w1');
 
       // findWebhookByChannelId returning empty
       mockResults.push([]);
-      const emptyWebhook = await repo.findWebhookByChannelId(channelId, tenantId);
+      const emptyWebhook = await repo.findWebhookByChannelId(
+        channelId,
+        tenantId,
+      );
       expect(emptyWebhook).toBeNull();
 
       // saveWebhook (insert)
       mockResults.push([]); // select empty -> insert
-      const newWebhook = new ChannelWebhook('w2', { tenantId, channelId, webhookUrl: 'https://site' });
+      const newWebhook = new ChannelWebhook('w2', {
+        tenantId,
+        channelId,
+        webhookUrl: 'https://site',
+      });
       await repo.saveWebhook(newWebhook, tenantId);
       expect(db.insert).toHaveBeenCalled();
 
@@ -281,18 +469,38 @@ describe('Channel Drizzle Repository', () => {
 
     it('should findRateLimitByChannelId, saveRateLimit (insert/update)', async () => {
       // findRateLimitByChannelId returning row
-      mockResults.push([{ id: 'r1', tenantId, channelId, providerLimit: 10, tenantLimit: 5, currentUsage: 0, resetAt: new Date() }]);
-      const rateLimit = await repo.findRateLimitByChannelId(channelId, tenantId);
+      mockResults.push([
+        {
+          id: 'r1',
+          tenantId,
+          channelId,
+          providerLimit: 10,
+          tenantLimit: 5,
+          currentUsage: 0,
+          resetAt: new Date(),
+        },
+      ]);
+      const rateLimit = await repo.findRateLimitByChannelId(
+        channelId,
+        tenantId,
+      );
       expect(rateLimit?.id).toBe('r1');
 
       // findRateLimitByChannelId returning empty
       mockResults.push([]);
-      const emptyRateLimit = await repo.findRateLimitByChannelId(channelId, tenantId);
+      const emptyRateLimit = await repo.findRateLimitByChannelId(
+        channelId,
+        tenantId,
+      );
       expect(emptyRateLimit).toBeNull();
 
       // saveRateLimit (insert)
       mockResults.push([]); // select empty -> insert
-      const newRateLimit = new ChannelRateLimit('r2', { tenantId, channelId, resetAt: new Date() });
+      const newRateLimit = new ChannelRateLimit('r2', {
+        tenantId,
+        channelId,
+        resetAt: new Date(),
+      });
       await repo.saveRateLimit(newRateLimit, tenantId);
       expect(db.insert).toHaveBeenCalled();
 

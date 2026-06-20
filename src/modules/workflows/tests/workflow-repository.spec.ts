@@ -46,16 +46,46 @@ jest.mock('@easydev/database', () => {
       transaction: jest.fn((cb) => cb(queryBuilder)),
     },
     schema: {
-      workflowTemplates: { id: 'workflowTemplates.id', tenantId: 'workflowTemplates.tenantId' },
-      workflowVersions: { id: 'workflowVersions.id', tenantId: 'workflowVersions.tenantId' },
-      workflowExecutions: { id: 'workflowExecutions.id', tenantId: 'workflowExecutions.tenantId' },
-      workflowTriggers: { id: 'workflowTriggers.id', tenantId: 'workflowTriggers.tenantId' },
-      workflowConditions: { id: 'workflowConditions.id', tenantId: 'workflowConditions.tenantId' },
-      workflowActions: { id: 'workflowActions.id', tenantId: 'workflowActions.tenantId' },
-      workflowApprovals: { id: 'workflowApprovals.id', tenantId: 'workflowApprovals.tenantId' },
-      workflowSchedules: { id: 'workflowSchedules.id', tenantId: 'workflowSchedules.tenantId' },
-      workflowAuditLogs: { id: 'workflowAuditLogs.id', tenantId: 'workflowAuditLogs.tenantId' },
-      workflowVariables: { id: 'workflowVariables.id', tenantId: 'workflowVariables.tenantId' },
+      workflowTemplates: {
+        id: 'workflowTemplates.id',
+        tenantId: 'workflowTemplates.tenantId',
+      },
+      workflowVersions: {
+        id: 'workflowVersions.id',
+        tenantId: 'workflowVersions.tenantId',
+      },
+      workflowExecutions: {
+        id: 'workflowExecutions.id',
+        tenantId: 'workflowExecutions.tenantId',
+      },
+      workflowTriggers: {
+        id: 'workflowTriggers.id',
+        tenantId: 'workflowTriggers.tenantId',
+      },
+      workflowConditions: {
+        id: 'workflowConditions.id',
+        tenantId: 'workflowConditions.tenantId',
+      },
+      workflowActions: {
+        id: 'workflowActions.id',
+        tenantId: 'workflowActions.tenantId',
+      },
+      workflowApprovals: {
+        id: 'workflowApprovals.id',
+        tenantId: 'workflowApprovals.tenantId',
+      },
+      workflowSchedules: {
+        id: 'workflowSchedules.id',
+        tenantId: 'workflowSchedules.tenantId',
+      },
+      workflowAuditLogs: {
+        id: 'workflowAuditLogs.id',
+        tenantId: 'workflowAuditLogs.tenantId',
+      },
+      workflowVariables: {
+        id: 'workflowVariables.id',
+        tenantId: 'workflowVariables.tenantId',
+      },
     },
   };
 });
@@ -122,14 +152,16 @@ describe('Workflow Orchestration Drizzle Repository', () => {
 
     it('should retrieve a template by ID', async () => {
       // Mock db queries to return template and relation rows
-      mockResults.push([{
-        id: workflowId,
-        tenantId,
-        name: 'VIP Escalation',
-        workflowType: 'ESCALATION_WORKFLOW',
-        status: 'ACTIVE',
-        isSystem: true,
-      }]);
+      mockResults.push([
+        {
+          id: workflowId,
+          tenantId,
+          name: 'VIP Escalation',
+          workflowType: 'ESCALATION_WORKFLOW',
+          status: 'ACTIVE',
+          isSystem: true,
+        },
+      ]);
       mockResults.push([]); // triggers
       mockResults.push([]); // conditions
       mockResults.push([]); // actions
@@ -166,14 +198,16 @@ describe('Workflow Orchestration Drizzle Repository', () => {
       expect(saved.id).toBe(executionId);
 
       // retrieve mock
-      mockResults.push([{
-        id: executionId,
-        tenantId,
-        workflowId,
-        executionStatus: 'ACTIVE',
-        triggerSource: 'MANUAL',
-        context: { amount: 200 },
-      }]);
+      mockResults.push([
+        {
+          id: executionId,
+          tenantId,
+          workflowId,
+          executionStatus: 'ACTIVE',
+          triggerSource: 'MANUAL',
+          context: { amount: 200 },
+        },
+      ]);
       mockResults.push([]); // approvals
 
       const retrieved = await repo.getExecutionById(executionId, tenantId);
@@ -197,13 +231,15 @@ describe('Workflow Orchestration Drizzle Repository', () => {
       expect(saved.id).toBe(approvalId);
 
       // find approvals by execution ID mock
-      mockResults.push([{
-        id: approvalId,
-        tenantId,
-        workflowExecutionId: executionId,
-        approverId: 'user-manager-1',
-        approvalStatus: 'PENDING',
-      }]);
+      mockResults.push([
+        {
+          id: approvalId,
+          tenantId,
+          workflowExecutionId: executionId,
+          approverId: 'user-manager-1',
+          approvalStatus: 'PENDING',
+        },
+      ]);
 
       const list = await repo.findApprovalsByExecutionId(executionId, tenantId);
       expect(list.length).toBe(1);
@@ -227,14 +263,16 @@ describe('Workflow Orchestration Drizzle Repository', () => {
       expect(saved.id).toBe(scheduleId);
 
       // get schedule by id mock
-      mockResults.push([{
-        id: scheduleId,
-        tenantId,
-        workflowId,
-        cronExpression: '0 9 * * 1-5',
-        timezone: 'America/New_York',
-        isActive: true,
-      }]);
+      mockResults.push([
+        {
+          id: scheduleId,
+          tenantId,
+          workflowId,
+          cronExpression: '0 9 * * 1-5',
+          timezone: 'America/New_York',
+          isActive: true,
+        },
+      ]);
 
       const retrieved = await repo.getScheduleById(scheduleId, tenantId);
       expect(retrieved).toBeDefined();

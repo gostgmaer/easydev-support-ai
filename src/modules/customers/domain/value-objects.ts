@@ -58,7 +58,7 @@ export class CustomerPhone extends ValueObject<{ value: string }> {
 export enum CustomerStatusEnum {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
-  MERGED = 'MERGED'
+  MERGED = 'MERGED',
 }
 
 export class CustomerStatus extends ValueObject<{ value: CustomerStatusEnum }> {

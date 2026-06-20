@@ -24,17 +24,31 @@ export class KnowledgeQueueProcessor extends BaseWorker {
 
     switch (job.name) {
       case 'knowledge-ingestion-job':
-        this.logger.log(`Processing knowledge-ingestion-job ${job.id} for document ${job.data.documentId}`);
+        this.logger.log(
+          `Processing knowledge-ingestion-job ${job.id} for document ${job.data.documentId}`,
+        );
         return this.syncService.triggerIngestion(tenantId, job.data.documentId);
 
       case 'knowledge-sync-job':
-        this.logger.log(`Processing knowledge-sync-job ${job.id} for source ${job.data.sourceId}`);
+        this.logger.log(
+          `Processing knowledge-sync-job ${job.id} for source ${job.data.sourceId}`,
+        );
         // Background sync source (which can kick off crawls or imports)
-        return this.syncService.processCrawlJob(tenantId, job.data.sourceId, job.data.jobId);
+        return this.syncService.processCrawlJob(
+          tenantId,
+          job.data.sourceId,
+          job.data.jobId,
+        );
 
       case 'knowledge-crawl-job':
-        this.logger.log(`Processing knowledge-crawl-job ${job.id} for source ${job.data.sourceId}`);
-        return this.syncService.processCrawlJob(tenantId, job.data.sourceId, job.data.jobId);
+        this.logger.log(
+          `Processing knowledge-crawl-job ${job.id} for source ${job.data.sourceId}`,
+        );
+        return this.syncService.processCrawlJob(
+          tenantId,
+          job.data.sourceId,
+          job.data.jobId,
+        );
 
       case 'knowledge-index-job':
         this.logger.log(`Processing knowledge-index-job ${job.id}`);

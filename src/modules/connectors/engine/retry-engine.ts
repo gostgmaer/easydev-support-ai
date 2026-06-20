@@ -23,9 +23,16 @@ export class RetryEngine {
     );
 
     try {
-      return await this.executionEngine.execute(tenantId, capabilityType, params, options);
+      return await this.executionEngine.execute(
+        tenantId,
+        capabilityType,
+        params,
+        options,
+      );
     } catch (error: any) {
-      this.logger.error(`Retry attempt ${options.attempt} failed: ${error.message}`);
+      this.logger.error(
+        `Retry attempt ${options.attempt} failed: ${error.message}`,
+      );
       throw error; // Re-throw to fail the BullMQ job or let it exhaust
     }
   }

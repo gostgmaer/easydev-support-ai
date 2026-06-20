@@ -24,16 +24,34 @@ export class TeamMember extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get teamId(): string { return this.props.teamId; }
-  get agentProfileId(): string { return this.props.agentProfileId; }
-  get role(): string { return this.props.role; }
-  get joinedAt(): Date { return this.props.joinedAt!; }
-  get isPrimary(): boolean { return this.props.isPrimary; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get teamId(): string {
+    return this.props.teamId;
+  }
+  get agentProfileId(): string {
+    return this.props.agentProfileId;
+  }
+  get role(): string {
+    return this.props.role;
+  }
+  get joinedAt(): Date {
+    return this.props.joinedAt!;
+  }
+  get isPrimary(): boolean {
+    return this.props.isPrimary;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
-  public update(props: Partial<Pick<TeamMemberProps, 'role' | 'isPrimary'>>): void {
+  public update(
+    props: Partial<Pick<TeamMemberProps, 'role' | 'isPrimary'>>,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

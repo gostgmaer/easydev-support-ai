@@ -30,19 +30,45 @@ export class ChannelConfiguration extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get channelId(): string { return this.props.channelId; }
-  get authenticationType(): string { return this.props.authenticationType; }
-  get configuration(): Record<string, any> { return this.props.configuration; }
-  get credentials(): Record<string, any> { return this.props.credentials; }
-  get settings(): Record<string, any> { return this.props.settings || {}; }
-  get healthStatus(): string { return this.props.healthStatus || 'UNKNOWN'; }
-  get lastHealthCheck(): Date { return this.props.lastHealthCheck!; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get channelId(): string {
+    return this.props.channelId;
+  }
+  get authenticationType(): string {
+    return this.props.authenticationType;
+  }
+  get configuration(): Record<string, any> {
+    return this.props.configuration;
+  }
+  get credentials(): Record<string, any> {
+    return this.props.credentials;
+  }
+  get settings(): Record<string, any> {
+    return this.props.settings || {};
+  }
+  get healthStatus(): string {
+    return this.props.healthStatus || 'UNKNOWN';
+  }
+  get lastHealthCheck(): Date {
+    return this.props.lastHealthCheck!;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
-  public update(props: Partial<Omit<ChannelConfigurationProps, 'tenantId' | 'channelId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<
+      Omit<ChannelConfigurationProps, 'tenantId' | 'channelId' | 'createdAt'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

@@ -11,8 +11,8 @@ export class CustomerTimelineService {
       .where(
         and(
           eq(schema.auditLogs.tenantId, tenantId),
-          ilike(schema.auditLogs.details, `%${customerId}%`)
-        )
+          ilike(schema.auditLogs.details, `%${customerId}%`),
+        ),
       )
       .orderBy(desc(schema.auditLogs.createdAt))
       .limit(50);

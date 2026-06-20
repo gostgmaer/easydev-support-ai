@@ -8,7 +8,12 @@ import {
   UseInterceptors,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { InboxService } from '../services/inbox.service';
 import { InboxQueryDto } from '../dtos';
 import type { InboxQueryOptions } from '../repositories/conversation-repository.interface';
@@ -19,7 +24,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Inbox')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/inbox')
@@ -29,14 +38,20 @@ export class InboxController {
   @Get()
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Unified inbox listing (read model, cached)' })
-  async list(@Headers('x-tenant-id') tenantId: string, @Query() query: InboxQueryDto) {
+  async list(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: InboxQueryDto,
+  ) {
     return this.inboxService.listInbox(tenantId, query as InboxQueryOptions);
   }
 
   @Get('unread')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Unread conversation count for the current view' })
-  async unread(@Headers('x-tenant-id') tenantId: string, @Query() query: InboxQueryDto) {
+  async unread(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: InboxQueryDto,
+  ) {
     return this.inboxService.unreadCount(tenantId, query as InboxQueryOptions);
   }
 
@@ -49,13 +64,20 @@ export class InboxController {
     @Req() req: any,
   ) {
     const agentProfileId = req.user?.agentProfileId || req.user?.id;
-    return this.inboxService.myConversations(tenantId, agentProfileId, query as InboxQueryOptions);
+    return this.inboxService.myConversations(
+      tenantId,
+      agentProfileId,
+      query as InboxQueryOptions,
+    );
   }
 
   @Get('unassigned')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Unassigned conversations queue' })
-  async unassigned(@Headers('x-tenant-id') tenantId: string, @Query() query: InboxQueryDto) {
+  async unassigned(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: InboxQueryDto,
+  ) {
     return this.inboxService.unassigned(tenantId, query as InboxQueryOptions);
   }
 
@@ -67,7 +89,11 @@ export class InboxController {
     @Param('teamId') teamId: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.teamConversations(tenantId, teamId, query as InboxQueryOptions);
+    return this.inboxService.teamConversations(
+      tenantId,
+      teamId,
+      query as InboxQueryOptions,
+    );
   }
 
   @Get('priority/:priority')
@@ -78,6 +104,10 @@ export class InboxController {
     @Param('priority') priority: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.priorityView(tenantId, priority, query as InboxQueryOptions);
+    return this.inboxService.priorityView(
+      tenantId,
+      priority,
+      query as InboxQueryOptions,
+    );
   }
 }

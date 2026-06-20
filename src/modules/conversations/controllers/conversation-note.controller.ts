@@ -9,7 +9,12 @@ import {
   UseInterceptors,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ConversationNoteService } from '../services/conversation-note.service';
 import { AddNoteDto, MentionUserDto } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -19,7 +24,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Conversation Notes')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/conversations/:conversationId/notes')
@@ -35,14 +44,22 @@ export class ConversationNoteController {
     @Body() dto: AddNoteDto,
     @Req() req: any,
   ) {
-    const note = await this.noteService.addNote(tenantId, conversationId, dto, req.user?.id);
+    const note = await this.noteService.addNote(
+      tenantId,
+      conversationId,
+      dto,
+      req.user?.id,
+    );
     return note.toJSON();
   }
 
   @Get()
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'List internal notes for a conversation' })
-  async list(@Headers('x-tenant-id') tenantId: string, @Param('conversationId') conversationId: string) {
+  async list(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
     const notes = await this.noteService.listNotes(tenantId, conversationId);
     return notes.map((n) => n.toJSON());
   }
@@ -56,15 +73,26 @@ export class ConversationNoteController {
     @Body() dto: MentionUserDto,
     @Req() req: any,
   ) {
-    const mention = await this.noteService.mention(tenantId, conversationId, dto, req.user?.id);
+    const mention = await this.noteService.mention(
+      tenantId,
+      conversationId,
+      dto,
+      req.user?.id,
+    );
     return mention.toJSON();
   }
 
   @Get('mentions')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'List mentions for a conversation' })
-  async listMentions(@Headers('x-tenant-id') tenantId: string, @Param('conversationId') conversationId: string) {
-    const mentions = await this.noteService.listMentions(tenantId, conversationId);
+  async listMentions(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
+    const mentions = await this.noteService.listMentions(
+      tenantId,
+      conversationId,
+    );
     return mentions.map((m) => m.toJSON());
   }
 }

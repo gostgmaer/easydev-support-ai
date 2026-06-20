@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import type { IChannelRepository } from '../repositories/channel-repository.interface';
 import { ChannelConnectorRegistry } from '../connectors/channel-connector.registry';
 import { ChannelEventPublisher } from './channel-event.publisher';
@@ -23,15 +29,23 @@ export class ChannelMessageService {
     private readonly connectorRegistry: ChannelConnectorRegistry,
     private readonly eventPublisher: ChannelEventPublisher,
     private readonly queueService: QueueService,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
   ) {}
 
-  async processIncomingWebhook(tenantId: string, channelId: string, payload: any, headers: Record<string, any>): Promise<void> {
+  async processIncomingWebhook(
+    tenantId: string,
+    channelId: string,
+    payload: any,
+    headers: Record<string, any>,
+  ): Promise<void> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
 
     // 1. Rate Limiting Check
-    let rateLimit = await this.channelRepo.findRateLimitByChannelId(channelId, tenantId);
+    let rateLimit = await this.channelRepo.findRateLimitByChannelId(
+      channelId,
+      tenantId,
+    );
     if (!rateLimit) {
       rateLimit = new ChannelRateLimit(randomUUID(), {
         tenantId,
@@ -51,22 +65,40 @@ export class ChannelMessageService {
 
     // 2. Normalization
     const connector = this.connectorRegistry.getConnector(channel.type.value);
-    const normalized = await connector.normalizeMessage(tenantId, channelId, payload);
+    const normalized = await connector.normalizeMessage(
+      tenantId,
+      channelId,
+      payload,
+    );
 
     // 3. Spam Detection Hook (Basic spam check structure based on content metadata)
     const isSpam = this.checkForSpam(normalized.content);
     if (isSpam) {
-      this.logger.warn(`Spam message detected for channel ${channelId}: ${normalized.content}`);
+      this.logger.warn(
+        `Spam message detected for channel ${channelId}: ${normalized.content}`,
+      );
       return; // Drop message silently or flag it
     }
 
     // 4. Publish Event
     const messageId = normalized.externalMessageId || randomUUID();
     await this.eventPublisher.publish(
-      new MessageReceivedEvent(tenantId, messageId, randomUUID(), normalized.content, 'CUSTOMER')
+      new MessageReceivedEvent(
+        tenantId,
+        messageId,
+        randomUUID(),
+        normalized.content,
+        'CUSTOMER',
+      ),
     );
     await this.eventPublisher.publish(
-      new MessageNormalizedEvent(tenantId, messageId, channelId, payload, normalized)
+      new MessageNormalizedEvent(
+        tenantId,
+        messageId,
+        channelId,
+        payload,
+        normalized,
+      ),
     );
 
     // 5. Audit Logging
@@ -82,7 +114,7 @@ export class ChannelMessageService {
     channelId: string,
     recipientId: string,
     content: any,
-    options?: { templateName?: string; variables?: Record<string, any> }
+    options?: { templateName?: string; variables?: Record<string, any> },
   ): Promise<void> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
@@ -91,23 +123,28 @@ export class ChannelMessageService {
 
     // Resolve template if requested
     if (options?.templateName) {
-      const template = await this.channelRepo.findTemplateByName(channelId, options.templateName, tenantId);
+      const template = await this.channelRepo.findTemplateByName(
+        channelId,
+        options.templateName,
+        tenantId,
+      );
       if (!template) {
-        throw new NotFoundException(`Template ${options.templateName} not found`);
+        throw new NotFoundException(
+          `Template ${options.templateName} not found`,
+        );
       }
-      finalContent = this.resolveTemplateContent(template.templateContent, options.variables || {});
+      finalContent = this.resolveTemplateContent(
+        template.templateContent,
+        options.variables || {},
+      );
     }
 
     // Push to outgoing queue
-    await this.queueService.addJob(
-      'channel-queue',
-      'outgoing-message-job',
-      {
-        channelId,
-        recipientId,
-        content: finalContent,
-      }
-    );
+    await this.queueService.addJob('channel-queue', 'outgoing-message-job', {
+      channelId,
+      recipientId,
+      content: finalContent,
+    });
 
     await this.auditService.log({
       tenantId,
@@ -116,19 +153,39 @@ export class ChannelMessageService {
     });
   }
 
-  async deliverOutgoingMessage(tenantId: string, channelId: string, recipientId: string, content: any): Promise<void> {
+  async deliverOutgoingMessage(
+    tenantId: string,
+    channelId: string,
+    recipientId: string,
+    content: any,
+  ): Promise<void> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
 
     const connector = this.connectorRegistry.getConnector(channel.type.value);
 
     try {
-      const formatted = await connector.formatOutgoingMessage(tenantId, channelId, content);
-      const deliveryResult = await connector.sendMessage(tenantId, channelId, recipientId, formatted);
+      const formatted = await connector.formatOutgoingMessage(
+        tenantId,
+        channelId,
+        content,
+      );
+      const deliveryResult = await connector.sendMessage(
+        tenantId,
+        channelId,
+        recipientId,
+        formatted,
+      );
 
       if (deliveryResult.status === 'SENT') {
         await this.eventPublisher.publish(
-          new MessageSentEvent(tenantId, deliveryResult.messageId, randomUUID(), typeof content === 'string' ? content : JSON.stringify(content), recipientId)
+          new MessageSentEvent(
+            tenantId,
+            deliveryResult.messageId,
+            randomUUID(),
+            typeof content === 'string' ? content : JSON.stringify(content),
+            recipientId,
+          ),
         );
       } else {
         throw new Error(deliveryResult.error || 'Delivery failed');
@@ -136,7 +193,7 @@ export class ChannelMessageService {
     } catch (err: any) {
       const messageId = randomUUID();
       await this.eventPublisher.publish(
-        new MessageFailedEvent(tenantId, messageId, channelId, err.message)
+        new MessageFailedEvent(tenantId, messageId, channelId, err.message),
       );
       throw err; // propagates to queue processor for retries/DLQ
     }
@@ -145,14 +202,25 @@ export class ChannelMessageService {
   private checkForSpam(content: string): boolean {
     // Basic spam detector: check for common trigger patterns or links
     if (!content) return false;
-    const spamWords = ['buy crypto', 'win free ticket', 'lottery winner', 'casino bonus'];
+    const spamWords = [
+      'buy crypto',
+      'win free ticket',
+      'lottery winner',
+      'casino bonus',
+    ];
     return spamWords.some((word) => content.toLowerCase().includes(word));
   }
 
-  private resolveTemplateContent(content: string, variables: Record<string, any>): string {
+  private resolveTemplateContent(
+    content: string,
+    variables: Record<string, any>,
+  ): string {
     let resolved = content;
     for (const [key, val] of Object.entries(variables)) {
-      resolved = resolved.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(val));
+      resolved = resolved.replace(
+        new RegExp(`\\{\\{${key}\\}\\}`, 'g'),
+        String(val),
+      );
     }
     return resolved;
   }

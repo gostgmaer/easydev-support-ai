@@ -81,8 +81,10 @@ export interface ITicketRepository extends ITenantRepository<Ticket, string> {
   findApprovals(tenantId: string, ticketId: string): Promise<TicketApproval[]>;
 }
 
-export interface ITicketCategoryRepository
-  extends ITenantRepository<TicketCategoryDefinition, string> {
+export interface ITicketCategoryRepository extends ITenantRepository<
+  TicketCategoryDefinition,
+  string
+> {
   findByName(
     tenantId: string,
     name: string,

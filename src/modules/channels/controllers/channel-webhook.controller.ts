@@ -12,7 +12,12 @@ import {
   HttpCode,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ChannelWebhookService } from '../services/channel-webhook.service';
 import { ChannelWebhookDto } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -27,7 +32,11 @@ export class ChannelWebhookController {
 
   @Post()
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
@@ -36,34 +45,48 @@ export class ChannelWebhookController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('channelId') channelId: string,
     @Body() dto: ChannelWebhookDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const webhook = await this.webhookService.registerWebhook(tenantId, channelId, dto, req.user?.id);
+    const webhook = await this.webhookService.registerWebhook(
+      tenantId,
+      channelId,
+      dto,
+      req.user?.id,
+    );
     return webhook.toJSON();
   }
 
   @Get()
-  @ApiOperation({ summary: 'Verify webhook challenge token from external providers' })
+  @ApiOperation({
+    summary: 'Verify webhook challenge token from external providers',
+  })
   async verify(
     @Headers('x-tenant-id') tenantId: string,
     @Param('channelId') channelId: string,
-    @Query() query: Record<string, any>
+    @Query() query: Record<string, any>,
   ) {
     return this.webhookService.verifyWebhook(tenantId, channelId, query);
   }
 
   @Post('receive')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Receive incoming webhook triggers from channel providers' })
+  @ApiOperation({
+    summary: 'Receive incoming webhook triggers from channel providers',
+  })
   async receive(
     @Headers('x-tenant-id') tenantId: string,
     @Param('channelId') channelId: string,
     @Body() payload: any,
-    @Headers() headers: Record<string, any>
+    @Headers() headers: Record<string, any>,
   ) {
     // Note: We return 200 OK instantly to avoid provider timeouts,
     // and queue message validation & routing processes asynchronously.
-    await this.webhookService.handleIncomingWebhook(tenantId, channelId, payload, headers);
+    await this.webhookService.handleIncomingWebhook(
+      tenantId,
+      channelId,
+      payload,
+      headers,
+    );
     return { status: 'queued' };
   }
 }

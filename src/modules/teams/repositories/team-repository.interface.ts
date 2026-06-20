@@ -14,9 +14,16 @@ export interface TeamQueryOptions {
 
 export interface ITeamRepository extends ITenantRepository<Team, string> {
   findByName(name: string, tenantId: string): Promise<Team | null>;
-  findPaginated(tenantId: string, options: TeamQueryOptions): Promise<{ data: Team[]; total: number }>;
+  findPaginated(
+    tenantId: string,
+    options: TeamQueryOptions,
+  ): Promise<{ data: Team[]; total: number }>;
   addMember(member: TeamMember, tenantId: string): Promise<void>;
-  removeMember(teamId: string, agentProfileId: string, tenantId: string): Promise<void>;
+  removeMember(
+    teamId: string,
+    agentProfileId: string,
+    tenantId: string,
+  ): Promise<void>;
   findTeamMembers(teamId: string, tenantId: string): Promise<TeamMember[]>;
   saveRule(rule: AssignmentRule, tenantId: string): Promise<void>;
   findRules(teamId: string, tenantId: string): Promise<AssignmentRule[]>;

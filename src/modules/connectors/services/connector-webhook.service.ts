@@ -40,10 +40,19 @@ export class ConnectorWebhookService {
     headers: Record<string, string>,
     rawBody?: string,
   ): Promise<any> {
-    return this.webhookDispatcher.dispatch(tenantId, webhookId, payload, headers, rawBody);
+    return this.webhookDispatcher.dispatch(
+      tenantId,
+      webhookId,
+      payload,
+      headers,
+      rawBody,
+    );
   }
 
-  public async getWebhook(tenantId: string, webhookId: string): Promise<ConnectorWebhook> {
+  public async getWebhook(
+    tenantId: string,
+    webhookId: string,
+  ): Promise<ConnectorWebhook> {
     const webhook = await this.repository.getWebhook(tenantId, webhookId);
     if (!webhook) {
       throw new NotFoundException(`Webhook with ID ${webhookId} not found`);
@@ -51,11 +60,17 @@ export class ConnectorWebhookService {
     return webhook;
   }
 
-  public async getWebhooks(tenantId: string, connectorId: string): Promise<ConnectorWebhook[]> {
+  public async getWebhooks(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<ConnectorWebhook[]> {
     return this.repository.findWebhooks(tenantId, connectorId);
   }
 
-  public async deleteWebhook(tenantId: string, webhookId: string): Promise<boolean> {
+  public async deleteWebhook(
+    tenantId: string,
+    webhookId: string,
+  ): Promise<boolean> {
     return this.repository.deleteWebhook(tenantId, webhookId);
   }
 }

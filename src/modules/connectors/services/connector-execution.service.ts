@@ -1,5 +1,8 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import type { IConnectorRepository, ExecutionQueryOptions } from '../repositories/connector-repository.interface';
+import type {
+  IConnectorRepository,
+  ExecutionQueryOptions,
+} from '../repositories/connector-repository.interface';
 import { ExecutionEngine } from '../engine/execution-engine';
 import { CapabilityTypeEnum } from '../domain/value-objects';
 import { ConnectorExecution } from '../domain/connector-execution.entity';
@@ -25,16 +28,27 @@ export class ConnectorExecutionService {
   ): Promise<any> {
     // Check idempotency if key provided
     if (options.idempotencyKey) {
-      const existing = await this.repository.findExecutionByIdempotency(tenantId, options.idempotencyKey);
+      const existing = await this.repository.findExecutionByIdempotency(
+        tenantId,
+        options.idempotencyKey,
+      );
       if (existing && existing.status === 'SUCCESS') {
         return existing.responsePayload;
       }
     }
 
-    return this.executionEngine.execute(tenantId, capabilityType, params, options);
+    return this.executionEngine.execute(
+      tenantId,
+      capabilityType,
+      params,
+      options,
+    );
   }
 
-  public async getExecution(tenantId: string, executionId: string): Promise<ConnectorExecution> {
+  public async getExecution(
+    tenantId: string,
+    executionId: string,
+  ): Promise<ConnectorExecution> {
     const execution = await this.repository.getExecution(tenantId, executionId);
     if (!execution) {
       throw new NotFoundException(`Execution with ID ${executionId} not found`);

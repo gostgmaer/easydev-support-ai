@@ -137,7 +137,11 @@ describe('TicketSLAService', () => {
       resolutionDueAt: new Date('2026-06-09T00:00:00.000Z'),
       breached: false,
     });
-    const ticket = buildTicket(tenantId, ticketId, new Date('2026-06-08T00:00:00.000Z'));
+    const ticket = buildTicket(
+      tenantId,
+      ticketId,
+      new Date('2026-06-08T00:00:00.000Z'),
+    );
     ticket.resolve('done');
     mockRepo.findDueSlas.mockResolvedValue([sla]);
     mockRepo.findById.mockResolvedValue(ticket);

@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
-import { CircuitBreaker, CircuitBreakerSnapshot, DEFAULT_CIRCUIT_OPTIONS } from '../domain/circuit-breaker';
+import {
+  CircuitBreaker,
+  CircuitBreakerSnapshot,
+  DEFAULT_CIRCUIT_OPTIONS,
+} from '../domain/circuit-breaker';
 
 @Injectable()
 export class CircuitBreakerManager implements OnModuleDestroy {
@@ -21,7 +25,9 @@ export class CircuitBreakerManager implements OnModuleDestroy {
     this.redis.on('error', (err) => {
       if (this.isRedisAvailable) {
         this.isRedisAvailable = false;
-        this.logger.warn(`Redis connection failed in CircuitBreakerManager: ${err.message}. Falling back to in-memory.`);
+        this.logger.warn(
+          `Redis connection failed in CircuitBreakerManager: ${err.message}. Falling back to in-memory.`,
+        );
       }
     });
 
@@ -38,7 +44,10 @@ export class CircuitBreakerManager implements OnModuleDestroy {
     return `connector:cb:${tenantId}:${connectorId}`;
   }
 
-  public async getBreaker(tenantId: string, connectorId: string): Promise<CircuitBreaker> {
+  public async getBreaker(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<CircuitBreaker> {
     const key = this.getCacheKey(tenantId, connectorId);
     let snapshot: CircuitBreakerSnapshot | undefined;
 
@@ -60,7 +69,11 @@ export class CircuitBreakerManager implements OnModuleDestroy {
     return new CircuitBreaker(DEFAULT_CIRCUIT_OPTIONS, snapshot);
   }
 
-  public async saveBreaker(tenantId: string, connectorId: string, breaker: CircuitBreaker): Promise<void> {
+  public async saveBreaker(
+    tenantId: string,
+    connectorId: string,
+    breaker: CircuitBreaker,
+  ): Promise<void> {
     const key = this.getCacheKey(tenantId, connectorId);
     const snapshot = breaker.snapshot();
 
@@ -70,7 +83,12 @@ export class CircuitBreakerManager implements OnModuleDestroy {
     if (this.isRedisAvailable) {
       try {
         // Cache circuit state for a week
-        await this.redis.set(key, JSON.stringify(snapshot), 'EX', 7 * 24 * 3600);
+        await this.redis.set(
+          key,
+          JSON.stringify(snapshot),
+          'EX',
+          7 * 24 * 3600,
+        );
       } catch (err: any) {
         this.logger.debug(`Failed to save CB state to Redis: ${err.message}`);
       }

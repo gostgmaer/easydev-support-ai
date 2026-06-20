@@ -2,7 +2,13 @@ import { DrizzleCustomerRepository } from './drizzle-customer.repository';
 import { DrizzleCustomerSegmentRepository } from './drizzle-customer-segment.repository';
 import { db } from '@easydev/database';
 import { Customer } from '../domain/customer.aggregate';
-import { CustomerEmail, CustomerStatus, CustomerStatusEnum, CustomerLanguage, CustomerTimezone } from '../domain/value-objects';
+import {
+  CustomerEmail,
+  CustomerStatus,
+  CustomerStatusEnum,
+  CustomerLanguage,
+  CustomerTimezone,
+} from '../domain/value-objects';
 import { randomUUID } from 'crypto';
 
 jest.mock('@easydev/database', () => {
@@ -35,14 +41,43 @@ jest.mock('@easydev/database', () => {
       update: updateMock,
       set: setMock,
       delete: deleteMock,
-      transaction: jest.fn((cb) => cb({ select: selectMock, from: fromMock, where: whereMock, insert: insertMock, values: valuesMock, update: updateMock, set: setMock })),
+      transaction: jest.fn((cb) =>
+        cb({
+          select: selectMock,
+          from: fromMock,
+          where: whereMock,
+          insert: insertMock,
+          values: valuesMock,
+          update: updateMock,
+          set: setMock,
+        }),
+      ),
     },
     schema: {
-      customers: { id: 'customers.id', tenantId: 'customers.tenant_id', email: 'customers.email', deletedAt: 'customers.deleted_at' },
-      customerProfiles: { customerId: 'customerProfiles.customer_id', tenantId: 'customerProfiles.tenant_id' },
-      customerMetrics: { customerId: 'customerMetrics.customer_id', tenantId: 'customerMetrics.tenant_id' },
-      customerSegments: { id: 'customerSegments.id', tenantId: 'customerSegments.tenant_id', segmentName: 'customerSegments.segment_name' },
-      customerSegmentMembers: { customerId: 'customerSegmentMembers.customer_id', segmentId: 'customerSegmentMembers.segment_id', tenantId: 'customerSegmentMembers.tenant_id' },
+      customers: {
+        id: 'customers.id',
+        tenantId: 'customers.tenant_id',
+        email: 'customers.email',
+        deletedAt: 'customers.deleted_at',
+      },
+      customerProfiles: {
+        customerId: 'customerProfiles.customer_id',
+        tenantId: 'customerProfiles.tenant_id',
+      },
+      customerMetrics: {
+        customerId: 'customerMetrics.customer_id',
+        tenantId: 'customerMetrics.tenant_id',
+      },
+      customerSegments: {
+        id: 'customerSegments.id',
+        tenantId: 'customerSegments.tenant_id',
+        segmentName: 'customerSegments.segment_name',
+      },
+      customerSegmentMembers: {
+        customerId: 'customerSegmentMembers.customer_id',
+        segmentId: 'customerSegmentMembers.segment_id',
+        tenantId: 'customerSegmentMembers.tenant_id',
+      },
     },
   };
 });

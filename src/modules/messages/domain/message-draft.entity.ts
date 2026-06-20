@@ -49,7 +49,11 @@ export class MessageDraft extends Entity<string> {
     return this.props.updatedAt!;
   }
 
-  public update(draftContent: string, draftType?: string, expiresAt?: Date): void {
+  public update(
+    draftContent: string,
+    draftType?: string,
+    expiresAt?: Date,
+  ): void {
     this.props.draftContent = draftContent;
     if (draftType) this.props.draftType = draftType;
     if (expiresAt !== undefined) this.props.expiresAt = expiresAt;
@@ -57,7 +61,9 @@ export class MessageDraft extends Entity<string> {
   }
 
   public isExpired(at: Date = new Date()): boolean {
-    return !!this.props.expiresAt && this.props.expiresAt.getTime() <= at.getTime();
+    return (
+      !!this.props.expiresAt && this.props.expiresAt.getTime() <= at.getTime()
+    );
   }
 
   public toJSON() {

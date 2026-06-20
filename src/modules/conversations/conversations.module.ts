@@ -35,7 +35,13 @@ import { Attachment } from './entities/attachment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Conversation, Message, ConversationTag, ConversationNote, Attachment]),
+    TypeOrmModule.forFeature([
+      Conversation,
+      Message,
+      ConversationTag,
+      ConversationNote,
+      Attachment,
+    ]),
     CustomersModule,
     TeamsModule,
   ],

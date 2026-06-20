@@ -1,4 +1,15 @@
-import { IsString, IsOptional, IsEnum, IsBoolean, IsArray, IsNumber, IsObject, ValidateNested, IsDateString, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsArray,
+  IsNumber,
+  IsObject,
+  ValidateNested,
+  IsDateString,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import {
   WorkflowTypeEnum,

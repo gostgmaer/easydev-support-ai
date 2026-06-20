@@ -41,7 +41,10 @@ describe('AgentProfileService', () => {
       providers: [
         AgentProfileService,
         { provide: 'IAgentProfileRepository', useValue: mockProfileRepo },
-        { provide: 'IAgentAvailabilityRepository', useValue: mockAvailabilityRepo },
+        {
+          provide: 'IAgentAvailabilityRepository',
+          useValue: mockAvailabilityRepo,
+        },
         { provide: TeamEventPublisher, useValue: mockEventPublisher },
         { provide: AuditService, useValue: mockAuditService },
       ],
@@ -83,21 +86,25 @@ describe('AgentProfileService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'AGENT_CREATE',
-        })
+        }),
       );
     });
 
     it('should throw ConflictException if userId already exists', async () => {
       profileRepo.findByUserId.mockResolvedValue({ id: 'existing' });
 
-      await expect(service.create(tenantId, dto)).rejects.toThrow(ConflictException);
+      await expect(service.create(tenantId, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException if employeeCode already exists', async () => {
       profileRepo.findByUserId.mockResolvedValue(null);
       profileRepo.findByEmployeeCode.mockResolvedValue({ id: 'existing-code' });
 
-      await expect(service.create(tenantId, dto)).rejects.toThrow(ConflictException);
+      await expect(service.create(tenantId, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -111,7 +118,11 @@ describe('AgentProfileService', () => {
         userId: randomUUID(),
         displayName: 'John Old',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 3.0,
         timezone: 'UTC',
       });
@@ -136,7 +147,11 @@ describe('AgentProfileService', () => {
         userId: randomUUID(),
         displayName: 'John Old',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 3.0,
         timezone: 'UTC',
       });
@@ -154,7 +169,9 @@ describe('AgentProfileService', () => {
 
     it('should throw NotFoundException if profile does not exist', async () => {
       profileRepo.findById.mockResolvedValue(null);
-      await expect(service.update(tenantId, profileId, {})).rejects.toThrow(NotFoundException);
+      await expect(service.update(tenantId, profileId, {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -168,7 +185,11 @@ describe('AgentProfileService', () => {
         userId: randomUUID(),
         displayName: 'John Old',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 3.0,
         timezone: 'UTC',
       });
@@ -184,7 +205,11 @@ describe('AgentProfileService', () => {
         userId: randomUUID(),
         displayName: 'John Old',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 3.0,
         timezone: 'UTC',
       });
@@ -199,7 +224,9 @@ describe('AgentProfileService', () => {
 
     it('should throw NotFoundException on delete if profile not found', async () => {
       profileRepo.findById.mockResolvedValue(null);
-      await expect(service.delete(tenantId, profileId)).rejects.toThrow(NotFoundException);
+      await expect(service.delete(tenantId, profileId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

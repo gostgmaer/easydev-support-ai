@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsUUID, IsString, IsOptional, IsInt, IsNumber, IsArray, IsObject, IsEnum } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsOptional,
+  IsInt,
+  IsNumber,
+  IsArray,
+  IsObject,
+  IsEnum,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AgentProfileDto {

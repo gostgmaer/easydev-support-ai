@@ -278,8 +278,7 @@ export class Message extends AggregateRoot<string> {
   public addReaction(reaction: MessageReaction): void {
     if (
       this.props.reactions!.some(
-        (r) =>
-          r.userId === reaction.userId && r.reaction === reaction.reaction,
+        (r) => r.userId === reaction.userId && r.reaction === reaction.reaction,
       )
     ) {
       return;

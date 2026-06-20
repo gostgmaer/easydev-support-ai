@@ -1,6 +1,20 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsObject, IsArray, IsUrl, IsNumber, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsArray,
+  IsUrl,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { ConnectorTypeEnum, AuthTypeEnum, CapabilityTypeEnum } from '../domain/value-objects';
+import {
+  ConnectorTypeEnum,
+  AuthTypeEnum,
+  CapabilityTypeEnum,
+} from '../domain/value-objects';
 
 export class InstallConnectorDto {
   @IsString()

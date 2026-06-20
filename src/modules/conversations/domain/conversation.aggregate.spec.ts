@@ -37,13 +37,17 @@ describe('Conversation value objects', () => {
   });
 
   it('exposes priority weights for ordering', () => {
-    expect(ConversationPriority.create(ConversationPriorityEnum.CRITICAL).weight).toBeGreaterThan(
+    expect(
+      ConversationPriority.create(ConversationPriorityEnum.CRITICAL).weight,
+    ).toBeGreaterThan(
       ConversationPriority.create(ConversationPriorityEnum.LOW).weight,
     );
   });
 
   it('rejects invalid status values', () => {
-    expect(() => ConversationStatus.create('BOGUS' as ConversationStatusEnum)).toThrow();
+    expect(() =>
+      ConversationStatus.create('BOGUS' as ConversationStatusEnum),
+    ).toThrow();
   });
 });
 

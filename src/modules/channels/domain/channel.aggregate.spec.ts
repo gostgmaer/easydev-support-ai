@@ -25,7 +25,9 @@ describe('Channel Domain Model', () => {
 
     it('should validate ChannelType', () => {
       expect(() => ChannelType.create('UNKNOWN' as any)).toThrow();
-      expect(ChannelType.create(ChannelTypeEnum.WHATSAPP).value).toBe(ChannelTypeEnum.WHATSAPP);
+      expect(ChannelType.create(ChannelTypeEnum.WHATSAPP).value).toBe(
+        ChannelTypeEnum.WHATSAPP,
+      );
     });
 
     it('should validate ChannelProvider', () => {
@@ -35,12 +37,16 @@ describe('Channel Domain Model', () => {
 
     it('should validate WebhookSecret', () => {
       expect(() => WebhookSecret.create('short')).toThrow();
-      expect(WebhookSecret.create('very-long-secret-key-123').value).toBeDefined();
+      expect(
+        WebhookSecret.create('very-long-secret-key-123').value,
+      ).toBeDefined();
     });
 
     it('should validate ChannelStatus', () => {
       expect(() => ChannelStatus.create('UNKNOWN' as any)).toThrow();
-      expect(ChannelStatus.create(ChannelStatusEnum.ACTIVE).value).toBe(ChannelStatusEnum.ACTIVE);
+      expect(ChannelStatus.create(ChannelStatusEnum.ACTIVE).value).toBe(
+        ChannelStatusEnum.ACTIVE,
+      );
     });
   });
 
@@ -115,7 +121,9 @@ describe('Channel Domain Model', () => {
       expect(channel.id).toBe(channelId);
       expect(channel.name).toBe('WhatsApp Business');
       expect(channel.domainEvents.length).toBe(1);
-      expect((channel.domainEvents[0] as any).constructor.eventName).toBe('channel.created');
+      expect((channel.domainEvents[0] as any).constructor.eventName).toBe(
+        'channel.created',
+      );
     });
 
     it('should support enabling and disabling channel with events', () => {
@@ -133,13 +141,17 @@ describe('Channel Domain Model', () => {
       channel.disable();
       expect(channel.isActive).toBe(false);
       expect(channel.domainEvents.length).toBe(1);
-      expect((channel.domainEvents[0] as any).constructor.eventName).toBe('channel.disabled');
+      expect((channel.domainEvents[0] as any).constructor.eventName).toBe(
+        'channel.disabled',
+      );
 
       channel.clearEvents();
       channel.enable();
       expect(channel.isActive).toBe(true);
       expect(channel.domainEvents.length).toBe(1);
-      expect((channel.domainEvents[0] as any).constructor.eventName).toBe('channel.enabled');
+      expect((channel.domainEvents[0] as any).constructor.eventName).toBe(
+        'channel.enabled',
+      );
     });
 
     it('should manage templates array and metadata updates', () => {

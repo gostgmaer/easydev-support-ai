@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEnum, IsOptional, IsObject, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsObject,
+  IsBoolean,
+} from 'class-validator';
 
 export class CustomerSegmentDto {
   @ApiProperty({ example: 'High Value Customers' })

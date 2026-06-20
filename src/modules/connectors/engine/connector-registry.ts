@@ -10,7 +10,9 @@ export class ConnectorRegistry {
   private handlers = new Map<string, IConnectorHandler>();
 
   public register(connectorType: string, handler: IConnectorHandler): void {
-    this.logger.log(`Registering custom connector handler for type: ${connectorType}`);
+    this.logger.log(
+      `Registering custom connector handler for type: ${connectorType}`,
+    );
     this.handlers.set(connectorType, handler);
   }
 

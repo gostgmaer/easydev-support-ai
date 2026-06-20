@@ -20,7 +20,9 @@ export class AiRoutingService {
       direction?: string;
     } = {},
   ): Promise<AiAgent | null> {
-    this.logger.log(`Routing conversation for tenant ${tenantId} (category: ${options.category}, language: ${options.language})`);
+    this.logger.log(
+      `Routing conversation for tenant ${tenantId} (category: ${options.category}, language: ${options.language})`,
+    );
 
     const agents = await this.repository.findAgents(tenantId);
     if (agents.length === 0) {
@@ -33,7 +35,9 @@ export class AiRoutingService {
         (a) =>
           a.profile?.languageSupport &&
           Array.isArray(a.profile.languageSupport) &&
-          a.profile.languageSupport.some((l) => l.toLowerCase() === options.language?.toLowerCase()),
+          a.profile.languageSupport.some(
+            (l) => l.toLowerCase() === options.language?.toLowerCase(),
+          ),
       );
       if (matchedLang) return matchedLang;
     }
@@ -41,12 +45,17 @@ export class AiRoutingService {
     // Rule 2: Attempt to match category / agentType
     if (options.category) {
       const typeStr = options.category.toUpperCase();
-      const matchedType = agents.find((a) => a.agentType === typeStr || a.name.toUpperCase().includes(typeStr));
+      const matchedType = agents.find(
+        (a) =>
+          a.agentType === typeStr || a.name.toUpperCase().includes(typeStr),
+      );
       if (matchedType) return matchedType;
     }
 
     // Rule 3: Return default / Customer Support agent
-    const supportAgent = agents.find((a) => a.agentType === AgentTypeEnum.CUSTOMER_SUPPORT);
+    const supportAgent = agents.find(
+      (a) => a.agentType === AgentTypeEnum.CUSTOMER_SUPPORT,
+    );
     if (supportAgent) return supportAgent;
 
     // Fallback: return the first active agent

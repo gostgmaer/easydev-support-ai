@@ -25,17 +25,31 @@ describe('Team DDD Domain Model', () => {
 
     it('should validate assignment strategy type', () => {
       expect(() => AssignmentStrategy.create('UNKNOWN' as any)).toThrow();
-      expect(AssignmentStrategy.create(AssignmentStrategyEnum.ROUND_ROBIN).value).toBe(AssignmentStrategyEnum.ROUND_ROBIN);
+      expect(
+        AssignmentStrategy.create(AssignmentStrategyEnum.ROUND_ROBIN).value,
+      ).toBe(AssignmentStrategyEnum.ROUND_ROBIN);
     });
 
     it('should validate department length', () => {
       expect(() => Department.create('a'.repeat(150))).toThrow();
-      expect(Department.create('Customer Success').value).toBe('Customer Success');
+      expect(Department.create('Customer Success').value).toBe(
+        'Customer Success',
+      );
     });
 
     it('should validate capacity values', () => {
-      expect(() => AgentCapacity.create({ capacity: -1, maxConcurrentConversations: 5, maxOpenTickets: 20 })).toThrow();
-      const cap = AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 });
+      expect(() =>
+        AgentCapacity.create({
+          capacity: -1,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
+      ).toThrow();
+      const cap = AgentCapacity.create({
+        capacity: 10,
+        maxConcurrentConversations: 5,
+        maxOpenTickets: 20,
+      });
       expect(cap.capacity).toBe(10);
     });
   });
@@ -54,7 +68,9 @@ describe('Team DDD Domain Model', () => {
       expect(team.id).toBe(teamId);
       expect(team.name).toBe('Support Tier 1');
       expect(team.domainEvents.length).toBe(1);
-      expect((team.domainEvents[0] as any).constructor.eventName).toBe('team.created');
+      expect((team.domainEvents[0] as any).constructor.eventName).toBe(
+        'team.created',
+      );
     });
 
     it('should add team members and append agent.assigned event', () => {
@@ -81,7 +97,9 @@ describe('Team DDD Domain Model', () => {
 
       expect(team.members.length).toBe(1);
       expect(team.members[0].agentProfileId).toBe(agentProfileId);
-      expect((team.domainEvents[0] as any).constructor.eventName).toBe('agent.assigned');
+      expect((team.domainEvents[0] as any).constructor.eventName).toBe(
+        'agent.assigned',
+      );
     });
 
     it('should move team members and append agent.transferred event', () => {
@@ -108,7 +126,9 @@ describe('Team DDD Domain Model', () => {
       team.moveMember(agentProfileId, team.id, destinationTeamId);
 
       expect(team.members.length).toBe(0);
-      expect((team.domainEvents[0] as any).constructor.eventName).toBe('agent.transferred');
+      expect((team.domainEvents[0] as any).constructor.eventName).toBe(
+        'agent.transferred',
+      );
     });
 
     it('should archive team and append team.archived event', () => {
@@ -124,7 +144,9 @@ describe('Team DDD Domain Model', () => {
 
       expect(team.isActive).toBe(false);
       expect(team.deletedAt).toBeDefined();
-      expect((team.domainEvents[0] as any).constructor.eventName).toBe('team.archived');
+      expect((team.domainEvents[0] as any).constructor.eventName).toBe(
+        'team.archived',
+      );
     });
   });
 });

@@ -19,7 +19,10 @@ export class ConversationAssignmentService {
     private readonly auditService: AuditService,
   ) {}
 
-  private async persist(conversation: Conversation, tenantId: string): Promise<void> {
+  private async persist(
+    conversation: Conversation,
+    tenantId: string,
+  ): Promise<void> {
     await this.conversationRepo.save(conversation, tenantId);
     await this.summaryService.rebuild(tenantId, conversation.id);
     await this.eventPublisher.publishAll(conversation.domainEvents);
@@ -47,7 +50,10 @@ export class ConversationAssignmentService {
     );
   }
 
-  private async getOrThrow(tenantId: string, id: string): Promise<Conversation> {
+  private async getOrThrow(
+    tenantId: string,
+    id: string,
+  ): Promise<Conversation> {
     const conversation = await this.conversationRepo.findById(id, tenantId);
     if (!conversation) {
       throw new NotFoundException(`Conversation with ID ${id} not found`);
@@ -67,7 +73,14 @@ export class ConversationAssignmentService {
     conversation.assignAgent(agentProfileId, teamId, userId);
 
     await this.persist(conversation, tenantId);
-    await this.recordAssignment(tenantId, conversationId, agentProfileId, teamId, assignmentType, userId);
+    await this.recordAssignment(
+      tenantId,
+      conversationId,
+      agentProfileId,
+      teamId,
+      assignmentType,
+      userId,
+    );
 
     await this.auditService.log({
       tenantId,
@@ -84,7 +97,12 @@ export class ConversationAssignmentService {
    * (round-robin / least-loaded / skill-based / priority-based / fallback),
    * then binds the chosen agent to the conversation.
    */
-  async autoAssign(tenantId: string, conversationId: string, teamId: string, userId?: string): Promise<Conversation> {
+  async autoAssign(
+    tenantId: string,
+    conversationId: string,
+    teamId: string,
+    userId?: string,
+  ): Promise<Conversation> {
     const conversation = await this.getOrThrow(tenantId, conversationId);
 
     const agentProfileId = await this.agentAssignmentService.assignEntity(
@@ -95,15 +113,34 @@ export class ConversationAssignmentService {
       { priority: conversation.priority.weight },
     );
 
-    return this.assign(tenantId, conversationId, agentProfileId, teamId, 'AUTO', userId);
+    return this.assign(
+      tenantId,
+      conversationId,
+      agentProfileId,
+      teamId,
+      'AUTO',
+      userId,
+    );
   }
 
-  async transfer(tenantId: string, conversationId: string, toAgentProfileId: string, userId?: string): Promise<Conversation> {
+  async transfer(
+    tenantId: string,
+    conversationId: string,
+    toAgentProfileId: string,
+    userId?: string,
+  ): Promise<Conversation> {
     const conversation = await this.getOrThrow(tenantId, conversationId);
     conversation.transfer(toAgentProfileId, userId);
 
     await this.persist(conversation, tenantId);
-    await this.recordAssignment(tenantId, conversationId, toAgentProfileId, conversation.assignedTeamId, 'TRANSFER', userId);
+    await this.recordAssignment(
+      tenantId,
+      conversationId,
+      toAgentProfileId,
+      conversation.assignedTeamId,
+      'TRANSFER',
+      userId,
+    );
 
     await this.auditService.log({
       tenantId,

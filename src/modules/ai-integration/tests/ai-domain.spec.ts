@@ -45,7 +45,9 @@ describe('AI Integration Domain Model', () => {
     });
 
     it('should throw on empty WorkflowExecutionId', () => {
-      expect(() => WorkflowExecutionId.create('')).toThrow('WorkflowExecutionId cannot be empty');
+      expect(() => WorkflowExecutionId.create('')).toThrow(
+        'WorkflowExecutionId cannot be empty',
+      );
     });
 
     it('should create valid SessionId', () => {
@@ -63,8 +65,12 @@ describe('AI Integration Domain Model', () => {
     });
 
     it('should throw on invalid ConfidenceScore', () => {
-      expect(() => ConfidenceScore.create(-0.1)).toThrow('ConfidenceScore must be between 0.0 and 1.0');
-      expect(() => ConfidenceScore.create(1.1)).toThrow('ConfidenceScore must be between 0.0 and 1.0');
+      expect(() => ConfidenceScore.create(-0.1)).toThrow(
+        'ConfidenceScore must be between 0.0 and 1.0',
+      );
+      expect(() => ConfidenceScore.create(1.1)).toThrow(
+        'ConfidenceScore must be between 0.0 and 1.0',
+      );
     });
 
     it('should create valid TokenUsage', () => {
@@ -73,7 +79,9 @@ describe('AI Integration Domain Model', () => {
     });
 
     it('should throw on negative TokenUsage', () => {
-      expect(() => TokenUsage.create(-5)).toThrow('TokenUsage cannot be negative');
+      expect(() => TokenUsage.create(-5)).toThrow(
+        'TokenUsage cannot be negative',
+      );
     });
 
     it('should create valid CostValue', () => {
@@ -82,7 +90,9 @@ describe('AI Integration Domain Model', () => {
     });
 
     it('should throw on negative CostValue', () => {
-      expect(() => CostValue.create(-0.01)).toThrow('CostValue cannot be negative');
+      expect(() => CostValue.create(-0.01)).toThrow(
+        'CostValue cannot be negative',
+      );
     });
   });
 

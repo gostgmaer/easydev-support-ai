@@ -10,7 +10,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -65,7 +71,9 @@ export class AnalyticsReportController {
 
   @Get(':id')
   @Roles('tenant_admin', 'manager')
-  @ApiOperation({ summary: 'Get details of specific report definition and generated data' })
+  @ApiOperation({
+    summary: 'Get details of specific report definition and generated data',
+  })
   @ApiResponse({ status: 200, description: 'Report JSON details' })
   async getReport(
     @Headers('x-tenant-id') tenantId: string,
@@ -120,7 +128,10 @@ export class AnalyticsReportController {
     @Headers('x-tenant-id') tenantId: string,
     @Query('activeOnly') activeOnly?: boolean,
   ) {
-    const schedules = await this.scheduleService.findSchedules(tenantId, activeOnly);
+    const schedules = await this.scheduleService.findSchedules(
+      tenantId,
+      activeOnly,
+    );
     return schedules.map((s) => s.toJSON());
   }
 
@@ -145,7 +156,11 @@ export class AnalyticsReportController {
     @Param('id') id: string,
     @Body() dto: UpdateScheduleDto,
   ) {
-    const schedule = await this.scheduleService.updateSchedule(tenantId, id, dto);
+    const schedule = await this.scheduleService.updateSchedule(
+      tenantId,
+      id,
+      dto,
+    );
     return schedule.toJSON();
   }
 

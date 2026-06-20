@@ -16,10 +16,23 @@ export class WorkflowAuditService {
     details?: string,
     metadata?: any,
   ): Promise<void> {
-    await this.repository.logAudit({ workflowId, workflowExecutionId: executionId, action, details, metadata }, tenantId);
+    await this.repository.logAudit(
+      {
+        workflowId,
+        workflowExecutionId: executionId,
+        action,
+        details,
+        metadata,
+      },
+      tenantId,
+    );
   }
 
-  public async getAuditLogs(tenantId: string, workflowId?: string, executionId?: string): Promise<any[]> {
+  public async getAuditLogs(
+    tenantId: string,
+    workflowId?: string,
+    executionId?: string,
+  ): Promise<any[]> {
     return this.repository.findAuditLogs(tenantId, workflowId, executionId);
   }
 }

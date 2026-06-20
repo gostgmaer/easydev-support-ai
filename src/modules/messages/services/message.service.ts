@@ -284,7 +284,10 @@ export class MessageService {
   }
 
   async findPaginated(tenantId: string, query: MessageQueryDto) {
-    return this.messageRepo.findPaginated(tenantId, query as MessageQueryOptions);
+    return this.messageRepo.findPaginated(
+      tenantId,
+      query as MessageQueryOptions,
+    );
   }
 
   async findByConversation(

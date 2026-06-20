@@ -1,8 +1,18 @@
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import type { IChannelRepository } from '../repositories/channel-repository.interface';
 import { Channel } from '../domain/channel.aggregate';
 import { CreateChannelDto, UpdateChannelDto, ChannelQueryDto } from '../dtos';
-import { ChannelType, ChannelStatus, ChannelStatusEnum, ChannelProvider } from '../domain/value-objects';
+import {
+  ChannelType,
+  ChannelStatus,
+  ChannelStatusEnum,
+  ChannelProvider,
+} from '../domain/value-objects';
 import { randomUUID } from 'crypto';
 import { AuditService } from '../../audit/audit.service';
 import { ChannelEventPublisher } from './channel-event.publisher';
@@ -13,13 +23,19 @@ export class ChannelService {
     @Inject('IChannelRepository')
     private readonly channelRepo: IChannelRepository,
     private readonly eventPublisher: ChannelEventPublisher,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
   ) {}
 
-  async create(tenantId: string, dto: CreateChannelDto, userId?: string): Promise<Channel> {
+  async create(
+    tenantId: string,
+    dto: CreateChannelDto,
+    userId?: string,
+  ): Promise<Channel> {
     const existing = await this.channelRepo.findByName(dto.name, tenantId);
     if (existing) {
-      throw new ConflictException(`Channel with name ${dto.name} already exists`);
+      throw new ConflictException(
+        `Channel with name ${dto.name} already exists`,
+      );
     }
 
     const type = ChannelType.create(dto.type);
@@ -51,7 +67,12 @@ export class ChannelService {
     return saved;
   }
 
-  async update(tenantId: string, id: string, dto: UpdateChannelDto, userId?: string): Promise<Channel> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: UpdateChannelDto,
+    userId?: string,
+  ): Promise<Channel> {
     const channel = await this.channelRepo.findById(id, tenantId);
     if (!channel) {
       throw new NotFoundException(`Channel ${id} not found`);

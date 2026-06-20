@@ -1,11 +1,30 @@
-import { Controller, Get, Post, Put, Delete, Body, Headers, Param, Query, UseGuards, HttpCode, HttpStatus, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ForbiddenException,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { KnowledgeDocumentService } from '../services/knowledge-document.service';
 import { KnowledgePermissionService } from '../services/knowledge-permission.service';
 import { KnowledgeSyncService } from '../services/knowledge-sync.service';
-import { CreateDocumentDto, UpdateDocumentDto, PublishDocumentDto, AddPermissionDto } from '../dtos/knowledge.dto';
+import {
+  CreateDocumentDto,
+  UpdateDocumentDto,
+  PublishDocumentDto,
+  AddPermissionDto,
+} from '../dtos/knowledge.dto';
 
 @Controller('v1/knowledge-documents')
 @UseGuards(TenantGuard, RbacGuard)
@@ -35,7 +54,13 @@ export class KnowledgeDocumentController {
     @Headers('x-user-team-id') teamId?: string,
   ) {
     // Check permission
-    const hasAccess = await this.permissionService.checkAccess(tenantId, id, teamId, role, 'READ');
+    const hasAccess = await this.permissionService.checkAccess(
+      tenantId,
+      id,
+      teamId,
+      role,
+      'READ',
+    );
     if (!hasAccess) {
       throw new ForbiddenException('Access denied to this document');
     }
@@ -65,7 +90,13 @@ export class KnowledgeDocumentController {
     @Headers('x-user-role') role?: string,
     @Headers('x-user-team-id') teamId?: string,
   ) {
-    const hasAccess = await this.permissionService.checkAccess(tenantId, id, teamId, role, 'WRITE');
+    const hasAccess = await this.permissionService.checkAccess(
+      tenantId,
+      id,
+      teamId,
+      role,
+      'WRITE',
+    );
     if (!hasAccess) {
       throw new ForbiddenException('Access denied: Write permission required');
     }
@@ -82,7 +113,13 @@ export class KnowledgeDocumentController {
     @Headers('x-user-role') role?: string,
     @Headers('x-user-team-id') teamId?: string,
   ) {
-    const hasAccess = await this.permissionService.checkAccess(tenantId, id, teamId, role, 'MANAGE');
+    const hasAccess = await this.permissionService.checkAccess(
+      tenantId,
+      id,
+      teamId,
+      role,
+      'MANAGE',
+    );
     if (!hasAccess) {
       throw new ForbiddenException('Access denied: Manage permission required');
     }
@@ -97,7 +134,12 @@ export class KnowledgeDocumentController {
     @Body() dto: PublishDocumentDto,
     @Headers('x-user-id') userId: string,
   ) {
-    const doc = await this.documentService.publishDocument(tenantId, id, dto, userId);
+    const doc = await this.documentService.publishDocument(
+      tenantId,
+      id,
+      dto,
+      userId,
+    );
     return doc.toJSON();
   }
 
@@ -108,7 +150,11 @@ export class KnowledgeDocumentController {
     @Param('id') id: string,
     @Headers('x-user-id') userId: string,
   ) {
-    const doc = await this.documentService.archiveDocument(tenantId, id, userId);
+    const doc = await this.documentService.archiveDocument(
+      tenantId,
+      id,
+      userId,
+    );
     return doc.toJSON();
   }
 

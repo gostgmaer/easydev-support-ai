@@ -2520,3 +2520,237 @@ export const analyticsReportSchedules = supportAgentSchema.table(
   }),
 );
 
+// 91. Tenant Settings Table
+export const tenantSettings = supportAgentSchema.table(
+  'tenant_settings',
+  {
+    ...commonColumns,
+    tenantName: varchar('tenant_name', { length: 255 }).notNull(),
+    industry: varchar('industry', { length: 100 }),
+    timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
+    locale: varchar('locale', { length: 10 }).default('en').notNull(),
+    country: varchar('country', { length: 50 }),
+    currency: varchar('currency', { length: 10 }).default('USD').notNull(),
+    supportEmail: varchar('support_email', { length: 255 }),
+    supportPhone: varchar('support_phone', { length: 50 }),
+    websiteUrl: varchar('website_url', { length: 255 }),
+    status: varchar('status', { length: 50 }).default('ACTIVE').notNull(),
+    metadata: jsonb('metadata'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_settings_tenant').on(table.tenantId),
+  }),
+);
+
+// 92. Tenant Preferences Table
+export const tenantPreferences = supportAgentSchema.table(
+  'tenant_preferences',
+  {
+    ...commonColumns,
+    theme: varchar('theme', { length: 50 }).default('light').notNull(),
+    notificationsEnabled: boolean('notifications_enabled').default(true).notNull(),
+    autoResolveDays: integer('auto_resolve_days').default(3).notNull(),
+    autoCloseDays: integer('auto_close_days').default(7).notNull(),
+    metadata: jsonb('metadata'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_preferences_tenant').on(table.tenantId),
+  }),
+);
+
+// 93. Tenant Branding Table
+export const tenantBranding = supportAgentSchema.table(
+  'tenant_branding',
+  {
+    ...commonColumns,
+    logoUrl: varchar('logo_url', { length: 500 }),
+    faviconUrl: varchar('favicon_url', { length: 500 }),
+    primaryColor: varchar('primary_color', { length: 20 }).default('#000000').notNull(),
+    secondaryColor: varchar('secondary_color', { length: 20 }).default('#ffffff').notNull(),
+    themeMode: varchar('theme_mode', { length: 20 }).default('LIGHT').notNull(),
+    emailHeader: text('email_header'),
+    emailFooter: text('email_footer'),
+    customCss: text('custom_css'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_branding_tenant').on(table.tenantId),
+  }),
+);
+
+// 94. Tenant Business Hours Table
+export const tenantBusinessHours = supportAgentSchema.table(
+  'tenant_business_hours',
+  {
+    ...commonColumns,
+    dayOfWeek: integer('day_of_week').notNull(), // 0 = Sunday, ..., 6 = Saturday
+    startTime: varchar('start_time', { length: 8 }).default('09:00:00').notNull(),
+    endTime: varchar('end_time', { length: 8 }).default('17:00:00').notNull(),
+    isOpen: boolean('is_open').default(true).notNull(),
+    timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_bus_hours_tenant').on(table.tenantId),
+    dayOfWeekIdx: index('idx_tenant_bus_hours_day').on(table.tenantId, table.dayOfWeek),
+  }),
+);
+
+// 95. Tenant Holidays Table
+export const tenantHolidays = supportAgentSchema.table(
+  'tenant_holidays',
+  {
+    ...commonColumns,
+    holidayName: varchar('holiday_name', { length: 255 }).notNull(),
+    holidayDate: timestamp('holiday_date').notNull(),
+    isRecurring: boolean('is_recurring').default(false).notNull(),
+    country: varchar('country', { length: 50 }),
+    region: varchar('region', { length: 50 }),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_holidays_tenant').on(table.tenantId),
+    dateIdx: index('idx_tenant_holidays_date').on(table.tenantId, table.holidayDate),
+  }),
+);
+
+// 96. Tenant Feature Flags Table
+export const tenantFeatureFlags = supportAgentSchema.table(
+  'tenant_feature_flags',
+  {
+    ...commonColumns,
+    featureKey: varchar('feature_key', { length: 100 }).notNull(),
+    enabled: boolean('enabled').default(false).notNull(),
+    rolloutPercentage: integer('rollout_percentage').default(100).notNull(),
+    configuration: jsonb('configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_feat_flags_tenant').on(table.tenantId),
+    keyIdx: uniqueIndex('uq_tenant_feat_flags_key').on(table.tenantId, table.featureKey),
+  }),
+);
+
+// 97. Tenant AI Settings Table
+export const tenantAiSettings = supportAgentSchema.table(
+  'tenant_ai_settings',
+  {
+    ...commonColumns,
+    defaultAgent: varchar('default_agent', { length: 255 }),
+    confidenceThreshold: doublePrecision('confidence_threshold').default(0.7).notNull(),
+    escalationThreshold: doublePrecision('escalation_threshold').default(0.4).notNull(),
+    allowedLanguages: jsonb('allowed_languages').default('[]').notNull(),
+    defaultLanguage: varchar('default_language', { length: 10 }).default('en').notNull(),
+    autoResponseEnabled: boolean('auto_response_enabled').default(true).notNull(),
+    autoEscalationEnabled: boolean('auto_escalation_enabled').default(true).notNull(),
+    costLimitDaily: numeric('cost_limit_daily', { precision: 10, scale: 2 }),
+    costLimitMonthly: numeric('cost_limit_monthly', { precision: 10, scale: 2 }),
+    modelConfiguration: jsonb('model_configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_ai_settings_tenant').on(table.tenantId),
+  }),
+);
+
+// 98. Tenant Channel Settings Table
+export const tenantChannelSettings = supportAgentSchema.table(
+  'tenant_channel_settings',
+  {
+    ...commonColumns,
+    channelType: varchar('channel_type', { length: 50 }).notNull(), // EMAIL, WEB_CHAT, SMS, WHATSAPP, etc.
+    enabled: boolean('enabled').default(true).notNull(),
+    businessHoursOnly: boolean('business_hours_only').default(false).notNull(),
+    autoAssignmentEnabled: boolean('auto_assignment_enabled').default(true).notNull(),
+    configuration: jsonb('configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_chan_settings_tenant').on(table.tenantId),
+    typeIdx: uniqueIndex('uq_tenant_chan_settings_type').on(table.tenantId, table.channelType),
+  }),
+);
+
+// 99. Tenant Notification Settings Table
+export const tenantNotificationSettings = supportAgentSchema.table(
+  'tenant_notification_settings',
+  {
+    ...commonColumns,
+    emailEnabled: boolean('email_enabled').default(true).notNull(),
+    smsEnabled: boolean('sms_enabled').default(false).notNull(),
+    pushEnabled: boolean('push_enabled').default(true).notNull(),
+    webhookEnabled: boolean('webhook_enabled').default(false).notNull(),
+    digestEnabled: boolean('digest_enabled').default(false).notNull(),
+    configuration: jsonb('configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_notif_settings_tenant').on(table.tenantId),
+  }),
+);
+
+// 100. Tenant SLA Settings Table
+export const tenantSlaSettings = supportAgentSchema.table(
+  'tenant_sla_settings',
+  {
+    ...commonColumns,
+    responseTimeTarget: integer('response_time_target').default(3600).notNull(), // In seconds
+    resolutionTimeTarget: integer('resolution_time_target').default(86400).notNull(), // In seconds
+    escalationTimeTarget: integer('escalation_time_target').default(14400).notNull(), // In seconds
+    businessHoursOnly: boolean('business_hours_only').default(true).notNull(),
+    configuration: jsonb('configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_sla_settings_tenant').on(table.tenantId),
+  }),
+);
+
+// 101. Tenant Security Settings Table
+export const tenantSecuritySettings = supportAgentSchema.table(
+  'tenant_security_settings',
+  {
+    ...commonColumns,
+    sessionTimeout: integer('session_timeout').default(3600).notNull(), // In seconds
+    ipWhitelist: jsonb('ip_whitelist').default('[]').notNull(),
+    mfaRequired: boolean('mfa_required').default(false).notNull(),
+    apiKeyRotationDays: integer('api_key_rotation_days').default(90).notNull(),
+    auditRetentionDays: integer('audit_retention_days').default(365).notNull(),
+    configuration: jsonb('configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_sec_settings_tenant').on(table.tenantId),
+  }),
+);
+
+// 102. Tenant Widget Settings Table
+export const tenantWidgetSettings = supportAgentSchema.table(
+  'tenant_widget_settings',
+  {
+    ...commonColumns,
+    widgetName: varchar('widget_name', { length: 255 }).default('Live Support').notNull(),
+    widgetColor: varchar('widget_color', { length: 20 }).default('#1A73E8').notNull(),
+    widgetPosition: varchar('widget_position', { length: 50 }).default('BOTTOM_RIGHT').notNull(),
+    welcomeMessage: text('welcome_message'),
+    offlineMessage: text('offline_message'),
+    avatarUrl: varchar('avatar_url', { length: 500 }),
+    customCss: text('custom_css'),
+    customJs: text('custom_js'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_widget_settings_tenant').on(table.tenantId),
+  }),
+);
+
+// 103. Tenant Usage Limits Table
+export const tenantUsageLimits = supportAgentSchema.table(
+  'tenant_usage_limits',
+  {
+    ...commonColumns,
+    maxAgents: integer('max_agents').default(5).notNull(),
+    maxConversations: integer('max_conversations').default(1000).notNull(),
+    maxMessages: integer('max_messages').default(10000).notNull(),
+    maxWorkflows: integer('max_workflows').default(10).notNull(),
+    maxConnectors: integer('max_connectors').default(5).notNull(),
+    maxDocuments: integer('max_documents').default(100).notNull(),
+    maxStorage: bigint('max_storage', { mode: 'number' }).default(1073741824).notNull(), // 1 GB in bytes
+    maxAiRequests: integer('max_ai_requests').default(5000).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_tenant_usage_limits_tenant').on(table.tenantId),
+  }),
+);
+
+

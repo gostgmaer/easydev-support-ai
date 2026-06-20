@@ -42,7 +42,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Messages')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/messages')
@@ -62,7 +66,11 @@ export class MessageController {
     @Body() dto: CreateMessageDto,
     @Req() req: any,
   ) {
-    const message = await this.messageService.create(tenantId, dto, req.user?.id);
+    const message = await this.messageService.create(
+      tenantId,
+      dto,
+      req.user?.id,
+    );
     return message.toJSON();
   }
 
@@ -160,7 +168,12 @@ export class MessageController {
     @Body() dto: UpdateMessageDto,
     @Req() req: any,
   ) {
-    const message = await this.messageService.update(tenantId, id, dto, req.user?.id);
+    const message = await this.messageService.update(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return message.toJSON();
   }
 
@@ -173,7 +186,12 @@ export class MessageController {
     @Body() dto: ReplyMessageDto,
     @Req() req: any,
   ) {
-    const message = await this.messageService.reply(tenantId, id, dto, req.user?.id);
+    const message = await this.messageService.reply(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return message.toJSON();
   }
 
@@ -207,7 +225,11 @@ export class MessageController {
     @Param('id') id: string,
     @Req() req: any,
   ) {
-    const message = await this.deliveryService.retry(tenantId, id, req.user?.id);
+    const message = await this.deliveryService.retry(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return message.toJSON();
   }
 
@@ -218,7 +240,10 @@ export class MessageController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
   ) {
-    const statuses = await this.deliveryService.listDeliveryStatuses(tenantId, id);
+    const statuses = await this.deliveryService.listDeliveryStatuses(
+      tenantId,
+      id,
+    );
     return statuses.map((s) => s.toJSON());
   }
 
@@ -230,7 +255,11 @@ export class MessageController {
     @Param('id') id: string,
     @Req() req: any,
   ) {
-    const message = await this.messageService.markRead(tenantId, id, req.user?.id);
+    const message = await this.messageService.markRead(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return message.toJSON();
   }
 
@@ -242,7 +271,11 @@ export class MessageController {
     @Param('id') id: string,
     @Req() req: any,
   ) {
-    const message = await this.messageService.archive(tenantId, id, req.user?.id);
+    const message = await this.messageService.archive(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return message.toJSON();
   }
 

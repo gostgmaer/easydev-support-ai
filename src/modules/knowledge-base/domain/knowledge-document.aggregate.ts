@@ -148,7 +148,10 @@ export class KnowledgeDocument extends AggregateRoot<string> {
 
   public static create(
     id: string,
-    props: Omit<KnowledgeDocumentProps, 'createdAt' | 'updatedAt' | 'aggregateVersion'>,
+    props: Omit<
+      KnowledgeDocumentProps,
+      'createdAt' | 'updatedAt' | 'aggregateVersion'
+    >,
   ): KnowledgeDocument {
     const doc = new KnowledgeDocument(id, props);
     doc.addDomainEvent(
@@ -167,11 +170,22 @@ export class KnowledgeDocument extends AggregateRoot<string> {
     this.props.aggregateVersion = (this.props.aggregateVersion || 1) + 1;
   }
 
-  public update(props: Partial<Pick<KnowledgeDocumentProps, 'title' | 'categoryId' | 'tags' | 'metadata' | 'contentHash'>>): void {
+  public update(
+    props: Partial<
+      Pick<
+        KnowledgeDocumentProps,
+        'title' | 'categoryId' | 'tags' | 'metadata' | 'contentHash'
+      >
+    >,
+  ): void {
     this.props = { ...this.props, ...props };
     this.touch();
     this.addDomainEvent(
-      new KnowledgeDocumentUpdatedEvent(this.tenantId, this.id, this.status.value),
+      new KnowledgeDocumentUpdatedEvent(
+        this.tenantId,
+        this.id,
+        this.status.value,
+      ),
     );
   }
 

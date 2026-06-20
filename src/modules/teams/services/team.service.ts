@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import type { ITeamRepository } from '../repositories/team-repository.interface';
 import type { IAgentProfileRepository } from '../repositories/agent-profile-repository.interface';
 import { Team } from '../domain/team.aggregate';
@@ -16,10 +21,14 @@ export class TeamService {
     @Inject('IAgentProfileRepository')
     private readonly profileRepo: IAgentProfileRepository,
     private readonly eventPublisher: TeamEventPublisher,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
   ) {}
 
-  async create(tenantId: string, dto: CreateTeamDto, userId?: string): Promise<Team> {
+  async create(
+    tenantId: string,
+    dto: CreateTeamDto,
+    userId?: string,
+  ): Promise<Team> {
     const existing = await this.teamRepo.findByName(dto.name, tenantId);
     if (existing) {
       throw new ConflictException(`Team with name ${dto.name} already exists`);
@@ -49,7 +58,12 @@ export class TeamService {
     return saved;
   }
 
-  async update(tenantId: string, id: string, dto: UpdateTeamDto, userId?: string): Promise<Team> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: UpdateTeamDto,
+    userId?: string,
+  ): Promise<Team> {
     const team = await this.teamRepo.findById(id, tenantId);
     if (!team) {
       throw new NotFoundException(`Team ${id} not found`);
@@ -70,7 +84,11 @@ export class TeamService {
     return saved;
   }
 
-  async archive(tenantId: string, id: string, userId?: string): Promise<boolean> {
+  async archive(
+    tenantId: string,
+    id: string,
+    userId?: string,
+  ): Promise<boolean> {
     const team = await this.teamRepo.findById(id, tenantId);
     if (!team) {
       throw new NotFoundException(`Team ${id} not found`);
@@ -91,12 +109,19 @@ export class TeamService {
     return true;
   }
 
-  async addAgent(tenantId: string, teamId: string, agentProfileId: string, role = 'MEMBER', userId?: string): Promise<void> {
+  async addAgent(
+    tenantId: string,
+    teamId: string,
+    agentProfileId: string,
+    role = 'MEMBER',
+    userId?: string,
+  ): Promise<void> {
     const team = await this.teamRepo.findById(teamId, tenantId);
     if (!team) throw new NotFoundException(`Team ${teamId} not found`);
 
     const agent = await this.profileRepo.findById(agentProfileId, tenantId);
-    if (!agent) throw new NotFoundException(`Agent ${agentProfileId} not found`);
+    if (!agent)
+      throw new NotFoundException(`Agent ${agentProfileId} not found`);
 
     const member = new TeamMember(randomUUID(), {
       tenantId,
@@ -119,7 +144,12 @@ export class TeamService {
     });
   }
 
-  async removeAgent(tenantId: string, teamId: string, agentProfileId: string, userId?: string): Promise<void> {
+  async removeAgent(
+    tenantId: string,
+    teamId: string,
+    agentProfileId: string,
+    userId?: string,
+  ): Promise<void> {
     const team = await this.teamRepo.findById(teamId, tenantId);
     if (!team) throw new NotFoundException(`Team ${teamId} not found`);
 
@@ -136,7 +166,13 @@ export class TeamService {
     });
   }
 
-  async moveAgent(tenantId: string, fromTeamId: string, toTeamId: string, agentProfileId: string, userId?: string): Promise<void> {
+  async moveAgent(
+    tenantId: string,
+    fromTeamId: string,
+    toTeamId: string,
+    agentProfileId: string,
+    userId?: string,
+  ): Promise<void> {
     const fromTeam = await this.teamRepo.findById(fromTeamId, tenantId);
     const toTeam = await this.teamRepo.findById(toTeamId, tenantId);
 

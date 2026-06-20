@@ -45,7 +45,9 @@ export class KnowledgeTag extends Entity<string> {
     return this.props.version || 1;
   }
 
-  public update(props: Partial<Pick<KnowledgeTagProps, 'description' | 'color'>>): void {
+  public update(
+    props: Partial<Pick<KnowledgeTagProps, 'description' | 'color'>>,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

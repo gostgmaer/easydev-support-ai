@@ -9,7 +9,10 @@ export class KnowledgeVersionService {
     private readonly repository: IKnowledgeRepository,
   ) {}
 
-  public async getVersions(tenantId: string, documentId: string): Promise<KnowledgeVersion[]> {
+  public async getVersions(
+    tenantId: string,
+    documentId: string,
+  ): Promise<KnowledgeVersion[]> {
     return this.repository.getVersionsByDocumentId(documentId, tenantId);
   }
 }

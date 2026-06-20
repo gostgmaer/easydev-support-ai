@@ -1,4 +1,12 @@
-import { Controller, Get, Put, Body, Headers, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Body,
+  Headers,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -31,7 +39,11 @@ export class AiSessionController {
     @Param('conversationId') conversationId: string,
     @Body() state: Record<string, any>,
   ) {
-    const session = await this.conversationService.updateSessionState(tenantId, conversationId, state);
+    const session = await this.conversationService.updateSessionState(
+      tenantId,
+      conversationId,
+      state,
+    );
     return session.toJSON();
   }
 }

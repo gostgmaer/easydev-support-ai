@@ -3,7 +3,13 @@ import { CustomerService } from './customer.service';
 import { CustomerEventPublisher } from './customer-event.publisher';
 import { AuditService } from '../../audit/audit.service';
 import { Customer } from '../domain/customer.aggregate';
-import { CustomerEmail, CustomerStatus, CustomerStatusEnum, CustomerLanguage, CustomerTimezone } from '../domain/value-objects';
+import {
+  CustomerEmail,
+  CustomerStatus,
+  CustomerStatusEnum,
+  CustomerLanguage,
+  CustomerTimezone,
+} from '../domain/value-objects';
 import { CreateCustomerDto, UpdateCustomerDto } from '../dtos';
 import { randomUUID } from 'crypto';
 import { ConflictException, NotFoundException } from '@nestjs/common';
@@ -79,14 +85,16 @@ describe('CustomerService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'CUSTOMER_CREATE',
-        })
+        }),
       );
     });
 
     it('should throw ConflictException when email exists', async () => {
       repo.findByEmail.mockResolvedValue({ id: 'existing' });
 
-      await expect(service.create(tenantId, dto)).rejects.toThrow(ConflictException);
+      await expect(service.create(tenantId, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -121,13 +129,15 @@ describe('CustomerService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'CUSTOMER_UPDATE',
-        })
+        }),
       );
     });
 
     it('should throw NotFoundException if customer does not exist', async () => {
       repo.findById.mockResolvedValue(null);
-      await expect(service.update(tenantId, customerId, {})).rejects.toThrow(NotFoundException);
+      await expect(service.update(tenantId, customerId, {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -213,7 +223,7 @@ describe('CustomerService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'CUSTOMER_MERGE',
-        })
+        }),
       );
     });
   });

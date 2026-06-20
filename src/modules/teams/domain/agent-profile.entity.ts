@@ -34,23 +34,57 @@ export class AgentProfile extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get userId(): string { return this.props.userId; }
-  get employeeCode(): string | undefined { return this.props.employeeCode; }
-  get displayName(): string { return this.props.displayName; }
-  get avatarUrl(): string | undefined { return this.props.avatarUrl; }
-  get status(): string { return this.props.status; }
-  get capacity(): AgentCapacity { return this.props.capacity; }
-  get skillScore(): number { return this.props.skillScore; }
-  get timezone(): string { return this.props.timezone; }
-  get languagePreferences(): string[] { return this.props.languagePreferences || []; }
-  get metadata(): Record<string, any> { return this.props.metadata || {}; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get deletedAt(): Date | undefined { return this.props.deletedAt; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get userId(): string {
+    return this.props.userId;
+  }
+  get employeeCode(): string | undefined {
+    return this.props.employeeCode;
+  }
+  get displayName(): string {
+    return this.props.displayName;
+  }
+  get avatarUrl(): string | undefined {
+    return this.props.avatarUrl;
+  }
+  get status(): string {
+    return this.props.status;
+  }
+  get capacity(): AgentCapacity {
+    return this.props.capacity;
+  }
+  get skillScore(): number {
+    return this.props.skillScore;
+  }
+  get timezone(): string {
+    return this.props.timezone;
+  }
+  get languagePreferences(): string[] {
+    return this.props.languagePreferences || [];
+  }
+  get metadata(): Record<string, any> {
+    return this.props.metadata || {};
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get deletedAt(): Date | undefined {
+    return this.props.deletedAt;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
-  public update(props: Partial<Omit<AgentProfileProps, 'tenantId' | 'userId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<
+      Omit<AgentProfileProps, 'tenantId' | 'userId' | 'createdAt'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

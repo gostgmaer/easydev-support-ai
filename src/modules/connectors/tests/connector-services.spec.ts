@@ -15,7 +15,11 @@ import { ConnectorFactory } from '../engine/connector-factory';
 import { CredentialManager } from '../engine/credential-manager';
 import { RetryEngine } from '../engine/retry-engine';
 import { QueueService } from '@easydev/shared-queues';
-import { ConnectorTypeEnum, AuthTypeEnum, CapabilityTypeEnum } from '../domain/value-objects';
+import {
+  ConnectorTypeEnum,
+  AuthTypeEnum,
+  CapabilityTypeEnum,
+} from '../domain/value-objects';
 
 describe('Connector Module Services', () => {
   let connectorService: ConnectorService;
@@ -84,11 +88,17 @@ describe('Connector Module Services', () => {
     }).compile();
 
     connectorService = module.get<ConnectorService>(ConnectorService);
-    credentialService = module.get<ConnectorCredentialService>(ConnectorCredentialService);
+    credentialService = module.get<ConnectorCredentialService>(
+      ConnectorCredentialService,
+    );
     healthService = module.get<ConnectorHealthService>(ConnectorHealthService);
     importService = module.get<ConnectorImportService>(ConnectorImportService);
-    webhookService = module.get<ConnectorWebhookService>(ConnectorWebhookService);
-    executionService = module.get<ConnectorExecutionService>(ConnectorExecutionService);
+    webhookService = module.get<ConnectorWebhookService>(
+      ConnectorWebhookService,
+    );
+    executionService = module.get<ConnectorExecutionService>(
+      ConnectorExecutionService,
+    );
   });
 
   it('should be defined and resolved successfully', () => {

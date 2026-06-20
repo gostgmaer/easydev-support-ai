@@ -13,7 +13,14 @@ import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { TenantResolver } from '@easydev/shared-kernel';
 import { randomUUID } from 'crypto';
 import { ChannelTypeEnum } from '../domain/value-objects';
-import { CreateChannelDto, UpdateChannelDto, ChannelConfigurationDto, ChannelWebhookDto, ChannelTemplateDto, ChannelQueryDto } from '../dtos';
+import {
+  CreateChannelDto,
+  UpdateChannelDto,
+  ChannelConfigurationDto,
+  ChannelWebhookDto,
+  ChannelTemplateDto,
+  ChannelQueryDto,
+} from '../dtos';
 
 describe('Channel Module Controllers', () => {
   let channelController: ChannelController;
@@ -87,14 +94,24 @@ describe('Channel Module Controllers', () => {
       .compile();
 
     channelController = module.get<ChannelController>(ChannelController);
-    webhookController = module.get<ChannelWebhookController>(ChannelWebhookController);
-    templateController = module.get<ChannelTemplateController>(ChannelTemplateController);
-    healthController = module.get<ChannelHealthController>(ChannelHealthController);
+    webhookController = module.get<ChannelWebhookController>(
+      ChannelWebhookController,
+    );
+    templateController = module.get<ChannelTemplateController>(
+      ChannelTemplateController,
+    );
+    healthController = module.get<ChannelHealthController>(
+      ChannelHealthController,
+    );
 
     channelService = module.get<ChannelService>(ChannelService);
-    configService = module.get<ChannelConfigurationService>(ChannelConfigurationService);
+    configService = module.get<ChannelConfigurationService>(
+      ChannelConfigurationService,
+    );
     webhookService = module.get<ChannelWebhookService>(ChannelWebhookService);
-    templateService = module.get<ChannelTemplateService>(ChannelTemplateService);
+    templateService = module.get<ChannelTemplateService>(
+      ChannelTemplateService,
+    );
     healthService = module.get<ChannelHealthService>(ChannelHealthService);
 
     jest.clearAllMocks();
@@ -102,12 +119,18 @@ describe('Channel Module Controllers', () => {
 
   describe('ChannelController', () => {
     it('should create a channel', async () => {
-      const dto: CreateChannelDto = { name: 'Support Chat', type: ChannelTypeEnum.WEBCHAT, provider: 'NATIVE' };
+      const dto: CreateChannelDto = {
+        name: 'Support Chat',
+        type: ChannelTypeEnum.WEBCHAT,
+        provider: 'NATIVE',
+      };
       mockChannelService.create.mockResolvedValue({
         toJSON: () => ({ id: channelId, name: 'Support Chat' }),
       });
 
-      const res = await channelController.create(tenantId, dto, { user: { id: 'u1' } });
+      const res = await channelController.create(tenantId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: channelId, name: 'Support Chat' });
       expect(channelService.create).toHaveBeenCalledWith(tenantId, dto, 'u1');
     });
@@ -138,68 +161,122 @@ describe('Channel Module Controllers', () => {
       mockChannelService.update.mockResolvedValue({
         toJSON: () => ({ id: channelId, name: 'New Name' }),
       });
-      const res = await channelController.update(tenantId, channelId, dto, { user: { id: 'u1' } });
+      const res = await channelController.update(tenantId, channelId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: channelId, name: 'New Name' });
     });
 
     it('should enable a channel', async () => {
-      await channelController.enable(tenantId, channelId, { user: { id: 'u1' } });
-      expect(channelService.enable).toHaveBeenCalledWith(tenantId, channelId, 'u1');
+      await channelController.enable(tenantId, channelId, {
+        user: { id: 'u1' },
+      });
+      expect(channelService.enable).toHaveBeenCalledWith(
+        tenantId,
+        channelId,
+        'u1',
+      );
     });
 
     it('should disable a channel', async () => {
-      await channelController.disable(tenantId, channelId, { user: { id: 'u1' } });
-      expect(channelService.disable).toHaveBeenCalledWith(tenantId, channelId, 'u1');
+      await channelController.disable(tenantId, channelId, {
+        user: { id: 'u1' },
+      });
+      expect(channelService.disable).toHaveBeenCalledWith(
+        tenantId,
+        channelId,
+        'u1',
+      );
     });
 
     it('should save config credentials', async () => {
-      const dto: ChannelConfigurationDto = { authenticationType: 'API_KEY', configuration: {}, credentials: {} };
-      mockConfigService.saveConfiguration.mockResolvedValue({ toJSON: () => ({ id: 'c1' }) });
+      const dto: ChannelConfigurationDto = {
+        authenticationType: 'API_KEY',
+        configuration: {},
+        credentials: {},
+      };
+      mockConfigService.saveConfiguration.mockResolvedValue({
+        toJSON: () => ({ id: 'c1' }),
+      });
 
-      const res = await channelController.saveConfig(tenantId, channelId, dto, { user: { id: 'u1' } });
+      const res = await channelController.saveConfig(tenantId, channelId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: 'c1' });
     });
 
     it('should get config details', async () => {
-      mockConfigService.getConfiguration.mockResolvedValue({ toJSON: () => ({ authenticationType: 'API_KEY' }) });
+      mockConfigService.getConfiguration.mockResolvedValue({
+        toJSON: () => ({ authenticationType: 'API_KEY' }),
+      });
       const res = await channelController.getConfig(tenantId, channelId);
       expect(res).toEqual({ authenticationType: 'API_KEY' });
     });
 
     it('should rotate config secrets', async () => {
-      await channelController.rotateSecrets(tenantId, channelId, { user: { id: 'u1' } });
-      expect(configService.rotateSecrets).toHaveBeenCalledWith(tenantId, channelId, 'u1');
+      await channelController.rotateSecrets(tenantId, channelId, {
+        user: { id: 'u1' },
+      });
+      expect(configService.rotateSecrets).toHaveBeenCalledWith(
+        tenantId,
+        channelId,
+        'u1',
+      );
     });
   });
 
   describe('ChannelWebhookController', () => {
     it('should register webhook', async () => {
       const dto: ChannelWebhookDto = { webhookUrl: 'https://site' };
-      mockWebhookService.registerWebhook.mockResolvedValue({ toJSON: () => ({ id: 'w1' }) });
+      mockWebhookService.registerWebhook.mockResolvedValue({
+        toJSON: () => ({ id: 'w1' }),
+      });
 
-      const res = await webhookController.register(tenantId, channelId, dto, { user: { id: 'u1' } });
+      const res = await webhookController.register(tenantId, channelId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: 'w1' });
     });
 
     it('should verify challenge query', async () => {
       mockWebhookService.verifyWebhook.mockResolvedValue('challenge_ok');
-      const res = await webhookController.verify(tenantId, channelId, { challenge: 'challenge_ok' });
+      const res = await webhookController.verify(tenantId, channelId, {
+        challenge: 'challenge_ok',
+      });
       expect(res).toBe('challenge_ok');
     });
 
     it('should receive webhook triggers', async () => {
-      const res = await webhookController.receive(tenantId, channelId, { text: 'hi' }, { signature: 'sig' });
+      const res = await webhookController.receive(
+        tenantId,
+        channelId,
+        { text: 'hi' },
+        { signature: 'sig' },
+      );
       expect(res).toEqual({ status: 'queued' });
-      expect(webhookService.handleIncomingWebhook).toHaveBeenCalledWith(tenantId, channelId, { text: 'hi' }, { signature: 'sig' });
+      expect(webhookService.handleIncomingWebhook).toHaveBeenCalledWith(
+        tenantId,
+        channelId,
+        { text: 'hi' },
+        { signature: 'sig' },
+      );
     });
   });
 
   describe('ChannelTemplateController', () => {
     it('should create template', async () => {
-      const dto: ChannelTemplateDto = { templateName: 'welcome', templateType: 'TEXT', templateContent: 'Hi' };
-      mockTemplateService.createTemplate.mockResolvedValue({ toJSON: () => ({ id: 't1' }) });
+      const dto: ChannelTemplateDto = {
+        templateName: 'welcome',
+        templateType: 'TEXT',
+        templateContent: 'Hi',
+      };
+      mockTemplateService.createTemplate.mockResolvedValue({
+        toJSON: () => ({ id: 't1' }),
+      });
 
-      const res = await templateController.create(tenantId, channelId, dto, { user: { id: 'u1' } });
+      const res = await templateController.create(tenantId, channelId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: 't1' });
     });
 
@@ -215,19 +292,33 @@ describe('Channel Module Controllers', () => {
       mockTemplateService.findTemplateByName.mockResolvedValue({
         toJSON: () => ({ templateName: 'wel' }),
       });
-      const res = await templateController.findTemplateByName(tenantId, channelId, 'wel');
+      const res = await templateController.findTemplateByName(
+        tenantId,
+        channelId,
+        'wel',
+      );
       expect(res).toEqual({ templateName: 'wel' });
     });
 
     it('should delete template by name', async () => {
-      await templateController.deleteTemplate(tenantId, channelId, 'wel', { user: { id: 'u1' } });
-      expect(templateService.deleteTemplate).toHaveBeenCalledWith(tenantId, channelId, 'wel', 'u1');
+      await templateController.deleteTemplate(tenantId, channelId, 'wel', {
+        user: { id: 'u1' },
+      });
+      expect(templateService.deleteTemplate).toHaveBeenCalledWith(
+        tenantId,
+        channelId,
+        'wel',
+        'u1',
+      );
     });
   });
 
   describe('ChannelHealthController', () => {
     it('should trigger health check and return results', async () => {
-      mockHealthService.checkHealth.mockResolvedValue({ status: 'HEALTHY', latencyMs: 5 });
+      mockHealthService.checkHealth.mockResolvedValue({
+        status: 'HEALTHY',
+        latencyMs: 5,
+      });
       const res = await healthController.checkHealth(tenantId, channelId);
       expect(res).toEqual({ status: 'HEALTHY', latencyMs: 5 });
     });

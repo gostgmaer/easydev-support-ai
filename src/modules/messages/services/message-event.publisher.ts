@@ -35,10 +35,14 @@ export class MessageEventPublisher {
 
     try {
       if (ANALYTICS_EVENTS.has(eventName)) {
-        await this.queueService.addJob(QUEUES.MESSAGE, 'message-analytics-job', {
-          messageId: event.getAggregateId(),
-          eventName,
-        });
+        await this.queueService.addJob(
+          QUEUES.MESSAGE,
+          'message-analytics-job',
+          {
+            messageId: event.getAggregateId(),
+            eventName,
+          },
+        );
       }
 
       if (AI_TRIGGER_EVENTS.has(eventName)) {

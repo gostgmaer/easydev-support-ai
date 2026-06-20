@@ -12,10 +12,13 @@ export class CustomerSegmentService {
     @Inject('ICustomerSegmentRepository')
     private readonly segmentRepo: ICustomerSegmentRepository,
     @Inject('ICustomerRepository')
-    private readonly customerRepo: ICustomerRepository
+    private readonly customerRepo: ICustomerRepository,
   ) {}
 
-  async createSegment(tenantId: string, dto: CustomerSegmentDto): Promise<CustomerSegment> {
+  async createSegment(
+    tenantId: string,
+    dto: CustomerSegmentDto,
+  ): Promise<CustomerSegment> {
     const segment = new CustomerSegment(randomUUID(), {
       tenantId,
       segmentName: dto.segmentName,
@@ -28,7 +31,11 @@ export class CustomerSegmentService {
     return this.segmentRepo.save(segment, tenantId);
   }
 
-  async updateSegment(tenantId: string, segmentId: string, dto: CustomerSegmentDto): Promise<CustomerSegment> {
+  async updateSegment(
+    tenantId: string,
+    segmentId: string,
+    dto: CustomerSegmentDto,
+  ): Promise<CustomerSegment> {
     const segment = await this.segmentRepo.findById(segmentId, tenantId);
     if (!segment) {
       throw new NotFoundException(`Segment with ID ${segmentId} not found`);
@@ -49,7 +56,11 @@ export class CustomerSegmentService {
     return this.segmentRepo.delete(segmentId, tenantId);
   }
 
-  async assignCustomerToSegment(tenantId: string, customerId: string, segmentId: string): Promise<void> {
+  async assignCustomerToSegment(
+    tenantId: string,
+    customerId: string,
+    segmentId: string,
+  ): Promise<void> {
     const customer = await this.customerRepo.findById(customerId, tenantId);
     if (!customer) {
       throw new NotFoundException(`Customer with ID ${customerId} not found`);
@@ -65,19 +76,32 @@ export class CustomerSegmentService {
     await this.customerRepo.save(customer, tenantId); // Save aggregates to publish events
   }
 
-  async removeCustomerFromSegment(tenantId: string, customerId: string, segmentId: string): Promise<void> {
+  async removeCustomerFromSegment(
+    tenantId: string,
+    customerId: string,
+    segmentId: string,
+  ): Promise<void> {
     await this.customerRepo.removeSegment(customerId, segmentId, tenantId);
   }
 
-  async findSegmentsForCustomer(tenantId: string, customerId: string): Promise<string[]> {
+  async findSegmentsForCustomer(
+    tenantId: string,
+    customerId: string,
+  ): Promise<string[]> {
     return this.customerRepo.findSegments(customerId, tenantId);
   }
 
-  async findSegmentMembers(tenantId: string, segmentId: string): Promise<Customer[]> {
+  async findSegmentMembers(
+    tenantId: string,
+    segmentId: string,
+  ): Promise<Customer[]> {
     return this.customerRepo.findSegmentMembers(segmentId, tenantId);
   }
 
-  async runDynamicSegmentation(tenantId: string, segmentId: string): Promise<void> {
+  async runDynamicSegmentation(
+    tenantId: string,
+    segmentId: string,
+  ): Promise<void> {
     const segment = await this.segmentRepo.findById(segmentId, tenantId);
     if (!segment || segment.segmentType !== 'DYNAMIC') return;
 
@@ -104,9 +128,17 @@ export class CustomerSegmentService {
       }
 
       if (matches) {
-        await this.customerRepo.assignSegment(customer.id, segment.id, tenantId);
+        await this.customerRepo.assignSegment(
+          customer.id,
+          segment.id,
+          tenantId,
+        );
       } else {
-        await this.customerRepo.removeSegment(customer.id, segment.id, tenantId);
+        await this.customerRepo.removeSegment(
+          customer.id,
+          segment.id,
+          tenantId,
+        );
       }
     }
   }

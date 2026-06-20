@@ -27,18 +27,42 @@ export class AgentAvailability extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get agentProfileId(): string { return this.props.agentProfileId; }
-  get status(): string { return this.props.status; }
-  get lastSeenAt(): Date { return this.props.lastSeenAt!; }
-  get workingHours(): Record<string, any> { return this.props.workingHours || {}; }
-  get currentLoad(): number { return this.props.currentLoad; }
-  get activeConversations(): number { return this.props.activeConversations; }
-  get activeTickets(): number { return this.props.activeTickets; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get agentProfileId(): string {
+    return this.props.agentProfileId;
+  }
+  get status(): string {
+    return this.props.status;
+  }
+  get lastSeenAt(): Date {
+    return this.props.lastSeenAt!;
+  }
+  get workingHours(): Record<string, any> {
+    return this.props.workingHours || {};
+  }
+  get currentLoad(): number {
+    return this.props.currentLoad;
+  }
+  get activeConversations(): number {
+    return this.props.activeConversations;
+  }
+  get activeTickets(): number {
+    return this.props.activeTickets;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
-  public update(props: Partial<Omit<AgentAvailabilityProps, 'tenantId' | 'agentProfileId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<
+      Omit<AgentAvailabilityProps, 'tenantId' | 'agentProfileId' | 'createdAt'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

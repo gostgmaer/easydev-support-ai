@@ -22,9 +22,7 @@ import { Team } from './entities/team.entity';
 import { AgentProfile } from './entities/agent-profile.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Team, AgentProfile]),
-  ],
+  imports: [TypeOrmModule.forFeature([Team, AgentProfile])],
   controllers: [
     TeamController,
     AgentProfileController,

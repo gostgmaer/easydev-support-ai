@@ -30,14 +30,23 @@ export class ConversationSummaryService {
    * Rebuilds the inbox-optimized read model for a single conversation. This is
    * the only writer of conversation_summary; the inbox never queries messages.
    */
-  async rebuild(tenantId: string, conversationId: string): Promise<ConversationSummary | null> {
-    const conversation = await this.conversationRepo.findById(conversationId, tenantId);
+  async rebuild(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<ConversationSummary | null> {
+    const conversation = await this.conversationRepo.findById(
+      conversationId,
+      tenantId,
+    );
     if (!conversation) return null;
 
     let customerName: string | undefined;
     let customerAvatar: string | undefined;
     try {
-      const customer = await this.customerService.findById(tenantId, conversation.customerId);
+      const customer = await this.customerService.findById(
+        tenantId,
+        conversation.customerId,
+      );
       customerName = customer.profile?.displayName || customer.email.value;
       customerAvatar = customer.profile?.avatarUrl;
     } catch {
@@ -47,7 +56,10 @@ export class ConversationSummaryService {
     let assignedAgentName: string | undefined;
     if (conversation.assignedAgentId) {
       try {
-        const agent = await this.agentProfileService.findById(tenantId, conversation.assignedAgentId);
+        const agent = await this.agentProfileService.findById(
+          tenantId,
+          conversation.assignedAgentId,
+        );
         assignedAgentName = agent.displayName;
       } catch {
         assignedAgentName = undefined;
@@ -57,14 +69,20 @@ export class ConversationSummaryService {
     let assignedTeamName: string | undefined;
     if (conversation.assignedTeamId) {
       try {
-        const team = await this.teamRepo.findById(conversation.assignedTeamId, tenantId);
+        const team = await this.teamRepo.findById(
+          conversation.assignedTeamId,
+          tenantId,
+        );
         assignedTeamName = team?.name;
       } catch {
         assignedTeamName = undefined;
       }
     }
 
-    const existing = await this.conversationRepo.getSummary(conversationId, tenantId);
+    const existing = await this.conversationRepo.getSummary(
+      conversationId,
+      tenantId,
+    );
     const summary = new ConversationSummary(existing?.id || randomUUID(), {
       tenantId,
       conversationId,
@@ -89,7 +107,10 @@ export class ConversationSummaryService {
     return summary;
   }
 
-  async getSummary(tenantId: string, conversationId: string): Promise<ConversationSummary | null> {
+  async getSummary(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<ConversationSummary | null> {
     return this.conversationRepo.getSummary(conversationId, tenantId);
   }
 }

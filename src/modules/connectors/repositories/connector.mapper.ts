@@ -16,9 +16,7 @@ import {
   HealthStatusEnum,
   ExecutionStatusEnum,
 } from '../domain/value-objects';
-import {
-  CredentialStatusEnum,
-} from '../domain/connector-credential.entity';
+import { CredentialStatusEnum } from '../domain/connector-credential.entity';
 import { InstanceStatusEnum } from '../domain/connector-instance.entity';
 
 export class ConnectorMapper {
@@ -88,7 +86,8 @@ export class ConnectorMapper {
       instanceId: raw.instanceId || undefined,
       capabilityId: raw.capabilityId || undefined,
       capabilityType: raw.capabilityType,
-      status: (raw.status || ExecutionStatusEnum.PENDING) as ExecutionStatusEnum,
+      status: (raw.status ||
+        ExecutionStatusEnum.PENDING) as ExecutionStatusEnum,
       statusCode: raw.statusCode ?? undefined,
       requestPayload: (raw.requestPayload as Record<string, any>) || undefined,
       responsePayload:

@@ -1,10 +1,30 @@
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import type { IConnectorRepository } from '../repositories/connector-repository.interface';
 import { Connector } from '../domain/connector.aggregate';
-import { ConnectorInstance, InstanceStatusEnum } from '../domain/connector-instance.entity';
+import {
+  ConnectorInstance,
+  InstanceStatusEnum,
+} from '../domain/connector-instance.entity';
 import { ConnectorCapability } from '../domain/connector-capability.entity';
-import { ConnectorType, ConnectorStatus, ConnectorStatusEnum, AuthTypeEnum, CapabilityType, HealthStatusEnum } from '../domain/value-objects';
-import { InstallConnectorDto, ConfigureConnectorDto, CreateInstanceDto, MapCapabilitiesDto } from '../dtos/connector.dto';
+import {
+  ConnectorType,
+  ConnectorStatus,
+  ConnectorStatusEnum,
+  AuthTypeEnum,
+  CapabilityType,
+  HealthStatusEnum,
+} from '../domain/value-objects';
+import {
+  InstallConnectorDto,
+  ConfigureConnectorDto,
+  CreateInstanceDto,
+  MapCapabilitiesDto,
+} from '../dtos/connector.dto';
 import { ConnectorEventPublisher } from './connector-event.publisher';
 
 @Injectable()
@@ -21,7 +41,9 @@ export class ConnectorService {
   ): Promise<Connector> {
     const existing = await this.repository.findBySlug(tenantId, dto.slug);
     if (existing) {
-      throw new ConflictException(`Connector with slug '${dto.slug}' already exists`);
+      throw new ConflictException(
+        `Connector with slug '${dto.slug}' already exists`,
+      );
     }
 
     const connectorId = crypto.randomUUID();
@@ -69,7 +91,10 @@ export class ConnectorService {
     return saved;
   }
 
-  public async activateConnector(tenantId: string, connectorId: string): Promise<Connector> {
+  public async activateConnector(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<Connector> {
     const connector = await this.repository.findById(connectorId, tenantId);
     if (!connector) {
       throw new NotFoundException(`Connector ${connectorId} not found`);
@@ -81,7 +106,10 @@ export class ConnectorService {
     return saved;
   }
 
-  public async pauseConnector(tenantId: string, connectorId: string): Promise<Connector> {
+  public async pauseConnector(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<Connector> {
     const connector = await this.repository.findById(connectorId, tenantId);
     if (!connector) {
       throw new NotFoundException(`Connector ${connectorId} not found`);
@@ -93,7 +121,10 @@ export class ConnectorService {
     return saved;
   }
 
-  public async disableConnector(tenantId: string, connectorId: string): Promise<Connector> {
+  public async disableConnector(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<Connector> {
     const connector = await this.repository.findById(connectorId, tenantId);
     if (!connector) {
       throw new NotFoundException(`Connector ${connectorId} not found`);
@@ -105,7 +136,10 @@ export class ConnectorService {
     return saved;
   }
 
-  public async deleteConnector(tenantId: string, connectorId: string): Promise<void> {
+  public async deleteConnector(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<void> {
     const connector = await this.repository.findById(connectorId, tenantId);
     if (!connector) {
       throw new NotFoundException(`Connector ${connectorId} not found`);
@@ -116,7 +150,10 @@ export class ConnectorService {
     connector.clearEvents();
   }
 
-  public async getConnector(tenantId: string, connectorId: string): Promise<Connector> {
+  public async getConnector(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<Connector> {
     const connector = await this.repository.findById(connectorId, tenantId);
     if (!connector) {
       throw new NotFoundException(`Connector ${connectorId} not found`);
@@ -153,11 +190,17 @@ export class ConnectorService {
     return instance;
   }
 
-  public async getInstances(tenantId: string, connectorId: string): Promise<ConnectorInstance[]> {
+  public async getInstances(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<ConnectorInstance[]> {
     return this.repository.findInstances(tenantId, connectorId);
   }
 
-  public async deleteInstance(tenantId: string, instanceId: string): Promise<boolean> {
+  public async deleteInstance(
+    tenantId: string,
+    instanceId: string,
+  ): Promise<boolean> {
     return this.repository.deleteInstance(tenantId, instanceId);
   }
 

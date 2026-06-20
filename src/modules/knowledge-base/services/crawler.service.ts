@@ -18,8 +18,10 @@ export class CrawlerService {
     limit = 50,
     rateLimitMs = 200,
   ): Promise<ScrapedPage[]> {
-    this.logger.log(`Crawling website starting from ${startUrl} (limit: ${limit})`);
-    
+    this.logger.log(
+      `Crawling website starting from ${startUrl} (limit: ${limit})`,
+    );
+
     const parsedStart = new URL(startUrl);
     const domain = parsedStart.hostname;
 
@@ -35,7 +37,7 @@ export class CrawlerService {
       visited.add(url);
 
       this.logger.debug(`Crawling page: ${url}`);
-      
+
       try {
         // Rate limiting
         if (rateLimitMs > 0) {
@@ -115,8 +117,14 @@ export class CrawlerService {
 
   private extractTextContent(html: string): string {
     // 1. Remove script/style tags
-    let content = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    content = content.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+    let content = html.replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      '',
+    );
+    content = content.replace(
+      /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+      '',
+    );
     // 2. Remove comments
     content = content.replace(/<!--[\s\S]*?-->/g, '');
     // 3. Replace HTML entities
@@ -131,7 +139,11 @@ export class CrawlerService {
     return content.replace(/\s+/g, ' ').trim();
   }
 
-  private discoverLinks(html: string, baseUrl: string, targetDomain: string): string[] {
+  private discoverLinks(
+    html: string,
+    baseUrl: string,
+    targetDomain: string,
+  ): string[] {
     const links: string[] = [];
     const hrefRegex = /href="([^"]+)"/gi;
     let match;
@@ -139,7 +151,11 @@ export class CrawlerService {
     while ((match = hrefRegex.exec(html)) !== null) {
       try {
         const rawHref = match[1];
-        if (rawHref.startsWith('javascript:') || rawHref.startsWith('mailto:') || rawHref.startsWith('#')) {
+        if (
+          rawHref.startsWith('javascript:') ||
+          rawHref.startsWith('mailto:') ||
+          rawHref.startsWith('#')
+        ) {
           continue;
         }
 

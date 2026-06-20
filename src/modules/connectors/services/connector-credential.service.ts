@@ -1,6 +1,9 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import type { IConnectorRepository } from '../repositories/connector-repository.interface';
-import { ConnectorCredential, CredentialStatusEnum } from '../domain/connector-credential.entity';
+import {
+  ConnectorCredential,
+  CredentialStatusEnum,
+} from '../domain/connector-credential.entity';
 import { CredentialManager } from '../engine/credential-manager';
 import { AuthTypeEnum } from '../domain/value-objects';
 
@@ -22,7 +25,11 @@ export class ConnectorCredentialService {
     const { encryptedData, keyId } = this.credentialManager.encrypt(data);
 
     // Look for existing credential to rotate
-    let credential = await this.repository.getActiveCredential(tenantId, connectorId, options.instanceId);
+    let credential = await this.repository.getActiveCredential(
+      tenantId,
+      connectorId,
+      options.instanceId,
+    );
 
     if (credential) {
       credential.rotate(encryptedData, options.expiresAt);
@@ -49,17 +56,30 @@ export class ConnectorCredentialService {
     connectorId: string,
     instanceId?: string,
   ): Promise<any | null> {
-    const credential = await this.repository.getActiveCredential(tenantId, connectorId, instanceId);
+    const credential = await this.repository.getActiveCredential(
+      tenantId,
+      connectorId,
+      instanceId,
+    );
     if (!credential) {
       return null;
     }
     return this.credentialManager.decrypt(credential.encryptedData);
   }
 
-  public async rotateSecrets(tenantId: string, credentialId: string, newData: any): Promise<ConnectorCredential> {
-    const credential = await this.repository.getCredentialById(tenantId, credentialId);
+  public async rotateSecrets(
+    tenantId: string,
+    credentialId: string,
+    newData: any,
+  ): Promise<ConnectorCredential> {
+    const credential = await this.repository.getCredentialById(
+      tenantId,
+      credentialId,
+    );
     if (!credential) {
-      throw new NotFoundException(`Credential with ID ${credentialId} not found`);
+      throw new NotFoundException(
+        `Credential with ID ${credentialId} not found`,
+      );
     }
 
     const { encryptedData } = this.credentialManager.encrypt(newData);

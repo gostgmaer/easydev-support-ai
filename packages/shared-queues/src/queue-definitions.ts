@@ -16,8 +16,10 @@ export const QUEUES = {
   CUSTOMER: 'customer-queue',
   TEAM: 'team-queue',
   CHANNEL: 'channel-queue',
+  SETTINGS: 'settings-queue',
   DEAD_LETTER: 'dead-letter-queue',
 } as const;
+
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 

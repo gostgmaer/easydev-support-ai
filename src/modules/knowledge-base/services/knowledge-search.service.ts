@@ -21,7 +21,9 @@ export class KnowledgeSearchService {
     userId?: string,
   ): Promise<any> {
     const startTime = Date.now();
-    this.logger.log(`Performing knowledge search: "${dto.query}" (tenant ${tenantId})`);
+    this.logger.log(
+      `Performing knowledge search: "${dto.query}" (tenant ${tenantId})`,
+    );
 
     // 1. Fetch filtered documents from database
     const paginated = await this.repository.findDocuments(tenantId, {
@@ -36,7 +38,14 @@ export class KnowledgeSearchService {
 
     const docs = paginated.data;
     if (docs.length === 0) {
-      await this.logSearch(tenantId, dto.query, 0, Date.now() - startTime, userId, dto);
+      await this.logSearch(
+        tenantId,
+        dto.query,
+        0,
+        Date.now() - startTime,
+        userId,
+        dto,
+      );
       return [];
     }
 
@@ -48,8 +57,10 @@ export class KnowledgeSearchService {
 
     if (dto.query.trim().length > 2 && docs.length > 1) {
       try {
-        const docContents = docs.map((d) => `${d.title}\n${JSON.stringify(d.metadata || {})}`);
-        
+        const docContents = docs.map(
+          (d) => `${d.title}\n${JSON.stringify(d.metadata || {})}`,
+        );
+
         const rerankResult = await this.aiClient.rerank(
           tenantId,
           dto.query,
@@ -70,12 +81,21 @@ export class KnowledgeSearchService {
           }))
           .sort((a, b) => b.score - a.score);
       } catch (err: any) {
-        this.logger.warn(`AI Platform reranking failed: ${err.message}. Defaulting to keyword ordering.`);
+        this.logger.warn(
+          `AI Platform reranking failed: ${err.message}. Defaulting to keyword ordering.`,
+        );
       }
     }
 
     const latency = Date.now() - startTime;
-    await this.logSearch(tenantId, dto.query, finalResults.length, latency, userId, dto);
+    await this.logSearch(
+      tenantId,
+      dto.query,
+      finalResults.length,
+      latency,
+      userId,
+      dto,
+    );
 
     return finalResults;
   }

@@ -134,8 +134,8 @@ describe('TicketApprovalService', () => {
 
   it('throws NotFound for a missing approval', async () => {
     mockRepo.getApproval.mockResolvedValue(null);
-    await expect(
-      service.approve(tenantId, randomUUID(), {}),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.approve(tenantId, randomUUID(), {})).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

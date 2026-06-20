@@ -10,8 +10,17 @@ export interface AgentProfileQueryOptions {
   status?: string;
 }
 
-export interface IAgentProfileRepository extends ITenantRepository<AgentProfile, string> {
+export interface IAgentProfileRepository extends ITenantRepository<
+  AgentProfile,
+  string
+> {
   findByUserId(userId: string, tenantId: string): Promise<AgentProfile | null>;
-  findByEmployeeCode(employeeCode: string, tenantId: string): Promise<AgentProfile | null>;
-  findPaginated(tenantId: string, options: AgentProfileQueryOptions): Promise<{ data: AgentProfile[]; total: number }>;
+  findByEmployeeCode(
+    employeeCode: string,
+    tenantId: string,
+  ): Promise<AgentProfile | null>;
+  findPaginated(
+    tenantId: string,
+    options: AgentProfileQueryOptions,
+  ): Promise<{ data: AgentProfile[]; total: number }>;
 }

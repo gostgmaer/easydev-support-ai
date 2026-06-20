@@ -56,7 +56,11 @@ describe('InboxService', () => {
       totalAttachments: 0,
       sentimentScore: 0,
     });
-    mockRepo.findInbox.mockResolvedValue({ data: [summary], total: 1, nextCursor: 'c1' });
+    mockRepo.findInbox.mockResolvedValue({
+      data: [summary],
+      total: 1,
+      nextCursor: 'c1',
+    });
 
     const result = await service.listInbox(tenantId, { status: 'OPEN' });
 
@@ -73,7 +77,9 @@ describe('InboxService', () => {
 
     await service.myConversations(tenantId, agentId, {});
 
-    expect(repo.findInbox).toHaveBeenCalledWith(tenantId, { assignedAgentId: agentId });
+    expect(repo.findInbox).toHaveBeenCalledWith(tenantId, {
+      assignedAgentId: agentId,
+    });
   });
 
   it('aggregates unread counts from the read model', async () => {

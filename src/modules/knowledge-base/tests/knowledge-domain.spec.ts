@@ -45,7 +45,9 @@ describe('Knowledge Domain Model', () => {
       expect(source.id).toBe(sourceId);
       expect(source.syncStatus).toBe(SyncStatusEnum.PENDING);
       expect(source.domainEvents.length).toBe(1);
-      expect(source.domainEvents[0].constructor.name).toBe('KnowledgeSourceCreatedEvent');
+      expect(source.domainEvents[0].constructor.name).toBe(
+        'KnowledgeSourceCreatedEvent',
+      );
     });
 
     it('should manage sync progress states', () => {

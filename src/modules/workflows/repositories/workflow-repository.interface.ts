@@ -7,25 +7,61 @@ import {
 
 export interface IWorkflowRepository {
   // Workflow Templates
-  saveTemplate(template: WorkflowTemplate, tenantId: string): Promise<WorkflowTemplate>;
-  getTemplateById(id: string, tenantId: string): Promise<WorkflowTemplate | null>;
-  findTemplates(tenantId: string, options?: { status?: string; type?: string }): Promise<WorkflowTemplate[]>;
+  saveTemplate(
+    template: WorkflowTemplate,
+    tenantId: string,
+  ): Promise<WorkflowTemplate>;
+  getTemplateById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowTemplate | null>;
+  findTemplates(
+    tenantId: string,
+    options?: { status?: string; type?: string },
+  ): Promise<WorkflowTemplate[]>;
   deleteTemplate(id: string, tenantId: string): Promise<boolean>;
 
   // Workflow Executions
-  saveExecution(execution: WorkflowExecution, tenantId: string): Promise<WorkflowExecution>;
-  getExecutionById(id: string, tenantId: string): Promise<WorkflowExecution | null>;
-  findExecutions(tenantId: string, options?: { workflowId?: string; status?: string }): Promise<WorkflowExecution[]>;
+  saveExecution(
+    execution: WorkflowExecution,
+    tenantId: string,
+  ): Promise<WorkflowExecution>;
+  getExecutionById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowExecution | null>;
+  findExecutions(
+    tenantId: string,
+    options?: { workflowId?: string; status?: string },
+  ): Promise<WorkflowExecution[]>;
 
   // Workflow Approvals
-  saveApproval(approval: WorkflowApproval, tenantId: string): Promise<WorkflowApproval>;
-  getApprovalById(id: string, tenantId: string): Promise<WorkflowApproval | null>;
-  findApprovalsByExecutionId(executionId: string, tenantId: string): Promise<WorkflowApproval[]>;
+  saveApproval(
+    approval: WorkflowApproval,
+    tenantId: string,
+  ): Promise<WorkflowApproval>;
+  getApprovalById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowApproval | null>;
+  findApprovalsByExecutionId(
+    executionId: string,
+    tenantId: string,
+  ): Promise<WorkflowApproval[]>;
 
   // Workflow Schedules
-  saveSchedule(schedule: WorkflowSchedule, tenantId: string): Promise<WorkflowSchedule>;
-  getScheduleById(id: string, tenantId: string): Promise<WorkflowSchedule | null>;
-  findSchedules(tenantId: string, activeOnly?: boolean): Promise<WorkflowSchedule[]>;
+  saveSchedule(
+    schedule: WorkflowSchedule,
+    tenantId: string,
+  ): Promise<WorkflowSchedule>;
+  getScheduleById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowSchedule | null>;
+  findSchedules(
+    tenantId: string,
+    activeOnly?: boolean,
+  ): Promise<WorkflowSchedule[]>;
   deleteSchedule(id: string, tenantId: string): Promise<boolean>;
 
   // Workflow Audit Logs
@@ -39,7 +75,11 @@ export interface IWorkflowRepository {
     },
     tenantId: string,
   ): Promise<void>;
-  findAuditLogs(tenantId: string, workflowId?: string, executionId?: string): Promise<any[]>;
+  findAuditLogs(
+    tenantId: string,
+    workflowId?: string,
+    executionId?: string,
+  ): Promise<any[]>;
 
   // Workflow Versions
   saveVersion(
@@ -54,6 +94,15 @@ export interface IWorkflowRepository {
   getActiveVersion(templateId: string, tenantId: string): Promise<any | null>;
 
   // Workflow Variables
-  saveVariable(workflowId: string, name: string, type: string, value: string, tenantId: string): Promise<void>;
-  getVariables(workflowId: string, tenantId: string): Promise<Record<string, { type: string; value: string }>>;
+  saveVariable(
+    workflowId: string,
+    name: string,
+    type: string,
+    value: string,
+    tenantId: string,
+  ): Promise<void>;
+  getVariables(
+    workflowId: string,
+    tenantId: string,
+  ): Promise<Record<string, { type: string; value: string }>>;
 }

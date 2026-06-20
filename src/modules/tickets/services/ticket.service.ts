@@ -79,7 +79,9 @@ export class TicketService {
       assignedAgentId: dto.assignedAgentId,
       assignedTeamId: dto.assignedTeamId,
       categoryId: dto.categoryId,
-      priority: TicketPriority.create(dto.priority || TicketPriorityEnum.MEDIUM),
+      priority: TicketPriority.create(
+        dto.priority || TicketPriorityEnum.MEDIUM,
+      ),
       status: TicketStatus.create(initialStatus),
       source: TicketSource.create(dto.source || TicketSourceEnum.MANUAL),
       subject: dto.subject,
@@ -127,9 +129,7 @@ export class TicketService {
           ? TicketPriority.create(dto.priority)
           : undefined,
       status:
-        dto.status !== undefined
-          ? TicketStatus.create(dto.status)
-          : undefined,
+        dto.status !== undefined ? TicketStatus.create(dto.status) : undefined,
       categoryId: dto.categoryId,
       metadata: dto.metadata
         ? { ...(ticket.metadata || {}), ...dto.metadata }
@@ -272,11 +272,7 @@ export class TicketService {
     return ticket;
   }
 
-  async unwatch(
-    tenantId: string,
-    id: string,
-    userId: string,
-  ): Promise<Ticket> {
+  async unwatch(tenantId: string, id: string, userId: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
     ticket.removeWatcher(userId);
     await this.persist(ticket, tenantId);
@@ -346,9 +342,6 @@ export class TicketService {
   }
 
   async findPaginated(tenantId: string, query: TicketQueryDto) {
-    return this.ticketRepo.findPaginated(
-      tenantId,
-      query as TicketQueryOptions,
-    );
+    return this.ticketRepo.findPaginated(tenantId, query as TicketQueryOptions);
   }
 }

@@ -9,7 +9,8 @@ export class AiEventPublisher {
   constructor(private readonly queueService: QueueService) {}
 
   public async publish(event: DomainEvent): Promise<void> {
-    const eventName = (event.constructor as any).eventName || event.constructor.name;
+    const eventName =
+      (event.constructor as any).eventName || event.constructor.name;
     this.logger.log(
       `Publishing AI Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`,
     );
@@ -28,13 +29,17 @@ export class AiEventPublisher {
 
       if (eventName === 'ai.tool.requested') {
         const e = event as any;
-        await this.queueService.addJob('ai-queue' as any, 'ai-tool-execution-job', {
-          tenantId: e.tenantId,
-          toolRequestId: e.toolRequestId,
-          workflowExecutionId: e.workflowExecutionId,
-          toolName: e.toolName,
-          capability: e.capability,
-        });
+        await this.queueService.addJob(
+          'ai-queue' as any,
+          'ai-tool-execution-job',
+          {
+            tenantId: e.tenantId,
+            toolRequestId: e.toolRequestId,
+            workflowExecutionId: e.workflowExecutionId,
+            toolName: e.toolName,
+            capability: e.capability,
+          },
+        );
       }
 
       if (eventName === 'ai.escalation.created') {
@@ -59,7 +64,9 @@ export class AiEventPublisher {
         });
       }
     } catch (err: any) {
-      this.logger.error(`Failed to publish AI event ${eventName}: ${err.message}`);
+      this.logger.error(
+        `Failed to publish AI event ${eventName}: ${err.message}`,
+      );
     }
   }
 

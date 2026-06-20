@@ -18,7 +18,9 @@ export class AuditEventPublisher {
     updatedBy?: string;
   }): Promise<void> {
     try {
-      this.logger.debug(`Publishing Audit Event for Tenant ${log.tenantId}: ${log.action}`);
+      this.logger.debug(
+        `Publishing Audit Event for Tenant ${log.tenantId}: ${log.action}`,
+      );
       await this.queueService.addJob('analytics-queue', 'audit-event', log);
     } catch (e: any) {
       this.logger.error(`Failed to publish audit event: ${e.message}`);

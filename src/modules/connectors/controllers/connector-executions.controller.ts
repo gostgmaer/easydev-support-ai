@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Headers, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -9,9 +18,7 @@ import { CapabilityTypeEnum } from '../domain/value-objects';
 @Controller('v1/connectors')
 @UseGuards(TenantGuard, RbacGuard)
 export class ConnectorExecutionsController {
-  constructor(
-    private readonly executionService: ConnectorExecutionService,
-  ) {}
+  constructor(private readonly executionService: ConnectorExecutionService) {}
 
   @Post('executions/execute')
   @Roles('tenant_admin', 'agent')
@@ -41,7 +48,11 @@ export class ConnectorExecutionsController {
     @Param('id') connectorId: string,
     @Query() query: any,
   ) {
-    const result = await this.executionService.getExecutions(tenantId, connectorId, query);
+    const result = await this.executionService.getExecutions(
+      tenantId,
+      connectorId,
+      query,
+    );
     return {
       data: result.data.map((exec) => exec.toJSON()),
       total: result.total,
@@ -54,7 +65,10 @@ export class ConnectorExecutionsController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('executionId') executionId: string,
   ) {
-    const execution = await this.executionService.getExecution(tenantId, executionId);
+    const execution = await this.executionService.getExecution(
+      tenantId,
+      executionId,
+    );
     return execution.toJSON();
   }
 }

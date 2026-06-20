@@ -16,7 +16,11 @@ export class WorkflowAuditController {
     @Query('workflowId') workflowId?: string,
     @Query('executionId') executionId?: string,
   ) {
-    const logs = await this.auditService.getAuditLogs(tenantId, workflowId, executionId);
+    const logs = await this.auditService.getAuditLogs(
+      tenantId,
+      workflowId,
+      executionId,
+    );
     return logs;
   }
 }

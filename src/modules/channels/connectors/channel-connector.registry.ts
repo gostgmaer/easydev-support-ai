@@ -10,7 +10,7 @@ export class ChannelConnectorRegistry {
 
   constructor(
     @Inject(CHANNEL_CONNECTORS_TOKEN)
-    private readonly connectors: IChannelConnector[]
+    private readonly connectors: IChannelConnector[],
   ) {
     for (const connector of connectors) {
       this.registry.set(connector.channelType, connector);
@@ -20,7 +20,9 @@ export class ChannelConnectorRegistry {
   getConnector(type: ChannelTypeEnum): IChannelConnector {
     const connector = this.registry.get(type);
     if (!connector) {
-      throw new NotFoundException(`No channel connector found for type: ${type}`);
+      throw new NotFoundException(
+        `No channel connector found for type: ${type}`,
+      );
     }
     return connector;
   }

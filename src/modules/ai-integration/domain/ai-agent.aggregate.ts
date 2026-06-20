@@ -98,7 +98,19 @@ export class AiAgent extends AggregateRoot<string> {
     return agent;
   }
 
-  public update(props: Partial<Pick<AiAgentProps, 'name' | 'description' | 'status' | 'defaultWorkflow' | 'systemPromptReference' | 'configuration'>>): void {
+  public update(
+    props: Partial<
+      Pick<
+        AiAgentProps,
+        | 'name'
+        | 'description'
+        | 'status'
+        | 'defaultWorkflow'
+        | 'systemPromptReference'
+        | 'configuration'
+      >
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

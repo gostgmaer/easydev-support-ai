@@ -28,15 +28,33 @@ export class ChannelRateLimit extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get channelId(): string { return this.props.channelId; }
-  get providerLimit(): number { return this.props.providerLimit || 100; }
-  get tenantLimit(): number { return this.props.tenantLimit || 50; }
-  get currentUsage(): number { return this.props.currentUsage || 0; }
-  get resetAt(): Date { return this.props.resetAt; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get channelId(): string {
+    return this.props.channelId;
+  }
+  get providerLimit(): number {
+    return this.props.providerLimit || 100;
+  }
+  get tenantLimit(): number {
+    return this.props.tenantLimit || 50;
+  }
+  get currentUsage(): number {
+    return this.props.currentUsage || 0;
+  }
+  get resetAt(): Date {
+    return this.props.resetAt;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public incrementUsage(): void {
     const now = new Date();

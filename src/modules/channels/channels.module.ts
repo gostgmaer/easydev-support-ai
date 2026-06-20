@@ -26,7 +26,10 @@ import {
 import { DrizzleChannelRepository } from './repositories/drizzle-channel.repository';
 
 // Connectors & Registry
-import { ChannelConnectorRegistry, CHANNEL_CONNECTORS_TOKEN } from './connectors/channel-connector.registry';
+import {
+  ChannelConnectorRegistry,
+  CHANNEL_CONNECTORS_TOKEN,
+} from './connectors/channel-connector.registry';
 import {
   WebChatConnector,
   EmailConnector,
@@ -89,8 +92,17 @@ import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
         facebook: FacebookConnector,
         instagram: InstagramConnector,
         slack: SlackConnector,
-        teams: TeamsConnector
-      ) => [webChat, email, whatsapp, telegram, facebook, instagram, slack, teams],
+        teams: TeamsConnector,
+      ) => [
+        webChat,
+        email,
+        whatsapp,
+        telegram,
+        facebook,
+        instagram,
+        slack,
+        teams,
+      ],
       inject: [
         WebChatConnector,
         EmailConnector,

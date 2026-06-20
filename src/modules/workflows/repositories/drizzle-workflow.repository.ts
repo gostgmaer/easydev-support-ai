@@ -16,7 +16,10 @@ import { WorkflowMapper } from './workflow.mapper';
 @Injectable()
 export class DrizzleWorkflowRepository implements IWorkflowRepository {
   // ------------------ Workflow Templates ------------------
-  public async saveTemplate(template: WorkflowTemplate, tenantId: string): Promise<WorkflowTemplate> {
+  public async saveTemplate(
+    template: WorkflowTemplate,
+    tenantId: string,
+  ): Promise<WorkflowTemplate> {
     const rawTemplate = {
       id: template.id,
       tenantId: template.tenantId,
@@ -31,14 +34,24 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     const [existing] = await db
       .select()
       .from(schema.workflowTemplates)
-      .where(and(eq(schema.workflowTemplates.id, template.id), eq(schema.workflowTemplates.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowTemplates.id, template.id),
+          eq(schema.workflowTemplates.tenantId, tenantId),
+        ),
+      );
 
     await db.transaction(async (tx) => {
       if (existing) {
         await tx
           .update(schema.workflowTemplates)
           .set(rawTemplate)
-          .where(and(eq(schema.workflowTemplates.id, template.id), eq(schema.workflowTemplates.tenantId, tenantId)));
+          .where(
+            and(
+              eq(schema.workflowTemplates.id, template.id),
+              eq(schema.workflowTemplates.tenantId, tenantId),
+            ),
+          );
       } else {
         await tx
           .insert(schema.workflowTemplates)
@@ -48,7 +61,12 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       // Re-sync Triggers (Clear existing and insert new ones)
       await tx
         .delete(schema.workflowTriggers)
-        .where(and(eq(schema.workflowTriggers.workflowId, template.id), eq(schema.workflowTriggers.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowTriggers.workflowId, template.id),
+            eq(schema.workflowTriggers.tenantId, tenantId),
+          ),
+        );
 
       for (const trigger of template.triggers) {
         const rawTrigger = {
@@ -67,7 +85,12 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       // Re-sync Conditions
       await tx
         .delete(schema.workflowConditions)
-        .where(and(eq(schema.workflowConditions.workflowId, template.id), eq(schema.workflowConditions.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowConditions.workflowId, template.id),
+            eq(schema.workflowConditions.tenantId, tenantId),
+          ),
+        );
 
       for (const cond of template.conditions) {
         const rawCond = {
@@ -88,7 +111,12 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       // Re-sync Actions
       await tx
         .delete(schema.workflowActions)
-        .where(and(eq(schema.workflowActions.workflowId, template.id), eq(schema.workflowActions.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowActions.workflowId, template.id),
+            eq(schema.workflowActions.tenantId, tenantId),
+          ),
+        );
 
       for (const action of template.actions) {
         const rawAction = {
@@ -108,57 +136,92 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       // Sync Variables
       await tx
         .delete(schema.workflowVariables)
-        .where(and(eq(schema.workflowVariables.workflowId, template.id), eq(schema.workflowVariables.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowVariables.workflowId, template.id),
+            eq(schema.workflowVariables.tenantId, tenantId),
+          ),
+        );
 
       for (const [name, variable] of Object.entries(template.variables)) {
-        await tx
-          .insert(schema.workflowVariables)
-          .values({
-            id: crypto.randomUUID(),
-            tenantId,
-            workflowId: template.id,
-            name,
-            type: variable.type,
-            value: variable.value,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
+        await tx.insert(schema.workflowVariables).values({
+          id: crypto.randomUUID(),
+          tenantId,
+          workflowId: template.id,
+          name,
+          type: variable.type,
+          value: variable.value,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
       }
     });
 
     return template;
   }
 
-  public async getTemplateById(id: string, tenantId: string): Promise<WorkflowTemplate | null> {
+  public async getTemplateById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowTemplate | null> {
     const [raw] = await db
       .select()
       .from(schema.workflowTemplates)
-      .where(and(eq(schema.workflowTemplates.id, id), eq(schema.workflowTemplates.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowTemplates.id, id),
+          eq(schema.workflowTemplates.tenantId, tenantId),
+        ),
+      );
 
     if (!raw) return null;
 
     const triggers = await db
       .select()
       .from(schema.workflowTriggers)
-      .where(and(eq(schema.workflowTriggers.workflowId, id), eq(schema.workflowTriggers.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowTriggers.workflowId, id),
+          eq(schema.workflowTriggers.tenantId, tenantId),
+        ),
+      );
 
     const conditions = await db
       .select()
       .from(schema.workflowConditions)
-      .where(and(eq(schema.workflowConditions.workflowId, id), eq(schema.workflowConditions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowConditions.workflowId, id),
+          eq(schema.workflowConditions.tenantId, tenantId),
+        ),
+      );
 
     const actions = await db
       .select()
       .from(schema.workflowActions)
-      .where(and(eq(schema.workflowActions.workflowId, id), eq(schema.workflowActions.tenantId, tenantId)))
+      .where(
+        and(
+          eq(schema.workflowActions.workflowId, id),
+          eq(schema.workflowActions.tenantId, tenantId),
+        ),
+      )
       .orderBy(asc(schema.workflowActions.sequenceOrder));
 
     const variablesMap = await this.getVariables(id, tenantId);
 
-    return WorkflowMapper.templateToDomain(raw, triggers, conditions, actions, variablesMap);
+    return WorkflowMapper.templateToDomain(
+      raw,
+      triggers,
+      conditions,
+      actions,
+      variablesMap,
+    );
   }
 
-  public async findTemplates(tenantId: string, options?: { status?: string; type?: string }): Promise<WorkflowTemplate[]> {
+  public async findTemplates(
+    tenantId: string,
+    options?: { status?: string; type?: string },
+  ): Promise<WorkflowTemplate[]> {
     const conditions = [eq(schema.workflowTemplates.tenantId, tenantId)];
     if (options?.status) {
       conditions.push(eq(schema.workflowTemplates.status, options.status));
@@ -177,22 +240,45 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       const triggers = await db
         .select()
         .from(schema.workflowTriggers)
-        .where(and(eq(schema.workflowTriggers.workflowId, raw.id), eq(schema.workflowTriggers.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowTriggers.workflowId, raw.id),
+            eq(schema.workflowTriggers.tenantId, tenantId),
+          ),
+        );
 
       const conditions = await db
         .select()
         .from(schema.workflowConditions)
-        .where(and(eq(schema.workflowConditions.workflowId, raw.id), eq(schema.workflowConditions.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowConditions.workflowId, raw.id),
+            eq(schema.workflowConditions.tenantId, tenantId),
+          ),
+        );
 
       const actions = await db
         .select()
         .from(schema.workflowActions)
-        .where(and(eq(schema.workflowActions.workflowId, raw.id), eq(schema.workflowActions.tenantId, tenantId)))
+        .where(
+          and(
+            eq(schema.workflowActions.workflowId, raw.id),
+            eq(schema.workflowActions.tenantId, tenantId),
+          ),
+        )
         .orderBy(asc(schema.workflowActions.sequenceOrder));
 
       const variablesMap = await this.getVariables(raw.id, tenantId);
 
-      templates.push(WorkflowMapper.templateToDomain(raw, triggers, conditions, actions, variablesMap));
+      templates.push(
+        WorkflowMapper.templateToDomain(
+          raw,
+          triggers,
+          conditions,
+          actions,
+          variablesMap,
+        ),
+      );
     }
 
     return templates;
@@ -202,19 +288,32 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     const [existing] = await db
       .select()
       .from(schema.workflowTemplates)
-      .where(and(eq(schema.workflowTemplates.id, id), eq(schema.workflowTemplates.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowTemplates.id, id),
+          eq(schema.workflowTemplates.tenantId, tenantId),
+        ),
+      );
 
     if (!existing) return false;
 
     await db
       .delete(schema.workflowTemplates)
-      .where(and(eq(schema.workflowTemplates.id, id), eq(schema.workflowTemplates.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowTemplates.id, id),
+          eq(schema.workflowTemplates.tenantId, tenantId),
+        ),
+      );
 
     return true;
   }
 
   // ------------------ Workflow Executions ------------------
-  public async saveExecution(execution: WorkflowExecution, tenantId: string): Promise<WorkflowExecution> {
+  public async saveExecution(
+    execution: WorkflowExecution,
+    tenantId: string,
+  ): Promise<WorkflowExecution> {
     const raw = {
       id: execution.id,
       tenantId: execution.tenantId,
@@ -234,14 +333,24 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     const [existing] = await db
       .select()
       .from(schema.workflowExecutions)
-      .where(and(eq(schema.workflowExecutions.id, execution.id), eq(schema.workflowExecutions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowExecutions.id, execution.id),
+          eq(schema.workflowExecutions.tenantId, tenantId),
+        ),
+      );
 
     await db.transaction(async (tx) => {
       if (existing) {
         await tx
           .update(schema.workflowExecutions)
           .set(raw)
-          .where(and(eq(schema.workflowExecutions.id, execution.id), eq(schema.workflowExecutions.tenantId, tenantId)));
+          .where(
+            and(
+              eq(schema.workflowExecutions.id, execution.id),
+              eq(schema.workflowExecutions.tenantId, tenantId),
+            ),
+          );
       } else {
         await tx
           .insert(schema.workflowExecutions)
@@ -265,13 +374,23 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
         const [existingApp] = await tx
           .select()
           .from(schema.workflowApprovals)
-          .where(and(eq(schema.workflowApprovals.id, app.id), eq(schema.workflowApprovals.tenantId, tenantId)));
+          .where(
+            and(
+              eq(schema.workflowApprovals.id, app.id),
+              eq(schema.workflowApprovals.tenantId, tenantId),
+            ),
+          );
 
         if (existingApp) {
           await tx
             .update(schema.workflowApprovals)
             .set(rawApp)
-            .where(and(eq(schema.workflowApprovals.id, app.id), eq(schema.workflowApprovals.tenantId, tenantId)));
+            .where(
+              and(
+                eq(schema.workflowApprovals.id, app.id),
+                eq(schema.workflowApprovals.tenantId, tenantId),
+              ),
+            );
         } else {
           await tx
             .insert(schema.workflowApprovals)
@@ -283,29 +402,49 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     return execution;
   }
 
-  public async getExecutionById(id: string, tenantId: string): Promise<WorkflowExecution | null> {
+  public async getExecutionById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowExecution | null> {
     const [raw] = await db
       .select()
       .from(schema.workflowExecutions)
-      .where(and(eq(schema.workflowExecutions.id, id), eq(schema.workflowExecutions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowExecutions.id, id),
+          eq(schema.workflowExecutions.tenantId, tenantId),
+        ),
+      );
 
     if (!raw) return null;
 
     const approvals = await db
       .select()
       .from(schema.workflowApprovals)
-      .where(and(eq(schema.workflowApprovals.workflowExecutionId, id), eq(schema.workflowApprovals.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowApprovals.workflowExecutionId, id),
+          eq(schema.workflowApprovals.tenantId, tenantId),
+        ),
+      );
 
     return WorkflowMapper.executionToDomain(raw, approvals);
   }
 
-  public async findExecutions(tenantId: string, options?: { workflowId?: string; status?: string }): Promise<WorkflowExecution[]> {
+  public async findExecutions(
+    tenantId: string,
+    options?: { workflowId?: string; status?: string },
+  ): Promise<WorkflowExecution[]> {
     const conditions = [eq(schema.workflowExecutions.tenantId, tenantId)];
     if (options?.workflowId) {
-      conditions.push(eq(schema.workflowExecutions.workflowId, options.workflowId));
+      conditions.push(
+        eq(schema.workflowExecutions.workflowId, options.workflowId),
+      );
     }
     if (options?.status) {
-      conditions.push(eq(schema.workflowExecutions.executionStatus, options.status));
+      conditions.push(
+        eq(schema.workflowExecutions.executionStatus, options.status),
+      );
     }
 
     const rows = await db
@@ -319,7 +458,12 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       const approvals = await db
         .select()
         .from(schema.workflowApprovals)
-        .where(and(eq(schema.workflowApprovals.workflowExecutionId, raw.id), eq(schema.workflowApprovals.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowApprovals.workflowExecutionId, raw.id),
+            eq(schema.workflowApprovals.tenantId, tenantId),
+          ),
+        );
       executions.push(WorkflowMapper.executionToDomain(raw, approvals));
     }
 
@@ -327,7 +471,10 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
   }
 
   // ------------------ Workflow Approvals ------------------
-  public async saveApproval(approval: WorkflowApproval, tenantId: string): Promise<WorkflowApproval> {
+  public async saveApproval(
+    approval: WorkflowApproval,
+    tenantId: string,
+  ): Promise<WorkflowApproval> {
     const raw = {
       id: approval.id,
       tenantId: approval.tenantId,
@@ -343,13 +490,23 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     const [existing] = await db
       .select()
       .from(schema.workflowApprovals)
-      .where(and(eq(schema.workflowApprovals.id, approval.id), eq(schema.workflowApprovals.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowApprovals.id, approval.id),
+          eq(schema.workflowApprovals.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.workflowApprovals)
         .set(raw)
-        .where(and(eq(schema.workflowApprovals.id, approval.id), eq(schema.workflowApprovals.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowApprovals.id, approval.id),
+            eq(schema.workflowApprovals.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.workflowApprovals)
@@ -359,27 +516,46 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     return approval;
   }
 
-  public async getApprovalById(id: string, tenantId: string): Promise<WorkflowApproval | null> {
+  public async getApprovalById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowApproval | null> {
     const [raw] = await db
       .select()
       .from(schema.workflowApprovals)
-      .where(and(eq(schema.workflowApprovals.id, id), eq(schema.workflowApprovals.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowApprovals.id, id),
+          eq(schema.workflowApprovals.tenantId, tenantId),
+        ),
+      );
 
     if (!raw) return null;
     return WorkflowMapper.approvalToDomain(raw);
   }
 
-  public async findApprovalsByExecutionId(executionId: string, tenantId: string): Promise<WorkflowApproval[]> {
+  public async findApprovalsByExecutionId(
+    executionId: string,
+    tenantId: string,
+  ): Promise<WorkflowApproval[]> {
     const rows = await db
       .select()
       .from(schema.workflowApprovals)
-      .where(and(eq(schema.workflowApprovals.workflowExecutionId, executionId), eq(schema.workflowApprovals.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowApprovals.workflowExecutionId, executionId),
+          eq(schema.workflowApprovals.tenantId, tenantId),
+        ),
+      );
 
     return rows.map((r) => WorkflowMapper.approvalToDomain(r));
   }
 
   // ------------------ Workflow Schedules ------------------
-  public async saveSchedule(schedule: WorkflowSchedule, tenantId: string): Promise<WorkflowSchedule> {
+  public async saveSchedule(
+    schedule: WorkflowSchedule,
+    tenantId: string,
+  ): Promise<WorkflowSchedule> {
     const raw = {
       id: schedule.id,
       tenantId: schedule.tenantId,
@@ -395,13 +571,23 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     const [existing] = await db
       .select()
       .from(schema.workflowSchedules)
-      .where(and(eq(schema.workflowSchedules.id, schedule.id), eq(schema.workflowSchedules.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowSchedules.id, schedule.id),
+          eq(schema.workflowSchedules.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.workflowSchedules)
         .set(raw)
-        .where(and(eq(schema.workflowSchedules.id, schedule.id), eq(schema.workflowSchedules.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.workflowSchedules.id, schedule.id),
+            eq(schema.workflowSchedules.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.workflowSchedules)
@@ -411,17 +597,28 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     return schedule;
   }
 
-  public async getScheduleById(id: string, tenantId: string): Promise<WorkflowSchedule | null> {
+  public async getScheduleById(
+    id: string,
+    tenantId: string,
+  ): Promise<WorkflowSchedule | null> {
     const [raw] = await db
       .select()
       .from(schema.workflowSchedules)
-      .where(and(eq(schema.workflowSchedules.id, id), eq(schema.workflowSchedules.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowSchedules.id, id),
+          eq(schema.workflowSchedules.tenantId, tenantId),
+        ),
+      );
 
     if (!raw) return null;
     return WorkflowMapper.scheduleToDomain(raw);
   }
 
-  public async findSchedules(tenantId: string, activeOnly?: boolean): Promise<WorkflowSchedule[]> {
+  public async findSchedules(
+    tenantId: string,
+    activeOnly?: boolean,
+  ): Promise<WorkflowSchedule[]> {
     const conditions = [eq(schema.workflowSchedules.tenantId, tenantId)];
     if (activeOnly) {
       conditions.push(eq(schema.workflowSchedules.isActive, true));
@@ -439,13 +636,23 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     const [existing] = await db
       .select()
       .from(schema.workflowSchedules)
-      .where(and(eq(schema.workflowSchedules.id, id), eq(schema.workflowSchedules.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowSchedules.id, id),
+          eq(schema.workflowSchedules.tenantId, tenantId),
+        ),
+      );
 
     if (!existing) return false;
 
     await db
       .delete(schema.workflowSchedules)
-      .where(and(eq(schema.workflowSchedules.id, id), eq(schema.workflowSchedules.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.workflowSchedules.id, id),
+          eq(schema.workflowSchedules.tenantId, tenantId),
+        ),
+      );
 
     return true;
   }
@@ -461,28 +668,32 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
     },
     tenantId: string,
   ): Promise<void> {
-    await db
-      .insert(schema.workflowAuditLogs)
-      .values({
-        id: crypto.randomUUID(),
-        tenantId,
-        workflowId: log.workflowId || null,
-        workflowExecutionId: log.workflowExecutionId || null,
-        action: log.action,
-        details: log.details || null,
-        metadata: log.metadata || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+    await db.insert(schema.workflowAuditLogs).values({
+      id: crypto.randomUUID(),
+      tenantId,
+      workflowId: log.workflowId || null,
+      workflowExecutionId: log.workflowExecutionId || null,
+      action: log.action,
+      details: log.details || null,
+      metadata: log.metadata || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   }
 
-  public async findAuditLogs(tenantId: string, workflowId?: string, executionId?: string): Promise<any[]> {
+  public async findAuditLogs(
+    tenantId: string,
+    workflowId?: string,
+    executionId?: string,
+  ): Promise<any[]> {
     const conditions = [eq(schema.workflowAuditLogs.tenantId, tenantId)];
     if (workflowId) {
       conditions.push(eq(schema.workflowAuditLogs.workflowId, workflowId));
     }
     if (executionId) {
-      conditions.push(eq(schema.workflowAuditLogs.workflowExecutionId, executionId));
+      conditions.push(
+        eq(schema.workflowAuditLogs.workflowExecutionId, executionId),
+      );
     }
 
     return db
@@ -526,12 +737,13 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
         );
     }
 
-    await db
-      .insert(schema.workflowVersions)
-      .values(raw);
+    await db.insert(schema.workflowVersions).values(raw);
   }
 
-  public async getActiveVersion(templateId: string, tenantId: string): Promise<any | null> {
+  public async getActiveVersion(
+    templateId: string,
+    tenantId: string,
+  ): Promise<any | null> {
     const [row] = await db
       .select()
       .from(schema.workflowVersions)
@@ -577,22 +789,23 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
           ),
         );
     } else {
-      await db
-        .insert(schema.workflowVariables)
-        .values({
-          id: crypto.randomUUID(),
-          tenantId,
-          workflowId,
-          name,
-          type,
-          value,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+      await db.insert(schema.workflowVariables).values({
+        id: crypto.randomUUID(),
+        tenantId,
+        workflowId,
+        name,
+        type,
+        value,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
   }
 
-  public async getVariables(workflowId: string, tenantId: string): Promise<Record<string, { type: string; value: string }>> {
+  public async getVariables(
+    workflowId: string,
+    tenantId: string,
+  ): Promise<Record<string, { type: string; value: string }>> {
     const rows = await db
       .select()
       .from(schema.workflowVariables)

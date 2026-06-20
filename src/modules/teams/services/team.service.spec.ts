@@ -81,14 +81,16 @@ describe('TeamService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'TEAM_CREATE',
-        })
+        }),
       );
     });
 
     it('should throw ConflictException when team name exists', async () => {
       teamRepo.findByName.mockResolvedValue({ id: 'existing' });
 
-      await expect(service.create(tenantId, dto)).rejects.toThrow(ConflictException);
+      await expect(service.create(tenantId, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -119,13 +121,15 @@ describe('TeamService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'TEAM_UPDATE',
-        })
+        }),
       );
     });
 
     it('should throw NotFoundException if team does not exist', async () => {
       teamRepo.findById.mockResolvedValue(null);
-      await expect(service.update(tenantId, teamId, {})).rejects.toThrow(NotFoundException);
+      await expect(service.update(tenantId, teamId, {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -151,13 +155,15 @@ describe('TeamService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'TEAM_ARCHIVE',
-        })
+        }),
       );
     });
 
     it('should throw NotFoundException if team does not exist', async () => {
       teamRepo.findById.mockResolvedValue(null);
-      await expect(service.archive(tenantId, teamId)).rejects.toThrow(NotFoundException);
+      await expect(service.archive(tenantId, teamId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -178,7 +184,11 @@ describe('TeamService', () => {
         userId: randomUUID(),
         displayName: 'Agent Agent',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -186,7 +196,13 @@ describe('TeamService', () => {
       teamRepo.findById.mockResolvedValue(team);
       profileRepo.findById.mockResolvedValue(agent);
 
-      await service.addAgent(tenantId, teamId, agentProfileId, 'MEMBER', 'user-123');
+      await service.addAgent(
+        tenantId,
+        teamId,
+        agentProfileId,
+        'MEMBER',
+        'user-123',
+      );
 
       expect(team.members.length).toBe(1);
       expect(team.members[0].agentProfileId).toBe(agentProfileId);
@@ -195,13 +211,15 @@ describe('TeamService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'TEAM_MEMBER_ADD',
-        })
+        }),
       );
     });
 
     it('should throw NotFoundException if team not found', async () => {
       teamRepo.findById.mockResolvedValue(null);
-      await expect(service.addAgent(tenantId, teamId, agentProfileId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.addAgent(tenantId, teamId, agentProfileId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if agent profile not found', async () => {
@@ -214,7 +232,9 @@ describe('TeamService', () => {
       teamRepo.findById.mockResolvedValue(team);
       profileRepo.findById.mockResolvedValue(null);
 
-      await expect(service.addAgent(tenantId, teamId, agentProfileId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.addAgent(tenantId, teamId, agentProfileId),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -249,13 +269,15 @@ describe('TeamService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'TEAM_MEMBER_REMOVE',
-        })
+        }),
       );
     });
 
     it('should throw NotFoundException if team not found', async () => {
       teamRepo.findById.mockResolvedValue(null);
-      await expect(service.removeAgent(tenantId, teamId, agentProfileId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeAgent(tenantId, teamId, agentProfileId),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -293,7 +315,13 @@ describe('TeamService', () => {
         return Promise.resolve(null);
       });
 
-      await service.moveAgent(tenantId, fromTeamId, toTeamId, agentProfileId, 'user-123');
+      await service.moveAgent(
+        tenantId,
+        fromTeamId,
+        toTeamId,
+        agentProfileId,
+        'user-123',
+      );
 
       expect(fromTeam.members.length).toBe(0);
       expect(toTeam.members.length).toBe(1);
@@ -302,13 +330,15 @@ describe('TeamService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'TEAM_MEMBER_MOVE',
-        })
+        }),
       );
     });
 
     it('should throw NotFoundException if either team is missing', async () => {
       teamRepo.findById.mockResolvedValue(null);
-      await expect(service.moveAgent(tenantId, fromTeamId, toTeamId, agentProfileId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.moveAgent(tenantId, fromTeamId, toTeamId, agentProfileId),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -331,7 +361,9 @@ describe('TeamService', () => {
 
     it('should throw NotFoundException if team not found on findById', async () => {
       teamRepo.findById.mockResolvedValue(null);
-      await expect(service.findById(tenantId, teamId)).rejects.toThrow(NotFoundException);
+      await expect(service.findById(tenantId, teamId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should call repository findPaginated', async () => {

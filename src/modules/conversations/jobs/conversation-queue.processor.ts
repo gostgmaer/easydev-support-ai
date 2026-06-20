@@ -25,7 +25,9 @@ export class ConversationQueueProcessor extends BaseWorker {
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
     if (!tenantId) {
-      this.logger.warn(`Job ${job.id} [${job.name}] ran without tenantId context`);
+      this.logger.warn(
+        `Job ${job.id} [${job.name}] ran without tenantId context`,
+      );
     }
 
     switch (job.name) {
@@ -37,12 +39,18 @@ export class ConversationQueueProcessor extends BaseWorker {
           job.data.teamId,
           job.data.userId,
         );
-        return { conversationId: conversation.id, assignedAgentId: conversation.assignedAgentId };
+        return {
+          conversationId: conversation.id,
+          assignedAgentId: conversation.assignedAgentId,
+        };
       }
 
       case 'conversation-summary-job': {
         this.logger.log(`Processing conversation-summary-job ${job.id}`);
-        const summary = await this.summaryService.rebuild(tenantId, job.data.conversationId);
+        const summary = await this.summaryService.rebuild(
+          tenantId,
+          job.data.conversationId,
+        );
         await this.inboxService.invalidate(tenantId);
         if (summary) {
           this.gateway?.broadcastInboxUpdate(tenantId, summary.toJSON());
@@ -63,17 +71,25 @@ export class ConversationQueueProcessor extends BaseWorker {
 
       case 'conversation-archive-job': {
         this.logger.log(`Processing conversation-archive-job ${job.id}`);
-        const archived = await this.conversationService.archive(tenantId, job.data.conversationId, job.data.userId);
+        const archived = await this.conversationService.archive(
+          tenantId,
+          job.data.conversationId,
+          job.data.userId,
+        );
         return { conversationId: archived.id, status: archived.status.value };
       }
 
       case 'conversation-analytics-job': {
         this.logger.log(`Processing conversation-analytics-job ${job.id}`);
-        await this.queueService?.addJob(QUEUES.ANALYTICS, 'conversation-event', {
-          conversationId: job.data.conversationId,
-          eventName: job.data.eventName,
-          tenantId,
-        });
+        await this.queueService?.addJob(
+          QUEUES.ANALYTICS,
+          'conversation-event',
+          {
+            conversationId: job.data.conversationId,
+            eventName: job.data.eventName,
+            tenantId,
+          },
+        );
         return { forwarded: true, conversationId: job.data.conversationId };
       }
 

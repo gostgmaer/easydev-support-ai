@@ -37,17 +37,39 @@ export class AiConversationSession extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get conversationId(): string { return this.props.conversationId; }
-  get customerId(): string { return this.props.customerId; }
-  get agentId(): string { return this.props.agentId; }
-  get workflowExecutionId(): string | undefined { return this.props.workflowExecutionId; }
-  get sessionState(): Record<string, any> { return this.props.sessionState; }
-  get lastInteractionAt(): Date | undefined { return this.props.lastInteractionAt; }
-  get contextVersion(): number { return this.props.contextVersion || 1; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get conversationId(): string {
+    return this.props.conversationId;
+  }
+  get customerId(): string {
+    return this.props.customerId;
+  }
+  get agentId(): string {
+    return this.props.agentId;
+  }
+  get workflowExecutionId(): string | undefined {
+    return this.props.workflowExecutionId;
+  }
+  get sessionState(): Record<string, any> {
+    return this.props.sessionState;
+  }
+  get lastInteractionAt(): Date | undefined {
+    return this.props.lastInteractionAt;
+  }
+  get contextVersion(): number {
+    return this.props.contextVersion || 1;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public updateState(state: Record<string, any>): void {
     this.props.sessionState = {
@@ -117,18 +139,42 @@ export class AiWorkflowExecution extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowId(): string { return this.props.workflowId; }
-  get conversationId(): string { return this.props.conversationId; }
-  get status(): WorkflowStatusEnum { return this.props.status; }
-  get startedAt(): Date { return this.props.startedAt!; }
-  get completedAt(): Date | undefined { return this.props.completedAt; }
-  get executionTimeMs(): number { return this.props.executionTimeMs || 0; }
-  get tokensUsed(): number { return this.props.tokensUsed || 0; }
-  get estimatedCost(): number { return this.props.estimatedCost || 0.0; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowId(): string {
+    return this.props.workflowId;
+  }
+  get conversationId(): string {
+    return this.props.conversationId;
+  }
+  get status(): WorkflowStatusEnum {
+    return this.props.status;
+  }
+  get startedAt(): Date {
+    return this.props.startedAt!;
+  }
+  get completedAt(): Date | undefined {
+    return this.props.completedAt;
+  }
+  get executionTimeMs(): number {
+    return this.props.executionTimeMs || 0;
+  }
+  get tokensUsed(): number {
+    return this.props.tokensUsed || 0;
+  }
+  get estimatedCost(): number {
+    return this.props.estimatedCost || 0.0;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public start(): void {
     this.props.status = WorkflowStatusEnum.RUNNING;
@@ -213,16 +259,36 @@ export class AiToolRequest extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowExecutionId(): string { return this.props.workflowExecutionId; }
-  get toolName(): string { return this.props.toolName; }
-  get capability(): string { return this.props.capability; }
-  get payload(): Record<string, any> { return this.props.payload; }
-  get status(): ToolStatusEnum { return this.props.status; }
-  get requestedAt(): Date { return this.props.requestedAt!; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowExecutionId(): string {
+    return this.props.workflowExecutionId;
+  }
+  get toolName(): string {
+    return this.props.toolName;
+  }
+  get capability(): string {
+    return this.props.capability;
+  }
+  get payload(): Record<string, any> {
+    return this.props.payload;
+  }
+  get status(): ToolStatusEnum {
+    return this.props.status;
+  }
+  get requestedAt(): Date {
+    return this.props.requestedAt!;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public complete(): void {
     this.props.status = ToolStatusEnum.SUCCESS;
@@ -278,14 +344,30 @@ export class AiToolResult extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get toolRequestId(): string { return this.props.toolRequestId; }
-  get response(): Record<string, any> { return this.props.response; }
-  get status(): ToolStatusEnum { return this.props.status; }
-  get completedAt(): Date { return this.props.completedAt!; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get toolRequestId(): string {
+    return this.props.toolRequestId;
+  }
+  get response(): Record<string, any> {
+    return this.props.response;
+  }
+  get status(): ToolStatusEnum {
+    return this.props.status;
+  }
+  get completedAt(): Date {
+    return this.props.completedAt!;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public toJSON() {
     return {
@@ -330,16 +412,36 @@ export class AiEscalation extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get conversationId(): string { return this.props.conversationId; }
-  get reason(): string { return this.props.reason; }
-  get confidenceScore(): number | undefined { return this.props.confidenceScore; }
-  get sentimentScore(): number | undefined { return this.props.sentimentScore; }
-  get escalatedTo(): EscalationTargetEnum { return this.props.escalatedTo; }
-  get status(): EscalationStatusEnum { return this.props.status; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get conversationId(): string {
+    return this.props.conversationId;
+  }
+  get reason(): string {
+    return this.props.reason;
+  }
+  get confidenceScore(): number | undefined {
+    return this.props.confidenceScore;
+  }
+  get sentimentScore(): number | undefined {
+    return this.props.sentimentScore;
+  }
+  get escalatedTo(): EscalationTargetEnum {
+    return this.props.escalatedTo;
+  }
+  get status(): EscalationStatusEnum {
+    return this.props.status;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public resolve(): void {
     this.props.status = EscalationStatusEnum.RESOLVED;
@@ -391,19 +493,46 @@ export class AiUsageMetric extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get agentId(): string { return this.props.agentId; }
-  get date(): string { return this.props.date; }
-  get requests(): number { return this.props.requests; }
-  get tokens(): number { return this.props.tokens; }
-  get cost(): number { return this.props.cost; }
-  get workflowCount(): number { return this.props.workflowCount; }
-  get toolCalls(): number { return this.props.toolCalls; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get agentId(): string {
+    return this.props.agentId;
+  }
+  get date(): string {
+    return this.props.date;
+  }
+  get requests(): number {
+    return this.props.requests;
+  }
+  get tokens(): number {
+    return this.props.tokens;
+  }
+  get cost(): number {
+    return this.props.cost;
+  }
+  get workflowCount(): number {
+    return this.props.workflowCount;
+  }
+  get toolCalls(): number {
+    return this.props.toolCalls;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
-  public recordRequest(tokens: number, cost: number, workflowInc: boolean, toolsCount: number): void {
+  public recordRequest(
+    tokens: number,
+    cost: number,
+    workflowInc: boolean,
+    toolsCount: number,
+  ): void {
     this.props.requests = (this.props.requests || 0) + 1;
     this.props.tokens = (this.props.tokens || 0) + tokens;
     this.props.cost = (this.props.cost || 0.0) + cost;

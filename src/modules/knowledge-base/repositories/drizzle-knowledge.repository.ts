@@ -1,16 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { db, schema } from '@easydev/database';
+import { eq, and, or, ilike, sql, desc, asc, isNull } from 'drizzle-orm';
 import {
-  eq,
-  and,
-  or,
-  ilike,
-  sql,
-  desc,
-  asc,
-  isNull,
-} from 'drizzle-orm';
-import { IKnowledgeRepository, DocumentQueryOptions, PaginatedResult } from './knowledge-repository.interface';
+  IKnowledgeRepository,
+  DocumentQueryOptions,
+  PaginatedResult,
+} from './knowledge-repository.interface';
 import { KnowledgeSource } from '../domain/knowledge-source.aggregate';
 import { KnowledgeDocument } from '../domain/knowledge-document.aggregate';
 import { KnowledgeChunk } from '../domain/knowledge-chunk.entity';
@@ -24,9 +19,11 @@ import { KnowledgeMapper } from './knowledge.mapper';
 
 @Injectable()
 export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
-  
   // ------------------ Sources ------------------
-  async saveSource(source: KnowledgeSource, tenantId: string): Promise<KnowledgeSource> {
+  async saveSource(
+    source: KnowledgeSource,
+    tenantId: string,
+  ): Promise<KnowledgeSource> {
     const raw = {
       id: source.id,
       tenantId: source.tenantId,
@@ -49,13 +46,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeSources)
-      .where(and(eq(schema.knowledgeSources.id, source.id), eq(schema.knowledgeSources.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeSources.id, source.id),
+          eq(schema.knowledgeSources.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.knowledgeSources)
         .set(raw)
-        .where(and(eq(schema.knowledgeSources.id, source.id), eq(schema.knowledgeSources.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgeSources.id, source.id),
+            eq(schema.knowledgeSources.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.knowledgeSources)
@@ -65,20 +72,36 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     return source;
   }
 
-  async getSourceById(id: string, tenantId: string): Promise<KnowledgeSource | null> {
+  async getSourceById(
+    id: string,
+    tenantId: string,
+  ): Promise<KnowledgeSource | null> {
     const [row] = await db
       .select()
       .from(schema.knowledgeSources)
-      .where(and(eq(schema.knowledgeSources.id, id), eq(schema.knowledgeSources.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeSources.id, id),
+          eq(schema.knowledgeSources.tenantId, tenantId),
+        ),
+      );
     if (!row) return null;
     return KnowledgeMapper.sourceToDomain(row);
   }
 
-  async findSources(tenantId: string, options?: any): Promise<PaginatedResult<KnowledgeSource>> {
+  async findSources(
+    tenantId: string,
+    options?: any,
+  ): Promise<PaginatedResult<KnowledgeSource>> {
     const rows = await db
       .select()
       .from(schema.knowledgeSources)
-      .where(and(eq(schema.knowledgeSources.tenantId, tenantId), isNull(schema.knowledgeSources.deletedAt)))
+      .where(
+        and(
+          eq(schema.knowledgeSources.tenantId, tenantId),
+          isNull(schema.knowledgeSources.deletedAt),
+        ),
+      )
       .orderBy(desc(schema.knowledgeSources.createdAt));
 
     return {
@@ -91,20 +114,33 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeSources)
-      .where(and(eq(schema.knowledgeSources.id, id), eq(schema.knowledgeSources.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeSources.id, id),
+          eq(schema.knowledgeSources.tenantId, tenantId),
+        ),
+      );
 
     if (!existing) return false;
 
     await db
       .update(schema.knowledgeSources)
       .set({ deletedAt: new Date(), status: 'DISABLED' })
-      .where(and(eq(schema.knowledgeSources.id, id), eq(schema.knowledgeSources.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeSources.id, id),
+          eq(schema.knowledgeSources.tenantId, tenantId),
+        ),
+      );
 
     return true;
   }
 
   // ------------------ Documents ------------------
-  async findById(id: string, tenantId: string): Promise<KnowledgeDocument | null> {
+  async findById(
+    id: string,
+    tenantId: string,
+  ): Promise<KnowledgeDocument | null> {
     const [row] = await db
       .select()
       .from(schema.knowledgeDocuments)
@@ -112,14 +148,17 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
         and(
           eq(schema.knowledgeDocuments.id, id),
           eq(schema.knowledgeDocuments.tenantId, tenantId),
-          isNull(schema.knowledgeDocuments.deletedAt)
-        )
+          isNull(schema.knowledgeDocuments.deletedAt),
+        ),
       );
     if (!row) return null;
     return KnowledgeMapper.documentToDomain(row);
   }
 
-  async findBySlug(tenantId: string, slug: string): Promise<KnowledgeDocument | null> {
+  async findBySlug(
+    tenantId: string,
+    slug: string,
+  ): Promise<KnowledgeDocument | null> {
     const [row] = await db
       .select()
       .from(schema.knowledgeDocuments)
@@ -127,8 +166,8 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
         and(
           eq(schema.knowledgeDocuments.slug, slug),
           eq(schema.knowledgeDocuments.tenantId, tenantId),
-          isNull(schema.knowledgeDocuments.deletedAt)
-        )
+          isNull(schema.knowledgeDocuments.deletedAt),
+        ),
       );
     if (!row) return null;
     return KnowledgeMapper.documentToDomain(row);
@@ -138,11 +177,19 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const rows = await db
       .select()
       .from(schema.knowledgeDocuments)
-      .where(and(eq(schema.knowledgeDocuments.tenantId, tenantId), isNull(schema.knowledgeDocuments.deletedAt)));
+      .where(
+        and(
+          eq(schema.knowledgeDocuments.tenantId, tenantId),
+          isNull(schema.knowledgeDocuments.deletedAt),
+        ),
+      );
     return rows.map((r) => KnowledgeMapper.documentToDomain(r));
   }
 
-  async save(document: KnowledgeDocument, tenantId: string): Promise<KnowledgeDocument> {
+  async save(
+    document: KnowledgeDocument,
+    tenantId: string,
+  ): Promise<KnowledgeDocument> {
     const raw = {
       id: document.id,
       tenantId: document.tenantId,
@@ -175,13 +222,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeDocuments)
-      .where(and(eq(schema.knowledgeDocuments.id, document.id), eq(schema.knowledgeDocuments.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeDocuments.id, document.id),
+          eq(schema.knowledgeDocuments.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.knowledgeDocuments)
         .set(raw)
-        .where(and(eq(schema.knowledgeDocuments.id, document.id), eq(schema.knowledgeDocuments.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgeDocuments.id, document.id),
+            eq(schema.knowledgeDocuments.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.knowledgeDocuments)
@@ -195,19 +252,32 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeDocuments)
-      .where(and(eq(schema.knowledgeDocuments.id, id), eq(schema.knowledgeDocuments.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeDocuments.id, id),
+          eq(schema.knowledgeDocuments.tenantId, tenantId),
+        ),
+      );
 
     if (!existing) return false;
 
     await db
       .update(schema.knowledgeDocuments)
       .set({ deletedAt: new Date(), status: 'ARCHIVED' })
-      .where(and(eq(schema.knowledgeDocuments.id, id), eq(schema.knowledgeDocuments.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeDocuments.id, id),
+          eq(schema.knowledgeDocuments.tenantId, tenantId),
+        ),
+      );
 
     return true;
   }
 
-  async findDocuments(tenantId: string, options: DocumentQueryOptions): Promise<PaginatedResult<KnowledgeDocument>> {
+  async findDocuments(
+    tenantId: string,
+    options: DocumentQueryOptions,
+  ): Promise<PaginatedResult<KnowledgeDocument>> {
     const page = options.page || 1;
     const limit = options.limit || 20;
     const offset = (page - 1) * limit;
@@ -221,7 +291,9 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
       conditions.push(eq(schema.knowledgeDocuments.sourceId, options.sourceId));
     }
     if (options.categoryId) {
-      conditions.push(eq(schema.knowledgeDocuments.categoryId, options.categoryId));
+      conditions.push(
+        eq(schema.knowledgeDocuments.categoryId, options.categoryId),
+      );
     }
     if (options.status) {
       conditions.push(eq(schema.knowledgeDocuments.status, options.status));
@@ -233,8 +305,8 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
       conditions.push(
         or(
           ilike(schema.knowledgeDocuments.title, `%${options.search}%`),
-          ilike(schema.knowledgeDocuments.slug, `%${options.search}%`)
-        ) as any
+          ilike(schema.knowledgeDocuments.slug, `%${options.search}%`),
+        ) as any,
       );
     }
 
@@ -262,7 +334,12 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [row] = await db
       .select()
       .from(schema.knowledgeDocuments)
-      .where(and(eq(schema.knowledgeDocuments.id, id), eq(schema.knowledgeDocuments.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeDocuments.id, id),
+          eq(schema.knowledgeDocuments.tenantId, tenantId),
+        ),
+      );
 
     if (!row) {
       throw new Error(`Document ${id} not found`);
@@ -272,7 +349,12 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     await db
       .update(schema.knowledgeDocuments)
       .set({ version: nextVer, updatedAt: new Date() })
-      .where(and(eq(schema.knowledgeDocuments.id, id), eq(schema.knowledgeDocuments.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeDocuments.id, id),
+          eq(schema.knowledgeDocuments.tenantId, tenantId),
+        ),
+      );
 
     return nextVer;
   }
@@ -286,7 +368,12 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
       const docId = chunks[0].documentId;
       await tx
         .delete(schema.knowledgeChunks)
-        .where(and(eq(schema.knowledgeChunks.documentId, docId), eq(schema.knowledgeChunks.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgeChunks.documentId, docId),
+            eq(schema.knowledgeChunks.tenantId, tenantId),
+          ),
+        );
 
       // 2. Insert new chunks in bulk
       const values = chunks.map((c) => ({
@@ -307,24 +394,43 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     });
   }
 
-  async getChunksByDocumentId(documentId: string, tenantId: string): Promise<KnowledgeChunk[]> {
+  async getChunksByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<KnowledgeChunk[]> {
     const rows = await db
       .select()
       .from(schema.knowledgeChunks)
-      .where(and(eq(schema.knowledgeChunks.documentId, documentId), eq(schema.knowledgeChunks.tenantId, tenantId)))
+      .where(
+        and(
+          eq(schema.knowledgeChunks.documentId, documentId),
+          eq(schema.knowledgeChunks.tenantId, tenantId),
+        ),
+      )
       .orderBy(asc(schema.knowledgeChunks.chunkIndex));
 
     return rows.map((r) => KnowledgeMapper.chunkToDomain(r));
   }
 
-  async deleteChunksByDocumentId(documentId: string, tenantId: string): Promise<void> {
+  async deleteChunksByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<void> {
     await db
       .delete(schema.knowledgeChunks)
-      .where(and(eq(schema.knowledgeChunks.documentId, documentId), eq(schema.knowledgeChunks.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeChunks.documentId, documentId),
+          eq(schema.knowledgeChunks.tenantId, tenantId),
+        ),
+      );
   }
 
   // ------------------ Categories ------------------
-  async saveCategory(category: KnowledgeCategory, tenantId: string): Promise<KnowledgeCategory> {
+  async saveCategory(
+    category: KnowledgeCategory,
+    tenantId: string,
+  ): Promise<KnowledgeCategory> {
     const raw = {
       id: category.id,
       tenantId: category.tenantId,
@@ -339,13 +445,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeCategories)
-      .where(and(eq(schema.knowledgeCategories.id, category.id), eq(schema.knowledgeCategories.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeCategories.id, category.id),
+          eq(schema.knowledgeCategories.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.knowledgeCategories)
         .set(raw)
-        .where(and(eq(schema.knowledgeCategories.id, category.id), eq(schema.knowledgeCategories.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgeCategories.id, category.id),
+            eq(schema.knowledgeCategories.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.knowledgeCategories)
@@ -355,11 +471,19 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     return category;
   }
 
-  async getCategoryById(id: string, tenantId: string): Promise<KnowledgeCategory | null> {
+  async getCategoryById(
+    id: string,
+    tenantId: string,
+  ): Promise<KnowledgeCategory | null> {
     const [row] = await db
       .select()
       .from(schema.knowledgeCategories)
-      .where(and(eq(schema.knowledgeCategories.id, id), eq(schema.knowledgeCategories.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeCategories.id, id),
+          eq(schema.knowledgeCategories.tenantId, tenantId),
+        ),
+      );
     if (!row) return null;
     return KnowledgeMapper.categoryToDomain(row);
   }
@@ -377,7 +501,12 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeCategories)
-      .where(and(eq(schema.knowledgeCategories.id, id), eq(schema.knowledgeCategories.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeCategories.id, id),
+          eq(schema.knowledgeCategories.tenantId, tenantId),
+        ),
+      );
 
     if (!existing) return false;
 
@@ -385,11 +514,21 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     await db
       .update(schema.knowledgeCategories)
       .set({ parentCategoryId: null })
-      .where(and(eq(schema.knowledgeCategories.parentCategoryId, id), eq(schema.knowledgeCategories.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeCategories.parentCategoryId, id),
+          eq(schema.knowledgeCategories.tenantId, tenantId),
+        ),
+      );
 
     await db
       .delete(schema.knowledgeCategories)
-      .where(and(eq(schema.knowledgeCategories.id, id), eq(schema.knowledgeCategories.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeCategories.id, id),
+          eq(schema.knowledgeCategories.tenantId, tenantId),
+        ),
+      );
 
     return true;
   }
@@ -408,13 +547,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeTags)
-      .where(and(eq(schema.knowledgeTags.id, tag.id), eq(schema.knowledgeTags.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeTags.id, tag.id),
+          eq(schema.knowledgeTags.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.knowledgeTags)
         .set(raw)
-        .where(and(eq(schema.knowledgeTags.id, tag.id), eq(schema.knowledgeTags.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgeTags.id, tag.id),
+            eq(schema.knowledgeTags.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.knowledgeTags)
@@ -424,11 +573,19 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     return tag;
   }
 
-  async getTagByName(name: string, tenantId: string): Promise<KnowledgeTag | null> {
+  async getTagByName(
+    name: string,
+    tenantId: string,
+  ): Promise<KnowledgeTag | null> {
     const [row] = await db
       .select()
       .from(schema.knowledgeTags)
-      .where(and(eq(schema.knowledgeTags.name, name), eq(schema.knowledgeTags.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeTags.name, name),
+          eq(schema.knowledgeTags.tenantId, tenantId),
+        ),
+      );
     if (!row) return null;
     return KnowledgeMapper.tagToDomain(row);
   }
@@ -443,7 +600,10 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
   }
 
   // ------------------ Versions ------------------
-  async saveVersion(version: KnowledgeVersion, tenantId: string): Promise<KnowledgeVersion> {
+  async saveVersion(
+    version: KnowledgeVersion,
+    tenantId: string,
+  ): Promise<KnowledgeVersion> {
     const raw = {
       id: version.id,
       tenantId: version.tenantId,
@@ -457,21 +617,34 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
       updatedAt: new Date(),
     };
 
-    await db.insert(schema.knowledgeVersions).values({ ...raw, createdAt: version.createdAt });
+    await db
+      .insert(schema.knowledgeVersions)
+      .values({ ...raw, createdAt: version.createdAt });
     return version;
   }
 
-  async getVersionsByDocumentId(documentId: string, tenantId: string): Promise<KnowledgeVersion[]> {
+  async getVersionsByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<KnowledgeVersion[]> {
     const rows = await db
       .select()
       .from(schema.knowledgeVersions)
-      .where(and(eq(schema.knowledgeVersions.documentId, documentId), eq(schema.knowledgeVersions.tenantId, tenantId)))
+      .where(
+        and(
+          eq(schema.knowledgeVersions.documentId, documentId),
+          eq(schema.knowledgeVersions.tenantId, tenantId),
+        ),
+      )
       .orderBy(desc(schema.knowledgeVersions.versionNumber));
     return rows.map((r) => KnowledgeMapper.versionToDomain(r));
   }
 
   // ------------------ Permissions ------------------
-  async savePermission(permission: KnowledgePermission, tenantId: string): Promise<KnowledgePermission> {
+  async savePermission(
+    permission: KnowledgePermission,
+    tenantId: string,
+  ): Promise<KnowledgePermission> {
     const raw = {
       id: permission.id,
       tenantId: permission.tenantId,
@@ -485,13 +658,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgePermissions)
-      .where(and(eq(schema.knowledgePermissions.id, permission.id), eq(schema.knowledgePermissions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgePermissions.id, permission.id),
+          eq(schema.knowledgePermissions.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.knowledgePermissions)
         .set(raw)
-        .where(and(eq(schema.knowledgePermissions.id, permission.id), eq(schema.knowledgePermissions.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgePermissions.id, permission.id),
+            eq(schema.knowledgePermissions.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.knowledgePermissions)
@@ -501,11 +684,19 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     return permission;
   }
 
-  async getPermissionsByDocumentId(documentId: string, tenantId: string): Promise<KnowledgePermission[]> {
+  async getPermissionsByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<KnowledgePermission[]> {
     const rows = await db
       .select()
       .from(schema.knowledgePermissions)
-      .where(and(eq(schema.knowledgePermissions.documentId, documentId), eq(schema.knowledgePermissions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgePermissions.documentId, documentId),
+          eq(schema.knowledgePermissions.tenantId, tenantId),
+        ),
+      );
     return rows.map((r) => KnowledgeMapper.permissionToDomain(r));
   }
 
@@ -513,13 +704,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgePermissions)
-      .where(and(eq(schema.knowledgePermissions.id, id), eq(schema.knowledgePermissions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgePermissions.id, id),
+          eq(schema.knowledgePermissions.tenantId, tenantId),
+        ),
+      );
 
     if (!existing) return false;
 
     await db
       .delete(schema.knowledgePermissions)
-      .where(and(eq(schema.knowledgePermissions.id, id), eq(schema.knowledgePermissions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgePermissions.id, id),
+          eq(schema.knowledgePermissions.tenantId, tenantId),
+        ),
+      );
 
     return true;
   }
@@ -534,7 +735,12 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const rows = await db
       .select()
       .from(schema.knowledgePermissions)
-      .where(and(eq(schema.knowledgePermissions.documentId, documentId), eq(schema.knowledgePermissions.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgePermissions.documentId, documentId),
+          eq(schema.knowledgePermissions.tenantId, tenantId),
+        ),
+      );
 
     if (rows.length === 0) {
       return true; // Inherits default public workspace access if no restrictions configured
@@ -560,7 +766,10 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
   }
 
   // ------------------ Sync Jobs ------------------
-  async saveSyncJob(job: KnowledgeSyncJob, tenantId: string): Promise<KnowledgeSyncJob> {
+  async saveSyncJob(
+    job: KnowledgeSyncJob,
+    tenantId: string,
+  ): Promise<KnowledgeSyncJob> {
     const raw = {
       id: job.id,
       tenantId: job.tenantId,
@@ -581,13 +790,23 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     const [existing] = await db
       .select()
       .from(schema.knowledgeSyncJobs)
-      .where(and(eq(schema.knowledgeSyncJobs.id, job.id), eq(schema.knowledgeSyncJobs.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeSyncJobs.id, job.id),
+          eq(schema.knowledgeSyncJobs.tenantId, tenantId),
+        ),
+      );
 
     if (existing) {
       await db
         .update(schema.knowledgeSyncJobs)
         .set(raw)
-        .where(and(eq(schema.knowledgeSyncJobs.id, job.id), eq(schema.knowledgeSyncJobs.tenantId, tenantId)));
+        .where(
+          and(
+            eq(schema.knowledgeSyncJobs.id, job.id),
+            eq(schema.knowledgeSyncJobs.tenantId, tenantId),
+          ),
+        );
     } else {
       await db
         .insert(schema.knowledgeSyncJobs)
@@ -597,20 +816,36 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     return job;
   }
 
-  async getSyncJobById(id: string, tenantId: string): Promise<KnowledgeSyncJob | null> {
+  async getSyncJobById(
+    id: string,
+    tenantId: string,
+  ): Promise<KnowledgeSyncJob | null> {
     const [row] = await db
       .select()
       .from(schema.knowledgeSyncJobs)
-      .where(and(eq(schema.knowledgeSyncJobs.id, id), eq(schema.knowledgeSyncJobs.tenantId, tenantId)));
+      .where(
+        and(
+          eq(schema.knowledgeSyncJobs.id, id),
+          eq(schema.knowledgeSyncJobs.tenantId, tenantId),
+        ),
+      );
     if (!row) return null;
     return KnowledgeMapper.syncJobToDomain(row);
   }
 
-  async findSyncJobs(tenantId: string, sourceId: string): Promise<KnowledgeSyncJob[]> {
+  async findSyncJobs(
+    tenantId: string,
+    sourceId: string,
+  ): Promise<KnowledgeSyncJob[]> {
     const rows = await db
       .select()
       .from(schema.knowledgeSyncJobs)
-      .where(and(eq(schema.knowledgeSyncJobs.sourceId, sourceId), eq(schema.knowledgeSyncJobs.tenantId, tenantId)))
+      .where(
+        and(
+          eq(schema.knowledgeSyncJobs.sourceId, sourceId),
+          eq(schema.knowledgeSyncJobs.tenantId, tenantId),
+        ),
+      )
       .orderBy(desc(schema.knowledgeSyncJobs.createdAt));
     return rows.map((r) => KnowledgeMapper.syncJobToDomain(r));
   }
@@ -633,7 +868,10 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
     await db.insert(schema.knowledgeSearchLogs).values(raw);
   }
 
-  async getSearchLogs(tenantId: string, options?: any): Promise<KnowledgeSearchLog[]> {
+  async getSearchLogs(
+    tenantId: string,
+    options?: any,
+  ): Promise<KnowledgeSearchLog[]> {
     const rows = await db
       .select()
       .from(schema.knowledgeSearchLogs)

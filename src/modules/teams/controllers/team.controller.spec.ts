@@ -11,7 +11,16 @@ import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { TenantResolver } from '@easydev/shared-kernel';
 import { randomUUID } from 'crypto';
-import { CreateTeamDto, UpdateTeamDto, TeamQueryDto, AssignAgentDto, AgentProfileDto, UpdateAgentProfileDto, AgentProfileQueryDto, UpdateAvailabilityDto } from '../dtos';
+import {
+  CreateTeamDto,
+  UpdateTeamDto,
+  TeamQueryDto,
+  AssignAgentDto,
+  AgentProfileDto,
+  UpdateAgentProfileDto,
+  AgentProfileQueryDto,
+  UpdateAvailabilityDto,
+} from '../dtos';
 
 describe('Teams Module Controllers', () => {
   let teamController: TeamController;
@@ -66,7 +75,10 @@ describe('Teams Module Controllers', () => {
         TenantResolver,
         { provide: TeamService, useValue: mockTeamService },
         { provide: AgentProfileService, useValue: mockProfileService },
-        { provide: AgentAvailabilityService, useValue: mockAvailabilityService },
+        {
+          provide: AgentAvailabilityService,
+          useValue: mockAvailabilityService,
+        },
         { provide: AgentAssignmentService, useValue: mockAssignmentService },
       ],
     })
@@ -77,14 +89,23 @@ describe('Teams Module Controllers', () => {
       .compile();
 
     teamController = module.get<TeamController>(TeamController);
-    profileController = module.get<AgentProfileController>(AgentProfileController);
-    availabilityController = module.get<AvailabilityController>(AvailabilityController);
-    assignmentController = module.get<AssignmentController>(AssignmentController);
+    profileController = module.get<AgentProfileController>(
+      AgentProfileController,
+    );
+    availabilityController = module.get<AvailabilityController>(
+      AvailabilityController,
+    );
+    assignmentController =
+      module.get<AssignmentController>(AssignmentController);
 
     teamService = module.get<TeamService>(TeamService);
     profileService = module.get<AgentProfileService>(AgentProfileService);
-    availabilityService = module.get<AgentAvailabilityService>(AgentAvailabilityService);
-    assignmentService = module.get<AgentAssignmentService>(AgentAssignmentService);
+    availabilityService = module.get<AgentAvailabilityService>(
+      AgentAvailabilityService,
+    );
+    assignmentService = module.get<AgentAssignmentService>(
+      AgentAssignmentService,
+    );
 
     jest.clearAllMocks();
   });
@@ -98,7 +119,9 @@ describe('Teams Module Controllers', () => {
         toJSON: () => ({ id: teamId, name: 'Engineering' }),
       });
 
-      const res = await teamController.create(tenantId, dto, { user: { id: 'u1' } });
+      const res = await teamController.create(tenantId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: teamId, name: 'Engineering' });
       expect(teamService.create).toHaveBeenCalledWith(tenantId, dto, 'u1');
     });
@@ -130,7 +153,9 @@ describe('Teams Module Controllers', () => {
         toJSON: () => ({ id: teamId, name: 'Support Tier 2' }),
       });
 
-      const res = await teamController.update(tenantId, teamId, dto, { user: { id: 'u1' } });
+      const res = await teamController.update(tenantId, teamId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: teamId, name: 'Support Tier 2' });
     });
 
@@ -141,20 +166,47 @@ describe('Teams Module Controllers', () => {
 
     it('should add agent to a team', async () => {
       const dto: AssignAgentDto = { agentProfileId: 'a1', role: 'MEMBER' };
-      const res = await teamController.addAgent(tenantId, teamId, dto, { user: { id: 'u1' } });
+      const res = await teamController.addAgent(tenantId, teamId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ success: true });
-      expect(teamService.addAgent).toHaveBeenCalledWith(tenantId, teamId, 'a1', 'MEMBER', 'u1');
+      expect(teamService.addAgent).toHaveBeenCalledWith(
+        tenantId,
+        teamId,
+        'a1',
+        'MEMBER',
+        'u1',
+      );
     });
 
     it('should remove agent from a team', async () => {
-      await teamController.removeAgent(tenantId, teamId, 'a1', { user: { id: 'u1' } });
-      expect(teamService.removeAgent).toHaveBeenCalledWith(tenantId, teamId, 'a1', 'u1');
+      await teamController.removeAgent(tenantId, teamId, 'a1', {
+        user: { id: 'u1' },
+      });
+      expect(teamService.removeAgent).toHaveBeenCalledWith(
+        tenantId,
+        teamId,
+        'a1',
+        'u1',
+      );
     });
 
     it('should transfer an agent', async () => {
-      const res = await teamController.transfer(tenantId, teamId, 'team-2', 'a1', { user: { id: 'u1' } });
+      const res = await teamController.transfer(
+        tenantId,
+        teamId,
+        'team-2',
+        'a1',
+        { user: { id: 'u1' } },
+      );
       expect(res).toEqual({ success: true });
-      expect(teamService.moveAgent).toHaveBeenCalledWith(tenantId, teamId, 'team-2', 'a1', 'u1');
+      expect(teamService.moveAgent).toHaveBeenCalledWith(
+        tenantId,
+        teamId,
+        'team-2',
+        'a1',
+        'u1',
+      );
     });
   });
 
@@ -162,12 +214,17 @@ describe('Teams Module Controllers', () => {
     const agentId = randomUUID();
 
     it('should create an agent profile', async () => {
-      const dto: AgentProfileDto = { userId: randomUUID(), displayName: 'Agent Name' };
+      const dto: AgentProfileDto = {
+        userId: randomUUID(),
+        displayName: 'Agent Name',
+      };
       mockProfileService.create.mockResolvedValue({
         toJSON: () => ({ id: agentId, displayName: 'Agent Name' }),
       });
 
-      const res = await profileController.create(tenantId, dto, { user: { id: 'u1' } });
+      const res = await profileController.create(tenantId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: agentId, displayName: 'Agent Name' });
     });
 
@@ -198,13 +255,19 @@ describe('Teams Module Controllers', () => {
         toJSON: () => ({ id: agentId, displayName: 'New Name' }),
       });
 
-      const res = await profileController.update(tenantId, agentId, dto, { user: { id: 'u1' } });
+      const res = await profileController.update(tenantId, agentId, dto, {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ id: agentId, displayName: 'New Name' });
     });
 
     it('should delete an agent profile', async () => {
       await profileController.delete(tenantId, agentId, { user: { id: 'u1' } });
-      expect(profileService.delete).toHaveBeenCalledWith(tenantId, agentId, 'u1');
+      expect(profileService.delete).toHaveBeenCalledWith(
+        tenantId,
+        agentId,
+        'u1',
+      );
     });
   });
 
@@ -213,21 +276,45 @@ describe('Teams Module Controllers', () => {
 
     it('should get agent availability', async () => {
       mockAvailabilityService.getAvailability.mockResolvedValue({
-        toJSON: () => ({ id: 'av1', agentProfileId: agentId, status: 'ONLINE' }),
+        toJSON: () => ({
+          id: 'av1',
+          agentProfileId: agentId,
+          status: 'ONLINE',
+        }),
       });
 
-      const res = await availabilityController.getAvailability(tenantId, agentId);
-      expect(res).toEqual({ id: 'av1', agentProfileId: agentId, status: 'ONLINE' });
+      const res = await availabilityController.getAvailability(
+        tenantId,
+        agentId,
+      );
+      expect(res).toEqual({
+        id: 'av1',
+        agentProfileId: agentId,
+        status: 'ONLINE',
+      });
     });
 
     it('should update agent availability', async () => {
       const dto: UpdateAvailabilityDto = { status: 'ONLINE' };
       mockAvailabilityService.updateAvailability.mockResolvedValue({
-        toJSON: () => ({ id: 'av1', agentProfileId: agentId, status: 'ONLINE' }),
+        toJSON: () => ({
+          id: 'av1',
+          agentProfileId: agentId,
+          status: 'ONLINE',
+        }),
       });
 
-      const res = await availabilityController.updateAvailability(tenantId, agentId, dto, { user: { id: 'u1' } });
-      expect(res).toEqual({ id: 'av1', agentProfileId: agentId, status: 'ONLINE' });
+      const res = await availabilityController.updateAvailability(
+        tenantId,
+        agentId,
+        dto,
+        { user: { id: 'u1' } },
+      );
+      expect(res).toEqual({
+        id: 'av1',
+        agentProfileId: agentId,
+        status: 'ONLINE',
+      });
     });
   });
 
@@ -237,9 +324,21 @@ describe('Teams Module Controllers', () => {
       const entityId = randomUUID();
       mockAssignmentService.assignEntity.mockResolvedValue('a1');
 
-      const res = await assignmentController.assign(tenantId, teamId, entityId, 'CONVERSATION', { requiredSkill: 5 });
+      const res = await assignmentController.assign(
+        tenantId,
+        teamId,
+        entityId,
+        'CONVERSATION',
+        { requiredSkill: 5 },
+      );
       expect(res).toEqual({ assignedAgentId: 'a1', success: true });
-      expect(assignmentService.assignEntity).toHaveBeenCalledWith(tenantId, teamId, entityId, 'CONVERSATION', { requiredSkill: 5 });
+      expect(assignmentService.assignEntity).toHaveBeenCalledWith(
+        tenantId,
+        teamId,
+        entityId,
+        'CONVERSATION',
+        { requiredSkill: 5 },
+      );
     });
   });
 });

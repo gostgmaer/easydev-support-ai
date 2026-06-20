@@ -50,7 +50,9 @@ describe('ConversationService', () => {
   };
   const mockPublisher = { publish: jest.fn(), publishAll: jest.fn() };
   const mockSummary = { rebuild: jest.fn(), getSummary: jest.fn() };
-  const mockCustomers = { findById: jest.fn().mockResolvedValue({ id: 'cust' }) };
+  const mockCustomers = {
+    findById: jest.fn().mockResolvedValue({ id: 'cust' }),
+  };
   const mockAudit = { log: jest.fn() };
 
   beforeEach(async () => {
@@ -77,7 +79,10 @@ describe('ConversationService', () => {
   });
 
   describe('create', () => {
-    const dto: CreateConversationDto = { customerId: randomUUID(), channelId: randomUUID() };
+    const dto: CreateConversationDto = {
+      customerId: randomUUID(),
+      channelId: randomUUID(),
+    };
 
     it('validates the customer, persists, rebuilds summary and audits', async () => {
       const result = await service.create(tenantId, dto, 'user-1');
@@ -93,7 +98,10 @@ describe('ConversationService', () => {
     });
 
     it('starts ASSIGNED when an agent is provided', async () => {
-      const result = await service.create(tenantId, { ...dto, assignedAgentId: randomUUID() });
+      const result = await service.create(tenantId, {
+        ...dto,
+        assignedAgentId: randomUUID(),
+      });
       expect(result.status.value).toBe(ConversationStatusEnum.ASSIGNED);
     });
 
@@ -118,7 +126,9 @@ describe('ConversationService', () => {
       const result = await service.resolve(tenantId, id, 'agent-1');
       expect(result.status.value).toBe(ConversationStatusEnum.RESOLVED);
       expect(result.resolvedAt).toBeInstanceOf(Date);
-      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'CONVERSATION_RESOLVE' }));
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'CONVERSATION_RESOLVE' }),
+      );
     });
 
     it('closes a conversation', async () => {
@@ -140,7 +150,9 @@ describe('ConversationService', () => {
 
     it('throws NotFound when the conversation is missing', async () => {
       mockRepo.findById.mockResolvedValue(null);
-      await expect(service.resolve(tenantId, id)).rejects.toThrow(NotFoundException);
+      await expect(service.resolve(tenantId, id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -153,15 +165,24 @@ describe('ConversationService', () => {
       source.clearEvents();
       target.clearEvents();
       mockRepo.findById.mockImplementation((id: string) =>
-        Promise.resolve(id === sourceId ? source : id === targetId ? target : null),
+        Promise.resolve(
+          id === sourceId ? source : id === targetId ? target : null,
+        ),
       );
 
-      const result = await service.merge(tenantId, sourceId, targetId, 'agent-1');
+      const result = await service.merge(
+        tenantId,
+        sourceId,
+        targetId,
+        'agent-1',
+      );
 
       expect(result.id).toBe(targetId);
       expect(source.status.value).toBe(ConversationStatusEnum.ARCHIVED);
       expect(repo.save).toHaveBeenCalledTimes(2);
-      expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'CONVERSATION_MERGE' }));
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'CONVERSATION_MERGE' }),
+      );
     });
   });
 });

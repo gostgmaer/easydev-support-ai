@@ -15,14 +15,31 @@ export interface CustomerQueryOptions {
   segmentId?: string;
 }
 
-export interface ICustomerRepository extends ITenantRepository<Customer, string> {
+export interface ICustomerRepository extends ITenantRepository<
+  Customer,
+  string
+> {
   findByEmail(email: string, tenantId: string): Promise<Customer | null>;
-  findByExternalId(externalId: string, tenantId: string): Promise<Customer | null>;
+  findByExternalId(
+    externalId: string,
+    tenantId: string,
+  ): Promise<Customer | null>;
   restore(id: string, tenantId: string): Promise<boolean>;
-  findPaginated(tenantId: string, options: CustomerQueryOptions): Promise<{ data: Customer[]; total: number; nextCursor?: string }>;
+  findPaginated(
+    tenantId: string,
+    options: CustomerQueryOptions,
+  ): Promise<{ data: Customer[]; total: number; nextCursor?: string }>;
   search(tenantId: string, query: string, limit?: number): Promise<Customer[]>;
-  assignSegment(customerId: string, segmentId: string, tenantId: string): Promise<void>;
-  removeSegment(customerId: string, segmentId: string, tenantId: string): Promise<void>;
+  assignSegment(
+    customerId: string,
+    segmentId: string,
+    tenantId: string,
+  ): Promise<void>;
+  removeSegment(
+    customerId: string,
+    segmentId: string,
+    tenantId: string,
+  ): Promise<void>;
   findSegments(customerId: string, tenantId: string): Promise<string[]>;
   findSegmentMembers(segmentId: string, tenantId: string): Promise<Customer[]>;
 }

@@ -26,7 +26,13 @@ import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.mod
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { IamModule } from './modules/iam/iam.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { AiIntegrationModule, TypeOrmAiAgent, TypeOrmAiSession, TypeOrmAiWorkflow } from './modules/ai-integration/ai-integration.module';
+import {
+  AiIntegrationModule,
+  TypeOrmAiAgent,
+  TypeOrmAiSession,
+  TypeOrmAiWorkflow,
+} from './modules/ai-integration/ai-integration.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 // Entities
 import { Customer } from './modules/customers/entities/customer.entity';
@@ -152,6 +158,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     ObservabilityModule,
     AuditModule,
     QueueModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [

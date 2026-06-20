@@ -6,10 +6,14 @@ import { Customer } from '../domain/customer.aggregate';
 export class CustomerSearchService {
   constructor(
     @Inject('ICustomerRepository')
-    private readonly customerRepo: ICustomerRepository
+    private readonly customerRepo: ICustomerRepository,
   ) {}
 
-  async search(tenantId: string, query: string, limit = 20): Promise<Customer[]> {
+  async search(
+    tenantId: string,
+    query: string,
+    limit = 20,
+  ): Promise<Customer[]> {
     if (!query || !query.trim()) {
       return [];
     }

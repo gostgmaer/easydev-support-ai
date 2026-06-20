@@ -1,5 +1,18 @@
-import { Controller, Get, Query, Headers, UseGuards, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Query,
+  Headers,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -21,7 +34,10 @@ export class AnalyticsDashboardController {
   @Get()
   @Roles('tenant_admin', 'manager')
   @ApiOperation({ summary: 'Get general overview dashboard metrics' })
-  @ApiResponse({ status: 200, description: 'SLA, CSAT, Conversations, Messages counters' })
+  @ApiResponse({
+    status: 200,
+    description: 'SLA, CSAT, Conversations, Messages counters',
+  })
   async getDashboard(
     @Headers('x-tenant-id') tenantId: string,
     @Query('timeRange') timeRange: string = 'Last 30 Days',
@@ -32,7 +48,10 @@ export class AnalyticsDashboardController {
   @Get('ai')
   @Roles('tenant_admin', 'manager')
   @ApiOperation({ summary: 'Get AI resolution and cost savings metrics' })
-  @ApiResponse({ status: 200, description: 'AI requests, tokens used, cost metrics' })
+  @ApiResponse({
+    status: 200,
+    description: 'AI requests, tokens used, cost metrics',
+  })
   async getAiMetrics(
     @Headers('x-tenant-id') tenantId: string,
     @Query('timeRange') timeRange: string = 'Last 30 Days',
@@ -43,7 +62,10 @@ export class AnalyticsDashboardController {
   @Get('agents')
   @Roles('tenant_admin', 'manager')
   @ApiOperation({ summary: 'Get comparative summary for all agents' })
-  @ApiResponse({ status: 200, description: 'Agent workloads and response rates' })
+  @ApiResponse({
+    status: 200,
+    description: 'Agent workloads and response rates',
+  })
   async getAgentSummary(
     @Headers('x-tenant-id') tenantId: string,
     @Query('timeRange') timeRange: string = 'Last 30 Days',
@@ -54,13 +76,20 @@ export class AnalyticsDashboardController {
   @Get('agents/:agentId')
   @Roles('tenant_admin', 'manager')
   @ApiOperation({ summary: 'Get metrics details for specific agent' })
-  @ApiResponse({ status: 200, description: 'Agent assigned vs resolved tickets, utilization' })
+  @ApiResponse({
+    status: 200,
+    description: 'Agent assigned vs resolved tickets, utilization',
+  })
   async getAgentMetrics(
     @Headers('x-tenant-id') tenantId: string,
     @Param('agentId') agentId: string,
     @Query('timeRange') timeRange: string = 'Last 30 Days',
   ) {
-    return this.dashboardService.getAgentDashboardMetrics(tenantId, agentId, timeRange);
+    return this.dashboardService.getAgentDashboardMetrics(
+      tenantId,
+      agentId,
+      timeRange,
+    );
   }
 
   @Get('channels')
@@ -77,13 +106,20 @@ export class AnalyticsDashboardController {
   @Get('channels/:channelId')
   @Roles('tenant_admin', 'manager')
   @ApiOperation({ summary: 'Get metrics details for specific channel' })
-  @ApiResponse({ status: 200, description: 'Channel volumes, response times, delivery rates' })
+  @ApiResponse({
+    status: 200,
+    description: 'Channel volumes, response times, delivery rates',
+  })
   async getChannelMetrics(
     @Headers('x-tenant-id') tenantId: string,
     @Param('channelId') channelId: string,
     @Query('timeRange') timeRange: string = 'Last 30 Days',
   ) {
-    return this.dashboardService.getChannelDashboardMetrics(tenantId, channelId, timeRange);
+    return this.dashboardService.getChannelDashboardMetrics(
+      tenantId,
+      channelId,
+      timeRange,
+    );
   }
 
   @Get('custom')

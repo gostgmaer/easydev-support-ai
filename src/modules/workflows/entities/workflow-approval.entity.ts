@@ -9,7 +9,12 @@ export class WorkflowApproval extends BaseTenantEntity {
   @Column({ type: 'uuid', name: 'approver_id' })
   approverId: string;
 
-  @Column({ type: 'varchar', length: 50, name: 'approval_status', default: 'PENDING' })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    name: 'approval_status',
+    default: 'PENDING',
+  })
   approvalStatus: string;
 
   @Column({ type: 'text', nullable: true })

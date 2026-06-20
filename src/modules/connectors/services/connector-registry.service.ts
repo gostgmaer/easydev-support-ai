@@ -17,15 +17,25 @@ export class ConnectorRegistryService {
     tenantId: string,
     capabilityName: string,
   ): Promise<{ endpoint: string; credentials: any } | null> {
-    this.logger.debug(`Fetching capability endpoint for ${capabilityName} (tenant ${tenantId})`);
+    this.logger.debug(
+      `Fetching capability endpoint for ${capabilityName} (tenant ${tenantId})`,
+    );
 
-    const result = await this.repository.resolveCapability(tenantId, capabilityName);
+    const result = await this.repository.resolveCapability(
+      tenantId,
+      capabilityName,
+    );
     if (!result) {
-      this.logger.warn(`Capability ${capabilityName} not configured for tenant ${tenantId}`);
+      this.logger.warn(
+        `Capability ${capabilityName} not configured for tenant ${tenantId}`,
+      );
       return null;
     }
 
-    const credential = await this.repository.getActiveCredential(tenantId, result.connector.id);
+    const credential = await this.repository.getActiveCredential(
+      tenantId,
+      result.connector.id,
+    );
 
     return {
       endpoint: `${result.connector.baseUrl?.replace(/\/$/, '')}/${result.capability.path.replace(/^\//, '')}`,

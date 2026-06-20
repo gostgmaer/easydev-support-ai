@@ -65,7 +65,7 @@ describe('TeamEventPublisher', () => {
       expect(queueService.addJob).toHaveBeenCalledWith(
         'team-queue',
         'load-balancer-job',
-        { agentProfileId: aggregateId }
+        { agentProfileId: aggregateId },
       );
     });
 
@@ -81,7 +81,10 @@ describe('TeamEventPublisher', () => {
   describe('publishAll', () => {
     it('should publish all events in list', async () => {
       const aggregateId = randomUUID();
-      const events = [new DummyEvent(aggregateId), new AgentAssignedDummyEvent(aggregateId)];
+      const events = [
+        new DummyEvent(aggregateId),
+        new AgentAssignedDummyEvent(aggregateId),
+      ];
 
       await publisher.publishAll(events);
 

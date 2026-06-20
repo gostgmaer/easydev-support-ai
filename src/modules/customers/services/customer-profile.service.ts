@@ -7,13 +7,13 @@ import { randomUUID } from 'crypto';
 export class CustomerProfileService {
   constructor(
     @Inject('ICustomerRepository')
-    private readonly customerRepo: ICustomerRepository
+    private readonly customerRepo: ICustomerRepository,
   ) {}
 
   async updateProfile(
     tenantId: string,
     customerId: string,
-    data: any
+    data: any,
   ): Promise<CustomerProfile> {
     const customer = await this.customerRepo.findById(customerId, tenantId);
     if (!customer) {

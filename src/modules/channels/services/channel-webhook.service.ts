@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import type { IChannelRepository } from '../repositories/channel-repository.interface';
 import { ChannelWebhook } from '../domain/channel-webhook.entity';
 import { ChannelWebhookDto } from '../dtos';
@@ -19,19 +25,22 @@ export class ChannelWebhookService {
     private readonly connectorRegistry: ChannelConnectorRegistry,
     private readonly eventPublisher: ChannelEventPublisher,
     private readonly auditService: AuditService,
-    private readonly queueService: QueueService
+    private readonly queueService: QueueService,
   ) {}
 
   async registerWebhook(
     tenantId: string,
     channelId: string,
     dto: ChannelWebhookDto,
-    userId?: string
+    userId?: string,
   ): Promise<ChannelWebhook> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
 
-    let webhook = await this.channelRepo.findWebhookByChannelId(channelId, tenantId);
+    let webhook = await this.channelRepo.findWebhookByChannelId(
+      channelId,
+      tenantId,
+    );
     if (webhook) {
       webhook.update({
         webhookUrl: dto.webhookUrl,
@@ -59,9 +68,19 @@ export class ChannelWebhookService {
     return webhook;
   }
 
-  async verifyWebhook(tenantId: string, channelId: string, query: Record<string, any>): Promise<string> {
-    const webhook = await this.channelRepo.findWebhookByChannelId(channelId, tenantId);
-    if (!webhook) throw new NotFoundException(`Webhook config for channel ${channelId} not found`);
+  async verifyWebhook(
+    tenantId: string,
+    channelId: string,
+    query: Record<string, any>,
+  ): Promise<string> {
+    const webhook = await this.channelRepo.findWebhookByChannelId(
+      channelId,
+      tenantId,
+    );
+    if (!webhook)
+      throw new NotFoundException(
+        `Webhook config for channel ${channelId} not found`,
+      );
 
     // Common query parameters: hub.mode, hub.challenge, hub.verify_token (WhatsApp/Messenger)
     const mode = query['hub.mode'] || query['mode'];
@@ -81,32 +100,42 @@ export class ChannelWebhookService {
     tenantId: string,
     channelId: string,
     payload: any,
-    headers: Record<string, any>
+    headers: Record<string, any>,
   ): Promise<void> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
 
-    const webhook = await this.channelRepo.findWebhookByChannelId(channelId, tenantId);
-    if (!webhook) throw new NotFoundException(`Webhook for channel ${channelId} not found`);
+    const webhook = await this.channelRepo.findWebhookByChannelId(
+      channelId,
+      tenantId,
+    );
+    if (!webhook)
+      throw new NotFoundException(`Webhook for channel ${channelId} not found`);
 
     const connector = this.connectorRegistry.getConnector(channel.type.value);
 
     // Signature/validation checks
-    const signature = headers['x-hub-signature-256'] || headers['signature'] || '';
+    const signature =
+      headers['x-hub-signature-256'] || headers['signature'] || '';
     if (webhook.webhookSecret && signature) {
       const isSignatureValid = await connector.verifySignature(
         tenantId,
         channelId,
         payload,
         signature,
-        webhook.webhookSecret
+        webhook.webhookSecret,
       );
       if (!isSignatureValid) {
         throw new BadRequestException('Invalid signature');
       }
     }
 
-    const isValid = await connector.validateWebhook(tenantId, channelId, payload, headers);
+    const isValid = await connector.validateWebhook(
+      tenantId,
+      channelId,
+      payload,
+      headers,
+    );
     if (!isValid) {
       throw new BadRequestException('Webhook payload validation failed');
     }
@@ -117,17 +146,15 @@ export class ChannelWebhookService {
 
     // Publish event
     const webhookId = randomUUID();
-    await this.eventPublisher.publish(new WebhookReceivedEvent(tenantId, webhookId, channelId, payload));
+    await this.eventPublisher.publish(
+      new WebhookReceivedEvent(tenantId, webhookId, channelId, payload),
+    );
 
     // Dispatch to incoming queue for async processing
-    await this.queueService.addJob(
-      'channel-queue',
-      'incoming-message-job',
-      {
-        channelId,
-        payload,
-        headers,
-      }
-    );
+    await this.queueService.addJob('channel-queue', 'incoming-message-job', {
+      channelId,
+      payload,
+      headers,
+    });
   }
 }

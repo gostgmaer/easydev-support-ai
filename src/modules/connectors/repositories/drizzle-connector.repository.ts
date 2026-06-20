@@ -425,10 +425,7 @@ export class DrizzleConnectorRepository implements IConnectorRepository {
     return rows.map((r) => ConnectorMapper.instanceToDomain(r));
   }
 
-  async deleteInstance(
-    tenantId: string,
-    instanceId: string,
-  ): Promise<boolean> {
+  async deleteInstance(tenantId: string, instanceId: string): Promise<boolean> {
     const result = await db
       .delete(schema.connectorInstances)
       .where(

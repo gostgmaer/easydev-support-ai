@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional, IsObject, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  IsObject,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateCustomerProfileDto {

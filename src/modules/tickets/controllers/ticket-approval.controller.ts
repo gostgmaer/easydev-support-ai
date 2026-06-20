@@ -26,7 +26,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Ticket Approvals')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1')
@@ -36,7 +40,10 @@ export class TicketApprovalController {
   @Post('tickets/:ticketId/approvals')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Request an approval on a ticket' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Approval requested' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Approval requested',
+  })
   async request(
     @Headers('x-tenant-id') tenantId: string,
     @Param('ticketId') ticketId: string,
@@ -59,7 +66,10 @@ export class TicketApprovalController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('ticketId') ticketId: string,
   ) {
-    const approvals = await this.approvalService.listApprovals(tenantId, ticketId);
+    const approvals = await this.approvalService.listApprovals(
+      tenantId,
+      ticketId,
+    );
     return approvals.map((a) => a.toJSON());
   }
 

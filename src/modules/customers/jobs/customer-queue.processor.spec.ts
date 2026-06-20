@@ -58,12 +58,19 @@ describe('CustomerQueueProcessor', () => {
         },
       };
 
-      mockCustomerService.import.mockResolvedValue({ importedCount: 1, errors: [] });
+      mockCustomerService.import.mockResolvedValue({
+        importedCount: 1,
+        errors: [],
+      });
 
       const res = await processor.handleJob(job as any);
 
       expect(res).toEqual({ importedCount: 1, errors: [] });
-      expect(customerService.import).toHaveBeenCalledWith(tenantId, job.data.records, 'u1');
+      expect(customerService.import).toHaveBeenCalledWith(
+        tenantId,
+        job.data.records,
+        'u1',
+      );
     });
 
     it('should route customer-metrics-job', async () => {
@@ -82,7 +89,10 @@ describe('CustomerQueueProcessor', () => {
       const res = await processor.handleJob(job as any);
 
       expect(res).toEqual({ id: 'm1' });
-      expect(metricsService.recalculateMetrics).toHaveBeenCalledWith(tenantId, customerId);
+      expect(metricsService.recalculateMetrics).toHaveBeenCalledWith(
+        tenantId,
+        customerId,
+      );
     });
 
     it('should route customer-segmentation-job', async () => {
@@ -105,7 +115,10 @@ describe('CustomerQueueProcessor', () => {
 
       expect(res).toEqual({ status: 'success' });
       expect(segmentService.findAllSegments).toHaveBeenCalledWith(tenantId);
-      expect(segmentService.runDynamicSegmentation).toHaveBeenCalledWith(tenantId, 'seg-1');
+      expect(segmentService.runDynamicSegmentation).toHaveBeenCalledWith(
+        tenantId,
+        'seg-1',
+      );
     });
   });
 });

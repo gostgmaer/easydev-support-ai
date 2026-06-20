@@ -38,7 +38,9 @@ describe('Workflow Orchestration Domain Model', () => {
     });
 
     it('should throw on empty WorkflowExecutionId', () => {
-      expect(() => WorkflowExecutionId.create('')).toThrow('WorkflowExecutionId cannot be empty');
+      expect(() => WorkflowExecutionId.create('')).toThrow(
+        'WorkflowExecutionId cannot be empty',
+      );
     });
   });
 
@@ -83,7 +85,10 @@ describe('Workflow Orchestration Domain Model', () => {
       expect(template.version).toBe(1);
       expect(template.isSystem).toBe(false);
 
-      template.update({ name: 'Updated Template', description: 'New description' });
+      template.update({
+        name: 'Updated Template',
+        description: 'New description',
+      });
       expect(template.name).toBe('Updated Template');
       expect(template.description).toBe('New description');
 

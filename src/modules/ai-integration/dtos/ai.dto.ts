@@ -1,5 +1,19 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsObject, IsArray, IsNumber, Min, Max } from 'class-validator';
-import { AgentTypeEnum, AgentStatusEnum, EscalationTargetEnum } from '../domain/value-objects';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsArray,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
+import {
+  AgentTypeEnum,
+  AgentStatusEnum,
+  EscalationTargetEnum,
+} from '../domain/value-objects';
 
 export class CreateAgentDto {
   @IsString()

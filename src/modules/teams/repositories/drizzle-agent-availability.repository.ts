@@ -23,30 +23,36 @@ class AgentAvailabilityMapper {
 
 @Injectable()
 export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRepository {
-  async findById(id: string, tenantId: string): Promise<AgentAvailability | null> {
+  async findById(
+    id: string,
+    tenantId: string,
+  ): Promise<AgentAvailability | null> {
     const [row] = await db
       .select()
       .from(schema.agentAvailability)
       .where(
         and(
           eq(schema.agentAvailability.id, id),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
     return AgentAvailabilityMapper.toDomain(row);
   }
 
-  async findByAgentProfileId(agentProfileId: string, tenantId: string): Promise<AgentAvailability | null> {
+  async findByAgentProfileId(
+    agentProfileId: string,
+    tenantId: string,
+  ): Promise<AgentAvailability | null> {
     const [row] = await db
       .select()
       .from(schema.agentAvailability)
       .where(
         and(
           eq(schema.agentAvailability.agentProfileId, agentProfileId),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -60,8 +66,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
       .where(
         and(
           eq(schema.agentAvailability.tenantId, tenantId),
-          eq(schema.agentAvailability.status, 'ONLINE')
-        )
+          eq(schema.agentAvailability.status, 'ONLINE'),
+        ),
       );
 
     return rows.map((r) => AgentAvailabilityMapper.toDomain(r));
@@ -76,7 +82,10 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
     return rows.map((r) => AgentAvailabilityMapper.toDomain(r));
   }
 
-  async save(availability: AgentAvailability, tenantId: string): Promise<AgentAvailability> {
+  async save(
+    availability: AgentAvailability,
+    tenantId: string,
+  ): Promise<AgentAvailability> {
     const raw = {
       id: availability.id,
       tenantId: availability.tenantId,
@@ -97,8 +106,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
       .where(
         and(
           eq(schema.agentAvailability.id, availability.id),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -108,8 +117,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
         .where(
           and(
             eq(schema.agentAvailability.id, availability.id),
-            eq(schema.agentAvailability.tenantId, tenantId)
-          )
+            eq(schema.agentAvailability.tenantId, tenantId),
+          ),
         );
     } else {
       await db.insert(schema.agentAvailability).values({
@@ -129,8 +138,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
       .where(
         and(
           eq(schema.agentAvailability.id, id),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
 
     if (!existing) return false;
@@ -140,14 +149,18 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
       .where(
         and(
           eq(schema.agentAvailability.id, id),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
 
     return true;
   }
 
-  async updateLoad(agentProfileId: string, change: number, tenantId: string): Promise<void> {
+  async updateLoad(
+    agentProfileId: string,
+    change: number,
+    tenantId: string,
+  ): Promise<void> {
     await db
       .update(schema.agentAvailability)
       .set({
@@ -157,8 +170,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
       .where(
         and(
           eq(schema.agentAvailability.agentProfileId, agentProfileId),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
   }
 
@@ -166,7 +179,7 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
     agentProfileId: string,
     conversationsChange: number,
     ticketsChange: number,
-    tenantId: string
+    tenantId: string,
   ): Promise<void> {
     await db
       .update(schema.agentAvailability)
@@ -179,8 +192,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
       .where(
         and(
           eq(schema.agentAvailability.agentProfileId, agentProfileId),
-          eq(schema.agentAvailability.tenantId, tenantId)
-        )
+          eq(schema.agentAvailability.tenantId, tenantId),
+        ),
       );
   }
 }

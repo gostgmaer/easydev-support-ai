@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Headers, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -8,9 +20,7 @@ import { CreateCategoryDto, UpdateCategoryDto } from '../dtos/knowledge.dto';
 @Controller('v1/knowledge-categories')
 @UseGuards(TenantGuard, RbacGuard)
 export class KnowledgeCategoryController {
-  constructor(
-    private readonly categoryService: KnowledgeCategoryService,
-  ) {}
+  constructor(private readonly categoryService: KnowledgeCategoryService) {}
 
   @Post()
   @Roles('tenant_admin')
@@ -34,9 +44,7 @@ export class KnowledgeCategoryController {
 
   @Get()
   @Roles('tenant_admin', 'agent')
-  public async findCategories(
-    @Headers('x-tenant-id') tenantId: string,
-  ) {
+  public async findCategories(@Headers('x-tenant-id') tenantId: string) {
     const categories = await this.categoryService.findCategories(tenantId);
     return categories.map((c) => c.toJSON());
   }
@@ -48,7 +56,11 @@ export class KnowledgeCategoryController {
     @Param('id') id: string,
     @Body() dto: UpdateCategoryDto,
   ) {
-    const category = await this.categoryService.updateCategory(tenantId, id, dto);
+    const category = await this.categoryService.updateCategory(
+      tenantId,
+      id,
+      dto,
+    );
     return category.toJSON();
   }
 

@@ -25,26 +25,47 @@ export interface PaginatedResult<T> {
   total: number;
 }
 
-export interface IKnowledgeRepository extends ITenantRepository<KnowledgeDocument, string> {
+export interface IKnowledgeRepository extends ITenantRepository<
+  KnowledgeDocument,
+  string
+> {
   // Sources
-  saveSource(source: KnowledgeSource, tenantId: string): Promise<KnowledgeSource>;
+  saveSource(
+    source: KnowledgeSource,
+    tenantId: string,
+  ): Promise<KnowledgeSource>;
   getSourceById(id: string, tenantId: string): Promise<KnowledgeSource | null>;
-  findSources(tenantId: string, options?: any): Promise<PaginatedResult<KnowledgeSource>>;
+  findSources(
+    tenantId: string,
+    options?: any,
+  ): Promise<PaginatedResult<KnowledgeSource>>;
   deleteSource(id: string, tenantId: string): Promise<boolean>;
 
   // Documents
   findBySlug(tenantId: string, slug: string): Promise<KnowledgeDocument | null>;
-  findDocuments(tenantId: string, options: DocumentQueryOptions): Promise<PaginatedResult<KnowledgeDocument>>;
+  findDocuments(
+    tenantId: string,
+    options: DocumentQueryOptions,
+  ): Promise<PaginatedResult<KnowledgeDocument>>;
   incrementDocVersion(id: string, tenantId: string): Promise<number>;
 
   // Chunks
   saveChunks(chunks: KnowledgeChunk[], tenantId: string): Promise<void>;
-  getChunksByDocumentId(documentId: string, tenantId: string): Promise<KnowledgeChunk[]>;
+  getChunksByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<KnowledgeChunk[]>;
   deleteChunksByDocumentId(documentId: string, tenantId: string): Promise<void>;
 
   // Categories
-  saveCategory(category: KnowledgeCategory, tenantId: string): Promise<KnowledgeCategory>;
-  getCategoryById(id: string, tenantId: string): Promise<KnowledgeCategory | null>;
+  saveCategory(
+    category: KnowledgeCategory,
+    tenantId: string,
+  ): Promise<KnowledgeCategory>;
+  getCategoryById(
+    id: string,
+    tenantId: string,
+  ): Promise<KnowledgeCategory | null>;
   findCategories(tenantId: string): Promise<KnowledgeCategory[]>;
   deleteCategory(id: string, tenantId: string): Promise<boolean>;
 
@@ -54,18 +75,42 @@ export interface IKnowledgeRepository extends ITenantRepository<KnowledgeDocumen
   findTags(tenantId: string): Promise<KnowledgeTag[]>;
 
   // Versions
-  saveVersion(version: KnowledgeVersion, tenantId: string): Promise<KnowledgeVersion>;
-  getVersionsByDocumentId(documentId: string, tenantId: string): Promise<KnowledgeVersion[]>;
+  saveVersion(
+    version: KnowledgeVersion,
+    tenantId: string,
+  ): Promise<KnowledgeVersion>;
+  getVersionsByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<KnowledgeVersion[]>;
 
   // Permissions
-  savePermission(permission: KnowledgePermission, tenantId: string): Promise<KnowledgePermission>;
-  getPermissionsByDocumentId(documentId: string, tenantId: string): Promise<KnowledgePermission[]>;
+  savePermission(
+    permission: KnowledgePermission,
+    tenantId: string,
+  ): Promise<KnowledgePermission>;
+  getPermissionsByDocumentId(
+    documentId: string,
+    tenantId: string,
+  ): Promise<KnowledgePermission[]>;
   deletePermission(id: string, tenantId: string): Promise<boolean>;
-  checkPermission(documentId: string, tenantId: string, teamId?: string, role?: string, requiredLevel?: string): Promise<boolean>;
+  checkPermission(
+    documentId: string,
+    tenantId: string,
+    teamId?: string,
+    role?: string,
+    requiredLevel?: string,
+  ): Promise<boolean>;
 
   // Sync Jobs
-  saveSyncJob(job: KnowledgeSyncJob, tenantId: string): Promise<KnowledgeSyncJob>;
-  getSyncJobById(id: string, tenantId: string): Promise<KnowledgeSyncJob | null>;
+  saveSyncJob(
+    job: KnowledgeSyncJob,
+    tenantId: string,
+  ): Promise<KnowledgeSyncJob>;
+  getSyncJobById(
+    id: string,
+    tenantId: string,
+  ): Promise<KnowledgeSyncJob | null>;
   findSyncJobs(tenantId: string, sourceId: string): Promise<KnowledgeSyncJob[]>;
 
   // Search Logs

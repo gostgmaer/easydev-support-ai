@@ -54,7 +54,14 @@ export class KnowledgeCategory extends Entity<string> {
     return this.props.version || 1;
   }
 
-  public update(props: Partial<Pick<KnowledgeCategoryProps, 'name' | 'description' | 'parentCategoryId' | 'color' | 'sortOrder'>>): void {
+  public update(
+    props: Partial<
+      Pick<
+        KnowledgeCategoryProps,
+        'name' | 'description' | 'parentCategoryId' | 'color' | 'sortOrder'
+      >
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

@@ -35,7 +35,10 @@ export class CreateReportDto {
   @IsObject()
   filters?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: 'Custom formatting options', type: Object })
+  @ApiPropertyOptional({
+    description: 'Custom formatting options',
+    type: Object,
+  })
   @IsOptional()
   @IsObject()
   parameters?: Record<string, any>;
@@ -72,7 +75,10 @@ export class UpdateReportDto {
   @IsObject()
   parameters?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: 'Pre-computed report data', type: Object })
+  @ApiPropertyOptional({
+    description: 'Pre-computed report data',
+    type: Object,
+  })
   @IsOptional()
   @IsObject()
   data?: Record<string, any>;
@@ -94,7 +100,10 @@ export class CreateScheduleDto {
   @IsNotEmpty()
   cronExpression: string;
 
-  @ApiPropertyOptional({ description: 'Timezone for execution', default: 'UTC' })
+  @ApiPropertyOptional({
+    description: 'Timezone for execution',
+    default: 'UTC',
+  })
   @IsOptional()
   @IsString()
   timezone?: string;
@@ -109,7 +118,10 @@ export class CreateScheduleDto {
   @IsString({ each: true })
   recipients: string[];
 
-  @ApiPropertyOptional({ description: 'Whether the schedule is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the schedule is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

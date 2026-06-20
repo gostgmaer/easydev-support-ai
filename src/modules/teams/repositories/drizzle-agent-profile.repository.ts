@@ -3,7 +3,10 @@ import { db, schema } from '@easydev/database';
 import { eq, and, ilike, sql, desc, asc } from 'drizzle-orm';
 import { AgentProfile } from '../domain/agent-profile.entity';
 import { AgentCapacity } from '../domain/value-objects';
-import { IAgentProfileRepository, AgentProfileQueryOptions } from './agent-profile-repository.interface';
+import {
+  IAgentProfileRepository,
+  AgentProfileQueryOptions,
+} from './agent-profile-repository.interface';
 
 class AgentProfileMapper {
   public static toDomain(raw: any): AgentProfile {
@@ -41,15 +44,18 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
         and(
           eq(schema.agentProfiles.id, id),
           eq(schema.agentProfiles.tenantId, tenantId),
-          sql`${schema.agentProfiles.deletedAt} IS NULL`
-        )
+          sql`${schema.agentProfiles.deletedAt} IS NULL`,
+        ),
       );
 
     if (!row) return null;
     return AgentProfileMapper.toDomain(row);
   }
 
-  async findByUserId(userId: string, tenantId: string): Promise<AgentProfile | null> {
+  async findByUserId(
+    userId: string,
+    tenantId: string,
+  ): Promise<AgentProfile | null> {
     const [row] = await db
       .select()
       .from(schema.agentProfiles)
@@ -57,15 +63,18 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
         and(
           eq(schema.agentProfiles.userId, userId),
           eq(schema.agentProfiles.tenantId, tenantId),
-          sql`${schema.agentProfiles.deletedAt} IS NULL`
-        )
+          sql`${schema.agentProfiles.deletedAt} IS NULL`,
+        ),
       );
 
     if (!row) return null;
     return AgentProfileMapper.toDomain(row);
   }
 
-  async findByEmployeeCode(employeeCode: string, tenantId: string): Promise<AgentProfile | null> {
+  async findByEmployeeCode(
+    employeeCode: string,
+    tenantId: string,
+  ): Promise<AgentProfile | null> {
     const [row] = await db
       .select()
       .from(schema.agentProfiles)
@@ -73,8 +82,8 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
         and(
           eq(schema.agentProfiles.employeeCode, employeeCode),
           eq(schema.agentProfiles.tenantId, tenantId),
-          sql`${schema.agentProfiles.deletedAt} IS NULL`
-        )
+          sql`${schema.agentProfiles.deletedAt} IS NULL`,
+        ),
       );
 
     if (!row) return null;
@@ -88,8 +97,8 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
       .where(
         and(
           eq(schema.agentProfiles.tenantId, tenantId),
-          sql`${schema.agentProfiles.deletedAt} IS NULL`
-        )
+          sql`${schema.agentProfiles.deletedAt} IS NULL`,
+        ),
       );
 
     return rows.map((r) => AgentProfileMapper.toDomain(r));
@@ -97,7 +106,7 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
 
   async findPaginated(
     tenantId: string,
-    options: AgentProfileQueryOptions
+    options: AgentProfileQueryOptions,
   ): Promise<{ data: AgentProfile[]; total: number }> {
     const limit = options.limit || 20;
     const page = options.page || 1;
@@ -114,12 +123,15 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
 
     if (options.search) {
       conditions.push(
-        ilike(schema.agentProfiles.displayName, `%${options.search}%`)
+        ilike(schema.agentProfiles.displayName, `%${options.search}%`),
       );
     }
 
     const whereClause = and(...conditions);
-    const order = options.sortOrder === 'DESC' ? desc(schema.agentProfiles.createdAt) : asc(schema.agentProfiles.createdAt);
+    const order =
+      options.sortOrder === 'DESC'
+        ? desc(schema.agentProfiles.createdAt)
+        : asc(schema.agentProfiles.createdAt);
 
     const rows = await db
       .select()
@@ -168,8 +180,8 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
       .where(
         and(
           eq(schema.agentProfiles.id, profile.id),
-          eq(schema.agentProfiles.tenantId, tenantId)
-        )
+          eq(schema.agentProfiles.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -179,8 +191,8 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
         .where(
           and(
             eq(schema.agentProfiles.id, profile.id),
-            eq(schema.agentProfiles.tenantId, tenantId)
-          )
+            eq(schema.agentProfiles.tenantId, tenantId),
+          ),
         );
     } else {
       await db.insert(schema.agentProfiles).values({
@@ -200,8 +212,8 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
       .where(
         and(
           eq(schema.agentProfiles.id, id),
-          eq(schema.agentProfiles.tenantId, tenantId)
-        )
+          eq(schema.agentProfiles.tenantId, tenantId),
+        ),
       );
 
     if (!existing) return false;
@@ -215,8 +227,8 @@ export class DrizzleAgentProfileRepository implements IAgentProfileRepository {
       .where(
         and(
           eq(schema.agentProfiles.id, id),
-          eq(schema.agentProfiles.tenantId, tenantId)
-        )
+          eq(schema.agentProfiles.tenantId, tenantId),
+        ),
       );
 
     return true;

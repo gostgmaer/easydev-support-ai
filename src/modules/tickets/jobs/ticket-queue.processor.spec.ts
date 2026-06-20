@@ -63,7 +63,11 @@ describe('TicketQueueProcessor', () => {
     const job: Partial<Job> = {
       name: 'ticket-escalation-job',
       id: 'j2',
-      data: { ticketId, reason: 'SLA_RESOLUTION_BREACH', _tenantContext: { tenantId } },
+      data: {
+        ticketId,
+        reason: 'SLA_RESOLUTION_BREACH',
+        _tenantContext: { tenantId },
+      },
     };
     const res = await processor.handleJob(job as any);
     expect(mockEscalation.escalate).toHaveBeenCalledWith(
@@ -111,7 +115,11 @@ describe('TicketQueueProcessor', () => {
     const job: Partial<Job> = {
       name: 'ticket-analytics-job',
       id: 'j5',
-      data: { ticketId, eventName: 'ticket.created', _tenantContext: { tenantId } },
+      data: {
+        ticketId,
+        eventName: 'ticket.created',
+        _tenantContext: { tenantId },
+      },
     };
     const res = await processor.handleJob(job as any);
     expect(mockQueue.addJob).toHaveBeenCalledWith(

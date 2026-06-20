@@ -51,8 +51,13 @@ describe('TicketService', () => {
     bulkUpdateStatus: jest.fn().mockResolvedValue(2),
   };
   const mockPublisher = { publish: jest.fn(), publishAll: jest.fn() };
-  const mockSla = { configureForTicket: jest.fn(), refreshRemaining: jest.fn() };
-  const mockCustomers = { findById: jest.fn().mockResolvedValue({ id: 'cust' }) };
+  const mockSla = {
+    configureForTicket: jest.fn(),
+    refreshRemaining: jest.fn(),
+  };
+  const mockCustomers = {
+    findById: jest.fn().mockResolvedValue({ id: 'cust' }),
+  };
   const mockQueue = { addJob: jest.fn() };
   const mockAudit = { log: jest.fn() };
 
@@ -160,10 +165,17 @@ describe('TicketService', () => {
       source.clearEvents();
       target.clearEvents();
       mockRepo.findById.mockImplementation((tid: string) =>
-        Promise.resolve(tid === sourceId ? source : tid === targetId ? target : null),
+        Promise.resolve(
+          tid === sourceId ? source : tid === targetId ? target : null,
+        ),
       );
 
-      const result = await service.merge(tenantId, sourceId, targetId, 'agent-1');
+      const result = await service.merge(
+        tenantId,
+        sourceId,
+        targetId,
+        'agent-1',
+      );
 
       expect(result.id).toBe(targetId);
       expect(source.status.value).toBe(TicketStatusEnum.CLOSED);

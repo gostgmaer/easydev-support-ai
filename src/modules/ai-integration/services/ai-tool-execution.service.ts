@@ -5,7 +5,10 @@ import { ToolStatusEnum } from '../domain/value-objects';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { AIPlatformClient } from './ai-platform.client';
 import { AiEventPublisher } from './ai-event.publisher';
-import { AiToolRequestedEvent, AiToolCompletedEvent } from '@easydev/shared-events';
+import {
+  AiToolRequestedEvent,
+  AiToolCompletedEvent,
+} from '@easydev/shared-events';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -40,12 +43,20 @@ export class AiToolExecutionService {
 
     await this.repository.saveToolRequest(request, tenantId);
     await this.eventPublisher.publish(
-      new AiToolRequestedEvent(tenantId, requestId, workflowExecutionId, toolName, capability),
+      new AiToolRequestedEvent(
+        tenantId,
+        requestId,
+        workflowExecutionId,
+        toolName,
+        capability,
+      ),
     );
 
     try {
-      this.logger.log(`Executing tool capability ${capability} for tool ${toolName} (tenant ${tenantId})`);
-      
+      this.logger.log(
+        `Executing tool capability ${capability} for tool ${toolName} (tenant ${tenantId})`,
+      );
+
       // Execute capability on the connector
       const responsePayload = await this.connectorService.executeCapability(
         tenantId,
@@ -70,10 +81,21 @@ export class AiToolExecutionService {
       await this.repository.saveToolResult(result, tenantId);
 
       // Post results back to AI Platform Tool Result API
-      await this.aiClient.submitToolResult(tenantId, workflowId, requestId, responsePayload, 'SUCCESS');
+      await this.aiClient.submitToolResult(
+        tenantId,
+        workflowId,
+        requestId,
+        responsePayload,
+        'SUCCESS',
+      );
 
       await this.eventPublisher.publish(
-        new AiToolCompletedEvent(tenantId, requestId, workflowExecutionId, 'SUCCESS'),
+        new AiToolCompletedEvent(
+          tenantId,
+          requestId,
+          workflowExecutionId,
+          'SUCCESS',
+        ),
       );
 
       return responsePayload;
@@ -94,13 +116,26 @@ export class AiToolExecutionService {
 
       // Post failures back to AI Platform
       try {
-        await this.aiClient.submitToolResult(tenantId, workflowId, requestId, { error: error.message }, 'FAILED');
+        await this.aiClient.submitToolResult(
+          tenantId,
+          workflowId,
+          requestId,
+          { error: error.message },
+          'FAILED',
+        );
       } catch (err: any) {
-        this.logger.warn(`Failed to submit tool failure status to AI platform: ${err.message}`);
+        this.logger.warn(
+          `Failed to submit tool failure status to AI platform: ${err.message}`,
+        );
       }
 
       await this.eventPublisher.publish(
-        new AiToolCompletedEvent(tenantId, requestId, workflowExecutionId, 'FAILED'),
+        new AiToolCompletedEvent(
+          tenantId,
+          requestId,
+          workflowExecutionId,
+          'FAILED',
+        ),
       );
 
       throw error;

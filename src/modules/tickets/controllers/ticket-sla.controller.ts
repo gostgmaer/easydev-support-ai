@@ -25,7 +25,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Ticket SLA')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/tickets/:ticketId/sla')

@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsString, IsEnum, IsBoolean, IsOptional, IsObject, IsInt } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsBoolean,
+  IsOptional,
+  IsObject,
+  IsInt,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChannelTypeEnum } from '../domain/value-objects';
 

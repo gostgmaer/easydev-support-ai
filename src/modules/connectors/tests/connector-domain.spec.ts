@@ -47,7 +47,9 @@ describe('Connector Domain Model', () => {
       expect(connector.id).toBe(connectorId);
       expect(connector.status.value).toBe(ConnectorStatusEnum.DRAFT);
       expect(connector.domainEvents.length).toBe(1);
-      expect(connector.domainEvents[0].constructor.name).toBe('ConnectorCreatedEvent');
+      expect(connector.domainEvents[0].constructor.name).toBe(
+        'ConnectorCreatedEvent',
+      );
     });
 
     it('should handle activation and status transitions', () => {
@@ -83,7 +85,9 @@ describe('Connector Domain Model', () => {
       const capability = new ConnectorCapability('cap-id-1', {
         tenantId,
         connectorId,
-        capabilityType: CapabilityType.create(CapabilityTypeEnum.ORDER_TRACKING),
+        capabilityType: CapabilityType.create(
+          CapabilityTypeEnum.ORDER_TRACKING,
+        ),
         name: 'Track Order',
         method: 'GET',
         path: '/orders/{id}',

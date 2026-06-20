@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { db, schema } from '@easydev/database';
 import { eq, and, or, ilike, sql, desc, asc } from 'drizzle-orm';
 import { Customer } from '../domain/customer.aggregate';
-import { ICustomerRepository, CustomerQueryOptions } from './customer-repository.interface';
+import {
+  ICustomerRepository,
+  CustomerQueryOptions,
+} from './customer-repository.interface';
 import { CustomerMapper } from './customer.mapper';
 import { randomUUID } from 'crypto';
 
@@ -18,17 +21,17 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       )
       .where(
         and(
           eq(schema.customers.id, id),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -45,24 +48,27 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       )
       .where(
         and(
           eq(schema.customers.email, email.trim().toLowerCase()),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
     return CustomerMapper.toDomain(row.customer, row.profile, row.metrics);
   }
 
-  async findByExternalId(externalId: string, tenantId: string): Promise<Customer | null> {
+  async findByExternalId(
+    externalId: string,
+    tenantId: string,
+  ): Promise<Customer | null> {
     const [row] = await db
       .select({
         customer: schema.customers,
@@ -72,17 +78,17 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       )
       .where(
         and(
           eq(schema.customers.externalCustomerId, externalId),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -99,20 +105,22 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       )
       .where(
         and(
           eq(schema.customers.tenantId, tenantId),
-          sql`${schema.customers.deletedAt} IS NULL`
-        )
+          sql`${schema.customers.deletedAt} IS NULL`,
+        ),
       );
 
-    return rows.map((r) => CustomerMapper.toDomain(r.customer, r.profile, r.metrics));
+    return rows.map((r) =>
+      CustomerMapper.toDomain(r.customer, r.profile, r.metrics),
+    );
   }
 
   async save(customer: Customer, tenantId: string): Promise<Customer> {
@@ -141,8 +149,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         .where(
           and(
             eq(schema.customers.id, customer.id),
-            eq(schema.customers.tenantId, tenantId)
-          )
+            eq(schema.customers.tenantId, tenantId),
+          ),
         );
 
       if (existing) {
@@ -152,8 +160,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
           .where(
             and(
               eq(schema.customers.id, customer.id),
-              eq(schema.customers.tenantId, tenantId)
-            )
+              eq(schema.customers.tenantId, tenantId),
+            ),
           );
       } else {
         await tx.insert(schema.customers).values({
@@ -190,8 +198,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
           .where(
             and(
               eq(schema.customerProfiles.customerId, customer.id),
-              eq(schema.customerProfiles.tenantId, tenantId)
-            )
+              eq(schema.customerProfiles.tenantId, tenantId),
+            ),
           );
 
         if (existingProfile) {
@@ -201,8 +209,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
             .where(
               and(
                 eq(schema.customerProfiles.customerId, customer.id),
-                eq(schema.customerProfiles.tenantId, tenantId)
-              )
+                eq(schema.customerProfiles.tenantId, tenantId),
+              ),
             );
         } else {
           await tx.insert(schema.customerProfiles).values({
@@ -239,8 +247,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
           .where(
             and(
               eq(schema.customerMetrics.customerId, customer.id),
-              eq(schema.customerMetrics.tenantId, tenantId)
-            )
+              eq(schema.customerMetrics.tenantId, tenantId),
+            ),
           );
 
         if (existingMetrics) {
@@ -250,8 +258,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
             .where(
               and(
                 eq(schema.customerMetrics.customerId, customer.id),
-                eq(schema.customerMetrics.tenantId, tenantId)
-              )
+                eq(schema.customerMetrics.tenantId, tenantId),
+              ),
             );
         } else {
           await tx.insert(schema.customerMetrics).values({
@@ -273,8 +281,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .where(
         and(
           eq(schema.customers.id, id),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     if (!existing) return false;
@@ -288,8 +296,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .where(
         and(
           eq(schema.customers.id, id),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     return true;
@@ -302,8 +310,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .where(
         and(
           eq(schema.customers.id, id),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     if (!existing) return false;
@@ -317,8 +325,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .where(
         and(
           eq(schema.customers.id, id),
-          eq(schema.customers.tenantId, tenantId)
-        )
+          eq(schema.customers.tenantId, tenantId),
+        ),
       );
 
     return true;
@@ -326,7 +334,7 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
 
   async findPaginated(
     tenantId: string,
-    options: CustomerQueryOptions
+    options: CustomerQueryOptions,
   ): Promise<{ data: Customer[]; total: number; nextCursor?: string }> {
     const limit = options.limit || 20;
     const page = options.page || 1;
@@ -341,7 +349,9 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       conditions.push(eq(schema.customers.status, options.status));
     }
     if (options.email) {
-      conditions.push(eq(schema.customers.email, options.email.trim().toLowerCase()));
+      conditions.push(
+        eq(schema.customers.email, options.email.trim().toLowerCase()),
+      );
     }
     if (options.phone) {
       conditions.push(eq(schema.customers.phone, options.phone.trim()));
@@ -358,8 +368,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
           ilike(schema.customerProfiles.firstName, searchPattern),
           ilike(schema.customerProfiles.lastName, searchPattern),
           ilike(schema.customerProfiles.displayName, searchPattern),
-          ilike(schema.customerProfiles.company, searchPattern)
-        )
+          ilike(schema.customerProfiles.company, searchPattern),
+        ),
       );
     }
 
@@ -381,7 +391,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         orderByColumn = schema.customerMetrics.totalSpend;
       }
     }
-    const order = options.sortOrder === 'DESC' ? desc(orderByColumn) : asc(orderByColumn);
+    const order =
+      options.sortOrder === 'DESC' ? desc(orderByColumn) : asc(orderByColumn);
 
     let query = db
       .select({
@@ -392,11 +403,11 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       );
 
     if (options.segmentId) {
@@ -404,8 +415,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         schema.customerSegmentMembers,
         and(
           eq(schema.customers.id, schema.customerSegmentMembers.customerId),
-          eq(schema.customerSegmentMembers.segmentId, options.segmentId)
-        )
+          eq(schema.customerSegmentMembers.segmentId, options.segmentId),
+        ),
       ) as any;
     }
 
@@ -420,11 +431,11 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       );
 
     if (options.segmentId) {
@@ -432,15 +443,17 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         schema.customerSegmentMembers,
         and(
           eq(schema.customers.id, schema.customerSegmentMembers.customerId),
-          eq(schema.customerSegmentMembers.segmentId, options.segmentId)
-        )
+          eq(schema.customerSegmentMembers.segmentId, options.segmentId),
+        ),
       ) as any;
     }
 
     const [countResult] = await (countQuery as any).where(whereClause);
     const total = Number(countResult?.count || 0);
 
-    const data = dataRows.map((r: any) => CustomerMapper.toDomain(r.customer, r.profile, r.metrics));
+    const data = dataRows.map((r: any) =>
+      CustomerMapper.toDomain(r.customer, r.profile, r.metrics),
+    );
 
     let nextCursor: string | undefined;
     if (data.length > 0 && data.length === limit) {
@@ -450,7 +463,11 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
     return { data, total, nextCursor };
   }
 
-  async search(tenantId: string, queryText: string, limit = 10): Promise<Customer[]> {
+  async search(
+    tenantId: string,
+    queryText: string,
+    limit = 10,
+  ): Promise<Customer[]> {
     const searchPattern = `%${queryText}%`;
     const rows = await db
       .select({
@@ -461,11 +478,11 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .from(schema.customers)
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       )
       .where(
         and(
@@ -476,16 +493,22 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
             ilike(schema.customers.phone, searchPattern),
             ilike(schema.customerProfiles.firstName, searchPattern),
             ilike(schema.customerProfiles.lastName, searchPattern),
-            ilike(schema.customerProfiles.displayName, searchPattern)
-          )
-        )
+            ilike(schema.customerProfiles.displayName, searchPattern),
+          ),
+        ),
       )
       .limit(limit);
 
-    return rows.map((r) => CustomerMapper.toDomain(r.customer, r.profile, r.metrics));
+    return rows.map((r) =>
+      CustomerMapper.toDomain(r.customer, r.profile, r.metrics),
+    );
   }
 
-  async assignSegment(customerId: string, segmentId: string, tenantId: string): Promise<void> {
+  async assignSegment(
+    customerId: string,
+    segmentId: string,
+    tenantId: string,
+  ): Promise<void> {
     const [existing] = await db
       .select()
       .from(schema.customerSegmentMembers)
@@ -493,8 +516,8 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         and(
           eq(schema.customerSegmentMembers.customerId, customerId),
           eq(schema.customerSegmentMembers.segmentId, segmentId),
-          eq(schema.customerSegmentMembers.tenantId, tenantId)
-        )
+          eq(schema.customerSegmentMembers.tenantId, tenantId),
+        ),
       );
 
     if (!existing) {
@@ -510,15 +533,19 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
     }
   }
 
-  async removeSegment(customerId: string, segmentId: string, tenantId: string): Promise<void> {
+  async removeSegment(
+    customerId: string,
+    segmentId: string,
+    tenantId: string,
+  ): Promise<void> {
     await db
       .delete(schema.customerSegmentMembers)
       .where(
         and(
           eq(schema.customerSegmentMembers.customerId, customerId),
           eq(schema.customerSegmentMembers.segmentId, segmentId),
-          eq(schema.customerSegmentMembers.tenantId, tenantId)
-        )
+          eq(schema.customerSegmentMembers.tenantId, tenantId),
+        ),
       );
   }
 
@@ -529,14 +556,17 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
       .where(
         and(
           eq(schema.customerSegmentMembers.customerId, customerId),
-          eq(schema.customerSegmentMembers.tenantId, tenantId)
-        )
+          eq(schema.customerSegmentMembers.tenantId, tenantId),
+        ),
       );
 
     return rows.map((r) => r.segmentId);
   }
 
-  async findSegmentMembers(segmentId: string, tenantId: string): Promise<Customer[]> {
+  async findSegmentMembers(
+    segmentId: string,
+    tenantId: string,
+  ): Promise<Customer[]> {
     const rows = await db
       .select({
         customer: schema.customers,
@@ -548,24 +578,26 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         schema.customerSegmentMembers,
         and(
           eq(schema.customers.id, schema.customerSegmentMembers.customerId),
-          eq(schema.customerSegmentMembers.segmentId, segmentId)
-        )
+          eq(schema.customerSegmentMembers.segmentId, segmentId),
+        ),
       )
       .leftJoin(
         schema.customerProfiles,
-        eq(schema.customers.id, schema.customerProfiles.customerId)
+        eq(schema.customers.id, schema.customerProfiles.customerId),
       )
       .leftJoin(
         schema.customerMetrics,
-        eq(schema.customers.id, schema.customerMetrics.customerId)
+        eq(schema.customers.id, schema.customerMetrics.customerId),
       )
       .where(
         and(
           eq(schema.customers.tenantId, tenantId),
-          sql`${schema.customers.deletedAt} IS NULL`
-        )
+          sql`${schema.customers.deletedAt} IS NULL`,
+        ),
       );
 
-    return rows.map((r) => CustomerMapper.toDomain(r.customer, r.profile, r.metrics));
+    return rows.map((r) =>
+      CustomerMapper.toDomain(r.customer, r.profile, r.metrics),
+    );
   }
 }

@@ -1,8 +1,24 @@
-import { Injectable, Inject, NotFoundException, OnApplicationBootstrap, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  OnApplicationBootstrap,
+  Logger,
+} from '@nestjs/common';
 import type { IWorkflowRepository } from '../repositories/workflow-repository.interface';
-import { WorkflowTemplate, WorkflowTrigger, WorkflowCondition, WorkflowAction } from '../domain';
+import {
+  WorkflowTemplate,
+  WorkflowTrigger,
+  WorkflowCondition,
+  WorkflowAction,
+} from '../domain';
 import { CreateTemplateDto, UpdateTemplateDto } from '../dtos/workflow.dto';
-import { WorkflowStatusEnum, WorkflowTypeEnum, TriggerTypeEnum, ActionTypeEnum } from '../domain/value-objects';
+import {
+  WorkflowStatusEnum,
+  WorkflowTypeEnum,
+  TriggerTypeEnum,
+  ActionTypeEnum,
+} from '../domain/value-objects';
 import { WorkflowEventPublisher } from './workflow-event.publisher';
 import {
   WorkflowCreatedEvent,
@@ -36,14 +52,20 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
       const templatesToSeed = [
         {
           name: 'Refund Request',
-          description: 'Auto-escalates high-value refund requests for manual approval',
+          description:
+            'Auto-escalates high-value refund requests for manual approval',
           workflowType: WorkflowTypeEnum.TICKET_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.TICKET_CREATED, configuration: {} }],
+          triggers: [
+            { triggerType: TriggerTypeEnum.TICKET_CREATED, configuration: {} },
+          ],
           conditions: [{ field: 'amount', operator: 'GT', value: '500' }],
           actions: [
             {
               actionType: ActionTypeEnum.APPROVAL,
-              configuration: { approverId: '00000000-0000-0000-0000-000000000000', timeoutHours: 24 },
+              configuration: {
+                approverId: '00000000-0000-0000-0000-000000000000',
+                timeoutHours: 24,
+              },
               sequenceOrder: 1,
             },
             {
@@ -57,8 +79,15 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
           name: 'Order Escalation',
           description: 'Escalates order disputes and delivery failures',
           workflowType: WorkflowTypeEnum.ESCALATION_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.MESSAGE_RECEIVED, configuration: {} }],
-          conditions: [{ field: 'subject', operator: 'CONTAINS', value: 'order' }],
+          triggers: [
+            {
+              triggerType: TriggerTypeEnum.MESSAGE_RECEIVED,
+              configuration: {},
+            },
+          ],
+          conditions: [
+            { field: 'subject', operator: 'CONTAINS', value: 'order' },
+          ],
           actions: [
             {
               actionType: ActionTypeEnum.ESCALATE_TICKET,
@@ -69,24 +98,37 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
         },
         {
           name: 'VIP Customer Escalation',
-          description: 'Escalates tickets from VIP customers directly to senior support',
+          description:
+            'Escalates tickets from VIP customers directly to senior support',
           workflowType: WorkflowTypeEnum.ESCALATION_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.TICKET_CREATED, configuration: {} }],
-          conditions: [{ field: 'customerSegment', operator: 'EQUALS', value: 'VIP' }],
+          triggers: [
+            { triggerType: TriggerTypeEnum.TICKET_CREATED, configuration: {} },
+          ],
+          conditions: [
+            { field: 'customerSegment', operator: 'EQUALS', value: 'VIP' },
+          ],
           actions: [
             {
               actionType: ActionTypeEnum.ASSIGN_TICKET,
-              configuration: { teamId: '00000000-0000-0000-0000-000000000000', agentId: '00000000-0000-0000-0000-000000000000' },
+              configuration: {
+                teamId: '00000000-0000-0000-0000-000000000000',
+                agentId: '00000000-0000-0000-0000-000000000000',
+              },
               sequenceOrder: 1,
             },
           ],
         },
         {
           name: 'SLA Breach Escalation',
-          description: 'Handles SLA breaches by notifying managers and reassigning ticket',
+          description:
+            'Handles SLA breaches by notifying managers and reassigning ticket',
           workflowType: WorkflowTypeEnum.ESCALATION_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.SLA_BREACHED, configuration: {} }],
-          conditions: [{ field: 'priority', operator: 'EQUALS', value: 'HIGH' }],
+          triggers: [
+            { triggerType: TriggerTypeEnum.SLA_BREACHED, configuration: {} },
+          ],
+          conditions: [
+            { field: 'priority', operator: 'EQUALS', value: 'HIGH' },
+          ],
           actions: [
             {
               actionType: ActionTypeEnum.SEND_NOTIFICATION,
@@ -102,23 +144,34 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
         },
         {
           name: 'Customer Follow-up',
-          description: 'Auto-sends follow-up message when conversation is resolved',
+          description:
+            'Auto-sends follow-up message when conversation is resolved',
           workflowType: WorkflowTypeEnum.CUSTOMER_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.TICKET_UPDATED, configuration: {} }],
-          conditions: [{ field: 'status', operator: 'EQUALS', value: 'RESOLVED' }],
+          triggers: [
+            { triggerType: TriggerTypeEnum.TICKET_UPDATED, configuration: {} },
+          ],
+          conditions: [
+            { field: 'status', operator: 'EQUALS', value: 'RESOLVED' },
+          ],
           actions: [
             {
               actionType: ActionTypeEnum.SEND_MESSAGE,
-              configuration: { message: 'Thank you for contacting support. Your issue has been marked resolved.' },
+              configuration: {
+                message:
+                  'Thank you for contacting support. Your issue has been marked resolved.',
+              },
               sequenceOrder: 1,
             },
           ],
         },
         {
           name: 'Ticket Auto Assignment',
-          description: 'Auto-assigns low priority tickets to the default support pool',
+          description:
+            'Auto-assigns low priority tickets to the default support pool',
           workflowType: WorkflowTypeEnum.TICKET_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.TICKET_CREATED, configuration: {} }],
+          triggers: [
+            { triggerType: TriggerTypeEnum.TICKET_CREATED, configuration: {} },
+          ],
           conditions: [{ field: 'priority', operator: 'EQUALS', value: 'LOW' }],
           actions: [
             {
@@ -132,8 +185,15 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
           name: 'Conversation Auto Routing',
           description: 'Routes new conversation to appropriate department team',
           workflowType: WorkflowTypeEnum.CONVERSATION_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.CONVERSATION_CREATED, configuration: {} }],
-          conditions: [{ field: 'source', operator: 'EQUALS', value: 'WEBCHAT' }],
+          triggers: [
+            {
+              triggerType: TriggerTypeEnum.CONVERSATION_CREATED,
+              configuration: {},
+            },
+          ],
+          conditions: [
+            { field: 'source', operator: 'EQUALS', value: 'WEBCHAT' },
+          ],
           actions: [
             {
               actionType: ActionTypeEnum.ASSIGN_TICKET,
@@ -144,10 +204,15 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
         },
         {
           name: 'AI Escalation',
-          description: 'Triggers AI workflow for ticket analysis and escalation',
+          description:
+            'Triggers AI workflow for ticket analysis and escalation',
           workflowType: WorkflowTypeEnum.AI_WORKFLOW,
-          triggers: [{ triggerType: TriggerTypeEnum.AI_ESCALATED, configuration: {} }],
-          conditions: [{ field: 'sentiment', operator: 'EQUALS', value: 'NEGATIVE' }],
+          triggers: [
+            { triggerType: TriggerTypeEnum.AI_ESCALATED, configuration: {} },
+          ],
+          conditions: [
+            { field: 'sentiment', operator: 'EQUALS', value: 'NEGATIVE' },
+          ],
           actions: [
             {
               actionType: ActionTypeEnum.TRIGGER_AI_WORKFLOW,
@@ -211,9 +276,12 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     }
   }
 
-  public async createTemplate(tenantId: string, dto: CreateTemplateDto): Promise<WorkflowTemplate> {
+  public async createTemplate(
+    tenantId: string,
+    dto: CreateTemplateDto,
+  ): Promise<WorkflowTemplate> {
     const templateId = crypto.randomUUID();
-    
+
     const triggers = (dto.triggers || []).map(
       (t) =>
         new WorkflowTrigger(crypto.randomUUID(), {
@@ -259,11 +327,16 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     });
 
     const saved = await this.repository.saveTemplate(template, tenantId);
-    await this.eventPublisher.publish(new WorkflowCreatedEvent(tenantId, templateId, template.name));
+    await this.eventPublisher.publish(
+      new WorkflowCreatedEvent(tenantId, templateId, template.name),
+    );
     return saved;
   }
 
-  public async getTemplate(tenantId: string, id: string): Promise<WorkflowTemplate> {
+  public async getTemplate(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowTemplate> {
     const template = await this.repository.getTemplateById(id, tenantId);
     if (!template) {
       throw new NotFoundException(`Workflow template with ID ${id} not found`);
@@ -271,17 +344,26 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     return template;
   }
 
-  public async findTemplates(tenantId: string, options?: { status?: string; type?: string }): Promise<WorkflowTemplate[]> {
+  public async findTemplates(
+    tenantId: string,
+    options?: { status?: string; type?: string },
+  ): Promise<WorkflowTemplate[]> {
     return this.repository.findTemplates(tenantId, options);
   }
 
-  public async updateTemplate(tenantId: string, id: string, dto: UpdateTemplateDto): Promise<WorkflowTemplate> {
+  public async updateTemplate(
+    tenantId: string,
+    id: string,
+    dto: UpdateTemplateDto,
+  ): Promise<WorkflowTemplate> {
     const template = await this.getTemplate(tenantId, id);
 
     template.update(dto);
 
     if (dto.triggers || dto.conditions || dto.actions) {
-      const triggers = (dto.triggers || template.triggers.map(t => t.toJSON())).map(
+      const triggers = (
+        dto.triggers || template.triggers.map((t) => t.toJSON())
+      ).map(
         (t) =>
           new WorkflowTrigger(crypto.randomUUID(), {
             tenantId,
@@ -291,7 +373,9 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
           }),
       );
 
-      const conditions = (dto.conditions || template.conditions.map(c => c.toJSON())).map(
+      const conditions = (
+        dto.conditions || template.conditions.map((c) => c.toJSON())
+      ).map(
         (c) =>
           new WorkflowCondition(crypto.randomUUID(), {
             tenantId,
@@ -302,7 +386,9 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
           }),
       );
 
-      const actions = (dto.actions || template.actions.map(a => a.toJSON())).map(
+      const actions = (
+        dto.actions || template.actions.map((a) => a.toJSON())
+      ).map(
         (a) =>
           new WorkflowAction(crypto.randomUUID(), {
             tenantId,
@@ -352,7 +438,10 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     return newVersion;
   }
 
-  public async activateTemplate(tenantId: string, id: string): Promise<WorkflowTemplate> {
+  public async activateTemplate(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowTemplate> {
     const template = await this.getTemplate(tenantId, id);
     template.update({ status: WorkflowStatusEnum.ACTIVE });
     const saved = await this.repository.saveTemplate(template, tenantId);
@@ -360,7 +449,10 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     return saved;
   }
 
-  public async pauseTemplate(tenantId: string, id: string): Promise<WorkflowTemplate> {
+  public async pauseTemplate(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowTemplate> {
     const template = await this.getTemplate(tenantId, id);
     template.update({ status: WorkflowStatusEnum.PAUSED });
     const saved = await this.repository.saveTemplate(template, tenantId);

@@ -77,12 +77,21 @@ describe('ConversationAssignmentService', () => {
     mockRepo.findById.mockResolvedValue(conversation);
     const agentId = randomUUID();
 
-    const result = await service.assign(tenantId, conversationId, agentId, undefined, 'MANUAL', 'user-1');
+    const result = await service.assign(
+      tenantId,
+      conversationId,
+      agentId,
+      undefined,
+      'MANUAL',
+      'user-1',
+    );
 
     expect(result.assignedAgentId).toBe(agentId);
     expect(result.status.value).toBe(ConversationStatusEnum.ASSIGNED);
     expect(repo.addAssignment).toHaveBeenCalled();
-    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'CONVERSATION_ASSIGN' }));
+    expect(audit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'CONVERSATION_ASSIGN' }),
+    );
   });
 
   it('delegates to the team assignment engine for auto-assignment', async () => {
@@ -92,7 +101,12 @@ describe('ConversationAssignmentService', () => {
     const chosenAgent = randomUUID();
     mockEngine.assignEntity.mockResolvedValue(chosenAgent);
 
-    const result = await service.autoAssign(tenantId, conversationId, teamId, 'user-1');
+    const result = await service.autoAssign(
+      tenantId,
+      conversationId,
+      teamId,
+      'user-1',
+    );
 
     expect(engine.assignEntity).toHaveBeenCalledWith(
       tenantId,
@@ -111,14 +125,23 @@ describe('ConversationAssignmentService', () => {
     mockRepo.findById.mockResolvedValue(conversation);
     const toAgent = randomUUID();
 
-    const result = await service.transfer(tenantId, conversationId, toAgent, 'user-1');
+    const result = await service.transfer(
+      tenantId,
+      conversationId,
+      toAgent,
+      'user-1',
+    );
 
     expect(result.assignedAgentId).toBe(toAgent);
-    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'CONVERSATION_TRANSFER' }));
+    expect(audit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'CONVERSATION_TRANSFER' }),
+    );
   });
 
   it('throws NotFound when the conversation is missing', async () => {
     mockRepo.findById.mockResolvedValue(null);
-    await expect(service.assign(tenantId, conversationId, randomUUID())).rejects.toThrow(NotFoundException);
+    await expect(
+      service.assign(tenantId, conversationId, randomUUID()),
+    ).rejects.toThrow(NotFoundException);
   });
 });

@@ -12,18 +12,23 @@ export class AgentAvailabilityService {
     @Inject('IAgentAvailabilityRepository')
     private readonly availabilityRepo: IAgentAvailabilityRepository,
     private readonly eventPublisher: TeamEventPublisher,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
   ) {}
 
   async updateAvailability(
     tenantId: string,
     agentProfileId: string,
     dto: UpdateAvailabilityDto,
-    userId?: string
+    userId?: string,
   ): Promise<AgentAvailability> {
-    const availability = await this.availabilityRepo.findByAgentProfileId(agentProfileId, tenantId);
+    const availability = await this.availabilityRepo.findByAgentProfileId(
+      agentProfileId,
+      tenantId,
+    );
     if (!availability) {
-      throw new NotFoundException(`Availability record for agent ${agentProfileId} not found`);
+      throw new NotFoundException(
+        `Availability record for agent ${agentProfileId} not found`,
+      );
     }
 
     availability.update({
@@ -33,7 +38,9 @@ export class AgentAvailabilityService {
     });
 
     const saved = await this.availabilityRepo.save(availability, tenantId);
-    await this.eventPublisher.publish(new AvailabilityUpdatedEvent(tenantId, agentProfileId, dto.status));
+    await this.eventPublisher.publish(
+      new AvailabilityUpdatedEvent(tenantId, agentProfileId, dto.status),
+    );
 
     await this.auditService.log({
       tenantId,
@@ -45,15 +52,27 @@ export class AgentAvailabilityService {
     return saved;
   }
 
-  async getAvailability(tenantId: string, agentProfileId: string): Promise<AgentAvailability> {
-    const availability = await this.availabilityRepo.findByAgentProfileId(agentProfileId, tenantId);
+  async getAvailability(
+    tenantId: string,
+    agentProfileId: string,
+  ): Promise<AgentAvailability> {
+    const availability = await this.availabilityRepo.findByAgentProfileId(
+      agentProfileId,
+      tenantId,
+    );
     if (!availability) {
-      throw new NotFoundException(`Availability for agent ${agentProfileId} not found`);
+      throw new NotFoundException(
+        `Availability for agent ${agentProfileId} not found`,
+      );
     }
     return availability;
   }
 
-  async updateLoad(tenantId: string, agentProfileId: string, change: number): Promise<void> {
+  async updateLoad(
+    tenantId: string,
+    agentProfileId: string,
+    change: number,
+  ): Promise<void> {
     await this.availabilityRepo.updateLoad(agentProfileId, change, tenantId);
   }
 
@@ -61,8 +80,13 @@ export class AgentAvailabilityService {
     tenantId: string,
     agentProfileId: string,
     conversationsChange: number,
-    ticketsChange: number
+    ticketsChange: number,
   ): Promise<void> {
-    await this.availabilityRepo.updateCounters(agentProfileId, conversationsChange, ticketsChange, tenantId);
+    await this.availabilityRepo.updateCounters(
+      agentProfileId,
+      conversationsChange,
+      ticketsChange,
+      tenantId,
+    );
   }
 }

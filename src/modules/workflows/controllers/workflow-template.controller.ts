@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Body, Headers, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -37,7 +48,10 @@ export class WorkflowTemplateController {
     @Query('status') status?: string,
     @Query('type') type?: string,
   ) {
-    const templates = await this.templateService.findTemplates(tenantId, { status, type });
+    const templates = await this.templateService.findTemplates(tenantId, {
+      status,
+      type,
+    });
     return templates.map((t) => t.toJSON());
   }
 
@@ -48,7 +62,11 @@ export class WorkflowTemplateController {
     @Param('id') id: string,
     @Body() dto: UpdateTemplateDto,
   ) {
-    const template = await this.templateService.updateTemplate(tenantId, id, dto);
+    const template = await this.templateService.updateTemplate(
+      tenantId,
+      id,
+      dto,
+    );
     return template.toJSON();
   }
 
@@ -68,7 +86,10 @@ export class WorkflowTemplateController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
   ) {
-    const versionNumber = await this.templateService.publishVersion(tenantId, id);
+    const versionNumber = await this.templateService.publishVersion(
+      tenantId,
+      id,
+    );
     return { success: true, versionNumber };
   }
 

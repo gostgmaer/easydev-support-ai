@@ -25,7 +25,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Inbound Messages')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/inbound-messages')
@@ -41,7 +45,10 @@ export class InboundController {
   @Throttle({ default: { limit: 600, ttl: 60000 } })
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Ingest an inbound message (async pipeline)' })
-  @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Inbound message accepted' })
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    description: 'Inbound message accepted',
+  })
   async ingest(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: InboundMessageDto,

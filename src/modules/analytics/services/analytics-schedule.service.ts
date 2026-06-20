@@ -15,7 +15,10 @@ export class AnalyticsScheduleService {
     private readonly queueService: QueueService,
   ) {}
 
-  async createSchedule(tenantId: string, dto: CreateScheduleDto): Promise<AnalyticsSchedule> {
+  async createSchedule(
+    tenantId: string,
+    dto: CreateScheduleDto,
+  ): Promise<AnalyticsSchedule> {
     this.logger.log(`Creating schedule ${dto.name} for Tenant ${tenantId}`);
     const nextRun = new Date(Date.now() + 3600000); // 1 hour from now
 
@@ -42,21 +45,35 @@ export class AnalyticsScheduleService {
     return schedule;
   }
 
-  async findSchedules(tenantId: string, activeOnly?: boolean): Promise<AnalyticsSchedule[]> {
+  async findSchedules(
+    tenantId: string,
+    activeOnly?: boolean,
+  ): Promise<AnalyticsSchedule[]> {
     return this.repository.findSchedules(tenantId, activeOnly);
   }
 
-  async updateSchedule(tenantId: string, id: string, dto: UpdateScheduleDto): Promise<AnalyticsSchedule> {
+  async updateSchedule(
+    tenantId: string,
+    id: string,
+    dto: UpdateScheduleDto,
+  ): Promise<AnalyticsSchedule> {
     const schedule = await this.getSchedule(tenantId, id);
 
     const updated = new AnalyticsSchedule(schedule.id, {
       tenantId: schedule.tenantId,
       reportId: schedule.reportId,
       name: dto.name !== undefined ? dto.name : schedule.name,
-      cronExpression: dto.cronExpression !== undefined ? dto.cronExpression : schedule.cronExpression,
+      cronExpression:
+        dto.cronExpression !== undefined
+          ? dto.cronExpression
+          : schedule.cronExpression,
       timezone: dto.timezone !== undefined ? dto.timezone : schedule.timezone,
-      exportFormat: dto.exportFormat !== undefined ? dto.exportFormat : schedule.exportFormat,
-      recipients: dto.recipients !== undefined ? dto.recipients : schedule.recipients,
+      exportFormat:
+        dto.exportFormat !== undefined
+          ? dto.exportFormat
+          : schedule.exportFormat,
+      recipients:
+        dto.recipients !== undefined ? dto.recipients : schedule.recipients,
       isActive: dto.isActive !== undefined ? dto.isActive : schedule.isActive,
       nextRunAt: schedule.nextRunAt,
       lastRunAt: schedule.lastRunAt,
@@ -77,19 +94,17 @@ export class AnalyticsScheduleService {
     const schedule = await this.getSchedule(tenantId, id);
     if (!schedule.isActive) return;
 
-    this.logger.log(`Processing report schedule run for schedule ${schedule.name}`);
+    this.logger.log(
+      `Processing report schedule run for schedule ${schedule.name}`,
+    );
 
     // Queue the export generation & delivery job
-    await this.queueService.addJob(
-      QUEUES.ANALYTICS,
-      'analytics-export-job',
-      {
-        tenantId,
-        reportId: schedule.reportId,
-        format: schedule.exportFormat,
-        recipients: schedule.recipients,
-      },
-    );
+    await this.queueService.addJob(QUEUES.ANALYTICS, 'analytics-export-job', {
+      tenantId,
+      reportId: schedule.reportId,
+      format: schedule.exportFormat,
+      recipients: schedule.recipients,
+    });
 
     // Update next run time
     const nextRun = new Date(Date.now() + 3600000); // 1 hour from now
@@ -99,13 +114,17 @@ export class AnalyticsScheduleService {
 
   async tickSchedules(now: Date): Promise<void> {
     const schedules = await this.repository.findSchedulesToRun(now);
-    this.logger.log(`Ticking schedules. Found ${schedules.length} schedules to execute.`);
+    this.logger.log(
+      `Ticking schedules. Found ${schedules.length} schedules to execute.`,
+    );
 
     for (const schedule of schedules) {
       try {
         await this.processSchedule(schedule.tenantId, schedule.id);
       } catch (err: any) {
-        this.logger.error(`Error executing schedule ${schedule.id}: ${err.message}`);
+        this.logger.error(
+          `Error executing schedule ${schedule.id}: ${err.message}`,
+        );
       }
     }
   }

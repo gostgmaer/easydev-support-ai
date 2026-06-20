@@ -7,7 +7,9 @@ export class NotificationService {
 
   async sendEmail(tenantId: string, to: string, templateId: string, data: any) {
     try {
-      this.logger.log(`Dispatching email via EasyDev Notification Service to ${to}`);
+      this.logger.log(
+        `Dispatching email via EasyDev Notification Service to ${to}`,
+      );
       // Integrates with EasyDev Notification Service
       await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/v1/email`, {
         tenant_id: tenantId,
@@ -20,7 +22,11 @@ export class NotificationService {
     }
   }
 
-  async sendPushNotification(tenantId: string, userId: string, message: string) {
+  async sendPushNotification(
+    tenantId: string,
+    userId: string,
+    message: string,
+  ) {
     try {
       await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/v1/push`, {
         tenant_id: tenantId,

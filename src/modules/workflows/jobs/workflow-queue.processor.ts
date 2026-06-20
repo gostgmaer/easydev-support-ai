@@ -25,30 +25,59 @@ export class WorkflowQueueProcessor extends BaseWorker {
 
     switch (job.name) {
       case 'workflow-execution-job':
-        this.logger.log(`Processing workflow-execution-job ${job.id} for execution ${job.data.executionId}`);
+        this.logger.log(
+          `Processing workflow-execution-job ${job.id} for execution ${job.data.executionId}`,
+        );
         // Handle background execution tracking or heartbeat
         return { success: true };
 
       case 'workflow-approval-job':
-        this.logger.log(`Processing workflow-approval-job ${job.id} for approval ${job.data.approvalId}`);
-        const approval = await this.approvalService.getApproval(tenantId, job.data.approvalId);
+        this.logger.log(
+          `Processing workflow-approval-job ${job.id} for approval ${job.data.approvalId}`,
+        );
+        const approval = await this.approvalService.getApproval(
+          tenantId,
+          job.data.approvalId,
+        );
         if (approval.isExpired()) {
-          this.logger.log(`Approval ${approval.id} has expired. Triggering auto-rejection.`);
+          this.logger.log(
+            `Approval ${approval.id} has expired. Triggering auto-rejection.`,
+          );
           try {
-            await this.approvalService.reject(tenantId, approval.id, 'Auto-rejected: Approval request expired.');
-            await this.engineService.resumeExecution(tenantId, approval.workflowExecutionId, false, 'SYSTEM', 'Auto-rejected: Expired');
+            await this.approvalService.reject(
+              tenantId,
+              approval.id,
+              'Auto-rejected: Approval request expired.',
+            );
+            await this.engineService.resumeExecution(
+              tenantId,
+              approval.workflowExecutionId,
+              false,
+              'SYSTEM',
+              'Auto-rejected: Expired',
+            );
           } catch (err: any) {
-            this.logger.warn(`Failure processing approval timeout: ${err.message}`);
+            this.logger.warn(
+              `Failure processing approval timeout: ${err.message}`,
+            );
           }
           return { status: 'expired_rejected' };
         }
         return { status: 'checked_active' };
 
       case 'workflow-schedule-job':
-        this.logger.log(`Processing workflow-schedule-job ${job.id} for schedule ${job.data.scheduleId}`);
-        const schedule = await this.scheduleService.getSchedule(tenantId, job.data.scheduleId);
+        this.logger.log(
+          `Processing workflow-schedule-job ${job.id} for schedule ${job.data.scheduleId}`,
+        );
+        const schedule = await this.scheduleService.getSchedule(
+          tenantId,
+          job.data.scheduleId,
+        );
         if (schedule.isActive) {
-          const template = await this.templateService.getTemplate(tenantId, schedule.workflowId);
+          const template = await this.templateService.getTemplate(
+            tenantId,
+            schedule.workflowId,
+          );
           const executionId = await this.engineService.runWorkflowTemplate(
             tenantId,
             template,
@@ -61,7 +90,9 @@ export class WorkflowQueueProcessor extends BaseWorker {
         return { status: 'skipped_inactive' };
 
       case 'workflow-retry-job':
-        this.logger.log(`Processing workflow-retry-job ${job.id} for execution ${job.data.executionId}`);
+        this.logger.log(
+          `Processing workflow-retry-job ${job.id} for execution ${job.data.executionId}`,
+        );
         const execution = await this.engineService.resumeExecution(
           tenantId,
           job.data.executionId,

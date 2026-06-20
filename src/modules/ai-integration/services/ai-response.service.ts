@@ -7,7 +7,10 @@ import { AiEscalationService } from './ai-escalation.service';
 import { AiWorkflowService } from './ai-workflow.service';
 import { AiUsageService } from './ai-usage.service';
 import { AIPlatformClient } from './ai-platform.client';
-import { MessageDirectionEnum, MessageTypeEnum } from '../../messages/domain/value-objects';
+import {
+  MessageDirectionEnum,
+  MessageTypeEnum,
+} from '../../messages/domain/value-objects';
 import { ResponseTypeEnum } from '../domain/value-objects';
 
 @Injectable()
@@ -32,10 +35,15 @@ export class AiResponseService {
     messageText: string,
   ): Promise<any> {
     const startTime = Date.now();
-    this.logger.log(`Processing inbound message ${messageId} in conversation ${conversationId}`);
+    this.logger.log(
+      `Processing inbound message ${messageId} in conversation ${conversationId}`,
+    );
 
     // 1. Load Conversation
-    const conversation = await this.conversationService.findById(tenantId, conversationId);
+    const conversation = await this.conversationService.findById(
+      tenantId,
+      conversationId,
+    );
     if (!conversation) {
       this.logger.warn(`Conversation ${conversationId} not found`);
       return;
@@ -69,28 +77,47 @@ export class AiResponseService {
     );
 
     if (escalated) {
-      this.logger.log(`Conversation ${conversationId} escalated to human. Bypassing AI generation.`);
+      this.logger.log(
+        `Conversation ${conversationId} escalated to human. Bypassing AI generation.`,
+      );
       return { escalated: true };
     }
 
     // 5. Select & Trigger Workflow
     const workflowId = this.routingService.selectWorkflow(agent);
-    
+
     // Call AI Platform to generate / v1/generate
     try {
-      const recallContext = await this.conversationServiceAi.getConversationContext(tenantId, conversationId);
-      
-      const execution = await this.workflowService.triggerWorkflow(tenantId, workflowId, conversationId, {
-        prompt: messageText,
-        systemPrompt: agent.systemPromptReference || 'You are an AI support agent.',
-        history: recallContext || [],
-        configuration: agent.configuration,
-      });
+      const recallContext =
+        await this.conversationServiceAi.getConversationContext(
+          tenantId,
+          conversationId,
+        );
+
+      const execution = await this.workflowService.triggerWorkflow(
+        tenantId,
+        workflowId,
+        conversationId,
+        {
+          prompt: messageText,
+          systemPrompt:
+            agent.systemPromptReference || 'You are an AI support agent.',
+          history: recallContext || [],
+          configuration: agent.configuration,
+        },
+      );
 
       // Select /v1/generate or workflow result
-      const generateResult = await this.aiClient.generate(tenantId, messageText, agent.systemPromptReference || '', agent.configuration || {});
-      
-      const replyText = generateResult.text || 'I am sorry, I could not process your request at this time.';
+      const generateResult = await this.aiClient.generate(
+        tenantId,
+        messageText,
+        agent.systemPromptReference || '',
+        agent.configuration || {},
+      );
+
+      const replyText =
+        generateResult.text ||
+        'I am sorry, I could not process your request at this time.';
       const confidence = generateResult.confidence || 0.9;
       const tokensUsed = generateResult.tokensUsed || 100;
       const cost = generateResult.cost || 0.002;
@@ -99,17 +126,14 @@ export class AiResponseService {
       const maskedText = this.maskSensitiveData(replyText);
 
       // 6. Create Outbound Automated Response Message
-      const outboundMessage = await this.messageService.create(
-        tenantId,
-        {
-          conversationId,
-          direction: MessageDirectionEnum.OUTBOUND,
-          messageType: MessageTypeEnum.TEXT,
-          content: maskedText,
-          senderId: agent.id,
-          senderType: 'AGENT',
-        },
-      );
+      const outboundMessage = await this.messageService.create(tenantId, {
+        conversationId,
+        direction: MessageDirectionEnum.OUTBOUND,
+        messageType: MessageTypeEnum.TEXT,
+        content: maskedText,
+        senderId: agent.id,
+        senderType: 'AGENT',
+      });
 
       // 7. Track logs and usage metrics
       const responseTime = Date.now() - startTime;
@@ -125,13 +149,24 @@ export class AiResponseService {
         cost,
       );
 
-      await this.usageService.recordUsage(tenantId, agent.id, tokensUsed, cost, true, 0);
+      await this.usageService.recordUsage(
+        tenantId,
+        agent.id,
+        tokensUsed,
+        cost,
+        true,
+        0,
+      );
 
       // Update session state
-      await this.conversationServiceAi.updateSessionState(tenantId, conversationId, {
-        lastResponseId: outboundMessage.id,
-        workflowExecutionId: execution.id,
-      });
+      await this.conversationServiceAi.updateSessionState(
+        tenantId,
+        conversationId,
+        {
+          lastResponseId: outboundMessage.id,
+          workflowExecutionId: execution.id,
+        },
+      );
 
       return {
         escalated: false,
@@ -139,7 +174,9 @@ export class AiResponseService {
         reply: maskedText,
       };
     } catch (err: any) {
-      this.logger.error(`Failed during AI auto-response generation: ${err.message}`);
+      this.logger.error(
+        `Failed during AI auto-response generation: ${err.message}`,
+      );
       // Fallback response or trigger manager escalation if repeated failure
       await this.escalationService.createEscalation(
         tenantId,
@@ -154,7 +191,10 @@ export class AiResponseService {
 
   private maskSensitiveData(text: string): string {
     // Mask emails
-    let masked = text.replace(/([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/gi, '[EMAIL_HIDDEN]');
+    let masked = text.replace(
+      /([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/gi,
+      '[EMAIL_HIDDEN]',
+    );
     // Mask 16-digit credit cards
     masked = masked.replace(/\b(?:\d[ -]*?){13,16}\b/g, '[CARD_HIDDEN]');
     return masked;

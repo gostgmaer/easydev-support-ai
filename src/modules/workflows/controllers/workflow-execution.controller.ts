@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Headers, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -22,14 +31,20 @@ export class WorkflowExecutionController {
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: ExecuteWorkflowDto,
   ) {
-    const template = await this.templateService.getTemplate(tenantId, dto.workflowId);
+    const template = await this.templateService.getTemplate(
+      tenantId,
+      dto.workflowId,
+    );
     const executionId = await this.engineService.runWorkflowTemplate(
       tenantId,
       template,
       dto.context || {},
       dto.triggerSource || 'MANUAL',
     );
-    const execution = await this.executionService.getExecution(tenantId, executionId);
+    const execution = await this.executionService.getExecution(
+      tenantId,
+      executionId,
+    );
     return execution.toJSON();
   }
 
@@ -50,7 +65,10 @@ export class WorkflowExecutionController {
     @Query('workflowId') workflowId?: string,
     @Query('status') status?: string,
   ) {
-    const executions = await this.executionService.findExecutions(tenantId, { workflowId, status });
+    const executions = await this.executionService.findExecutions(tenantId, {
+      workflowId,
+      status,
+    });
     return executions.map((e) => e.toJSON());
   }
 }

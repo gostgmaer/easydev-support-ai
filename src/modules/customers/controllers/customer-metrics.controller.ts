@@ -9,7 +9,12 @@ import {
   UseInterceptors,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CustomerMetricsService } from '../services/customer-metrics.service';
 import { CustomerMetricsDto } from '../dtos/customer-metrics.dto';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -19,7 +24,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Customer Metrics')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/customer-metrics')
@@ -32,9 +41,13 @@ export class CustomerMetricsController {
   async update(
     @Headers('x-tenant-id') tenantId: string,
     @Param('customerId') customerId: string,
-    @Body() dto: CustomerMetricsDto
+    @Body() dto: CustomerMetricsDto,
   ) {
-    const metrics = await this.metricsService.updateMetrics(tenantId, customerId, dto);
+    const metrics = await this.metricsService.updateMetrics(
+      tenantId,
+      customerId,
+      dto,
+    );
     return metrics.toJSON();
   }
 
@@ -43,9 +56,12 @@ export class CustomerMetricsController {
   @ApiOperation({ summary: 'Trigger manual recalculation of customer metrics' })
   async recalculate(
     @Headers('x-tenant-id') tenantId: string,
-    @Param('customerId') customerId: string
+    @Param('customerId') customerId: string,
   ) {
-    const metrics = await this.metricsService.recalculateMetrics(tenantId, customerId);
+    const metrics = await this.metricsService.recalculateMetrics(
+      tenantId,
+      customerId,
+    );
     return metrics.toJSON();
   }
 }

@@ -1,8 +1,4 @@
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-  PartialType,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
   IsUUID,
   IsString,
@@ -253,7 +249,9 @@ export class RegisterAttachmentDto {
   @IsOptional()
   fileSize?: number;
 
-  @ApiProperty({ description: 'Reference id returned by the File Upload Service' })
+  @ApiProperty({
+    description: 'Reference id returned by the File Upload Service',
+  })
   @IsString()
   uploadReference!: string;
 

@@ -15,7 +15,12 @@ import { IAnalyticsRepository } from '../repositories/analytics-repository.inter
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { NotificationService } from '../../notifications/notification.service';
 import { IamIntegrationService } from '../../../integration/iam/iam.service';
-import { AnalyticsEvent, AnalyticsReport, AnalyticsMetric, AnalyticsSchedule } from '../domain/entities';
+import {
+  AnalyticsEvent,
+  AnalyticsReport,
+  AnalyticsMetric,
+  AnalyticsSchedule,
+} from '../domain/entities';
 import {
   MetricId,
   ReportId,
@@ -130,13 +135,17 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
   // IAM Service Mock
   const mockIamService = {
-    validateTokenAndGetTenant: jest.fn().mockResolvedValue({ tenantId, userId: 'user-123' }),
+    validateTokenAndGetTenant: jest
+      .fn()
+      .mockResolvedValue({ tenantId, userId: 'user-123' }),
     checkPermission: jest.fn().mockResolvedValue(true),
   };
 
   // TypeORM Repo Mock
   const mockTypeOrmRepo = {
-    create: jest.fn().mockImplementation((dto) => ({ id: 'typeorm-id', ...dto })),
+    create: jest
+      .fn()
+      .mockImplementation((dto) => ({ id: 'typeorm-id', ...dto })),
     save: jest.fn().mockResolvedValue({ id: 'typeorm-id' }),
   };
 
@@ -190,15 +199,25 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
     analyticsService = module.get<AnalyticsService>(AnalyticsService);
     eventService = module.get<AnalyticsEventService>(AnalyticsEventService);
-    aggregationService = module.get<AnalyticsAggregationService>(AnalyticsAggregationService);
-    dashboardService = module.get<AnalyticsDashboardService>(AnalyticsDashboardService);
+    aggregationService = module.get<AnalyticsAggregationService>(
+      AnalyticsAggregationService,
+    );
+    dashboardService = module.get<AnalyticsDashboardService>(
+      AnalyticsDashboardService,
+    );
     reportService = module.get<AnalyticsReportService>(AnalyticsReportService);
     exportService = module.get<AnalyticsExportService>(AnalyticsExportService);
-    scheduleService = module.get<AnalyticsScheduleService>(AnalyticsScheduleService);
-    realtimeService = module.get<AnalyticsRealtimeService>(AnalyticsRealtimeService);
+    scheduleService = module.get<AnalyticsScheduleService>(
+      AnalyticsScheduleService,
+    );
+    realtimeService = module.get<AnalyticsRealtimeService>(
+      AnalyticsRealtimeService,
+    );
     cronService = module.get<AnalyticsCronService>(AnalyticsCronService);
     eventConsumer = module.get<AnalyticsEventConsumer>(AnalyticsEventConsumer);
-    queueProcessor = module.get<AnalyticsQueueProcessor>(AnalyticsQueueProcessor);
+    queueProcessor = module.get<AnalyticsQueueProcessor>(
+      AnalyticsQueueProcessor,
+    );
   });
 
   describe('Value Objects & Domain Model', () => {
@@ -300,7 +319,9 @@ describe('Analytics Module - Comprehensive Tests', () => {
         },
       ]);
 
-      await analyticsService.trackEvent(tenantId, 'message.sent', { text: 'hi' });
+      await analyticsService.trackEvent(tenantId, 'message.sent', {
+        text: 'hi',
+      });
       expect(mockTypeOrmRepo.save).toHaveBeenCalled();
 
       const overview = await analyticsService.getExecutiveOverview(tenantId);
@@ -312,13 +333,38 @@ describe('Analytics Module - Comprehensive Tests', () => {
   describe('AnalyticsAggregationService', () => {
     it('should process events and compile metrics', async () => {
       const sampleEvents = [
-        { name: 'conversation.created', payload: { channelId: 'chan-1', channelType: 'WEB' } },
-        { name: 'conversation.closed', payload: { resolutionTime: 300, isSlaViolated: false } },
+        {
+          name: 'conversation.created',
+          payload: { channelId: 'chan-1', channelType: 'WEB' },
+        },
+        {
+          name: 'conversation.closed',
+          payload: { resolutionTime: 300, isSlaViolated: false },
+        },
         { name: 'message.sent', payload: { channelId: 'chan-1' } },
-        { name: 'ticket.created', payload: { status: 'OPEN', priority: 'HIGH' } },
+        {
+          name: 'ticket.created',
+          payload: { status: 'OPEN', priority: 'HIGH' },
+        },
         { name: 'ticket.closed', payload: { resolutionTime: 500 } },
-        { name: 'ai.workflow.completed', payload: { tokensUsed: 100, promptTokens: 50, completionTokens: 50, estimatedCost: 0.05, isResolved: true } },
-        { name: 'workflow.execution.completed', payload: { workflowId: 'wf-1', status: 'COMPLETED', executionTimeMs: 120 } },
+        {
+          name: 'ai.workflow.completed',
+          payload: {
+            tokensUsed: 100,
+            promptTokens: 50,
+            completionTokens: 50,
+            estimatedCost: 0.05,
+            isResolved: true,
+          },
+        },
+        {
+          name: 'workflow.execution.completed',
+          payload: {
+            workflowId: 'wf-1',
+            status: 'COMPLETED',
+            executionTimeMs: 120,
+          },
+        },
         { name: 'customer.created', payload: { email: 'test@t.com' } },
       ];
 
@@ -398,7 +444,10 @@ describe('Analytics Module - Comprehensive Tests', () => {
         },
       ]);
 
-      const metrics = await dashboardService.getDashboardMetrics(tenantId, 'Last 7 Days');
+      const metrics = await dashboardService.getDashboardMetrics(
+        tenantId,
+        'Last 7 Days',
+      );
       expect(metrics.conversationsCount).toBe(5);
       expect(metrics.averageResponseTime).toBe(80);
     });
@@ -420,15 +469,31 @@ describe('Analytics Module - Comprehensive Tests', () => {
         },
       ]);
 
-      const aiMetrics = await dashboardService.getAiDashboardMetrics(tenantId, 'Last 24 Hours');
+      const aiMetrics = await dashboardService.getAiDashboardMetrics(
+        tenantId,
+        'Last 24 Hours',
+      );
       expect(aiMetrics.aiRequests).toBe(10);
       expect(aiMetrics.tokensUsed).toBe(1000);
 
-      await dashboardService.getAgentDashboardMetrics(tenantId, 'agent-1', 'Last 7 Days');
+      await dashboardService.getAgentDashboardMetrics(
+        tenantId,
+        'agent-1',
+        'Last 7 Days',
+      );
       await dashboardService.getAgentSummaryMetrics(tenantId, 'Last 7 Days');
-      await dashboardService.getChannelDashboardMetrics(tenantId, 'chan-1', 'Last 7 Days');
+      await dashboardService.getChannelDashboardMetrics(
+        tenantId,
+        'chan-1',
+        'Last 7 Days',
+      );
       await dashboardService.getChannelSummaryMetrics(tenantId, 'Last 7 Days');
-      await dashboardService.getCustomMetrics(tenantId, 'test-m', new Date(), new Date());
+      await dashboardService.getCustomMetrics(
+        tenantId,
+        'test-m',
+        new Date(),
+        new Date(),
+      );
 
       expect(mockRepository.getAgentMetrics).toHaveBeenCalled();
       expect(mockRepository.getAgentMetricsSummary).toHaveBeenCalled();
@@ -458,7 +523,9 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
       await reportService.getReport(tenantId, reportId);
       await reportService.findReports(tenantId);
-      await reportService.updateReport(tenantId, reportId, { name: 'Updated name' });
+      await reportService.updateReport(tenantId, reportId, {
+        name: 'Updated name',
+      });
       await reportService.deleteReport(tenantId, reportId);
 
       expect(mockRepository.saveReport).toHaveBeenCalled();
@@ -479,7 +546,11 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
       const formats = ['CSV', 'EXCEL', 'PDF', 'JSON'];
       for (const fmt of formats) {
-        const result = await exportService.generateExport(tenantId, reportId, fmt);
+        const result = await exportService.generateExport(
+          tenantId,
+          reportId,
+          fmt,
+        );
         expect(result.buffer).toBeInstanceOf(Buffer);
         expect(result.filename).toBeDefined();
       }
@@ -521,7 +592,9 @@ describe('Analytics Module - Comprehensive Tests', () => {
       expect(schedule.name).toBe('Daily AI');
 
       await scheduleService.findSchedules(tenantId);
-      await scheduleService.updateSchedule(tenantId, scheduleId, { name: 'New Schedule name' });
+      await scheduleService.updateSchedule(tenantId, scheduleId, {
+        name: 'New Schedule name',
+      });
       await scheduleService.tickSchedules(new Date());
       await scheduleService.deleteSchedule(tenantId, scheduleId);
 
@@ -541,8 +614,12 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
   describe('AnalyticsEventConsumer', () => {
     it('should route event payloads to aggregation and real-time services', async () => {
-      const spyAggregation = jest.spyOn(aggregationService, 'processEvent').mockResolvedValue();
-      const spyRealtime = jest.spyOn(realtimeService, 'publishRealtimeEvent').mockResolvedValue();
+      const spyAggregation = jest
+        .spyOn(aggregationService, 'processEvent')
+        .mockResolvedValue();
+      const spyRealtime = jest
+        .spyOn(realtimeService, 'publishRealtimeEvent')
+        .mockResolvedValue();
 
       await eventConsumer.onConversationCreated({
         tenantId,
@@ -623,10 +700,18 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
   describe('AnalyticsQueueProcessor', () => {
     it('should process events, aggregations, reports, exports, and database cleanup jobs', async () => {
-      const spyEvent = jest.spyOn(eventConsumer, 'handleEvent').mockResolvedValue();
-      const spyAggregateHourly = jest.spyOn(aggregationService, 'aggregateHourly').mockResolvedValue();
-      const spyReport = jest.spyOn(reportService, 'generateReportData').mockResolvedValue();
-      const spyExport = jest.spyOn(exportService, 'triggerExport').mockResolvedValue();
+      const spyEvent = jest
+        .spyOn(eventConsumer, 'handleEvent')
+        .mockResolvedValue();
+      const spyAggregateHourly = jest
+        .spyOn(aggregationService, 'aggregateHourly')
+        .mockResolvedValue();
+      const spyReport = jest
+        .spyOn(reportService, 'generateReportData')
+        .mockResolvedValue();
+      const spyExport = jest
+        .spyOn(exportService, 'triggerExport')
+        .mockResolvedValue();
 
       const runJob = async (name: string, data: any) => {
         const job = {
@@ -654,26 +739,38 @@ describe('Analytics Module - Comprehensive Tests', () => {
       await runJob('analytics-export-job', { reportId, format: 'PDF' });
       expect(spyExport).toHaveBeenCalled();
 
-      const cleanupRes = await runJob('analytics-cleanup-job', { retentionDays: 10 });
+      const cleanupRes = await runJob('analytics-cleanup-job', {
+        retentionDays: 10,
+      });
       expect(cleanupRes.success).toBe(true);
     });
   });
 
   describe('Controllers', () => {
     it('AnalyticsDashboardController - endpoints', async () => {
-      const res = await module.get(AnalyticsDashboardController).getDashboard(tenantId);
+      const res = await module
+        .get(AnalyticsDashboardController)
+        .getDashboard(tenantId);
       expect(res).toBeDefined();
 
       await module.get(AnalyticsDashboardController).getAiMetrics(tenantId);
       await module.get(AnalyticsDashboardController).getAgentSummary(tenantId);
-      await module.get(AnalyticsDashboardController).getAgentMetrics(tenantId, 'agent-1');
-      await module.get(AnalyticsDashboardController).getChannelSummary(tenantId);
-      await module.get(AnalyticsDashboardController).getChannelMetrics(tenantId, 'chan-1');
-      await module.get(AnalyticsDashboardController).getCustomMetrics(tenantId, {
-        metricType: 'test',
-        startDate: new Date().toISOString(),
-        endDate: new Date().toISOString(),
-      });
+      await module
+        .get(AnalyticsDashboardController)
+        .getAgentMetrics(tenantId, 'agent-1');
+      await module
+        .get(AnalyticsDashboardController)
+        .getChannelSummary(tenantId);
+      await module
+        .get(AnalyticsDashboardController)
+        .getChannelMetrics(tenantId, 'chan-1');
+      await module
+        .get(AnalyticsDashboardController)
+        .getCustomMetrics(tenantId, {
+          metricType: 'test',
+          startDate: new Date().toISOString(),
+          endDate: new Date().toISOString(),
+        });
     });
 
     it('AnalyticsReportController - endpoints', async () => {
@@ -687,7 +784,9 @@ describe('Analytics Module - Comprehensive Tests', () => {
 
       await reportController.getReports(tenantId);
       await reportController.getReport(tenantId, reportId);
-      await reportController.updateReport(tenantId, reportId, { name: 'Updated' });
+      await reportController.updateReport(tenantId, reportId, {
+        name: 'Updated',
+      });
       await reportController.deleteReport(tenantId, reportId);
 
       await reportController.createSchedule(tenantId, {
@@ -699,13 +798,18 @@ describe('Analytics Module - Comprehensive Tests', () => {
       });
       await reportController.getSchedules(tenantId);
       await reportController.getSchedule(tenantId, scheduleId);
-      await reportController.updateSchedule(tenantId, scheduleId, { name: 'Updated Sched' });
+      await reportController.updateSchedule(tenantId, scheduleId, {
+        name: 'Updated Sched',
+      });
       await reportController.deleteSchedule(tenantId, scheduleId);
     });
 
     it('AnalyticsExportController - endpoints', async () => {
       const exportController = module.get(AnalyticsExportController);
-      await exportController.triggerManualExport(tenantId, { reportId, format: 'CSV' });
+      await exportController.triggerManualExport(tenantId, {
+        reportId,
+        format: 'CSV',
+      });
 
       const mockRes = {
         set: jest.fn(),
@@ -782,12 +886,16 @@ describe('Analytics Module - Comprehensive Tests', () => {
     it('should handle disconnect log', () => {
       const consoleSpy = jest.spyOn(realtimeService['logger'], 'log');
       realtimeService.handleDisconnect({ id: 'socket-3' } as any);
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Client disconnected'));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Client disconnected'),
+      );
     });
 
     it('should publish to Redis on publishRealtimeEvent when connected', async () => {
       await realtimeService.onModuleInit();
-      await realtimeService.publishRealtimeEvent(tenantId, 'test-event', { val: 1 });
+      await realtimeService.publishRealtimeEvent(tenantId, 'test-event', {
+        val: 1,
+      });
       expect(mockRedisPublish).toHaveBeenCalledWith(
         'analytics:events',
         expect.stringContaining('test-event'),
@@ -802,9 +910,14 @@ describe('Analytics Module - Comprehensive Tests', () => {
       } as any;
       realtimeService.server = mockServer;
 
-      await realtimeService.publishRealtimeEvent(tenantId, 'test-event-local', { val: 2 });
+      await realtimeService.publishRealtimeEvent(tenantId, 'test-event-local', {
+        val: 2,
+      });
       expect(mockServer.to).toHaveBeenCalledWith(`tenant_${tenantId}`);
-      expect(mockServer.emit).toHaveBeenCalledWith('metrics_update', expect.any(Object));
+      expect(mockServer.emit).toHaveBeenCalledWith(
+        'metrics_update',
+        expect.any(Object),
+      );
     });
 
     it('should handle incoming Redis messages and broadcast to the tenant', async () => {
@@ -825,18 +938,22 @@ describe('Analytics Module - Comprehensive Tests', () => {
       mockRedisOnMessageCallback('analytics:events', message);
 
       expect(mockServer.to).toHaveBeenCalledWith(`tenant_${tenantId}`);
-      expect(mockServer.emit).toHaveBeenCalledWith('metrics_update', expect.objectContaining({
-        event: 'redis-event',
-        data: { ok: true },
-      }));
+      expect(mockServer.emit).toHaveBeenCalledWith(
+        'metrics_update',
+        expect.objectContaining({
+          event: 'redis-event',
+          data: { ok: true },
+        }),
+      );
     });
 
     it('should gracefully handle malformed JSON messages from Redis', async () => {
       const consoleSpy = jest.spyOn(realtimeService['logger'], 'error');
       await realtimeService.onModuleInit();
       mockRedisOnMessageCallback('analytics:events', 'invalid-json{');
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to parse Redis Pub/Sub message'));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to parse Redis Pub/Sub message'),
+      );
     });
   });
 });
-

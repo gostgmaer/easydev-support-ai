@@ -12,7 +12,13 @@ import {
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CustomerSegmentService } from '../services/customer-segment.service';
 import { CustomerSegmentDto } from '../dtos/customer-segment.dto';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -22,7 +28,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Customer Segments')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/customer-segments')
@@ -32,8 +42,14 @@ export class CustomerSegmentController {
   @Post()
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Create a customer segment' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Segment created successfully' })
-  async create(@Headers('x-tenant-id') tenantId: string, @Body() dto: CustomerSegmentDto) {
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Segment created successfully',
+  })
+  async create(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: CustomerSegmentDto,
+  ) {
     const segment = await this.segmentService.createSegment(tenantId, dto);
     return segment.toJSON();
   }
@@ -52,7 +68,7 @@ export class CustomerSegmentController {
   async update(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Body() dto: CustomerSegmentDto
+    @Body() dto: CustomerSegmentDto,
   ) {
     const segment = await this.segmentService.updateSegment(tenantId, id, dto);
     return segment.toJSON();
@@ -62,7 +78,10 @@ export class CustomerSegmentController {
   @Roles('tenant_admin')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a segment' })
-  async delete(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async delete(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     await this.segmentService.deleteSegment(tenantId, id);
   }
 
@@ -72,7 +91,7 @@ export class CustomerSegmentController {
   async assign(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Body('customerId') customerId: string
+    @Body('customerId') customerId: string,
   ) {
     await this.segmentService.assignCustomerToSegment(tenantId, customerId, id);
     return { success: true };
@@ -84,24 +103,36 @@ export class CustomerSegmentController {
   async remove(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Body('customerId') customerId: string
+    @Body('customerId') customerId: string,
   ) {
-    await this.segmentService.removeCustomerFromSegment(tenantId, customerId, id);
+    await this.segmentService.removeCustomerFromSegment(
+      tenantId,
+      customerId,
+      id,
+    );
     return { success: true };
   }
 
   @Get(':id/members')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'List all members belonging to a segment' })
-  async getMembers(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async getMembers(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const members = await this.segmentService.findSegmentMembers(tenantId, id);
     return members.map((m) => m.toJSON());
   }
 
   @Post(':id/evaluate')
   @Roles('tenant_admin')
-  @ApiOperation({ summary: 'Evaluate and run rules for dynamic segment matching' })
-  async evaluate(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  @ApiOperation({
+    summary: 'Evaluate and run rules for dynamic segment matching',
+  })
+  async evaluate(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     await this.segmentService.runDynamicSegmentation(tenantId, id);
     return { success: true };
   }

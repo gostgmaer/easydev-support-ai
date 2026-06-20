@@ -32,7 +32,10 @@ describe('AgentAvailabilityService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AgentAvailabilityService,
-        { provide: 'IAgentAvailabilityRepository', useValue: mockAvailabilityRepo },
+        {
+          provide: 'IAgentAvailabilityRepository',
+          useValue: mockAvailabilityRepo,
+        },
         { provide: TeamEventPublisher, useValue: mockEventPublisher },
         { provide: AuditService, useValue: mockAuditService },
       ],
@@ -65,10 +68,18 @@ describe('AgentAvailabilityService', () => {
 
       const dto: UpdateAvailabilityDto = {
         status: 'ONLINE',
-        workingHours: { timezone: 'UTC', slots: [{ start: '09:00', end: '17:00' }] },
+        workingHours: {
+          timezone: 'UTC',
+          slots: [{ start: '09:00', end: '17:00' }],
+        },
       };
 
-      const result = await service.updateAvailability(tenantId, agentProfileId, dto, 'user-123');
+      const result = await service.updateAvailability(
+        tenantId,
+        agentProfileId,
+        dto,
+        'user-123',
+      );
 
       expect(result.status).toBe('ONLINE');
       expect(result.workingHours).toEqual(dto.workingHours);
@@ -77,7 +88,7 @@ describe('AgentAvailabilityService', () => {
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'AVAILABILITY_UPDATE',
-        })
+        }),
       );
     });
 
@@ -86,7 +97,7 @@ describe('AgentAvailabilityService', () => {
       const dto: UpdateAvailabilityDto = { status: 'ONLINE' };
 
       await expect(
-        service.updateAvailability(tenantId, agentProfileId, dto)
+        service.updateAvailability(tenantId, agentProfileId, dto),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -116,7 +127,7 @@ describe('AgentAvailabilityService', () => {
       availabilityRepo.findByAgentProfileId.mockResolvedValue(null);
 
       await expect(
-        service.getAvailability(tenantId, agentProfileId)
+        service.getAvailability(tenantId, agentProfileId),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -127,12 +138,21 @@ describe('AgentAvailabilityService', () => {
 
     it('should delegate updateLoad to repository', async () => {
       await service.updateLoad(tenantId, agentProfileId, 5);
-      expect(availabilityRepo.updateLoad).toHaveBeenCalledWith(agentProfileId, 5, tenantId);
+      expect(availabilityRepo.updateLoad).toHaveBeenCalledWith(
+        agentProfileId,
+        5,
+        tenantId,
+      );
     });
 
     it('should delegate updateCounters to repository', async () => {
       await service.updateCounters(tenantId, agentProfileId, 2, 3);
-      expect(availabilityRepo.updateCounters).toHaveBeenCalledWith(agentProfileId, 2, 3, tenantId);
+      expect(availabilityRepo.updateCounters).toHaveBeenCalledWith(
+        agentProfileId,
+        2,
+        3,
+        tenantId,
+      );
     });
   });
 });

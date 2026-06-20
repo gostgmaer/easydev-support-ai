@@ -12,7 +12,12 @@ import {
   HttpCode,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ConversationTagService } from '../services/conversation-tag.service';
 import { TagConversationDto } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -22,7 +27,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Conversation Tags')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/conversations/:conversationId/tags')
@@ -38,14 +47,22 @@ export class ConversationTagController {
     @Body() dto: TagConversationDto,
     @Req() req: any,
   ) {
-    const tag = await this.tagService.addTag(tenantId, conversationId, dto, req.user?.id);
+    const tag = await this.tagService.addTag(
+      tenantId,
+      conversationId,
+      dto,
+      req.user?.id,
+    );
     return tag.toJSON();
   }
 
   @Get()
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'List tags for a conversation' })
-  async list(@Headers('x-tenant-id') tenantId: string, @Param('conversationId') conversationId: string) {
+  async list(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
     const tags = await this.tagService.listTags(tenantId, conversationId);
     return tags.map((t) => t.toJSON());
   }
@@ -60,6 +77,11 @@ export class ConversationTagController {
     @Param('tag') tag: string,
     @Req() req: any,
   ) {
-    await this.tagService.removeTag(tenantId, conversationId, tag, req.user?.id);
+    await this.tagService.removeTag(
+      tenantId,
+      conversationId,
+      tag,
+      req.user?.id,
+    );
   }
 }

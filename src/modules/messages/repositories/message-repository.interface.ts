@@ -28,8 +28,7 @@ export interface PaginatedResult<T> {
   nextCursor?: string;
 }
 
-export interface IMessageRepository
-  extends ITenantRepository<Message, string> {
+export interface IMessageRepository extends ITenantRepository<Message, string> {
   findPaginated(
     tenantId: string,
     options: MessageQueryOptions,
@@ -55,7 +54,10 @@ export interface IMessageRepository
     userId: string,
     reaction: string,
   ): Promise<void>;
-  findReactions(tenantId: string, messageId: string): Promise<MessageReaction[]>;
+  findReactions(
+    tenantId: string,
+    messageId: string,
+  ): Promise<MessageReaction[]>;
 
   // Mentions
   addMention(mention: MessageMention, tenantId: string): Promise<void>;
@@ -100,8 +102,10 @@ export interface IMessageRepository
   ): Promise<{ total: number; attachments: number; unread: number }>;
 }
 
-export interface IMessageTemplateRepository
-  extends ITenantRepository<MessageTemplate, string> {
+export interface IMessageTemplateRepository extends ITenantRepository<
+  MessageTemplate,
+  string
+> {
   findPaginated(
     tenantId: string,
     page: number,
@@ -111,8 +115,10 @@ export interface IMessageTemplateRepository
   findByName(tenantId: string, name: string): Promise<MessageTemplate | null>;
 }
 
-export interface IMessageDraftRepository
-  extends ITenantRepository<MessageDraft, string> {
+export interface IMessageDraftRepository extends ITenantRepository<
+  MessageDraft,
+  string
+> {
   findByConversationAndAuthor(
     tenantId: string,
     conversationId: string,

@@ -33,7 +33,9 @@ export class AnalyticsEventConsumer {
     payload: any;
     metadata?: any;
   }): Promise<void> {
-    this.logger.log(`Consuming event ${event.eventName} for Tenant ${event.tenantId}`);
+    this.logger.log(
+      `Consuming event ${event.eventName} for Tenant ${event.tenantId}`,
+    );
 
     // Update Projections / Aggregations
     await this.aggregationService.processEvent(event);
@@ -165,7 +167,9 @@ export class AnalyticsEventConsumer {
     });
   }
 
-  async onWorkflowExecutionCompleted(event: WorkflowCompletedEvent): Promise<void> {
+  async onWorkflowExecutionCompleted(
+    event: WorkflowCompletedEvent,
+  ): Promise<void> {
     await this.handleEvent({
       tenantId: event.tenantId,
       eventName: 'workflow.execution.completed',

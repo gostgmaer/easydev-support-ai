@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Delete, Body, Headers, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -37,7 +47,10 @@ export class WorkflowScheduleController {
     @Query('activeOnly') activeOnly?: string,
   ) {
     const active = activeOnly === 'true';
-    const schedules = await this.scheduleService.findSchedules(tenantId, active);
+    const schedules = await this.scheduleService.findSchedules(
+      tenantId,
+      active,
+    );
     return schedules.map((s) => s.toJSON());
   }
 
@@ -48,7 +61,11 @@ export class WorkflowScheduleController {
     @Param('id') id: string,
     @Body('active') active: boolean,
   ) {
-    const schedule = await this.scheduleService.toggleSchedule(tenantId, id, active);
+    const schedule = await this.scheduleService.toggleSchedule(
+      tenantId,
+      id,
+      active,
+    );
     return schedule.toJSON();
   }
 

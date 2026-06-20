@@ -9,7 +9,8 @@ export class KnowledgeEventPublisher {
   constructor(private readonly queueService: QueueService) {}
 
   public async publish(event: DomainEvent): Promise<void> {
-    const eventName = (event.constructor as any).eventName || event.constructor.name;
+    const eventName =
+      (event.constructor as any).eventName || event.constructor.name;
     this.logger.log(
       `Publishing Knowledge Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`,
     );
@@ -18,10 +19,14 @@ export class KnowledgeEventPublisher {
       // Ingestion trigger
       if (eventName === 'knowledge.document.created') {
         const docEvent = event as any;
-        await this.queueService.addJob(QUEUES.KNOWLEDGE, 'knowledge-ingestion-job', {
-          tenantId: docEvent.tenantId,
-          documentId: docEvent.documentId,
-        });
+        await this.queueService.addJob(
+          QUEUES.KNOWLEDGE,
+          'knowledge-ingestion-job',
+          {
+            tenantId: docEvent.tenantId,
+            documentId: docEvent.documentId,
+          },
+        );
       }
 
       // Sync jobs
@@ -34,7 +39,9 @@ export class KnowledgeEventPublisher {
         });
       }
     } catch (err: any) {
-      this.logger.error(`Failed to publish knowledge event ${eventName}: ${err.message}`);
+      this.logger.error(
+        `Failed to publish knowledge event ${eventName}: ${err.message}`,
+      );
     }
   }
 

@@ -12,7 +12,7 @@ class TeamMapper {
   public static toDomain(
     rawTeam: any,
     rawMembers: any[] = [],
-    rawRules: any[] = []
+    rawRules: any[] = [],
   ): Team {
     const members = rawMembers.map(
       (m) =>
@@ -25,7 +25,7 @@ class TeamMapper {
           isPrimary: !!m.isPrimary,
           createdAt: m.createdAt,
           updatedAt: m.updatedAt,
-        })
+        }),
     );
 
     const rules = rawRules.map(
@@ -39,7 +39,7 @@ class TeamMapper {
           isActive: !!r.isActive,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,
-        })
+        }),
     );
 
     return new Team(rawTeam.id, {
@@ -70,8 +70,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         and(
           eq(schema.teams.id, id),
           eq(schema.teams.tenantId, tenantId),
-          sql`${schema.teams.deletedAt} IS NULL`
-        )
+          sql`${schema.teams.deletedAt} IS NULL`,
+        ),
       );
 
     if (!rawTeam) return null;
@@ -82,8 +82,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.teamMembers.teamId, id),
-          eq(schema.teamMembers.tenantId, tenantId)
-        )
+          eq(schema.teamMembers.tenantId, tenantId),
+        ),
       );
 
     const rawRules = await db
@@ -92,8 +92,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.assignmentRules.teamId, id),
-          eq(schema.assignmentRules.tenantId, tenantId)
-        )
+          eq(schema.assignmentRules.tenantId, tenantId),
+        ),
       );
 
     return TeamMapper.toDomain(rawTeam, rawMembers, rawRules);
@@ -107,8 +107,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         and(
           eq(schema.teams.name, name),
           eq(schema.teams.tenantId, tenantId),
-          sql`${schema.teams.deletedAt} IS NULL`
-        )
+          sql`${schema.teams.deletedAt} IS NULL`,
+        ),
       );
 
     if (!rawTeam) return null;
@@ -119,8 +119,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.teamMembers.teamId, rawTeam.id),
-          eq(schema.teamMembers.tenantId, tenantId)
-        )
+          eq(schema.teamMembers.tenantId, tenantId),
+        ),
       );
 
     const rawRules = await db
@@ -129,8 +129,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.assignmentRules.teamId, rawTeam.id),
-          eq(schema.assignmentRules.tenantId, tenantId)
-        )
+          eq(schema.assignmentRules.tenantId, tenantId),
+        ),
       );
 
     return TeamMapper.toDomain(rawTeam, rawMembers, rawRules);
@@ -143,8 +143,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.teams.tenantId, tenantId),
-          sql`${schema.teams.deletedAt} IS NULL`
-        )
+          sql`${schema.teams.deletedAt} IS NULL`,
+        ),
       );
 
     const result: Team[] = [];
@@ -155,8 +155,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.teamMembers.teamId, rawTeam.id),
-            eq(schema.teamMembers.tenantId, tenantId)
-          )
+            eq(schema.teamMembers.tenantId, tenantId),
+          ),
         );
 
       const rawRules = await db
@@ -165,8 +165,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.assignmentRules.teamId, rawTeam.id),
-            eq(schema.assignmentRules.tenantId, tenantId)
-          )
+            eq(schema.assignmentRules.tenantId, tenantId),
+          ),
         );
 
       result.push(TeamMapper.toDomain(rawTeam, rawMembers, rawRules));
@@ -176,7 +176,7 @@ export class DrizzleTeamRepository implements ITeamRepository {
 
   async findPaginated(
     tenantId: string,
-    options: TeamQueryOptions
+    options: TeamQueryOptions,
   ): Promise<{ data: Team[]; total: number }> {
     const limit = options.limit || 20;
     const page = options.page || 1;
@@ -196,7 +196,10 @@ export class DrizzleTeamRepository implements ITeamRepository {
     }
 
     const whereClause = and(...conditions);
-    const order = options.sortOrder === 'DESC' ? desc(schema.teams.createdAt) : asc(schema.teams.createdAt);
+    const order =
+      options.sortOrder === 'DESC'
+        ? desc(schema.teams.createdAt)
+        : asc(schema.teams.createdAt);
 
     const rawTeams = await db
       .select()
@@ -220,8 +223,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.teamMembers.teamId, rawTeam.id),
-            eq(schema.teamMembers.tenantId, tenantId)
-          )
+            eq(schema.teamMembers.tenantId, tenantId),
+          ),
         );
 
       const rawRules = await db
@@ -230,8 +233,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.assignmentRules.teamId, rawTeam.id),
-            eq(schema.assignmentRules.tenantId, tenantId)
-          )
+            eq(schema.assignmentRules.tenantId, tenantId),
+          ),
         );
 
       data.push(TeamMapper.toDomain(rawTeam, rawMembers, rawRules));
@@ -262,8 +265,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.teams.id, team.id),
-            eq(schema.teams.tenantId, tenantId)
-          )
+            eq(schema.teams.tenantId, tenantId),
+          ),
         );
 
       if (existing) {
@@ -273,8 +276,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
           .where(
             and(
               eq(schema.teams.id, team.id),
-              eq(schema.teams.tenantId, tenantId)
-            )
+              eq(schema.teams.tenantId, tenantId),
+            ),
           );
       } else {
         await tx.insert(schema.teams).values({
@@ -289,8 +292,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.teamMembers.teamId, team.id),
-            eq(schema.teamMembers.tenantId, tenantId)
-          )
+            eq(schema.teamMembers.tenantId, tenantId),
+          ),
         );
 
       for (const member of team.members) {
@@ -313,8 +316,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.assignmentRules.teamId, team.id),
-            eq(schema.assignmentRules.tenantId, tenantId)
-          )
+            eq(schema.assignmentRules.tenantId, tenantId),
+          ),
         );
 
       for (const rule of team.rules) {
@@ -340,12 +343,7 @@ export class DrizzleTeamRepository implements ITeamRepository {
     const [existing] = await db
       .select()
       .from(schema.teams)
-      .where(
-        and(
-          eq(schema.teams.id, id),
-          eq(schema.teams.tenantId, tenantId)
-        )
-      );
+      .where(and(eq(schema.teams.id, id), eq(schema.teams.tenantId, tenantId)));
 
     if (!existing) return false;
 
@@ -355,12 +353,7 @@ export class DrizzleTeamRepository implements ITeamRepository {
         deletedAt: new Date(),
         isActive: false,
       })
-      .where(
-        and(
-          eq(schema.teams.id, id),
-          eq(schema.teams.tenantId, tenantId)
-        )
-      );
+      .where(and(eq(schema.teams.id, id), eq(schema.teams.tenantId, tenantId)));
 
     return true;
   }
@@ -373,8 +366,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         and(
           eq(schema.teamMembers.teamId, member.teamId),
           eq(schema.teamMembers.agentProfileId, member.agentProfileId),
-          eq(schema.teamMembers.tenantId, tenantId)
-        )
+          eq(schema.teamMembers.tenantId, tenantId),
+        ),
       );
 
     if (!existing) {
@@ -393,27 +386,34 @@ export class DrizzleTeamRepository implements ITeamRepository {
     }
   }
 
-  async removeMember(teamId: string, agentProfileId: string, tenantId: string): Promise<void> {
+  async removeMember(
+    teamId: string,
+    agentProfileId: string,
+    tenantId: string,
+  ): Promise<void> {
     await db
       .delete(schema.teamMembers)
       .where(
         and(
           eq(schema.teamMembers.teamId, teamId),
           eq(schema.teamMembers.agentProfileId, agentProfileId),
-          eq(schema.teamMembers.tenantId, tenantId)
-        )
+          eq(schema.teamMembers.tenantId, tenantId),
+        ),
       );
   }
 
-  async findTeamMembers(teamId: string, tenantId: string): Promise<TeamMember[]> {
+  async findTeamMembers(
+    teamId: string,
+    tenantId: string,
+  ): Promise<TeamMember[]> {
     const rows = await db
       .select()
       .from(schema.teamMembers)
       .where(
         and(
           eq(schema.teamMembers.teamId, teamId),
-          eq(schema.teamMembers.tenantId, tenantId)
-        )
+          eq(schema.teamMembers.tenantId, tenantId),
+        ),
       );
 
     return rows.map(
@@ -425,7 +425,7 @@ export class DrizzleTeamRepository implements ITeamRepository {
           role: m.role,
           joinedAt: m.joinedAt,
           isPrimary: !!m.isPrimary,
-        })
+        }),
     );
   }
 
@@ -436,8 +436,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.assignmentRules.id, rule.id),
-          eq(schema.assignmentRules.tenantId, tenantId)
-        )
+          eq(schema.assignmentRules.tenantId, tenantId),
+        ),
       );
 
     const raw = {
@@ -459,8 +459,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
         .where(
           and(
             eq(schema.assignmentRules.id, rule.id),
-            eq(schema.assignmentRules.tenantId, tenantId)
-          )
+            eq(schema.assignmentRules.tenantId, tenantId),
+          ),
         );
     } else {
       await db.insert(schema.assignmentRules).values({
@@ -478,8 +478,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.assignmentRules.teamId, teamId),
-          eq(schema.assignmentRules.tenantId, tenantId)
-        )
+          eq(schema.assignmentRules.tenantId, tenantId),
+        ),
       );
 
     return rows.map(
@@ -491,7 +491,7 @@ export class DrizzleTeamRepository implements ITeamRepository {
           priority: r.priority,
           configuration: r.configuration as Record<string, any>,
           isActive: r.isActive,
-        })
+        }),
     );
   }
 
@@ -501,8 +501,8 @@ export class DrizzleTeamRepository implements ITeamRepository {
       .where(
         and(
           eq(schema.assignmentRules.id, ruleId),
-          eq(schema.assignmentRules.tenantId, tenantId)
-        )
+          eq(schema.assignmentRules.tenantId, tenantId),
+        ),
       );
   }
 }

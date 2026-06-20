@@ -1,6 +1,10 @@
 import { AggregateRoot } from '@easydev/shared-kernel';
 import { SourceTypeEnum, SyncStatusEnum } from './value-objects';
-import { KnowledgeSourceCreatedEvent, KnowledgeSyncStartedEvent, KnowledgeSyncCompletedEvent } from '@easydev/shared-events';
+import {
+  KnowledgeSourceCreatedEvent,
+  KnowledgeSyncStartedEvent,
+  KnowledgeSyncCompletedEvent,
+} from '@easydev/shared-events';
 
 export interface KnowledgeSourceProps {
   tenantId: string;
@@ -108,7 +112,14 @@ export class KnowledgeSource extends AggregateRoot<string> {
     this.props.version = (this.props.version || 1) + 1;
   }
 
-  public update(props: Partial<Pick<KnowledgeSourceProps, 'name' | 'description' | 'config' | 'metadata' | 'uri'>>): void {
+  public update(
+    props: Partial<
+      Pick<
+        KnowledgeSourceProps,
+        'name' | 'description' | 'config' | 'metadata' | 'uri'
+      >
+    >,
+  ): void {
     this.props = { ...this.props, ...props };
     this.touch();
   }
@@ -116,7 +127,9 @@ export class KnowledgeSource extends AggregateRoot<string> {
   public startSync(jobId: string): void {
     this.props.syncStatus = SyncStatusEnum.SYNCING;
     this.touch();
-    this.addDomainEvent(new KnowledgeSyncStartedEvent(this.tenantId, this.id, jobId));
+    this.addDomainEvent(
+      new KnowledgeSyncStartedEvent(this.tenantId, this.id, jobId),
+    );
   }
 
   public completeSync(docCount: number): void {
@@ -125,7 +138,9 @@ export class KnowledgeSource extends AggregateRoot<string> {
     this.props.lastSyncedAt = new Date();
     this.props.lastError = undefined;
     this.touch();
-    this.addDomainEvent(new KnowledgeSyncCompletedEvent(this.tenantId, this.id, docCount));
+    this.addDomainEvent(
+      new KnowledgeSyncCompletedEvent(this.tenantId, this.id, docCount),
+    );
   }
 
   public failSync(reason: string): void {

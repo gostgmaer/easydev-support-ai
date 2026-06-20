@@ -20,7 +20,8 @@ function build(direction = MessageDirectionEnum.OUTBOUND): Message {
     conversationId: randomUUID(),
     channelId: randomUUID(),
     customerId: randomUUID(),
-    senderType: direction === MessageDirectionEnum.INBOUND ? 'CUSTOMER' : 'AGENT',
+    senderType:
+      direction === MessageDirectionEnum.INBOUND ? 'CUSTOMER' : 'AGENT',
     messageType: MessageType.create(MessageTypeEnum.TEXT),
     direction: MessageDirection.create(direction),
     content: 'hello world',
@@ -44,14 +45,18 @@ describe('Message value objects', () => {
   it('classifies media types and internal notes', () => {
     expect(MessageType.create(MessageTypeEnum.IMAGE).isMedia()).toBe(true);
     expect(MessageType.create(MessageTypeEnum.TEXT).isMedia()).toBe(false);
-    expect(
-      MessageType.create(MessageTypeEnum.INTERNAL_NOTE).isInternal(),
-    ).toBe(true);
+    expect(MessageType.create(MessageTypeEnum.INTERNAL_NOTE).isInternal()).toBe(
+      true,
+    );
   });
 
   it('exposes retryable + terminal status semantics', () => {
-    expect(MessageStatus.create(MessageStatusEnum.FAILED).canRetry()).toBe(true);
-    expect(MessageStatus.create(MessageStatusEnum.READ).isTerminal()).toBe(true);
+    expect(MessageStatus.create(MessageStatusEnum.FAILED).canRetry()).toBe(
+      true,
+    );
+    expect(MessageStatus.create(MessageStatusEnum.READ).isTerminal()).toBe(
+      true,
+    );
     expect(MessageStatus.create(MessageStatusEnum.SENT).canRetry()).toBe(false);
   });
 
@@ -64,18 +69,14 @@ describe('Message value objects', () => {
 describe('Message aggregate', () => {
   it('emits created event for outbound messages', () => {
     const m = build();
-    const names = m.domainEvents.map(
-      (e) => (e.constructor as any).eventName,
-    );
+    const names = m.domainEvents.map((e) => (e.constructor as any).eventName);
     expect(names).toContain('message.created');
     expect(names).not.toContain('message.received');
   });
 
   it('emits created + received events for inbound messages', () => {
     const m = build(MessageDirectionEnum.INBOUND);
-    const names = m.domainEvents.map(
-      (e) => (e.constructor as any).eventName,
-    );
+    const names = m.domainEvents.map((e) => (e.constructor as any).eventName);
     expect(names).toContain('message.created');
     expect(names).toContain('message.received');
   });

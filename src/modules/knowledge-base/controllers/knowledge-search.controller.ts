@@ -8,9 +8,7 @@ import { SearchQueryDto } from '../dtos/knowledge.dto';
 @Controller('v1/knowledge-search')
 @UseGuards(TenantGuard, RbacGuard)
 export class KnowledgeSearchController {
-  constructor(
-    private readonly searchService: KnowledgeSearchService,
-  ) {}
+  constructor(private readonly searchService: KnowledgeSearchService) {}
 
   @Post()
   @Roles('tenant_admin', 'agent')

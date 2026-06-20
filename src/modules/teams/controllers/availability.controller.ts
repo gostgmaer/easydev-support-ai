@@ -9,7 +9,12 @@ import {
   UseInterceptors,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AgentAvailabilityService } from '../services/agent-availability.service';
 import { UpdateAvailabilityDto } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -19,7 +24,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Agent Availability')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/availability')
@@ -31,9 +40,12 @@ export class AvailabilityController {
   @ApiOperation({ summary: 'Get agent availability status' })
   async getAvailability(
     @Headers('x-tenant-id') tenantId: string,
-    @Param('agentProfileId') agentProfileId: string
+    @Param('agentProfileId') agentProfileId: string,
   ) {
-    const availability = await this.availabilityService.getAvailability(tenantId, agentProfileId);
+    const availability = await this.availabilityService.getAvailability(
+      tenantId,
+      agentProfileId,
+    );
     return availability.toJSON();
   }
 
@@ -44,13 +56,13 @@ export class AvailabilityController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('agentProfileId') agentProfileId: string,
     @Body() dto: UpdateAvailabilityDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
     const availability = await this.availabilityService.updateAvailability(
       tenantId,
       agentProfileId,
       dto,
-      req.user?.id
+      req.user?.id,
     );
     return availability.toJSON();
   }

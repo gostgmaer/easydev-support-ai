@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import type { ICustomerRepository } from '../repositories/customer-repository.interface';
 import { Customer } from '../domain/customer.aggregate';
 import { CustomerProfile } from '../domain/customer-profile.entity';
@@ -11,7 +16,11 @@ import {
   CustomerTimezone,
   CustomerStatusEnum,
 } from '../domain/value-objects';
-import { CreateCustomerDto, UpdateCustomerDto, CustomerQueryDto } from '../dtos';
+import {
+  CreateCustomerDto,
+  UpdateCustomerDto,
+  CustomerQueryDto,
+} from '../dtos';
 import { CustomerEventPublisher } from './customer-event.publisher';
 import { AuditService } from '../../audit/audit.service';
 import { randomUUID } from 'crypto';
@@ -22,13 +31,19 @@ export class CustomerService {
     @Inject('ICustomerRepository')
     private readonly customerRepo: ICustomerRepository,
     private readonly eventPublisher: CustomerEventPublisher,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
   ) {}
 
-  async create(tenantId: string, dto: CreateCustomerDto, userId?: string): Promise<Customer> {
+  async create(
+    tenantId: string,
+    dto: CreateCustomerDto,
+    userId?: string,
+  ): Promise<Customer> {
     const existing = await this.customerRepo.findByEmail(dto.email, tenantId);
     if (existing) {
-      throw new ConflictException(`Customer with email ${dto.email} already exists`);
+      throw new ConflictException(
+        `Customer with email ${dto.email} already exists`,
+      );
     }
 
     const customerId = randomUUID();
@@ -99,19 +114,36 @@ export class CustomerService {
     return saved;
   }
 
-  async update(tenantId: string, id: string, dto: UpdateCustomerDto, userId?: string): Promise<Customer> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: UpdateCustomerDto,
+    userId?: string,
+  ): Promise<Customer> {
     const customer = await this.customerRepo.findById(id, tenantId);
     if (!customer) {
       throw new NotFoundException(`Customer with ID ${id} not found`);
     }
 
     const updateProps: any = {};
-    if (dto.externalCustomerId !== undefined) updateProps.externalCustomerId = dto.externalCustomerId;
-    if (dto.email !== undefined) updateProps.email = CustomerEmail.create(dto.email);
-    if (dto.phone !== undefined) updateProps.phone = dto.phone ? CustomerPhone.create(dto.phone) : undefined;
-    if (dto.status !== undefined) updateProps.status = CustomerStatus.create(dto.status as CustomerStatusEnum);
-    if (dto.preferredLanguage !== undefined) updateProps.preferredLanguage = CustomerLanguage.create(dto.preferredLanguage);
-    if (dto.timezone !== undefined) updateProps.timezone = CustomerTimezone.create(dto.timezone);
+    if (dto.externalCustomerId !== undefined)
+      updateProps.externalCustomerId = dto.externalCustomerId;
+    if (dto.email !== undefined)
+      updateProps.email = CustomerEmail.create(dto.email);
+    if (dto.phone !== undefined)
+      updateProps.phone = dto.phone
+        ? CustomerPhone.create(dto.phone)
+        : undefined;
+    if (dto.status !== undefined)
+      updateProps.status = CustomerStatus.create(
+        dto.status as CustomerStatusEnum,
+      );
+    if (dto.preferredLanguage !== undefined)
+      updateProps.preferredLanguage = CustomerLanguage.create(
+        dto.preferredLanguage,
+      );
+    if (dto.timezone !== undefined)
+      updateProps.timezone = CustomerTimezone.create(dto.timezone);
     if (dto.source !== undefined) updateProps.source = dto.source;
     if (dto.metadata !== undefined) updateProps.metadata = dto.metadata;
 
@@ -153,7 +185,11 @@ export class CustomerService {
     return saved;
   }
 
-  async delete(tenantId: string, id: string, userId?: string): Promise<boolean> {
+  async delete(
+    tenantId: string,
+    id: string,
+    userId?: string,
+  ): Promise<boolean> {
     const customer = await this.customerRepo.findById(id, tenantId);
     if (!customer) {
       throw new NotFoundException(`Customer with ID ${id} not found`);
@@ -174,7 +210,11 @@ export class CustomerService {
     return true;
   }
 
-  async restore(tenantId: string, id: string, userId?: string): Promise<boolean> {
+  async restore(
+    tenantId: string,
+    id: string,
+    userId?: string,
+  ): Promise<boolean> {
     const customer = await this.customerRepo.findById(id, tenantId);
     if (!customer) {
       throw new NotFoundException(`Customer with ID ${id} not found`);
@@ -207,7 +247,12 @@ export class CustomerService {
     return this.customerRepo.findPaginated(tenantId, query);
   }
 
-  async merge(tenantId: string, sourceId: string, targetId: string, userId?: string): Promise<Customer> {
+  async merge(
+    tenantId: string,
+    sourceId: string,
+    targetId: string,
+    userId?: string,
+  ): Promise<Customer> {
     const source = await this.customerRepo.findById(sourceId, tenantId);
     const target = await this.customerRepo.findById(targetId, tenantId);
 
@@ -219,15 +264,27 @@ export class CustomerService {
       const mergedMetrics = new CustomerMetrics(target.metrics.id, {
         tenantId,
         customerId: target.id,
-        totalConversations: target.metrics.totalConversations + source.metrics.totalConversations,
+        totalConversations:
+          target.metrics.totalConversations + source.metrics.totalConversations,
         totalTickets: target.metrics.totalTickets + source.metrics.totalTickets,
         totalOrders: target.metrics.totalOrders + source.metrics.totalOrders,
         totalSpend: target.metrics.totalSpend + source.metrics.totalSpend,
-        averageCsat: (target.metrics.averageCsat + source.metrics.averageCsat) / 2,
-        averageResponseTime: Math.round((target.metrics.averageResponseTime + source.metrics.averageResponseTime) / 2),
-        averageResolutionTime: Math.round((target.metrics.averageResolutionTime + source.metrics.averageResolutionTime) / 2),
-        sentimentScore: (target.metrics.sentimentScore + source.metrics.sentimentScore) / 2,
-        lifetimeValue: target.metrics.lifetimeValue + source.metrics.lifetimeValue,
+        averageCsat:
+          (target.metrics.averageCsat + source.metrics.averageCsat) / 2,
+        averageResponseTime: Math.round(
+          (target.metrics.averageResponseTime +
+            source.metrics.averageResponseTime) /
+            2,
+        ),
+        averageResolutionTime: Math.round(
+          (target.metrics.averageResolutionTime +
+            source.metrics.averageResolutionTime) /
+            2,
+        ),
+        sentimentScore:
+          (target.metrics.sentimentScore + source.metrics.sentimentScore) / 2,
+        lifetimeValue:
+          target.metrics.lifetimeValue + source.metrics.lifetimeValue,
         riskScore: Math.max(target.metrics.riskScore, source.metrics.riskScore),
         vipStatus: target.metrics.vipStatus || source.metrics.vipStatus,
       });
@@ -263,7 +320,16 @@ export class CustomerService {
       return JSON.stringify(data, null, 2);
     }
 
-    const headers = ['id', 'email', 'phone', 'status', 'preferredLanguage', 'timezone', 'source', 'createdAt'];
+    const headers = [
+      'id',
+      'email',
+      'phone',
+      'status',
+      'preferredLanguage',
+      'timezone',
+      'source',
+      'createdAt',
+    ];
     const csvRows = [headers.join(',')];
 
     for (const item of data) {
@@ -275,15 +341,23 @@ export class CustomerService {
         item.preferredLanguage,
         item.timezone,
         item.source,
-        item.createdAt instanceof Date ? item.createdAt.toISOString() : new Date(item.createdAt).toISOString(),
+        item.createdAt instanceof Date
+          ? item.createdAt.toISOString()
+          : new Date(item.createdAt).toISOString(),
       ];
-      csvRows.push(values.map((val) => `"${val.replace(/"/g, '""')}"`).join(','));
+      csvRows.push(
+        values.map((val) => `"${val.replace(/"/g, '""')}"`).join(','),
+      );
     }
 
     return csvRows.join('\n');
   }
 
-  async import(tenantId: string, records: any[], userId?: string): Promise<{ importedCount: number; errors: string[] }> {
+  async import(
+    tenantId: string,
+    records: any[],
+    userId?: string,
+  ): Promise<{ importedCount: number; errors: string[] }> {
     let importedCount = 0;
     const errors: string[] = [];
 
@@ -305,14 +379,19 @@ export class CustomerService {
           profile: record.profile || {
             firstName: record.firstName,
             lastName: record.lastName,
-            displayName: record.displayName || `${record.firstName || ''} ${record.lastName || ''}`.trim() || undefined,
+            displayName:
+              record.displayName ||
+              `${record.firstName || ''} ${record.lastName || ''}`.trim() ||
+              undefined,
           },
         };
 
         await this.create(tenantId, dto, userId);
         importedCount++;
       } catch (err: any) {
-        errors.push(`Failed to import record ${record.email || 'unknown'}: ${err.message}`);
+        errors.push(
+          `Failed to import record ${record.email || 'unknown'}: ${err.message}`,
+        );
       }
     }
 

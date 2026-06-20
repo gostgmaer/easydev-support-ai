@@ -2,8 +2,19 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import type { IKnowledgeRepository } from '../repositories/knowledge-repository.interface';
 import { KnowledgeDocument } from '../domain/knowledge-document.aggregate';
 import { KnowledgeVersion } from '../domain/knowledge-version.entity';
-import { CreateDocumentDto, UpdateDocumentDto, PublishDocumentDto } from '../dtos/knowledge.dto';
-import { DocumentStatus, DocumentStatusEnum, DocumentLanguage, SyncStatusEnum, IngestionStatusEnum, EmbeddingStatusEnum } from '../domain/value-objects';
+import {
+  CreateDocumentDto,
+  UpdateDocumentDto,
+  PublishDocumentDto,
+} from '../dtos/knowledge.dto';
+import {
+  DocumentStatus,
+  DocumentStatusEnum,
+  DocumentLanguage,
+  SyncStatusEnum,
+  IngestionStatusEnum,
+  EmbeddingStatusEnum,
+} from '../domain/value-objects';
 import { KnowledgeEventPublisher } from './knowledge-event.publisher';
 
 @Injectable()
@@ -47,7 +58,10 @@ export class KnowledgeDocumentService {
     return saved;
   }
 
-  public async getDocument(tenantId: string, id: string): Promise<KnowledgeDocument> {
+  public async getDocument(
+    tenantId: string,
+    id: string,
+  ): Promise<KnowledgeDocument> {
     const doc = await this.repository.findById(id, tenantId);
     if (!doc) {
       throw new NotFoundException(`Knowledge Document ${id} not found`);

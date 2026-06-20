@@ -7,9 +7,7 @@ import { KnowledgeVersionService } from '../services/knowledge-version.service';
 @Controller('v1/knowledge-versions')
 @UseGuards(TenantGuard, RbacGuard)
 export class KnowledgeVersionController {
-  constructor(
-    private readonly versionService: KnowledgeVersionService,
-  ) {}
+  constructor(private readonly versionService: KnowledgeVersionService) {}
 
   @Get('document/:documentId')
   @Roles('tenant_admin', 'agent')
@@ -17,7 +15,10 @@ export class KnowledgeVersionController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('documentId') documentId: string,
   ) {
-    const versions = await this.versionService.getVersions(tenantId, documentId);
+    const versions = await this.versionService.getVersions(
+      tenantId,
+      documentId,
+    );
     return versions.map((v) => v.toJSON());
   }
 }

@@ -14,7 +14,13 @@ import {
   HttpCode,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { ConversationService } from '../services/conversation.service';
 import { ConversationSearchService } from '../services/conversation-search.service';
@@ -31,7 +37,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Conversations')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/conversations')
@@ -44,21 +54,34 @@ export class ConversationController {
   @Post()
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Create a new conversation' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Conversation created' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Conversation created',
+  })
   async create(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: CreateConversationDto,
     @Req() req: any,
   ) {
-    const conversation = await this.conversationService.create(tenantId, dto, req.user?.id);
+    const conversation = await this.conversationService.create(
+      tenantId,
+      dto,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
   @Get()
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'List, filter, paginate conversations' })
-  async findPaginated(@Headers('x-tenant-id') tenantId: string, @Query() query: ConversationQueryDto) {
-    const result = await this.conversationService.findPaginated(tenantId, query);
+  async findPaginated(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: ConversationQueryDto,
+  ) {
+    const result = await this.conversationService.findPaginated(
+      tenantId,
+      query,
+    );
     return {
       data: result.data.map((c) => c.toJSON()),
       total: result.total,
@@ -69,7 +92,10 @@ export class ConversationController {
   @Get('search')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Full text search conversations' })
-  async search(@Headers('x-tenant-id') tenantId: string, @Query('q') q: string) {
+  async search(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query('q') q: string,
+  ) {
     const results = await this.searchService.search(tenantId, q || '');
     return results.map((c) => c.toJSON());
   }
@@ -83,14 +109,22 @@ export class ConversationController {
     @Body() dto: MergeConversationsDto,
     @Req() req: any,
   ) {
-    const target = await this.conversationService.merge(tenantId, dto.sourceId, dto.targetId, req.user?.id);
+    const target = await this.conversationService.merge(
+      tenantId,
+      dto.sourceId,
+      dto.targetId,
+      req.user?.id,
+    );
     return target.toJSON();
   }
 
   @Get(':id')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Get a conversation by ID' })
-  async findById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async findById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const conversation = await this.conversationService.findById(tenantId, id);
     return conversation.toJSON();
   }
@@ -104,15 +138,28 @@ export class ConversationController {
     @Body() dto: UpdateConversationDto,
     @Req() req: any,
   ) {
-    const conversation = await this.conversationService.update(tenantId, id, dto, req.user?.id);
+    const conversation = await this.conversationService.update(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
   @Post(':id/resolve')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Resolve a conversation' })
-  async resolve(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string, @Req() req: any) {
-    const conversation = await this.conversationService.resolve(tenantId, id, req.user?.id);
+  async resolve(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const conversation = await this.conversationService.resolve(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
@@ -125,15 +172,28 @@ export class ConversationController {
     @Body('reason') reason: string,
     @Req() req: any,
   ) {
-    const conversation = await this.conversationService.close(tenantId, id, reason, req.user?.id);
+    const conversation = await this.conversationService.close(
+      tenantId,
+      id,
+      reason,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
   @Post(':id/archive')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Archive a conversation' })
-  async archive(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string, @Req() req: any) {
-    const conversation = await this.conversationService.archive(tenantId, id, req.user?.id);
+  async archive(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const conversation = await this.conversationService.archive(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
@@ -141,8 +201,16 @@ export class ConversationController {
   @Roles('tenant_admin', 'support_agent')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @ApiOperation({ summary: 'Split a conversation into a new one' })
-  async split(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string, @Req() req: any) {
-    const conversation = await this.conversationService.split(tenantId, id, req.user?.id);
+  async split(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const conversation = await this.conversationService.split(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
@@ -150,7 +218,11 @@ export class ConversationController {
   @Roles('tenant_admin')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete a conversation' })
-  async delete(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string, @Req() req: any) {
+  async delete(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
     await this.conversationService.delete(tenantId, id, req.user?.id);
   }
 }

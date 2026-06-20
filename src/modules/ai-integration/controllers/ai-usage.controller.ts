@@ -17,7 +17,12 @@ export class AiUsageController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const metrics = await this.usageService.getUsageMetrics(tenantId, agentId, startDate, endDate);
+    const metrics = await this.usageService.getUsageMetrics(
+      tenantId,
+      agentId,
+      startDate,
+      endDate,
+    );
     return metrics.map((m) => m.toJSON());
   }
 }

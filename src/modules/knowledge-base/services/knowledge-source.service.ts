@@ -34,7 +34,10 @@ export class KnowledgeSourceService {
     return saved;
   }
 
-  public async getSource(tenantId: string, id: string): Promise<KnowledgeSource> {
+  public async getSource(
+    tenantId: string,
+    id: string,
+  ): Promise<KnowledgeSource> {
     const source = await this.repository.getSourceById(id, tenantId);
     if (!source) {
       throw new NotFoundException(`Knowledge Source ${id} not found`);

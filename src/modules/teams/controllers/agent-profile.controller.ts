@@ -14,9 +14,19 @@ import {
   HttpCode,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AgentProfileService } from '../services/agent-profile.service';
-import { AgentProfileDto, UpdateAgentProfileDto, AgentProfileQueryDto } from '../dtos';
+import {
+  AgentProfileDto,
+  UpdateAgentProfileDto,
+  AgentProfileQueryDto,
+} from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -24,7 +34,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Agent Profiles')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/agents')
@@ -34,11 +48,14 @@ export class AgentProfileController {
   @Post()
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Create an agent profile' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Agent profile created successfully' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Agent profile created successfully',
+  })
   async create(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: AgentProfileDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
     const profile = await this.agentService.create(tenantId, dto, req.user?.id);
     return profile.toJSON();
@@ -49,7 +66,7 @@ export class AgentProfileController {
   @ApiOperation({ summary: 'List and paginate agent profiles' })
   async findPaginated(
     @Headers('x-tenant-id') tenantId: string,
-    @Query() query: AgentProfileQueryDto
+    @Query() query: AgentProfileQueryDto,
   ) {
     const result = await this.agentService.findPaginated(tenantId, query);
     return {
@@ -61,7 +78,10 @@ export class AgentProfileController {
   @Get(':id')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Get an agent profile by ID' })
-  async findById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async findById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const profile = await this.agentService.findById(tenantId, id);
     return profile.toJSON();
   }
@@ -73,9 +93,14 @@ export class AgentProfileController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Body() dto: UpdateAgentProfileDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const profile = await this.agentService.update(tenantId, id, dto, req.user?.id);
+    const profile = await this.agentService.update(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return profile.toJSON();
   }
 
@@ -86,7 +111,7 @@ export class AgentProfileController {
   async delete(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
     await this.agentService.delete(tenantId, id, req.user?.id);
   }

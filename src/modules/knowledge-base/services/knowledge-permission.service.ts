@@ -26,11 +26,17 @@ export class KnowledgePermissionService {
     return this.repository.savePermission(permission, tenantId);
   }
 
-  public async getPermissions(tenantId: string, documentId: string): Promise<KnowledgePermission[]> {
+  public async getPermissions(
+    tenantId: string,
+    documentId: string,
+  ): Promise<KnowledgePermission[]> {
     return this.repository.getPermissionsByDocumentId(documentId, tenantId);
   }
 
-  public async deletePermission(tenantId: string, id: string): Promise<boolean> {
+  public async deletePermission(
+    tenantId: string,
+    id: string,
+  ): Promise<boolean> {
     const deleted = await this.repository.deletePermission(id, tenantId);
     if (!deleted) {
       throw new NotFoundException(`Permission ${id} not found`);
@@ -45,7 +51,13 @@ export class KnowledgePermissionService {
     role?: string,
     requiredLevel: 'READ' | 'WRITE' | 'MANAGE' = 'READ',
   ): Promise<boolean> {
-    return this.repository.checkPermission(documentId, tenantId, teamId, role, requiredLevel);
+    return this.repository.checkPermission(
+      documentId,
+      tenantId,
+      teamId,
+      role,
+      requiredLevel,
+    );
   }
 }
 import * as crypto from 'crypto';

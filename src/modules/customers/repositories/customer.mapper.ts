@@ -14,7 +14,7 @@ export class CustomerMapper {
   public static toDomain(
     rawCustomer: any,
     rawProfile?: any,
-    rawMetrics?: any
+    rawMetrics?: any,
   ): Customer {
     const profile = rawProfile
       ? new CustomerProfile(rawProfile.id, {
@@ -31,7 +31,8 @@ export class CustomerMapper {
           state: rawProfile.state || undefined,
           postalCode: rawProfile.postalCode || undefined,
           tags: (rawProfile.tags as string[]) || [],
-          customAttributes: (rawProfile.customAttributes as Record<string, any>) || {},
+          customAttributes:
+            (rawProfile.customAttributes as Record<string, any>) || {},
           createdAt: rawProfile.createdAt,
           updatedAt: rawProfile.updatedAt,
         })
@@ -61,9 +62,13 @@ export class CustomerMapper {
       tenantId: rawCustomer.tenantId,
       externalCustomerId: rawCustomer.externalCustomerId || undefined,
       email: CustomerEmail.create(rawCustomer.email),
-      phone: rawCustomer.phone ? CustomerPhone.create(rawCustomer.phone) : undefined,
+      phone: rawCustomer.phone
+        ? CustomerPhone.create(rawCustomer.phone)
+        : undefined,
       status: CustomerStatus.create(rawCustomer.status as CustomerStatusEnum),
-      preferredLanguage: CustomerLanguage.create(rawCustomer.preferredLanguage || 'en'),
+      preferredLanguage: CustomerLanguage.create(
+        rawCustomer.preferredLanguage || 'en',
+      ),
       timezone: CustomerTimezone.create(rawCustomer.timezone || 'UTC'),
       lastSeenAt: rawCustomer.lastSeenAt || undefined,
       source: rawCustomer.source || 'API',

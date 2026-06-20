@@ -168,7 +168,10 @@ describe('AI Integration Module Services and Controllers', () => {
         { provide: ConversationService, useValue: mockConversationService },
         { provide: MessageService, useValue: mockMessageService },
         { provide: CustomerService, useValue: mockCustomerService },
-        { provide: ConnectorExecutionService, useValue: mockConnectorExecutionService },
+        {
+          provide: ConnectorExecutionService,
+          useValue: mockConnectorExecutionService,
+        },
       ],
     })
       .overrideGuard(TenantGuard)
@@ -178,7 +181,9 @@ describe('AI Integration Module Services and Controllers', () => {
       .compile();
 
     agentService = module.get<AiAgentService>(AiAgentService);
-    conversationServiceAi = module.get<AiConversationService>(AiConversationService);
+    conversationServiceAi = module.get<AiConversationService>(
+      AiConversationService,
+    );
     workflowService = module.get<AiWorkflowService>(AiWorkflowService);
     toolService = module.get<AiToolExecutionService>(AiToolExecutionService);
     escalationService = module.get<AiEscalationService>(AiEscalationService);
@@ -191,7 +196,9 @@ describe('AI Integration Module Services and Controllers', () => {
     workflowController = module.get<AiWorkflowController>(AiWorkflowController);
     sessionController = module.get<AiSessionController>(AiSessionController);
     usageController = module.get<AiUsageController>(AiUsageController);
-    escalationController = module.get<AiEscalationController>(AiEscalationController);
+    escalationController = module.get<AiEscalationController>(
+      AiEscalationController,
+    );
 
     jest.clearAllMocks();
 
@@ -241,7 +248,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should throw NotFoundException if agent not found', async () => {
       mockRepo.getAgentById.mockResolvedValue(null);
-      await expect(agentService.getAgent(tenantId, 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        agentService.getAgent(tenantId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should find agents', async () => {
@@ -260,7 +269,9 @@ describe('AI Integration Module Services and Controllers', () => {
       mockRepo.getAgentById.mockResolvedValue(agent);
       mockRepo.saveAgent.mockImplementation((a) => Promise.resolve(a));
 
-      const res = await agentService.updateAgent(tenantId, agentId, { name: 'Agent Updated' });
+      const res = await agentService.updateAgent(tenantId, agentId, {
+        name: 'Agent Updated',
+      });
       expect(res.name).toBe('Agent Updated');
     });
 
@@ -272,7 +283,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should throw NotFoundException on delete of non-existent agent', async () => {
       mockRepo.deleteAgent.mockResolvedValue(false);
-      await expect(agentService.deleteAgent(tenantId, 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        agentService.deleteAgent(tenantId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should set agent profile', async () => {
@@ -292,7 +305,11 @@ describe('AI Integration Module Services and Controllers', () => {
         escalationRules: { c: 3 },
       };
 
-      const res = await agentService.setAgentProfile(tenantId, agentId, profile);
+      const res = await agentService.setAgentProfile(
+        tenantId,
+        agentId,
+        profile,
+      );
       expect(res.profile?.languageSupport).toEqual(['en']);
     });
 
@@ -316,7 +333,11 @@ describe('AI Integration Module Services and Controllers', () => {
         frequencyPenalty: 0.0,
       };
 
-      const res = await agentService.setAgentModelConfig(tenantId, agentId, modelConfig);
+      const res = await agentService.setAgentModelConfig(
+        tenantId,
+        agentId,
+        modelConfig,
+      );
       expect(res.modelConfig?.modelName).toBe('gpt-4');
     });
   });
@@ -326,7 +347,12 @@ describe('AI Integration Module Services and Controllers', () => {
       mockRepo.getSessionByConversationId.mockResolvedValue(null);
       mockRepo.saveSession.mockImplementation((s) => Promise.resolve(s));
 
-      const res = await conversationServiceAi.getOrCreateSession(tenantId, conversationId, customerId, agentId);
+      const res = await conversationServiceAi.getOrCreateSession(
+        tenantId,
+        conversationId,
+        customerId,
+        agentId,
+      );
       expect(res.conversationId).toBe(conversationId);
       expect(res.customerId).toBe(customerId);
     });
@@ -341,7 +367,12 @@ describe('AI Integration Module Services and Controllers', () => {
       });
       mockRepo.getSessionByConversationId.mockResolvedValue(session);
 
-      const res = await conversationServiceAi.getOrCreateSession(tenantId, conversationId, customerId, agentId);
+      const res = await conversationServiceAi.getOrCreateSession(
+        tenantId,
+        conversationId,
+        customerId,
+        agentId,
+      );
       expect(res.id).toBe('session-id-1');
       expect(mockRepo.saveSession).not.toHaveBeenCalled();
     });
@@ -357,14 +388,20 @@ describe('AI Integration Module Services and Controllers', () => {
       mockRepo.getSessionByConversationId.mockResolvedValue(session);
       mockRepo.saveSession.mockImplementation((s) => Promise.resolve(s));
 
-      const res = await conversationServiceAi.updateSessionState(tenantId, conversationId, { state: 'some-value' });
+      const res = await conversationServiceAi.updateSessionState(
+        tenantId,
+        conversationId,
+        { state: 'some-value' },
+      );
       expect(res.sessionState.state).toBe('some-value');
       expect(res.contextVersion).toBe(2);
     });
 
     it('should throw error when updating non-existent session state', async () => {
       mockRepo.getSessionByConversationId.mockResolvedValue(null);
-      await expect(conversationServiceAi.updateSessionState(tenantId, conversationId, {})).rejects.toThrow();
+      await expect(
+        conversationServiceAi.updateSessionState(tenantId, conversationId, {}),
+      ).rejects.toThrow();
     });
 
     it('should associate workflow execution id', async () => {
@@ -378,21 +415,38 @@ describe('AI Integration Module Services and Controllers', () => {
       mockRepo.getSessionByConversationId.mockResolvedValue(session);
       mockRepo.saveSession.mockImplementation((s) => Promise.resolve(s));
 
-      const res = await conversationServiceAi.associateWorkflow(tenantId, conversationId, 'exec-123');
+      const res = await conversationServiceAi.associateWorkflow(
+        tenantId,
+        conversationId,
+        'exec-123',
+      );
       expect(res.workflowExecutionId).toBe('exec-123');
     });
 
     it('should throw error when associating workflow to non-existent session', async () => {
       mockRepo.getSessionByConversationId.mockResolvedValue(null);
-      await expect(conversationServiceAi.associateWorkflow(tenantId, conversationId, 'exec-123')).rejects.toThrow();
+      await expect(
+        conversationServiceAi.associateWorkflow(
+          tenantId,
+          conversationId,
+          'exec-123',
+        ),
+      ).rejects.toThrow();
     });
 
     it('should recall memory and get context', async () => {
       mockAiClient.recallMemory.mockResolvedValue({ memo: 'val' });
       mockAiClient.getConversationContext.mockResolvedValue([{ role: 'user' }]);
 
-      const memory = await conversationServiceAi.recallMemory(tenantId, 'query', 'key');
-      const ctx = await conversationServiceAi.getConversationContext(tenantId, conversationId);
+      const memory = await conversationServiceAi.recallMemory(
+        tenantId,
+        'query',
+        'key',
+      );
+      const ctx = await conversationServiceAi.getConversationContext(
+        tenantId,
+        conversationId,
+      );
 
       expect(memory.memo).toBe('val');
       expect(ctx[0].role).toBe('user');
@@ -401,21 +455,41 @@ describe('AI Integration Module Services and Controllers', () => {
 
   describe('AiWorkflowService', () => {
     it('should trigger and run a workflow successfully', async () => {
-      mockRepo.saveWorkflowExecution.mockImplementation((e) => Promise.resolve(e));
-      mockAiClient.runWorkflow.mockResolvedValue({ tokensUsed: 150, estimatedCost: 0.02 });
+      mockRepo.saveWorkflowExecution.mockImplementation((e) =>
+        Promise.resolve(e),
+      );
+      mockAiClient.runWorkflow.mockResolvedValue({
+        tokensUsed: 150,
+        estimatedCost: 0.02,
+      });
 
-      const res = await workflowService.triggerWorkflow(tenantId, 'wf-1', conversationId, { param: 1 });
+      const res = await workflowService.triggerWorkflow(
+        tenantId,
+        'wf-1',
+        conversationId,
+        { param: 1 },
+      );
       expect(res.status).toBe(WorkflowStatusEnum.COMPLETED);
       expect(res.tokensUsed).toBe(150);
       expect(res.estimatedCost).toBe(0.02);
-      expect(mockQueueService.addJob).toHaveBeenCalledWith('ai-queue', 'ai-workflow-job', expect.any(Object));
+      expect(mockQueueService.addJob).toHaveBeenCalledWith(
+        'ai-queue',
+        'ai-workflow-job',
+        expect.any(Object),
+      );
     });
 
     it('should fail and log errors if client run fails', async () => {
-      mockRepo.saveWorkflowExecution.mockImplementation((e) => Promise.resolve(e));
-      mockAiClient.runWorkflow.mockRejectedValue(new Error('AI execution failure'));
+      mockRepo.saveWorkflowExecution.mockImplementation((e) =>
+        Promise.resolve(e),
+      );
+      mockAiClient.runWorkflow.mockRejectedValue(
+        new Error('AI execution failure'),
+      );
 
-      await expect(workflowService.triggerWorkflow(tenantId, 'wf-1', conversationId)).rejects.toThrow('AI execution failure');
+      await expect(
+        workflowService.triggerWorkflow(tenantId, 'wf-1', conversationId),
+      ).rejects.toThrow('AI execution failure');
     });
 
     it('should retrieve workflow execution', async () => {
@@ -433,7 +507,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should throw NotFoundException on getExecution of non-existent execution', async () => {
       mockRepo.getWorkflowExecutionById.mockResolvedValue(null);
-      await expect(workflowService.getExecution(tenantId, 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        workflowService.getExecution(tenantId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should handle timeoutExecution', async () => {
@@ -444,7 +520,9 @@ describe('AI Integration Module Services and Controllers', () => {
         status: WorkflowStatusEnum.RUNNING,
       });
       mockRepo.getWorkflowExecutionById.mockResolvedValue(execution);
-      mockRepo.saveWorkflowExecution.mockImplementation((e) => Promise.resolve(e));
+      mockRepo.saveWorkflowExecution.mockImplementation((e) =>
+        Promise.resolve(e),
+      );
 
       await workflowService.timeoutExecution(tenantId, 'exec-1');
       expect(execution.status).toBe(WorkflowStatusEnum.TIMEOUT);
@@ -455,7 +533,9 @@ describe('AI Integration Module Services and Controllers', () => {
     it('should execute a tool capability successfully', async () => {
       mockRepo.saveToolRequest.mockImplementation((r) => Promise.resolve(r));
       mockRepo.saveToolResult.mockImplementation((r) => Promise.resolve(r));
-      mockConnectorExecutionService.executeCapability.mockResolvedValue({ status: 'delivered' });
+      mockConnectorExecutionService.executeCapability.mockResolvedValue({
+        status: 'delivered',
+      });
       mockAiClient.submitToolResult.mockResolvedValue({ success: true });
 
       const res = await toolService.executeTool(
@@ -468,17 +548,28 @@ describe('AI Integration Module Services and Controllers', () => {
       );
 
       expect(res.status).toBe('delivered');
-      expect(mockConnectorExecutionService.executeCapability).toHaveBeenCalled();
+      expect(
+        mockConnectorExecutionService.executeCapability,
+      ).toHaveBeenCalled();
       expect(mockAiClient.submitToolResult).toHaveBeenCalled();
     });
 
     it('should record failure and submit failure state on exception', async () => {
       mockRepo.saveToolRequest.mockImplementation((r) => Promise.resolve(r));
       mockRepo.saveToolResult.mockImplementation((r) => Promise.resolve(r));
-      mockConnectorExecutionService.executeCapability.mockRejectedValue(new Error('Connector down'));
+      mockConnectorExecutionService.executeCapability.mockRejectedValue(
+        new Error('Connector down'),
+      );
 
       await expect(
-        toolService.executeTool(tenantId, 'exec-123', 'wf-1', 'shopify-connector', 'ORDER_TRACKING', {}),
+        toolService.executeTool(
+          tenantId,
+          'exec-123',
+          'wf-1',
+          'shopify-connector',
+          'ORDER_TRACKING',
+          {},
+        ),
       ).rejects.toThrow('Connector down');
 
       expect(mockAiClient.submitToolResult).toHaveBeenCalledWith(
@@ -494,7 +585,9 @@ describe('AI Integration Module Services and Controllers', () => {
   describe('AiEscalationService', () => {
     it('should route to human if keyword match is found', async () => {
       mockRepo.saveEscalation.mockImplementation((e) => Promise.resolve(e));
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
 
       const res = await escalationService.evaluateEscalation(
         tenantId,
@@ -510,7 +603,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should route to human if confidence score is low', async () => {
       mockRepo.saveEscalation.mockImplementation((e) => Promise.resolve(e));
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
 
       const res = await escalationService.evaluateEscalation(
         tenantId,
@@ -525,7 +620,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should route to human if sentiment score is highly negative', async () => {
       mockRepo.saveEscalation.mockImplementation((e) => Promise.resolve(e));
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
 
       const res = await escalationService.evaluateEscalation(
         tenantId,
@@ -540,8 +637,14 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should route to human if customer is VIP', async () => {
       mockRepo.saveEscalation.mockImplementation((e) => Promise.resolve(e));
-      mockConversationService.findById.mockResolvedValue({ id: conversationId, customerId });
-      mockCustomerService.findById.mockResolvedValue({ id: customerId, metadata: { tier: 'VIP' } });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+        customerId,
+      });
+      mockCustomerService.findById.mockResolvedValue({
+        id: customerId,
+        metadata: { tier: 'VIP' },
+      });
 
       const res = await escalationService.evaluateEscalation(
         tenantId,
@@ -556,7 +659,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should route to human if policy violation keyword matches', async () => {
       mockRepo.saveEscalation.mockImplementation((e) => Promise.resolve(e));
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
 
       const res = await escalationService.evaluateEscalation(
         tenantId,
@@ -570,8 +675,14 @@ describe('AI Integration Module Services and Controllers', () => {
     });
 
     it('should return false if no rules match', async () => {
-      mockConversationService.findById.mockResolvedValue({ id: conversationId, customerId });
-      mockCustomerService.findById.mockResolvedValue({ id: customerId, metadata: { tier: 'STANDARD' } });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+        customerId,
+      });
+      mockCustomerService.findById.mockResolvedValue({
+        id: customerId,
+        metadata: { tier: 'STANDARD' },
+      });
 
       const res = await escalationService.evaluateEscalation(
         tenantId,
@@ -600,7 +711,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
     it('should throw NotFoundException on getEscalation of non-existent escalation', async () => {
       mockRepo.getEscalationById.mockResolvedValue(null);
-      await expect(escalationService.getEscalation(tenantId, 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        escalationService.getEscalation(tenantId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should find escalations', async () => {
@@ -630,19 +743,40 @@ describe('AI Integration Module Services and Controllers', () => {
       mockRepo.getUsageMetric.mockResolvedValue(null);
       mockRepo.saveUsageMetric.mockImplementation((m) => Promise.resolve(m));
 
-      const res = await usageService.recordUsage(tenantId, agentId, 100, 0.05, true, 2);
+      const res = await usageService.recordUsage(
+        tenantId,
+        agentId,
+        100,
+        0.05,
+        true,
+        2,
+      );
       expect(res.agentId).toBe(agentId);
       expect(res.tokens).toBe(100);
       expect(res.cost).toBeCloseTo(0.05);
       expect(res.workflowCount).toBe(1);
       expect(res.toolCalls).toBe(2);
-      expect(mockQueueService.addJob).toHaveBeenCalledWith('ai-queue', 'ai-usage-job', expect.any(Object));
+      expect(mockQueueService.addJob).toHaveBeenCalledWith(
+        'ai-queue',
+        'ai-usage-job',
+        expect.any(Object),
+      );
     });
 
     it('should log response and trigger events', async () => {
       mockRepo.logResponse.mockResolvedValue(undefined);
 
-      await usageService.logResponse(tenantId, conversationId, 'msg-1', 'exec-1', 'AUTOMATED', 150, 0.9, 100, 0.02);
+      await usageService.logResponse(
+        tenantId,
+        conversationId,
+        'msg-1',
+        'exec-1',
+        'AUTOMATED',
+        150,
+        0.9,
+        100,
+        0.02,
+      );
       expect(mockRepo.logResponse).toHaveBeenCalled();
     });
 
@@ -678,7 +812,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
       mockRepo.findAgents.mockResolvedValue([agentEng, agentEs]);
 
-      const res = await routingService.selectAgent(tenantId, { language: 'es' });
+      const res = await routingService.selectAgent(tenantId, {
+        language: 'es',
+      });
       expect(res?.id).toBe('es-agent');
     });
 
@@ -698,7 +834,9 @@ describe('AI Integration Module Services and Controllers', () => {
 
       mockRepo.findAgents.mockResolvedValue([agentBilling, agentSupport]);
 
-      const res = await routingService.selectAgent(tenantId, { category: 'BILLING' });
+      const res = await routingService.selectAgent(tenantId, {
+        category: 'BILLING',
+      });
       expect(res?.id).toBe('bill-agent');
     });
 
@@ -718,27 +856,43 @@ describe('AI Integration Module Services and Controllers', () => {
       });
 
       expect(routingService.selectWorkflow(agentWithWf)).toBe('custom-wf');
-      expect(routingService.selectWorkflow(agentNoWf)).toBe('default-agent-workflow-run');
+      expect(routingService.selectWorkflow(agentNoWf)).toBe(
+        'default-agent-workflow-run',
+      );
     });
   });
 
   describe('AiResponseService', () => {
     it('should return immediately if conversation is not found', async () => {
       mockConversationService.findById.mockResolvedValue(null);
-      const res = await responseService.processInboundMessage(tenantId, 'msg-1', conversationId, 'text');
+      const res = await responseService.processInboundMessage(
+        tenantId,
+        'msg-1',
+        conversationId,
+        'text',
+      );
       expect(res).toBeUndefined();
     });
 
     it('should return immediately if no active agent found', async () => {
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
       mockRepo.findAgents.mockResolvedValue([]);
 
-      const res = await responseService.processInboundMessage(tenantId, 'msg-1', conversationId, 'text');
+      const res = await responseService.processInboundMessage(
+        tenantId,
+        'msg-1',
+        conversationId,
+        'text',
+      );
       expect(res).toBeUndefined();
     });
 
     it('should return escalated details if escalation rule matches', async () => {
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
       const agent = AiAgent.create(agentId, {
         tenantId,
         name: 'Support Agent',
@@ -747,12 +901,21 @@ describe('AI Integration Module Services and Controllers', () => {
       });
       mockRepo.findAgents.mockResolvedValue([agent]);
 
-      const res = await responseService.processInboundMessage(tenantId, 'msg-1', conversationId, 'Please connect me to human agent');
+      const res = await responseService.processInboundMessage(
+        tenantId,
+        'msg-1',
+        conversationId,
+        'Please connect me to human agent',
+      );
       expect(res).toEqual({ escalated: true });
     });
 
     it('should successfully run workflow and generate masked response', async () => {
-      mockConversationService.findById.mockResolvedValue({ id: conversationId, customerId, language: { value: 'en' } });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+        customerId,
+        language: { value: 'en' },
+      });
       const agent = AiAgent.create(agentId, {
         tenantId,
         name: 'Support Agent',
@@ -763,16 +926,21 @@ describe('AI Integration Module Services and Controllers', () => {
       });
       mockRepo.findAgents.mockResolvedValue([agent]);
       mockAiClient.getConversationContext.mockResolvedValue([]);
-      
+
       const execution = new AiWorkflowExecution('exec-id-1', {
         tenantId,
         workflowId: 'wf-1',
         conversationId,
         status: WorkflowStatusEnum.PENDING,
       });
-      mockRepo.saveWorkflowExecution.mockImplementation((e) => Promise.resolve(e));
-      mockAiClient.runWorkflow.mockResolvedValue({ tokensUsed: 50, estimatedCost: 0.01 });
-      
+      mockRepo.saveWorkflowExecution.mockImplementation((e) =>
+        Promise.resolve(e),
+      );
+      mockAiClient.runWorkflow.mockResolvedValue({
+        tokensUsed: 50,
+        estimatedCost: 0.01,
+      });
+
       mockAiClient.generate.mockResolvedValue({
         text: 'Contact support at billing@easydev.ai or visa card 4111222233334444',
         confidence: 0.95,
@@ -784,7 +952,12 @@ describe('AI Integration Module Services and Controllers', () => {
       mockRepo.getUsageMetric.mockResolvedValue(null);
       mockRepo.saveUsageMetric.mockImplementation((m) => Promise.resolve(m));
 
-      const res = await responseService.processInboundMessage(tenantId, 'msg-1', conversationId, 'Hello');
+      const res = await responseService.processInboundMessage(
+        tenantId,
+        'msg-1',
+        conversationId,
+        'Hello',
+      );
       expect(res.escalated).toBe(false);
       expect(res.messageId).toBe('out-msg-1');
       expect(res.reply).toContain('[EMAIL_HIDDEN]');
@@ -792,7 +965,9 @@ describe('AI Integration Module Services and Controllers', () => {
     });
 
     it('should create escalation and throw if processing fails', async () => {
-      mockConversationService.findById.mockResolvedValue({ id: conversationId });
+      mockConversationService.findById.mockResolvedValue({
+        id: conversationId,
+      });
       const agent = AiAgent.create(agentId, {
         tenantId,
         name: 'Support Agent',
@@ -801,11 +976,18 @@ describe('AI Integration Module Services and Controllers', () => {
       });
       mockRepo.findAgents.mockResolvedValue([agent]);
       mockRepo.getSessionByConversationId.mockResolvedValue(null);
-      
-      mockAiClient.getConversationContext.mockRejectedValue(new Error('Context unavailable'));
+
+      mockAiClient.getConversationContext.mockRejectedValue(
+        new Error('Context unavailable'),
+      );
 
       await expect(
-        responseService.processInboundMessage(tenantId, 'msg-1', conversationId, 'Hello'),
+        responseService.processInboundMessage(
+          tenantId,
+          'msg-1',
+          conversationId,
+          'Hello',
+        ),
       ).rejects.toThrow('Context unavailable');
 
       expect(mockRepo.saveEscalation).toHaveBeenCalled();
@@ -831,7 +1013,10 @@ describe('AI Integration Module Services and Controllers', () => {
       jest.spyOn(agentService, 'setAgentProfile').mockResolvedValue(agent);
       jest.spyOn(agentService, 'setAgentModelConfig').mockResolvedValue(agent);
 
-      const created = await agentController.createAgent(tenantId, { name: 'Agent C', agentType: AgentTypeEnum.CUSTOMER_SUPPORT });
+      const created = await agentController.createAgent(tenantId, {
+        name: 'Agent C',
+        agentType: AgentTypeEnum.CUSTOMER_SUPPORT,
+      });
       expect(created.id).toBe(agentId);
 
       const got = await agentController.getAgent(tenantId, agentId);
@@ -840,7 +1025,9 @@ describe('AI Integration Module Services and Controllers', () => {
       const listed = await agentController.findAgents(tenantId, {});
       expect(listed[0].id).toBe(agentId);
 
-      const updated = await agentController.updateAgent(tenantId, agentId, { name: 'New Name' });
+      const updated = await agentController.updateAgent(tenantId, agentId, {
+        name: 'New Name',
+      });
       expect(updated.id).toBe(agentId);
 
       const deleted = await agentController.deleteAgent(tenantId, agentId);
@@ -849,15 +1036,19 @@ describe('AI Integration Module Services and Controllers', () => {
       const profiled = await agentController.setProfile(tenantId, agentId, {});
       expect(profiled.id).toBe(agentId);
 
-      const configured = await agentController.setModelConfig(tenantId, agentId, {
-        modelName: 'gpt-4',
-        provider: 'openai',
-        temperature: 0.7,
-        maxTokens: 1000,
-        topP: 1.0,
-        presencePenalty: 0,
-        frequencyPenalty: 0,
-      });
+      const configured = await agentController.setModelConfig(
+        tenantId,
+        agentId,
+        {
+          modelName: 'gpt-4',
+          provider: 'openai',
+          temperature: 0.7,
+          maxTokens: 1000,
+          topP: 1.0,
+          presencePenalty: 0,
+          frequencyPenalty: 0,
+        },
+      );
       expect(configured.id).toBe(agentId);
     });
 
@@ -869,10 +1060,15 @@ describe('AI Integration Module Services and Controllers', () => {
         status: WorkflowStatusEnum.PENDING,
       });
 
-      jest.spyOn(workflowService, 'triggerWorkflow').mockResolvedValue(execution);
+      jest
+        .spyOn(workflowService, 'triggerWorkflow')
+        .mockResolvedValue(execution);
       jest.spyOn(workflowService, 'getExecution').mockResolvedValue(execution);
 
-      const triggered = await workflowController.triggerWorkflow(tenantId, { workflowId: 'wf-1', conversationId });
+      const triggered = await workflowController.triggerWorkflow(tenantId, {
+        workflowId: 'wf-1',
+        conversationId,
+      });
       expect(triggered.id).toBe('exec-1');
 
       const got = await workflowController.getExecution(tenantId, 'exec-1');
@@ -888,13 +1084,21 @@ describe('AI Integration Module Services and Controllers', () => {
         sessionState: {},
       });
 
-      jest.spyOn(conversationServiceAi, 'getOrCreateSession').mockResolvedValue(session);
-      jest.spyOn(conversationServiceAi, 'updateSessionState').mockResolvedValue(session);
+      jest
+        .spyOn(conversationServiceAi, 'getOrCreateSession')
+        .mockResolvedValue(session);
+      jest
+        .spyOn(conversationServiceAi, 'updateSessionState')
+        .mockResolvedValue(session);
 
       const got = await sessionController.getSession(tenantId, conversationId);
       expect(got.id).toBe('session-1');
 
-      const updated = await sessionController.updateSessionState(tenantId, conversationId, { active: true });
+      const updated = await sessionController.updateSessionState(
+        tenantId,
+        conversationId,
+        { active: true },
+      );
       expect(updated.id).toBe('session-1');
     });
 
@@ -913,13 +1117,23 @@ describe('AI Integration Module Services and Controllers', () => {
         status: EscalationStatusEnum.PENDING,
       });
 
-      jest.spyOn(escalationService, 'findEscalations').mockResolvedValue([escalation]);
-      jest.spyOn(escalationService, 'resolveEscalation').mockResolvedValue(escalation);
+      jest
+        .spyOn(escalationService, 'findEscalations')
+        .mockResolvedValue([escalation]);
+      jest
+        .spyOn(escalationService, 'resolveEscalation')
+        .mockResolvedValue(escalation);
 
-      const listed = await escalationController.getEscalations(tenantId, 'PENDING');
+      const listed = await escalationController.getEscalations(
+        tenantId,
+        'PENDING',
+      );
       expect(listed[0].id).toBe('esc-1');
 
-      const resolved = await escalationController.resolveEscalation(tenantId, 'esc-1');
+      const resolved = await escalationController.resolveEscalation(
+        tenantId,
+        'esc-1',
+      );
       expect(resolved.id).toBe('esc-1');
     });
   });
@@ -935,7 +1149,9 @@ describe('AI Integration Module Services and Controllers', () => {
     });
 
     it('should process ai-tool-execution-job and call tool service', async () => {
-      jest.spyOn(toolService, 'executeTool').mockResolvedValue({ result: 'ok' });
+      jest
+        .spyOn(toolService, 'executeTool')
+        .mockResolvedValue({ result: 'ok' });
 
       const res = await processor.handleJob({
         name: 'ai-tool-execution-job',
@@ -950,7 +1166,14 @@ describe('AI Integration Module Services and Controllers', () => {
       } as any);
 
       expect(res).toEqual({ result: 'ok' });
-      expect(toolService.executeTool).toHaveBeenCalledWith(tenantId, 'exec-1', 'wf-1', 't-1', 'c-1', { query: 'test' });
+      expect(toolService.executeTool).toHaveBeenCalledWith(
+        tenantId,
+        'exec-1',
+        'wf-1',
+        't-1',
+        'c-1',
+        { query: 'test' },
+      );
     });
 
     it('should process ai-escalation-job and return status', async () => {
@@ -987,7 +1210,14 @@ describe('AI Integration Module Services and Controllers', () => {
       } as any);
 
       expect(res).toBeDefined();
-      expect(usageService.recordUsage).toHaveBeenCalledWith(tenantId, agentId, 100, 0.01, true, 1);
+      expect(usageService.recordUsage).toHaveBeenCalledWith(
+        tenantId,
+        agentId,
+        100,
+        0.01,
+        true,
+        1,
+      );
     });
 
     it('should process ai-retry-job and retry triggering workflow', async () => {
@@ -997,7 +1227,9 @@ describe('AI Integration Module Services and Controllers', () => {
         conversationId,
         status: WorkflowStatusEnum.RUNNING,
       });
-      jest.spyOn(workflowService, 'triggerWorkflow').mockResolvedValue(execution);
+      jest
+        .spyOn(workflowService, 'triggerWorkflow')
+        .mockResolvedValue(execution);
 
       const res = await processor.handleJob({
         name: 'ai-retry-job',
@@ -1010,7 +1242,12 @@ describe('AI Integration Module Services and Controllers', () => {
       } as any);
 
       expect(res).toBeDefined();
-      expect(workflowService.triggerWorkflow).toHaveBeenCalledWith(tenantId, 'wf-1', conversationId, { a: 1 });
+      expect(workflowService.triggerWorkflow).toHaveBeenCalledWith(
+        tenantId,
+        'wf-1',
+        conversationId,
+        { a: 1 },
+      );
     });
 
     it('should return retried: false if retry job data is missing parameters', async () => {

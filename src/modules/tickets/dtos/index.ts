@@ -1,8 +1,4 @@
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-  PartialType,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
   IsUUID,
   IsString,
@@ -292,7 +288,10 @@ export class RequestApprovalDto {
   @IsUUID()
   approverId!: string;
 
-  @ApiPropertyOptional({ enum: ApprovalTypeEnum, default: ApprovalTypeEnum.CUSTOM })
+  @ApiPropertyOptional({
+    enum: ApprovalTypeEnum,
+    default: ApprovalTypeEnum.CUSTOM,
+  })
   @IsEnum(ApprovalTypeEnum)
   @IsOptional()
   type?: ApprovalTypeEnum;

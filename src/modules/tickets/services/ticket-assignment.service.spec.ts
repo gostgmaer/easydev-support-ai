@@ -96,7 +96,12 @@ describe('TicketAssignmentService', () => {
     const chosenAgent = randomUUID();
     mockEngine.assignEntity.mockResolvedValue(chosenAgent);
 
-    const result = await service.autoAssign(tenantId, ticketId, teamId, 'user-1');
+    const result = await service.autoAssign(
+      tenantId,
+      ticketId,
+      teamId,
+      'user-1',
+    );
 
     expect(engine.assignEntity).toHaveBeenCalledWith(
       tenantId,
@@ -115,7 +120,12 @@ describe('TicketAssignmentService', () => {
     mockRepo.findById.mockResolvedValue(ticket);
     const toAgent = randomUUID();
 
-    const result = await service.transfer(tenantId, ticketId, toAgent, 'user-1');
+    const result = await service.transfer(
+      tenantId,
+      ticketId,
+      toAgent,
+      'user-1',
+    );
 
     expect(result.assignedAgentId).toBe(toAgent);
     expect(audit.log).toHaveBeenCalledWith(

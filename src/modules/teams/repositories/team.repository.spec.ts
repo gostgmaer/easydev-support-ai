@@ -40,11 +40,44 @@ jest.mock('@easydev/database', () => {
       transaction: jest.fn((cb) => cb(queryBuilder)),
     },
     schema: {
-      teams: { id: 'teams.id', tenantId: 'teams.tenant_id', name: 'teams.name', deletedAt: 'teams.deleted_at', department: 'teams.department', createdAt: 'teams.created_at' },
-      teamMembers: { id: 'team_members.id', tenantId: 'team_members.tenant_id', teamId: 'team_members.team_id', agentProfileId: 'team_members.agent_profile_id' },
-      agentProfiles: { id: 'agent_profiles.id', tenantId: 'agent_profiles.tenant_id', userId: 'agent_profiles.user_id', deletedAt: 'agent_profiles.deleted_at', displayName: 'agent_profiles.display_name', status: 'agent_profiles.status', createdAt: 'agent_profiles.created_at', employeeCode: 'agent_profiles.employee_code' },
-      assignmentRules: { id: 'assignment_rules.id', tenantId: 'assignment_rules.tenant_id', teamId: 'assignment_rules.team_id' },
-      agentAvailability: { id: 'agent_availability.id', tenantId: 'agent_availability.tenant_id', agentProfileId: 'agent_availability.agent_profile_id', status: 'agent_availability.status', currentLoad: 'agent_availability.current_load', activeConversations: 'agent_availability.active_conversations', activeTickets: 'agent_availability.active_tickets' },
+      teams: {
+        id: 'teams.id',
+        tenantId: 'teams.tenant_id',
+        name: 'teams.name',
+        deletedAt: 'teams.deleted_at',
+        department: 'teams.department',
+        createdAt: 'teams.created_at',
+      },
+      teamMembers: {
+        id: 'team_members.id',
+        tenantId: 'team_members.tenant_id',
+        teamId: 'team_members.team_id',
+        agentProfileId: 'team_members.agent_profile_id',
+      },
+      agentProfiles: {
+        id: 'agent_profiles.id',
+        tenantId: 'agent_profiles.tenant_id',
+        userId: 'agent_profiles.user_id',
+        deletedAt: 'agent_profiles.deleted_at',
+        displayName: 'agent_profiles.display_name',
+        status: 'agent_profiles.status',
+        createdAt: 'agent_profiles.created_at',
+        employeeCode: 'agent_profiles.employee_code',
+      },
+      assignmentRules: {
+        id: 'assignment_rules.id',
+        tenantId: 'assignment_rules.tenant_id',
+        teamId: 'assignment_rules.team_id',
+      },
+      agentAvailability: {
+        id: 'agent_availability.id',
+        tenantId: 'agent_availability.tenant_id',
+        agentProfileId: 'agent_availability.agent_profile_id',
+        status: 'agent_availability.status',
+        currentLoad: 'agent_availability.current_load',
+        activeConversations: 'agent_availability.active_conversations',
+        activeTickets: 'agent_availability.active_tickets',
+      },
     },
   };
 });
@@ -78,7 +111,7 @@ describe('Team Module Repositories', () => {
       mockResults.push(
         [{ id: teamId, tenantId, name: 'Tier 1 Support', isActive: true }], // rawTeam
         [], // rawMembers
-        [] // rawRules
+        [], // rawRules
       );
 
       const result = await teamRepo.findById(teamId, tenantId);
@@ -90,7 +123,7 @@ describe('Team Module Repositories', () => {
       mockResults.push(
         [{ id: teamId, tenantId, name: 'Tier 1 Support', isActive: true }],
         [],
-        []
+        [],
       );
 
       const result = await teamRepo.findByName('Tier 1 Support', tenantId);
@@ -109,7 +142,7 @@ describe('Team Module Repositories', () => {
       mockResults.push(
         [{ id: teamId, tenantId, name: 'Team A' }],
         [], // members for Team A
-        [] // rules for Team A
+        [], // rules for Team A
       );
 
       const result = await teamRepo.findAll(tenantId);
@@ -122,7 +155,7 @@ describe('Team Module Repositories', () => {
         [{ id: teamId, tenantId, name: 'Team A', department: 'Eng' }], // teams rows
         [{ count: 1 }], // count query
         [], // members for Team A
-        [] // rules for Team A
+        [], // rules for Team A
       );
 
       const result = await teamRepo.findPaginated(tenantId, {
@@ -144,8 +177,24 @@ describe('Team Module Repositories', () => {
         priority: 1,
         isActive: true,
       });
-      team.addMember(new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: 'a1', role: 'MEMBER', isPrimary: false }));
-      team.addRule(new AssignmentRule(randomUUID(), { tenantId, teamId, ruleType: AssignmentStrategyEnum.ROUND_ROBIN, priority: 1, isActive: true }));
+      team.addMember(
+        new TeamMember(randomUUID(), {
+          tenantId,
+          teamId,
+          agentProfileId: 'a1',
+          role: 'MEMBER',
+          isPrimary: false,
+        }),
+      );
+      team.addRule(
+        new AssignmentRule(randomUUID(), {
+          tenantId,
+          teamId,
+          ruleType: AssignmentStrategyEnum.ROUND_ROBIN,
+          priority: 1,
+          isActive: true,
+        }),
+      );
 
       mockResults.push([]); // select existing -> empty
 
@@ -185,7 +234,13 @@ describe('Team Module Repositories', () => {
     });
 
     it('should add team member if not exists', async () => {
-      const member = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: 'a1', role: 'MEMBER', isPrimary: false });
+      const member = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: 'a1',
+        role: 'MEMBER',
+        isPrimary: false,
+      });
       mockResults.push([]); // not existing
 
       await teamRepo.addMember(member, tenantId);
@@ -198,7 +253,16 @@ describe('Team Module Repositories', () => {
     });
 
     it('should findTeamMembers', async () => {
-      mockResults.push([{ id: 'm1', tenantId, teamId, agentProfileId: 'a1', role: 'MEMBER', isPrimary: true }]);
+      mockResults.push([
+        {
+          id: 'm1',
+          tenantId,
+          teamId,
+          agentProfileId: 'a1',
+          role: 'MEMBER',
+          isPrimary: true,
+        },
+      ]);
 
       const members = await teamRepo.findTeamMembers(teamId, tenantId);
       expect(members.length).toBe(1);
@@ -206,7 +270,13 @@ describe('Team Module Repositories', () => {
     });
 
     it('should saveRule (insert new or update existing)', async () => {
-      const rule = new AssignmentRule(randomUUID(), { tenantId, teamId, ruleType: AssignmentStrategyEnum.ROUND_ROBIN, priority: 1, isActive: true });
+      const rule = new AssignmentRule(randomUUID(), {
+        tenantId,
+        teamId,
+        ruleType: AssignmentStrategyEnum.ROUND_ROBIN,
+        priority: 1,
+        isActive: true,
+      });
 
       // test insert
       mockResults.push([]);
@@ -220,7 +290,16 @@ describe('Team Module Repositories', () => {
     });
 
     it('should findRules and deleteRule', async () => {
-      mockResults.push([{ id: 'r1', tenantId, teamId, ruleType: 'ROUND_ROBIN', priority: 1, isActive: true }]);
+      mockResults.push([
+        {
+          id: 'r1',
+          tenantId,
+          teamId,
+          ruleType: 'ROUND_ROBIN',
+          priority: 1,
+          isActive: true,
+        },
+      ]);
 
       const rules = await teamRepo.findRules(teamId, tenantId);
       expect(rules.length).toBe(1);
@@ -242,23 +321,55 @@ describe('Team Module Repositories', () => {
     });
 
     it('should findByUserId and findByEmployeeCode', async () => {
-      mockResults.push([{ id: profileId, tenantId, userId: 'u1', displayName: 'Agent', capacity: 10 }]);
+      mockResults.push([
+        {
+          id: profileId,
+          tenantId,
+          userId: 'u1',
+          displayName: 'Agent',
+          capacity: 10,
+        },
+      ]);
       const p1 = await profileRepo.findByUserId('u1', tenantId);
       expect(p1).toBeDefined();
 
-      mockResults.push([{ id: profileId, tenantId, userId: 'u1', displayName: 'Agent', capacity: 10 }]);
+      mockResults.push([
+        {
+          id: profileId,
+          tenantId,
+          userId: 'u1',
+          displayName: 'Agent',
+          capacity: 10,
+        },
+      ]);
       const p2 = await profileRepo.findByEmployeeCode('E101', tenantId);
       expect(p2).toBeDefined();
     });
 
     it('should findAll and findPaginated profiles', async () => {
-      mockResults.push([{ id: profileId, tenantId, userId: 'u1', displayName: 'Agent', capacity: 10 }]);
+      mockResults.push([
+        {
+          id: profileId,
+          tenantId,
+          userId: 'u1',
+          displayName: 'Agent',
+          capacity: 10,
+        },
+      ]);
       const all = await profileRepo.findAll(tenantId);
       expect(all.length).toBe(1);
 
       mockResults.push(
-        [{ id: profileId, tenantId, userId: 'u1', displayName: 'Agent', capacity: 10 }],
-        [{ count: 1 }]
+        [
+          {
+            id: profileId,
+            tenantId,
+            userId: 'u1',
+            displayName: 'Agent',
+            capacity: 10,
+          },
+        ],
+        [{ count: 1 }],
       );
       const paginated = await profileRepo.findPaginated(tenantId, {
         page: 1,
@@ -276,7 +387,11 @@ describe('Team Module Repositories', () => {
         userId: randomUUID(),
         displayName: 'John Doe',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -308,20 +423,44 @@ describe('Team Module Repositories', () => {
     it('should findByAgentProfileId and return null if not found', async () => {
       mockResults.push([]);
 
-      const result = await availabilityRepo.findByAgentProfileId(profileId, tenantId);
+      const result = await availabilityRepo.findByAgentProfileId(
+        profileId,
+        tenantId,
+      );
       expect(result).toBeNull();
     });
 
     it('should findById, findOnlineAgents, and findAll', async () => {
-      mockResults.push([{ id: availabilityId, tenantId, agentProfileId: profileId, status: 'ONLINE' }]);
+      mockResults.push([
+        {
+          id: availabilityId,
+          tenantId,
+          agentProfileId: profileId,
+          status: 'ONLINE',
+        },
+      ]);
       const av = await availabilityRepo.findById(availabilityId, tenantId);
       expect(av).toBeDefined();
 
-      mockResults.push([{ id: availabilityId, tenantId, agentProfileId: profileId, status: 'ONLINE' }]);
+      mockResults.push([
+        {
+          id: availabilityId,
+          tenantId,
+          agentProfileId: profileId,
+          status: 'ONLINE',
+        },
+      ]);
       const online = await availabilityRepo.findOnlineAgents(tenantId);
       expect(online.length).toBe(1);
 
-      mockResults.push([{ id: availabilityId, tenantId, agentProfileId: profileId, status: 'ONLINE' }]);
+      mockResults.push([
+        {
+          id: availabilityId,
+          tenantId,
+          agentProfileId: profileId,
+          status: 'ONLINE',
+        },
+      ]);
       const all = await availabilityRepo.findAll(tenantId);
       expect(all.length).toBe(1);
     });

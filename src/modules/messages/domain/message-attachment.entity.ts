@@ -80,7 +80,8 @@ export class MessageAttachment extends Entity<string> {
     publicUrl?: string;
     checksum?: string;
   }): void {
-    this.props.storageProvider = ref.storageProvider ?? this.props.storageProvider;
+    this.props.storageProvider =
+      ref.storageProvider ?? this.props.storageProvider;
     this.props.storagePath = ref.storagePath ?? this.props.storagePath;
     this.props.publicUrl = ref.publicUrl ?? this.props.publicUrl;
     this.props.checksum = ref.checksum ?? this.props.checksum;

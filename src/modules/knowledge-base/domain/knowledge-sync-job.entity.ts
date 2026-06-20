@@ -88,7 +88,11 @@ export class KnowledgeSyncJob extends Entity<string> {
     this.props.updatedAt = new Date();
   }
 
-  public updateProgress(processed: number, failed: number, total?: number): void {
+  public updateProgress(
+    processed: number,
+    failed: number,
+    total?: number,
+  ): void {
     this.props.processedItems = processed;
     this.props.failedItems = failed;
     if (total !== undefined) {

@@ -21,7 +21,9 @@ export class TeamQueueProcessor extends BaseWorker {
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId;
     if (!tenantId) {
-      this.logger.warn(`Job ${job.id} [${job.name}] ran without tenantId context`);
+      this.logger.warn(
+        `Job ${job.id} [${job.name}] ran without tenantId context`,
+      );
     }
 
     switch (job.name) {
@@ -32,32 +34,52 @@ export class TeamQueueProcessor extends BaseWorker {
           job.data.teamId,
           job.data.entityId,
           job.data.entityType,
-          job.data.options
+          job.data.options,
         );
 
       case 'availability-sync-job':
         this.logger.log(`Running availability sync job ${job.id}`);
-        const availability = await this.availabilityService.getAvailability(tenantId, job.data.agentProfileId);
-        const minutesIdle = (new Date().getTime() - availability.lastSeenAt.getTime()) / 60000;
+        const availability = await this.availabilityService.getAvailability(
+          tenantId,
+          job.data.agentProfileId,
+        );
+        const minutesIdle =
+          (new Date().getTime() - availability.lastSeenAt.getTime()) / 60000;
         if (minutesIdle > 15 && availability.status === 'ONLINE') {
-          await this.availabilityService.updateAvailability(tenantId, job.data.agentProfileId, {
-            status: 'AWAY',
-          });
+          await this.availabilityService.updateAvailability(
+            tenantId,
+            job.data.agentProfileId,
+            {
+              status: 'AWAY',
+            },
+          );
         }
         return { status: 'synced' };
 
       case 'load-balancer-job':
-        this.logger.log(`Running load-balancer job ${job.id} for agent ${job.data.agentProfileId}`);
-        const avail = await this.availabilityService.getAvailability(tenantId, job.data.agentProfileId);
+        this.logger.log(
+          `Running load-balancer job ${job.id} for agent ${job.data.agentProfileId}`,
+        );
+        const avail = await this.availabilityService.getAvailability(
+          tenantId,
+          job.data.agentProfileId,
+        );
         const actualLoad = avail.activeConversations + avail.activeTickets;
         if (avail.currentLoad !== actualLoad) {
-          await this.availabilityService.updateLoad(tenantId, job.data.agentProfileId, actualLoad - avail.currentLoad);
+          await this.availabilityService.updateLoad(
+            tenantId,
+            job.data.agentProfileId,
+            actualLoad - avail.currentLoad,
+          );
         }
         return { actualLoad };
 
       case 'capacity-calculation-job':
         this.logger.log(`Running capacity recalculation job ${job.id}`);
-        const profile = await this.profileService.findById(tenantId, job.data.agentProfileId);
+        const profile = await this.profileService.findById(
+          tenantId,
+          job.data.agentProfileId,
+        );
         await this.profileService.update(tenantId, job.data.agentProfileId, {
           capacity: job.data.newCapacity || profile.capacity.capacity,
         });

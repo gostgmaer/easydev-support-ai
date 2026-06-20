@@ -14,10 +14,21 @@ import {
   HttpCode,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ChannelService } from '../services/channel.service';
 import { ChannelConfigurationService } from '../services/channel-configuration.service';
-import { CreateChannelDto, UpdateChannelDto, ChannelQueryDto, ChannelConfigurationDto } from '../dtos';
+import {
+  CreateChannelDto,
+  UpdateChannelDto,
+  ChannelQueryDto,
+  ChannelConfigurationDto,
+} from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -25,26 +36,37 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Channels')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/channels')
 export class ChannelController {
   constructor(
     private readonly channelService: ChannelService,
-    private readonly configService: ChannelConfigurationService
+    private readonly configService: ChannelConfigurationService,
   ) {}
 
   @Post()
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Create a new channel' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Channel created successfully' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Channel created successfully',
+  })
   async create(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: CreateChannelDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const channel = await this.channelService.create(tenantId, dto, req.user?.id);
+    const channel = await this.channelService.create(
+      tenantId,
+      dto,
+      req.user?.id,
+    );
     return channel.toJSON();
   }
 
@@ -53,7 +75,7 @@ export class ChannelController {
   @ApiOperation({ summary: 'List and paginate channels' })
   async findPaginated(
     @Headers('x-tenant-id') tenantId: string,
-    @Query() query: ChannelQueryDto
+    @Query() query: ChannelQueryDto,
   ) {
     const result = await this.channelService.findPaginated(tenantId, query);
     return {
@@ -65,7 +87,10 @@ export class ChannelController {
   @Get(':id')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Get channel by ID' })
-  async findById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async findById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const channel = await this.channelService.findById(tenantId, id);
     return channel.toJSON();
   }
@@ -77,9 +102,14 @@ export class ChannelController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Body() dto: UpdateChannelDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const channel = await this.channelService.update(tenantId, id, dto, req.user?.id);
+    const channel = await this.channelService.update(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return channel.toJSON();
   }
 
@@ -90,7 +120,7 @@ export class ChannelController {
   async enable(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
     await this.channelService.enable(tenantId, id, req.user?.id);
   }
@@ -102,7 +132,7 @@ export class ChannelController {
   async disable(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
     await this.channelService.disable(tenantId, id, req.user?.id);
   }
@@ -114,9 +144,14 @@ export class ChannelController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Body() dto: ChannelConfigurationDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const config = await this.configService.saveConfiguration(tenantId, id, dto, req.user?.id);
+    const config = await this.configService.saveConfiguration(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return config.toJSON();
   }
 
@@ -125,7 +160,7 @@ export class ChannelController {
   @ApiOperation({ summary: 'Get channel credentials and configuration' })
   async getConfig(
     @Headers('x-tenant-id') tenantId: string,
-    @Param('id') id: string
+    @Param('id') id: string,
   ) {
     const config = await this.configService.getConfiguration(tenantId, id);
     return config.toJSON();
@@ -134,11 +169,13 @@ export class ChannelController {
   @Post(':id/rotate-secrets')
   @Roles('tenant_admin')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Rotate secret tokens for the channel configuration' })
+  @ApiOperation({
+    summary: 'Rotate secret tokens for the channel configuration',
+  })
   async rotateSecrets(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
     await this.configService.rotateSecrets(tenantId, id, req.user?.id);
   }

@@ -16,8 +16,10 @@ export class WorkflowTriggerService {
     tenantId: string,
     triggerType: TriggerTypeEnum,
   ): Promise<WorkflowTemplate[]> {
-    this.logger.log(`Scanning active workflow templates for trigger: ${triggerType} (tenant: ${tenantId})`);
-    
+    this.logger.log(
+      `Scanning active workflow templates for trigger: ${triggerType} (tenant: ${tenantId})`,
+    );
+
     const activeTemplates = await this.repository.findTemplates(tenantId, {
       status: WorkflowStatusEnum.ACTIVE,
     });

@@ -116,10 +116,14 @@ export class ConversationMapper {
       assignedAgentId: raw.assignedAgentId || undefined,
       assignedTeamId: raw.assignedTeamId || undefined,
       status: ConversationStatus.create(raw.status as ConversationStatusEnum),
-      priority: ConversationPriority.create(raw.priority as ConversationPriorityEnum),
+      priority: ConversationPriority.create(
+        raw.priority as ConversationPriorityEnum,
+      ),
       subject: raw.subject || undefined,
       language: ConversationLanguage.create(raw.language || 'en'),
-      sentiment: ConversationSentiment.create((raw.sentiment || 'NEUTRAL') as ConversationSentimentEnum),
+      sentiment: ConversationSentiment.create(
+        (raw.sentiment || 'NEUTRAL') as ConversationSentimentEnum,
+      ),
       source: ConversationSource.create(raw.source || 'API'),
       lastMessageAt: raw.lastMessageAt || undefined,
       lastActivityAt: raw.lastActivityAt || undefined,
@@ -133,7 +137,9 @@ export class ConversationMapper {
       version: raw.version || 1,
       tags: rawTags.map((t) => ConversationMapper.tagToDomain(t)),
       notes: rawNotes.map((n) => ConversationMapper.noteToDomain(n)),
-      participants: rawParticipants.map((p) => ConversationMapper.participantToDomain(p)),
+      participants: rawParticipants.map((p) =>
+        ConversationMapper.participantToDomain(p),
+      ),
       mentions: rawMentions.map((m) => ConversationMapper.mentionToDomain(m)),
     });
   }

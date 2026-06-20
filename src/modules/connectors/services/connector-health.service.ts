@@ -14,12 +14,19 @@ export class ConnectorHealthService {
     private readonly eventPublisher: ConnectorEventPublisher,
   ) {}
 
-  public async checkHealth(tenantId: string, connectorId: string): Promise<boolean> {
-    this.logger.log(`Checking health for connector ${connectorId} under tenant ${tenantId}`);
+  public async checkHealth(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<boolean> {
+    this.logger.log(
+      `Checking health for connector ${connectorId} under tenant ${tenantId}`,
+    );
 
     const connector = await this.repository.findById(connectorId, tenantId);
     if (!connector) {
-      this.logger.warn(`Connector ${connectorId} not found during health check`);
+      this.logger.warn(
+        `Connector ${connectorId} not found during health check`,
+      );
       return false;
     }
 
@@ -29,7 +36,9 @@ export class ConnectorHealthService {
       connector.recordHealthy();
       this.logger.debug(`Connector ${connector.name} is HEALTHY`);
     } else {
-      connector.recordUnhealthy('Ping check failed: Connection refused or timeout');
+      connector.recordUnhealthy(
+        'Ping check failed: Connection refused or timeout',
+      );
       this.logger.warn(`Connector ${connector.name} is UNHEALTHY`);
     }
 
@@ -41,16 +50,23 @@ export class ConnectorHealthService {
   }
 
   public async runHealthSweep(limit = 20): Promise<void> {
-    this.logger.log(`Running periodic connector health sweep (limit: ${limit})`);
-    
+    this.logger.log(
+      `Running periodic connector health sweep (limit: ${limit})`,
+    );
+
     // Pass undefined tenantId to find active connectors across all tenants
-    const connectors = await this.repository.findActiveForHealthSweep(undefined, limit);
-    
+    const connectors = await this.repository.findActiveForHealthSweep(
+      undefined,
+      limit,
+    );
+
     for (const connector of connectors) {
       try {
         await this.checkHealth(connector.tenantId, connector.id);
       } catch (err: any) {
-        this.logger.error(`Error during health check sweep for connector ${connector.id}: ${err.message}`);
+        this.logger.error(
+          `Error during health check sweep for connector ${connector.id}: ${err.message}`,
+        );
       }
     }
   }
@@ -69,7 +85,9 @@ export class ConnectorHealthService {
       });
       return true;
     } catch (err: any) {
-      this.logger.debug(`Probe failed for connector base url ${connector.baseUrl}: ${err.message}`);
+      this.logger.debug(
+        `Probe failed for connector base url ${connector.baseUrl}: ${err.message}`,
+      );
       return false;
     }
   }

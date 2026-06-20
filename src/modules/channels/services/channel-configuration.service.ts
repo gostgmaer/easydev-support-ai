@@ -10,19 +10,22 @@ export class ChannelConfigurationService {
   constructor(
     @Inject('IChannelRepository')
     private readonly channelRepo: IChannelRepository,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
   ) {}
 
   async saveConfiguration(
     tenantId: string,
     channelId: string,
     dto: ChannelConfigurationDto,
-    userId?: string
+    userId?: string,
   ): Promise<ChannelConfiguration> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
 
-    let config = await this.channelRepo.findConfigByChannelId(channelId, tenantId);
+    let config = await this.channelRepo.findConfigByChannelId(
+      channelId,
+      tenantId,
+    );
     if (config) {
       config.update({
         authenticationType: dto.authenticationType,
@@ -52,17 +55,35 @@ export class ChannelConfigurationService {
     return config;
   }
 
-  async getConfiguration(tenantId: string, channelId: string): Promise<ChannelConfiguration> {
-    const config = await this.channelRepo.findConfigByChannelId(channelId, tenantId);
+  async getConfiguration(
+    tenantId: string,
+    channelId: string,
+  ): Promise<ChannelConfiguration> {
+    const config = await this.channelRepo.findConfigByChannelId(
+      channelId,
+      tenantId,
+    );
     if (!config) {
-      throw new NotFoundException(`Configuration for channel ${channelId} not found`);
+      throw new NotFoundException(
+        `Configuration for channel ${channelId} not found`,
+      );
     }
     return config;
   }
 
-  async rotateSecrets(tenantId: string, channelId: string, userId?: string): Promise<void> {
-    const config = await this.channelRepo.findConfigByChannelId(channelId, tenantId);
-    if (!config) throw new NotFoundException(`Configuration for channel ${channelId} not found`);
+  async rotateSecrets(
+    tenantId: string,
+    channelId: string,
+    userId?: string,
+  ): Promise<void> {
+    const config = await this.channelRepo.findConfigByChannelId(
+      channelId,
+      tenantId,
+    );
+    if (!config)
+      throw new NotFoundException(
+        `Configuration for channel ${channelId} not found`,
+      );
 
     const newSecret = randomUUID();
     const credentials = { ...config.credentials, api_key: newSecret };

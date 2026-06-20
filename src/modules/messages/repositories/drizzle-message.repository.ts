@@ -148,13 +148,11 @@ export class DrizzleMessageRepository implements IMessageRepository {
             ),
           );
       } else {
-        await tx
-          .insert(schema.messages)
-          .values({
-            ...raw,
-            createdAt: message.createdAt,
-            updatedAt: message.createdAt,
-          });
+        await tx.insert(schema.messages).values({
+          ...raw,
+          createdAt: message.createdAt,
+          updatedAt: message.createdAt,
+        });
       }
 
       for (const attachment of message.attachments) {

@@ -9,7 +9,8 @@ export class WorkflowEventPublisher {
   constructor(private readonly queueService: QueueService) {}
 
   public async publish(event: DomainEvent): Promise<void> {
-    const eventName = (event.constructor as any).eventName || event.constructor.name;
+    const eventName =
+      (event.constructor as any).eventName || event.constructor.name;
     this.logger.log(
       `Publishing Workflow Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`,
     );
@@ -18,24 +19,34 @@ export class WorkflowEventPublisher {
       // Route events to BullMQ jobs
       if (eventName === 'workflow.execution.started') {
         const e = event as any;
-        await this.queueService.addJob('workflow-queue', 'workflow-execution-job', {
-          tenantId: e.tenantId,
-          executionId: e.executionId,
-          workflowId: e.workflowId,
-        });
+        await this.queueService.addJob(
+          'workflow-queue',
+          'workflow-execution-job',
+          {
+            tenantId: e.tenantId,
+            executionId: e.executionId,
+            workflowId: e.workflowId,
+          },
+        );
       }
 
       if (eventName === 'workflow.approval.requested') {
         const e = event as any;
-        await this.queueService.addJob('workflow-queue', 'workflow-approval-job', {
-          tenantId: e.tenantId,
-          approvalId: e.approvalId,
-          executionId: e.executionId,
-          approverId: e.approverId,
-        });
+        await this.queueService.addJob(
+          'workflow-queue',
+          'workflow-approval-job',
+          {
+            tenantId: e.tenantId,
+            approvalId: e.approvalId,
+            executionId: e.executionId,
+            approverId: e.approverId,
+          },
+        );
       }
     } catch (err: any) {
-      this.logger.error(`Failed to publish workflow event ${eventName}: ${err.message}`);
+      this.logger.error(
+        `Failed to publish workflow event ${eventName}: ${err.message}`,
+      );
     }
   }
 

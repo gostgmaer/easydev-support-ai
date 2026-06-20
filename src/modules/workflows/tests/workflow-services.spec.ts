@@ -196,10 +196,18 @@ describe('Workflow Orchestration Services & Controllers', () => {
       ],
     }).compile();
 
-    templateService = module.get<WorkflowTemplateService>(WorkflowTemplateService);
-    executionService = module.get<WorkflowExecutionService>(WorkflowExecutionService);
-    approvalService = module.get<WorkflowApprovalService>(WorkflowApprovalService);
-    scheduleService = module.get<WorkflowScheduleService>(WorkflowScheduleService);
+    templateService = module.get<WorkflowTemplateService>(
+      WorkflowTemplateService,
+    );
+    executionService = module.get<WorkflowExecutionService>(
+      WorkflowExecutionService,
+    );
+    approvalService = module.get<WorkflowApprovalService>(
+      WorkflowApprovalService,
+    );
+    scheduleService = module.get<WorkflowScheduleService>(
+      WorkflowScheduleService,
+    );
     triggerService = module.get<WorkflowTriggerService>(WorkflowTriggerService);
     actionService = module.get<WorkflowActionService>(WorkflowActionService);
     auditService = module.get<WorkflowAuditService>(WorkflowAuditService);
@@ -207,11 +215,21 @@ describe('Workflow Orchestration Services & Controllers', () => {
     eventPublisher = module.get<WorkflowEventPublisher>(WorkflowEventPublisher);
     queueProcessor = module.get<WorkflowQueueProcessor>(WorkflowQueueProcessor);
 
-    templateController = module.get<WorkflowTemplateController>(WorkflowTemplateController);
-    executionController = module.get<WorkflowExecutionController>(WorkflowExecutionController);
-    approvalController = module.get<WorkflowApprovalController>(WorkflowApprovalController);
-    scheduleController = module.get<WorkflowScheduleController>(WorkflowScheduleController);
-    auditController = module.get<WorkflowAuditController>(WorkflowAuditController);
+    templateController = module.get<WorkflowTemplateController>(
+      WorkflowTemplateController,
+    );
+    executionController = module.get<WorkflowExecutionController>(
+      WorkflowExecutionController,
+    );
+    approvalController = module.get<WorkflowApprovalController>(
+      WorkflowApprovalController,
+    );
+    scheduleController = module.get<WorkflowScheduleController>(
+      WorkflowScheduleController,
+    );
+    auditController = module.get<WorkflowAuditController>(
+      WorkflowAuditController,
+    );
   });
 
   describe('WorkflowTemplateService', () => {
@@ -231,7 +249,13 @@ describe('Workflow Orchestration Services & Controllers', () => {
         workflowType: WorkflowTypeEnum.CUSTOM_WORKFLOW,
         triggers: [{ triggerType: TriggerTypeEnum.MANUAL }],
         conditions: [{ field: 'status', operator: 'EQUALS', value: 'OPEN' }],
-        actions: [{ actionType: ActionTypeEnum.SEND_NOTIFICATION, configuration: {}, sequenceOrder: 1 }],
+        actions: [
+          {
+            actionType: ActionTypeEnum.SEND_NOTIFICATION,
+            configuration: {},
+            sequenceOrder: 1,
+          },
+        ],
       });
 
       expect(created).toBeDefined();
@@ -242,7 +266,9 @@ describe('Workflow Orchestration Services & Controllers', () => {
       expect(retrieved.id).toBe(workflowId);
 
       mockRepository.getTemplateById.mockResolvedValue(null);
-      await expect(templateService.getTemplate(tenantId, 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        templateService.getTemplate(tenantId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should seed system templates if none exist', async () => {
@@ -287,13 +313,24 @@ describe('Workflow Orchestration Services & Controllers', () => {
       expect(created).toBeDefined();
       expect(created.id).toBeDefined();
 
-      const started = await executionService.startExecution(tenantId, executionId);
+      const started = await executionService.startExecution(
+        tenantId,
+        executionId,
+      );
       expect(started.executionStatus).toBe(WorkflowStatusEnum.ACTIVE);
 
-      const completed = await executionService.completeExecution(tenantId, executionId, { success: true });
+      const completed = await executionService.completeExecution(
+        tenantId,
+        executionId,
+        { success: true },
+      );
       expect(completed.executionStatus).toBe(WorkflowStatusEnum.COMPLETED);
 
-      const failed = await executionService.failExecution(tenantId, executionId, { error: 'err' });
+      const failed = await executionService.failExecution(
+        tenantId,
+        executionId,
+        { error: 'err' },
+      );
       expect(failed.executionStatus).toBe(WorkflowStatusEnum.FAILED);
     });
   });
@@ -310,11 +347,19 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.saveApproval.mockResolvedValue(approval);
       mockRepository.getApprovalById.mockResolvedValue(approval);
 
-      const created = await approvalService.createApproval(tenantId, executionId, 'approver-1');
+      const created = await approvalService.createApproval(
+        tenantId,
+        executionId,
+        'approver-1',
+      );
       expect(created).toBeDefined();
       expect(created.id).toBe(approvalId);
 
-      const approved = await approvalService.approve(tenantId, approvalId, 'Approved comment');
+      const approved = await approvalService.approve(
+        tenantId,
+        approvalId,
+        'Approved comment',
+      );
       expect(approved.approvalStatus).toBe(ApprovalStatusEnum.APPROVED);
 
       const approvalPending = new WorkflowApproval(approvalId, {
@@ -326,7 +371,11 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.getApprovalById.mockResolvedValue(approvalPending);
       mockRepository.saveApproval.mockResolvedValue(approvalPending);
 
-      const rejected = await approvalService.reject(tenantId, approvalId, 'Rejected comment');
+      const rejected = await approvalService.reject(
+        tenantId,
+        approvalId,
+        'Rejected comment',
+      );
       expect(rejected.approvalStatus).toBe(ApprovalStatusEnum.REJECTED);
     });
 
@@ -341,7 +390,9 @@ describe('Workflow Orchestration Services & Controllers', () => {
 
       mockRepository.getApprovalById.mockResolvedValue(expiredApproval);
 
-      await expect(approvalService.approve(tenantId, approvalId)).rejects.toThrow(BadRequestException);
+      await expect(
+        approvalService.approve(tenantId, approvalId),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -366,7 +417,11 @@ describe('Workflow Orchestration Services & Controllers', () => {
       expect(created).toBeDefined();
       expect(created.cronExpression).toBe('0 0 * * *');
 
-      const toggled = await scheduleService.toggleSchedule(tenantId, scheduleId, false);
+      const toggled = await scheduleService.toggleSchedule(
+        tenantId,
+        scheduleId,
+        false,
+      );
       expect(toggled.isActive).toBe(false);
     });
   });
@@ -385,7 +440,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         toJSON: () => ({}),
       } as any;
 
-      const resTicket = await actionService.executeAction(tenantId, actionCreateTicket, { customerId: 'cust-1' }, executionId);
+      const resTicket = await actionService.executeAction(
+        tenantId,
+        actionCreateTicket,
+        { customerId: 'cust-1' },
+        executionId,
+      );
       expect(resTicket.ticketId).toBeDefined();
       expect(mockTicketService.create).toHaveBeenCalled();
 
@@ -394,7 +454,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         actionType: ActionTypeEnum.ASSIGN_TICKET,
         configuration: { agentId: 'agent-1', teamId: 'team-1' },
       };
-      await actionService.executeAction(tenantId, actionAssign, { ticketId: 'ticket-1' }, executionId);
+      await actionService.executeAction(
+        tenantId,
+        actionAssign,
+        { ticketId: 'ticket-1' },
+        executionId,
+      );
       expect(mockTicketAssignmentService.assign).toHaveBeenCalled();
 
       const actionEscalate = {
@@ -402,7 +467,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         actionType: ActionTypeEnum.ESCALATE_TICKET,
         configuration: { reason: 'SLA Breach!' },
       };
-      await actionService.executeAction(tenantId, actionEscalate, { ticketId: 'ticket-1' }, executionId);
+      await actionService.executeAction(
+        tenantId,
+        actionEscalate,
+        { ticketId: 'ticket-1' },
+        executionId,
+      );
       expect(mockTicketEscalationService.escalate).toHaveBeenCalled();
 
       const actionUpdateCustomer = {
@@ -410,7 +480,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         actionType: ActionTypeEnum.UPDATE_CUSTOMER,
         configuration: { updateDto: { preferredLanguage: 'fr' } },
       };
-      await actionService.executeAction(tenantId, actionUpdateCustomer, { customerId: 'cust-1' }, executionId);
+      await actionService.executeAction(
+        tenantId,
+        actionUpdateCustomer,
+        { customerId: 'cust-1' },
+        executionId,
+      );
       expect(mockCustomerService.update).toHaveBeenCalled();
 
       const actionSendMessage = {
@@ -418,7 +493,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         actionType: ActionTypeEnum.SEND_MESSAGE,
         configuration: { content: 'Message body' },
       };
-      await actionService.executeAction(tenantId, actionSendMessage, { conversationId: 'conv-1' }, executionId);
+      await actionService.executeAction(
+        tenantId,
+        actionSendMessage,
+        { conversationId: 'conv-1' },
+        executionId,
+      );
       expect(mockMessageService.create).toHaveBeenCalled();
 
       const actionTriggerAi = {
@@ -426,7 +506,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         actionType: ActionTypeEnum.TRIGGER_AI_WORKFLOW,
         configuration: { workflowId: 'ai-wf-1' },
       };
-      await actionService.executeAction(tenantId, actionTriggerAi, { conversationId: 'conv-1' }, executionId);
+      await actionService.executeAction(
+        tenantId,
+        actionTriggerAi,
+        { conversationId: 'conv-1' },
+        executionId,
+      );
       expect(mockAiWorkflowService.triggerWorkflow).toHaveBeenCalled();
 
       const actionCallConnector = {
@@ -434,7 +519,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         actionType: ActionTypeEnum.CALL_CONNECTOR,
         configuration: { capability: 'get_order', payload: { id: 'order-1' } },
       };
-      await actionService.executeAction(tenantId, actionCallConnector, {}, executionId);
+      await actionService.executeAction(
+        tenantId,
+        actionCallConnector,
+        {},
+        executionId,
+      );
       expect(mockConnectorService.executeCapability).toHaveBeenCalled();
     });
   });
@@ -465,7 +555,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.getTemplateById.mockResolvedValue(template);
       mockRepository.findTemplates.mockResolvedValue([template]);
 
-      const runId = await engineService.runWorkflowTemplate(tenantId, template, { id: 'ticket-1' }, 'MANUAL');
+      const runId = await engineService.runWorkflowTemplate(
+        tenantId,
+        template,
+        { id: 'ticket-1' },
+        'MANUAL',
+      );
       expect(runId).toBeDefined();
     });
   });
@@ -500,7 +595,10 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.saveExecution.mockResolvedValue(execution);
       mockRepository.getExecutionById.mockResolvedValue(execution);
 
-      const ecExec = await executionController.executeWorkflow(tenantId, { workflowId, context: {} });
+      const ecExec = await executionController.executeWorkflow(tenantId, {
+        workflowId,
+        context: {},
+      });
       expect(ecExec).toBeDefined();
 
       const approval = new WorkflowApproval(approvalId, {
@@ -523,7 +621,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.getExecutionById.mockResolvedValue(executionPaused);
 
       const reqMock = { user: { id: 'user-manager' } };
-      const acApp = await approvalController.approve(tenantId, approvalId, { comments: 'Looks good' }, reqMock);
+      const acApp = await approvalController.approve(
+        tenantId,
+        approvalId,
+        { comments: 'Looks good' },
+        reqMock,
+      );
       expect(acApp.approvalStatus).toBe(ApprovalStatusEnum.APPROVED);
     });
   });
@@ -623,7 +726,8 @@ describe('Workflow Orchestration Services & Controllers', () => {
         expiresAt: new Date(Date.now() + 3600000), // 1 hour future
       });
       mockRepository.getApprovalById.mockResolvedValue(activeApproval);
-      const activeApprovalResult = await queueProcessor.handleJob(approvalJobMock);
+      const activeApprovalResult =
+        await queueProcessor.handleJob(approvalJobMock);
       expect(activeApprovalResult.status).toBe('checked_active');
 
       // 2. workflow-retry-job
@@ -641,7 +745,9 @@ describe('Workflow Orchestration Services & Controllers', () => {
         context: {},
         approvals: [],
       });
-      mockRepository.getExecutionById.mockResolvedValue(executionPausedForRetry);
+      mockRepository.getExecutionById.mockResolvedValue(
+        executionPausedForRetry,
+      );
       const retryResult = await queueProcessor.handleJob(retryJobMock);
       expect(retryResult.success).toBe(true);
 
@@ -678,32 +784,58 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.deleteTemplate.mockResolvedValue(true);
 
       // Update template with triggers, conditions, actions, variables
-      const updated = await templateService.updateTemplate(tenantId, workflowId, {
-        name: 'Template Life Updated',
-        triggers: [{ triggerType: TriggerTypeEnum.TICKET_UPDATED, configuration: {} }],
-        conditions: [{ field: 'status', operator: 'EQUALS', value: 'CLOSED' }],
-        actions: [{ actionType: ActionTypeEnum.ADD_TAG, configuration: { tag: 'VIP' }, sequenceOrder: 1 }],
-        variables: { vip: { type: 'boolean', value: 'true' } },
-      });
+      const updated = await templateService.updateTemplate(
+        tenantId,
+        workflowId,
+        {
+          name: 'Template Life Updated',
+          triggers: [
+            { triggerType: TriggerTypeEnum.TICKET_UPDATED, configuration: {} },
+          ],
+          conditions: [
+            { field: 'status', operator: 'EQUALS', value: 'CLOSED' },
+          ],
+          actions: [
+            {
+              actionType: ActionTypeEnum.ADD_TAG,
+              configuration: { tag: 'VIP' },
+              sequenceOrder: 1,
+            },
+          ],
+          variables: { vip: { type: 'boolean', value: 'true' } },
+        },
+      );
       expect(updated.name).toBe('Template Life Updated');
       expect(updated.triggers.length).toBe(1);
       expect(updated.conditions.length).toBe(1);
       expect(updated.actions.length).toBe(1);
 
       // Delete template
-      const deleted = await templateService.deleteTemplate(tenantId, workflowId);
+      const deleted = await templateService.deleteTemplate(
+        tenantId,
+        workflowId,
+      );
       expect(deleted).toBe(true);
 
       // Activate & Pause
-      const activated = await templateService.activateTemplate(tenantId, workflowId);
+      const activated = await templateService.activateTemplate(
+        tenantId,
+        workflowId,
+      );
       expect(activated.status).toBe(WorkflowStatusEnum.ACTIVE);
 
       const paused = await templateService.pauseTemplate(tenantId, workflowId);
       expect(paused.status).toBe(WorkflowStatusEnum.PAUSED);
 
       // Audit logs query
-      mockRepository.findAuditLogs.mockResolvedValue([{ action: 'TEST_AUDIT' }]);
-      const auditLogs = await auditService.getAuditLogs(tenantId, workflowId, executionId);
+      mockRepository.findAuditLogs.mockResolvedValue([
+        { action: 'TEST_AUDIT' },
+      ]);
+      const auditLogs = await auditService.getAuditLogs(
+        tenantId,
+        workflowId,
+        executionId,
+      );
       expect(auditLogs.length).toBe(1);
     });
   });
@@ -716,10 +848,20 @@ describe('Workflow Orchestration Services & Controllers', () => {
         workflowType: WorkflowTypeEnum.CONVERSATION_WORKFLOW,
         status: WorkflowStatusEnum.ACTIVE,
         triggers: [
-          new WorkflowTrigger('t-1', { tenantId, workflowId: 'wf-1', triggerType: TriggerTypeEnum.CONVERSATION_CREATED }),
+          new WorkflowTrigger('t-1', {
+            tenantId,
+            workflowId: 'wf-1',
+            triggerType: TriggerTypeEnum.CONVERSATION_CREATED,
+          }),
         ],
         conditions: [
-          new WorkflowCondition('c-1', { tenantId, workflowId: 'wf-1', field: 'source', operator: 'EQUALS', value: 'WEB' }),
+          new WorkflowCondition('c-1', {
+            tenantId,
+            workflowId: 'wf-1',
+            field: 'source',
+            operator: 'EQUALS',
+            value: 'WEB',
+          }),
         ],
         actions: [],
       });
@@ -730,10 +872,20 @@ describe('Workflow Orchestration Services & Controllers', () => {
         workflowType: WorkflowTypeEnum.CONVERSATION_WORKFLOW,
         status: WorkflowStatusEnum.ACTIVE,
         triggers: [
-          new WorkflowTrigger('t-2', { tenantId, workflowId: 'wf-2', triggerType: TriggerTypeEnum.CONVERSATION_CREATED }),
+          new WorkflowTrigger('t-2', {
+            tenantId,
+            workflowId: 'wf-2',
+            triggerType: TriggerTypeEnum.CONVERSATION_CREATED,
+          }),
         ],
         conditions: [
-          new WorkflowCondition('c-2', { tenantId, workflowId: 'wf-2', field: 'body', operator: 'CONTAINS', value: 'urgent' }),
+          new WorkflowCondition('c-2', {
+            tenantId,
+            workflowId: 'wf-2',
+            field: 'body',
+            operator: 'CONTAINS',
+            value: 'urgent',
+          }),
         ],
         actions: [],
       });
@@ -744,17 +896,37 @@ describe('Workflow Orchestration Services & Controllers', () => {
         workflowType: WorkflowTypeEnum.CONVERSATION_WORKFLOW,
         status: WorkflowStatusEnum.ACTIVE,
         triggers: [
-          new WorkflowTrigger('t-3', { tenantId, workflowId: 'wf-3', triggerType: TriggerTypeEnum.CONVERSATION_CREATED }),
+          new WorkflowTrigger('t-3', {
+            tenantId,
+            workflowId: 'wf-3',
+            triggerType: TriggerTypeEnum.CONVERSATION_CREATED,
+          }),
         ],
         conditions: [
-          new WorkflowCondition('c-3', { tenantId, workflowId: 'wf-3', field: 'score', operator: 'GT', value: '10' }),
-          new WorkflowCondition('c-4', { tenantId, workflowId: 'wf-3', field: 'score', operator: 'LT', value: '100' }),
+          new WorkflowCondition('c-3', {
+            tenantId,
+            workflowId: 'wf-3',
+            field: 'score',
+            operator: 'GT',
+            value: '10',
+          }),
+          new WorkflowCondition('c-4', {
+            tenantId,
+            workflowId: 'wf-3',
+            field: 'score',
+            operator: 'LT',
+            value: '100',
+          }),
         ],
         actions: [],
       });
 
       // Find trigger templates mock
-      mockRepository.findTemplates.mockResolvedValue([template1, template2, template3]);
+      mockRepository.findTemplates.mockResolvedValue([
+        template1,
+        template2,
+        template3,
+      ]);
 
       // Execution mock
       const mockExecution = WorkflowExecution.create(executionId, {
@@ -768,18 +940,26 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.saveExecution.mockResolvedValue(mockExecution);
 
       // Evaluate trigger with matching contexts
-      await engineService.evaluateEventTriggers(tenantId, TriggerTypeEnum.CONVERSATION_CREATED, {
-        source: 'WEB',
-        body: 'This is extremely urgent request',
-        score: 50,
-      });
+      await engineService.evaluateEventTriggers(
+        tenantId,
+        TriggerTypeEnum.CONVERSATION_CREATED,
+        {
+          source: 'WEB',
+          body: 'This is extremely urgent request',
+          score: 50,
+        },
+      );
 
       // Non-matching check
-      await engineService.evaluateEventTriggers(tenantId, TriggerTypeEnum.CONVERSATION_CREATED, {
-        source: 'EMAIL',
-        body: 'low priority email request',
-        score: 5,
-      });
+      await engineService.evaluateEventTriggers(
+        tenantId,
+        TriggerTypeEnum.CONVERSATION_CREATED,
+        {
+          source: 'EMAIL',
+          body: 'low priority email request',
+          score: 5,
+        },
+      );
     });
 
     it('should handle resumeExecution with auto-rejection (approved = false)', async () => {
@@ -803,7 +983,13 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.getTemplateById.mockResolvedValue(template);
       mockRepository.saveExecution.mockResolvedValue(executionPaused);
 
-      await engineService.resumeExecution(tenantId, executionId, false, 'approver-123', 'Denied.');
+      await engineService.resumeExecution(
+        tenantId,
+        executionId,
+        false,
+        'approver-123',
+        'Denied.',
+      );
       expect(executionPaused.executionStatus).toBe(WorkflowStatusEnum.FAILED);
     });
   });
@@ -821,14 +1007,22 @@ describe('Workflow Orchestration Services & Controllers', () => {
       mockRepository.saveSchedule.mockResolvedValue(schedule);
       mockRepository.deleteSchedule.mockResolvedValue(true);
 
-      const run = await scheduleService.recordExecutionRun(tenantId, scheduleId);
+      const run = await scheduleService.recordExecutionRun(
+        tenantId,
+        scheduleId,
+      );
       expect(run.lastRunAt).toBeDefined();
 
-      const deleted = await scheduleService.deleteSchedule(tenantId, scheduleId);
+      const deleted = await scheduleService.deleteSchedule(
+        tenantId,
+        scheduleId,
+      );
       expect(deleted).toBe(true);
 
       mockRepository.deleteSchedule.mockResolvedValue(false);
-      await expect(scheduleService.deleteSchedule(tenantId, 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        scheduleService.deleteSchedule(tenantId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -839,26 +1033,42 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.UPDATE_TICKET,
           configuration: {},
         } as any;
-        await expect(actionService.executeAction(tenantId, action, {}, executionId)).rejects.toThrow(
-          'Ticket ID missing in context or configuration for update action'
+        await expect(
+          actionService.executeAction(tenantId, action, {}, executionId),
+        ).rejects.toThrow(
+          'Ticket ID missing in context or configuration for update action',
         );
       });
 
       it('should successfully UPDATE_TICKET with context ticketId', async () => {
         const action = {
           actionType: ActionTypeEnum.UPDATE_TICKET,
-          configuration: { status: 'CLOSED', priority: 'HIGH', subject: 'Closed ticket {{id}}', description: 'Desc {{id}}' },
+          configuration: {
+            status: 'CLOSED',
+            priority: 'HIGH',
+            subject: 'Closed ticket {{id}}',
+            description: 'Desc {{id}}',
+          },
         } as any;
         mockTicketService.update.mockResolvedValue({ id: 'ticket-1' });
-        const res = await actionService.executeAction(tenantId, action, { ticketId: 'ticket-1', id: '123' }, executionId);
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          { ticketId: 'ticket-1', id: '123' },
+          executionId,
+        );
         expect(res).toEqual({ status: 'updated' });
-        expect(mockTicketService.update).toHaveBeenCalledWith(tenantId, 'ticket-1', {
-          status: 'CLOSED',
-          priority: 'HIGH',
-          subject: 'Closed ticket 123',
-          description: 'Desc 123',
-          metadata: undefined,
-        });
+        expect(mockTicketService.update).toHaveBeenCalledWith(
+          tenantId,
+          'ticket-1',
+          {
+            status: 'CLOSED',
+            priority: 'HIGH',
+            subject: 'Closed ticket 123',
+            description: 'Desc 123',
+            metadata: undefined,
+          },
+        );
       });
 
       it('should throw error on ASSIGN_TICKET when ticketId is missing', async () => {
@@ -866,8 +1076,10 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.ASSIGN_TICKET,
           configuration: {},
         } as any;
-        await expect(actionService.executeAction(tenantId, action, {}, executionId)).rejects.toThrow(
-          'Ticket ID missing in context or configuration for assign action'
+        await expect(
+          actionService.executeAction(tenantId, action, {}, executionId),
+        ).rejects.toThrow(
+          'Ticket ID missing in context or configuration for assign action',
         );
       });
 
@@ -876,8 +1088,10 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.ESCALATE_TICKET,
           configuration: {},
         } as any;
-        await expect(actionService.executeAction(tenantId, action, {}, executionId)).rejects.toThrow(
-          'Ticket ID missing in context or configuration for escalate action'
+        await expect(
+          actionService.executeAction(tenantId, action, {}, executionId),
+        ).rejects.toThrow(
+          'Ticket ID missing in context or configuration for escalate action',
         );
       });
 
@@ -886,8 +1100,10 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.UPDATE_CUSTOMER,
           configuration: {},
         } as any;
-        await expect(actionService.executeAction(tenantId, action, {}, executionId)).rejects.toThrow(
-          'Customer ID missing in context or configuration for update_customer action'
+        await expect(
+          actionService.executeAction(tenantId, action, {}, executionId),
+        ).rejects.toThrow(
+          'Customer ID missing in context or configuration for update_customer action',
         );
       });
 
@@ -896,7 +1112,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.SEND_EMAIL,
           configuration: { to: 'user@example.com', subject: 'Hello' },
         } as any;
-        const res = await actionService.executeAction(tenantId, action, {}, executionId);
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          {},
+          executionId,
+        );
         expect(res).toEqual({ status: 'email_sent' });
       });
 
@@ -905,7 +1126,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.SEND_NOTIFICATION,
           configuration: { userId: 'u-1', message: 'Hello' },
         } as any;
-        const res = await actionService.executeAction(tenantId, action, {}, executionId);
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          {},
+          executionId,
+        );
         expect(res).toEqual({ status: 'notified' });
       });
 
@@ -922,7 +1148,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
         });
         mockRepository.saveApproval.mockResolvedValue(approval);
 
-        const res = await actionService.executeAction(tenantId, action, {}, executionId);
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          {},
+          executionId,
+        );
         expect(res).toEqual({
           approvalId: approval.id,
           status: 'approval_requested',
@@ -935,7 +1166,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.WAIT,
           configuration: { durationSeconds: 0.001 },
         } as any;
-        const res = await actionService.executeAction(tenantId, action, {}, executionId);
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          {},
+          executionId,
+        );
         expect(res).toEqual({ status: 'waited' });
       });
 
@@ -944,14 +1180,24 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: ActionTypeEnum.ADD_TAG,
           configuration: { tag: 'VIP' },
         } as any;
-        const resAdd = await actionService.executeAction(tenantId, actionAdd, {}, executionId);
+        const resAdd = await actionService.executeAction(
+          tenantId,
+          actionAdd,
+          {},
+          executionId,
+        );
         expect(resAdd).toEqual({ tagAdded: 'VIP' });
 
         const actionRemove = {
           actionType: ActionTypeEnum.REMOVE_TAG,
           configuration: { tag: 'VIP' },
         } as any;
-        const resRemove = await actionService.executeAction(tenantId, actionRemove, {}, executionId);
+        const resRemove = await actionService.executeAction(
+          tenantId,
+          actionRemove,
+          {},
+          executionId,
+        );
         expect(resRemove).toEqual({ tagRemoved: 'VIP' });
       });
 
@@ -960,7 +1206,12 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actionType: 'UNKNOWN_ACTION_TYPE' as any,
           configuration: {},
         } as any;
-        const res = await actionService.executeAction(tenantId, action, {}, executionId);
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          {},
+          executionId,
+        );
         expect(res).toEqual({ status: 'custom_completed' });
       });
 
@@ -972,29 +1223,66 @@ describe('Workflow Orchestration Services & Controllers', () => {
             payload: [
               'simple text',
               { key: 'nested {{val}}' },
-              ['array {{val}}']
-            ]
+              ['array {{val}}'],
+            ],
           },
         } as any;
-        mockConnectorService.executeCapability.mockResolvedValue({ success: true });
-        const res = await actionService.executeAction(tenantId, action, { val: '123' }, executionId);
+        mockConnectorService.executeCapability.mockResolvedValue({
+          success: true,
+        });
+        const res = await actionService.executeAction(
+          tenantId,
+          action,
+          { val: '123' },
+          executionId,
+        );
         expect(res.status).toBe('connector_executed');
         expect(mockConnectorService.executeCapability).toHaveBeenCalledWith(
           tenantId,
           'test_cap',
           ['simple text', { key: 'nested 123' }, ['array 123']],
-          { workflowId: executionId }
+          { workflowId: executionId },
         );
       });
     });
 
     describe('WorkflowEngineService Edge Cases', () => {
       it('should evaluate trigger conditions with GT/LT/CONTAINS/EQUALS/invalid operator', async () => {
-        const condGt = new WorkflowCondition('c-gt', { tenantId, workflowId, field: 'num', operator: 'GT', value: '10' });
-        const condLt = new WorkflowCondition('c-lt', { tenantId, workflowId, field: 'num', operator: 'LT', value: '20' });
-        const condEq = new WorkflowCondition('c-eq', { tenantId, workflowId, field: 'str', operator: 'EQUALS', value: 'abc' });
-        const condContains = new WorkflowCondition('c-contains', { tenantId, workflowId, field: 'str', operator: 'CONTAINS', value: 'xyz' });
-        const condInvalid = new WorkflowCondition('c-invalid', { tenantId, workflowId, field: 'str', operator: 'INVALID_OP', value: '123' });
+        const condGt = new WorkflowCondition('c-gt', {
+          tenantId,
+          workflowId,
+          field: 'num',
+          operator: 'GT',
+          value: '10',
+        });
+        const condLt = new WorkflowCondition('c-lt', {
+          tenantId,
+          workflowId,
+          field: 'num',
+          operator: 'LT',
+          value: '20',
+        });
+        const condEq = new WorkflowCondition('c-eq', {
+          tenantId,
+          workflowId,
+          field: 'str',
+          operator: 'EQUALS',
+          value: 'abc',
+        });
+        const condContains = new WorkflowCondition('c-contains', {
+          tenantId,
+          workflowId,
+          field: 'str',
+          operator: 'CONTAINS',
+          value: 'xyz',
+        });
+        const condInvalid = new WorkflowCondition('c-invalid', {
+          tenantId,
+          workflowId,
+          field: 'str',
+          operator: 'INVALID_OP',
+          value: '123',
+        });
 
         // Template with invalid operator, should return false when evaluated
         const templateInvalid = WorkflowTemplate.create('wf-conds-invalid', {
@@ -1018,16 +1306,27 @@ describe('Workflow Orchestration Services & Controllers', () => {
           actions: [],
         });
 
-        mockRepository.findTemplates.mockResolvedValue([templateInvalid, templateValid]);
+        mockRepository.findTemplates.mockResolvedValue([
+          templateInvalid,
+          templateValid,
+        ]);
         const triggerServicePrivate = (engineService as any).triggerService;
-        jest.spyOn(triggerServicePrivate, 'findTriggeredTemplates').mockResolvedValue([templateInvalid, templateValid]);
+        jest
+          .spyOn(triggerServicePrivate, 'findTriggeredTemplates')
+          .mockResolvedValue([templateInvalid, templateValid]);
 
-        const runSpy = jest.spyOn(engineService, 'runWorkflowTemplate').mockResolvedValue('exec-1');
+        const runSpy = jest
+          .spyOn(engineService, 'runWorkflowTemplate')
+          .mockResolvedValue('exec-1');
 
-        await engineService.evaluateEventTriggers(tenantId, TriggerTypeEnum.TICKET_CREATED, {
-          num: 15,
-          str: 'abcxyz',
-        });
+        await engineService.evaluateEventTriggers(
+          tenantId,
+          TriggerTypeEnum.TICKET_CREATED,
+          {
+            num: 15,
+            str: 'abcxyz',
+          },
+        );
 
         // templateInvalid evaluates to false, templateValid evaluates to true (num=15 matches GT 10 & LT 20, str=abcxyz matches CONTAINS xyz but NOT EQUALS abc!)
         // Wait, templateValid has condEq (str EQUALS abc). If str is abcxyz, EQUALS is false, so templateValid is NOT matched either.
@@ -1037,11 +1336,20 @@ describe('Workflow Orchestration Services & Controllers', () => {
         // Now run with str: "abc" but we need CONTAINS "xyz". Since "abc" does not contain "xyz", it still fails.
         // Let's create a template with just GT, LT, and EQUALS to verify they match.
         templateValid.setDefinition([], [condGt, condLt, condEq], []);
-        await engineService.evaluateEventTriggers(tenantId, TriggerTypeEnum.TICKET_CREATED, {
-          num: 15,
-          str: 'abc',
-        });
-        expect(runSpy).toHaveBeenCalledWith(tenantId, templateValid, { num: 15, str: 'abc' }, TriggerTypeEnum.TICKET_CREATED);
+        await engineService.evaluateEventTriggers(
+          tenantId,
+          TriggerTypeEnum.TICKET_CREATED,
+          {
+            num: 15,
+            str: 'abc',
+          },
+        );
+        expect(runSpy).toHaveBeenCalledWith(
+          tenantId,
+          templateValid,
+          { num: 15, str: 'abc' },
+          TriggerTypeEnum.TICKET_CREATED,
+        );
       });
 
       it('should handle execution background action failure', async () => {
@@ -1059,7 +1367,7 @@ describe('Workflow Orchestration Services & Controllers', () => {
               actionType: ActionTypeEnum.ASSIGN_TICKET,
               configuration: {},
               sequenceOrder: 1,
-            })
+            }),
           ],
         });
 
@@ -1076,17 +1384,22 @@ describe('Workflow Orchestration Services & Controllers', () => {
         mockRepository.getExecutionById.mockResolvedValue(mockExecution);
         mockRepository.getTemplateById.mockResolvedValue(template);
 
-        const execId = await engineService.runWorkflowTemplate(tenantId, template, {}, 'MANUAL');
+        const execId = await engineService.runWorkflowTemplate(
+          tenantId,
+          template,
+          {},
+          'MANUAL',
+        );
         expect(execId).toBe(executionId);
 
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         expect(mockRepository.saveExecution).toHaveBeenCalled();
         expect(mockRepository.logAudit).toHaveBeenCalledWith(
           expect.objectContaining({
             action: 'EXECUTION_FAILED',
-            details: expect.stringContaining('Ticket ID missing')
+            details: expect.stringContaining('Ticket ID missing'),
           }),
-          tenantId
+          tenantId,
         );
       });
 
@@ -1109,8 +1422,15 @@ describe('Workflow Orchestration Services & Controllers', () => {
         mockRepository.getTemplateById.mockResolvedValue(template);
 
         await expect(
-          engineService.resumeExecution(tenantId, executionId, true, 'approver-1')
-        ).rejects.toThrow(`Workflow execution ${executionId} is not in PAUSED state`);
+          engineService.resumeExecution(
+            tenantId,
+            executionId,
+            true,
+            'approver-1',
+          ),
+        ).rejects.toThrow(
+          `Workflow execution ${executionId} is not in PAUSED state`,
+        );
       });
 
       it('should slice actions from APPROVAL when resuming execution, and slice correctly if no approval action exists', async () => {
@@ -1130,20 +1450,37 @@ describe('Workflow Orchestration Services & Controllers', () => {
           workflowType: WorkflowTypeEnum.TICKET_WORKFLOW,
           status: WorkflowStatusEnum.ACTIVE,
           actions: [
-            new WorkflowAction('a-app', { tenantId, workflowId, actionType: ActionTypeEnum.APPROVAL, configuration: {}, sequenceOrder: 1 }),
-            new WorkflowAction('a-notify', { tenantId, workflowId, actionType: ActionTypeEnum.SEND_NOTIFICATION, configuration: { userId: 'u-1', message: 'Approved' }, sequenceOrder: 2 }),
+            new WorkflowAction('a-app', {
+              tenantId,
+              workflowId,
+              actionType: ActionTypeEnum.APPROVAL,
+              configuration: {},
+              sequenceOrder: 1,
+            }),
+            new WorkflowAction('a-notify', {
+              tenantId,
+              workflowId,
+              actionType: ActionTypeEnum.SEND_NOTIFICATION,
+              configuration: { userId: 'u-1', message: 'Approved' },
+              sequenceOrder: 2,
+            }),
           ],
         });
         mockRepository.getTemplateById.mockResolvedValue(templateWithApproval);
         mockRepository.saveExecution.mockResolvedValue(executionPaused);
 
-        await engineService.resumeExecution(tenantId, executionId, true, 'approver-1');
+        await engineService.resumeExecution(
+          tenantId,
+          executionId,
+          true,
+          'approver-1',
+        );
         expect(mockRepository.logAudit).toHaveBeenCalledWith(
           expect.objectContaining({
             action: 'APPROVAL_GRANTED',
-            details: expect.stringContaining('Workflow approved by approver')
+            details: expect.stringContaining('Workflow approved by approver'),
           }),
-          tenantId
+          tenantId,
         );
 
         const executionPaused2 = WorkflowExecution.create(executionId, {
@@ -1163,17 +1500,28 @@ describe('Workflow Orchestration Services & Controllers', () => {
           workflowType: WorkflowTypeEnum.TICKET_WORKFLOW,
           status: WorkflowStatusEnum.ACTIVE,
           actions: [
-            new WorkflowAction('a-notify-only', { tenantId, workflowId, actionType: ActionTypeEnum.SEND_NOTIFICATION, configuration: { userId: 'u-1', message: 'Just Notify' }, sequenceOrder: 1 }),
+            new WorkflowAction('a-notify-only', {
+              tenantId,
+              workflowId,
+              actionType: ActionTypeEnum.SEND_NOTIFICATION,
+              configuration: { userId: 'u-1', message: 'Just Notify' },
+              sequenceOrder: 1,
+            }),
           ],
         });
         mockRepository.getTemplateById.mockResolvedValue(templateNoApproval);
-        await engineService.resumeExecution(tenantId, executionId, true, 'approver-1');
+        await engineService.resumeExecution(
+          tenantId,
+          executionId,
+          true,
+          'approver-1',
+        );
         expect(mockRepository.logAudit).toHaveBeenCalledWith(
           expect.objectContaining({
             action: 'EXECUTION_COMPLETED',
-            details: expect.stringContaining('completed successfully')
+            details: expect.stringContaining('completed successfully'),
           }),
-          tenantId
+          tenantId,
         );
       });
 
@@ -1194,22 +1542,39 @@ describe('Workflow Orchestration Services & Controllers', () => {
           workflowType: WorkflowTypeEnum.TICKET_WORKFLOW,
           status: WorkflowStatusEnum.ACTIVE,
           actions: [
-            new WorkflowAction('a-app', { tenantId, workflowId, actionType: ActionTypeEnum.APPROVAL, configuration: {}, sequenceOrder: 1 }),
-            new WorkflowAction('a-assign-fail', { tenantId, workflowId, actionType: ActionTypeEnum.ASSIGN_TICKET, configuration: {}, sequenceOrder: 2 }),
+            new WorkflowAction('a-app', {
+              tenantId,
+              workflowId,
+              actionType: ActionTypeEnum.APPROVAL,
+              configuration: {},
+              sequenceOrder: 1,
+            }),
+            new WorkflowAction('a-assign-fail', {
+              tenantId,
+              workflowId,
+              actionType: ActionTypeEnum.ASSIGN_TICKET,
+              configuration: {},
+              sequenceOrder: 2,
+            }),
           ],
         });
         mockRepository.getTemplateById.mockResolvedValue(template);
         mockRepository.saveExecution.mockResolvedValue(executionPaused);
 
-        await engineService.resumeExecution(tenantId, executionId, true, 'approver-1');
-        
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await engineService.resumeExecution(
+          tenantId,
+          executionId,
+          true,
+          'approver-1',
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
         expect(mockRepository.logAudit).toHaveBeenCalledWith(
           expect.objectContaining({
             action: 'EXECUTION_FAILED',
-            details: expect.stringContaining('Ticket ID missing')
+            details: expect.stringContaining('Ticket ID missing'),
           }),
-          tenantId
+          tenantId,
         );
       });
     });
@@ -1237,14 +1602,16 @@ describe('Workflow Orchestration Services & Controllers', () => {
     describe('WorkflowExecutionService Edge Cases', () => {
       it('should throw NotFoundException on getExecution when execution is missing', async () => {
         mockRepository.getExecutionById.mockResolvedValue(null);
-        await expect(executionService.getExecution(tenantId, 'non-existent')).rejects.toThrow(
-          NotFoundException
-        );
+        await expect(
+          executionService.getExecution(tenantId, 'non-existent'),
+        ).rejects.toThrow(NotFoundException);
       });
 
       it('should find executions', async () => {
         mockRepository.findExecutions.mockResolvedValue([]);
-        const res = await executionService.findExecutions(tenantId, { status: 'ACTIVE' });
+        const res = await executionService.findExecutions(tenantId, {
+          status: 'ACTIVE',
+        });
         expect(res).toEqual([]);
       });
 
@@ -1260,22 +1627,29 @@ describe('Workflow Orchestration Services & Controllers', () => {
         mockRepository.getExecutionById.mockResolvedValue(execution);
         mockRepository.saveExecution.mockImplementation(async (e) => e);
 
-        const res = await executionService.pauseExecution(tenantId, executionId);
+        const res = await executionService.pauseExecution(
+          tenantId,
+          executionId,
+        );
         expect(res.executionStatus).toBe(WorkflowStatusEnum.PAUSED);
       });
     });
 
     describe('WorkflowTemplateService Edge Cases', () => {
       it('should catch error on system template seeding when repository fails', async () => {
-        mockRepository.findTemplates.mockRejectedValueOnce(new Error('DB connection failed'));
-        await expect(templateService.onApplicationBootstrap()).resolves.not.toThrow();
+        mockRepository.findTemplates.mockRejectedValueOnce(
+          new Error('DB connection failed'),
+        );
+        await expect(
+          templateService.onApplicationBootstrap(),
+        ).resolves.not.toThrow();
       });
 
       it('should throw NotFoundException when deleting non-existent template', async () => {
         mockRepository.deleteTemplate.mockResolvedValue(false);
-        await expect(templateService.deleteTemplate(tenantId, 'non-existent')).rejects.toThrow(
-          NotFoundException
-        );
+        await expect(
+          templateService.deleteTemplate(tenantId, 'non-existent'),
+        ).rejects.toThrow(NotFoundException);
       });
 
       it('should publish template version successfully', async () => {
@@ -1298,7 +1672,7 @@ describe('Workflow Orchestration Services & Controllers', () => {
             definition: template.toJSON(),
             isActive: true,
           },
-          tenantId
+          tenantId,
         );
       });
     });
@@ -1306,9 +1680,9 @@ describe('Workflow Orchestration Services & Controllers', () => {
     describe('WorkflowApprovalService Edge Cases', () => {
       it('should throw NotFoundException on getApproval when approval is missing', async () => {
         mockRepository.getApprovalById.mockResolvedValue(null);
-        await expect(approvalService.getApproval(tenantId, 'non-existent')).rejects.toThrow(
-          NotFoundException
-        );
+        await expect(
+          approvalService.getApproval(tenantId, 'non-existent'),
+        ).rejects.toThrow(NotFoundException);
       });
 
       it('should throw BadRequestException when approving or rejecting resolved approval', async () => {
@@ -1320,17 +1694,20 @@ describe('Workflow Orchestration Services & Controllers', () => {
         });
         mockRepository.getApprovalById.mockResolvedValue(resolvedApproval);
 
-        await expect(approvalService.approve(tenantId, approvalId)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(approvalService.reject(tenantId, approvalId)).rejects.toThrow(
-          BadRequestException
-        );
+        await expect(
+          approvalService.approve(tenantId, approvalId),
+        ).rejects.toThrow(BadRequestException);
+        await expect(
+          approvalService.reject(tenantId, approvalId),
+        ).rejects.toThrow(BadRequestException);
       });
 
       it('should retrieve approvals for execution', async () => {
         mockRepository.findApprovalsByExecutionId.mockResolvedValue([]);
-        const res = await approvalService.getApprovalsForExecution(tenantId, executionId);
+        const res = await approvalService.getApprovalsForExecution(
+          tenantId,
+          executionId,
+        );
         expect(res).toEqual([]);
       });
     });
@@ -1338,9 +1715,9 @@ describe('Workflow Orchestration Services & Controllers', () => {
     describe('WorkflowScheduleService Edge Cases', () => {
       it('should throw NotFoundException on getSchedule when schedule is missing', async () => {
         mockRepository.getScheduleById.mockResolvedValue(null);
-        await expect(scheduleService.getSchedule(tenantId, 'non-existent')).rejects.toThrow(
-          NotFoundException
-        );
+        await expect(
+          scheduleService.getSchedule(tenantId, 'non-existent'),
+        ).rejects.toThrow(NotFoundException);
       });
 
       it('should find schedules', async () => {
@@ -1369,21 +1746,37 @@ describe('Workflow Orchestration Services & Controllers', () => {
         });
         expect(tcCreate).toBeDefined();
 
-        const tcUpdate = await templateController.updateTemplate(tenantId, workflowId, {
-          name: 'Updated Name',
-        });
+        const tcUpdate = await templateController.updateTemplate(
+          tenantId,
+          workflowId,
+          {
+            name: 'Updated Name',
+          },
+        );
         expect(tcUpdate).toBeDefined();
 
-        const tcPublish = await templateController.publishVersion(tenantId, workflowId);
+        const tcPublish = await templateController.publishVersion(
+          tenantId,
+          workflowId,
+        );
         expect(tcPublish).toEqual({ success: true, versionNumber: 2 });
 
-        const tcActivate = await templateController.activateTemplate(tenantId, workflowId);
+        const tcActivate = await templateController.activateTemplate(
+          tenantId,
+          workflowId,
+        );
         expect(tcActivate.status).toBe(WorkflowStatusEnum.ACTIVE);
 
-        const tcPause = await templateController.pauseTemplate(tenantId, workflowId);
+        const tcPause = await templateController.pauseTemplate(
+          tenantId,
+          workflowId,
+        );
         expect(tcPause.status).toBe(WorkflowStatusEnum.PAUSED);
 
-        const tcDelete = await templateController.deleteTemplate(tenantId, workflowId);
+        const tcDelete = await templateController.deleteTemplate(
+          tenantId,
+          workflowId,
+        );
         expect(tcDelete).toEqual({ success: true });
       });
 
@@ -1399,10 +1792,17 @@ describe('Workflow Orchestration Services & Controllers', () => {
         mockRepository.getExecutionById.mockResolvedValue(execution);
         mockRepository.findExecutions.mockResolvedValue([execution]);
 
-        const ecGet = await executionController.getExecution(tenantId, executionId);
+        const ecGet = await executionController.getExecution(
+          tenantId,
+          executionId,
+        );
         expect(ecGet.id).toBe(executionId);
 
-        const ecFind = await executionController.findExecutions(tenantId, workflowId, 'ACTIVE');
+        const ecFind = await executionController.findExecutions(
+          tenantId,
+          workflowId,
+          'ACTIVE',
+        );
         expect(ecFind.length).toBe(1);
       });
 
@@ -1427,13 +1827,24 @@ describe('Workflow Orchestration Services & Controllers', () => {
         });
         mockRepository.getExecutionById.mockResolvedValue(executionPaused);
 
-        const acGet = await approvalController.getApproval(tenantId, approvalId);
+        const acGet = await approvalController.getApproval(
+          tenantId,
+          approvalId,
+        );
         expect(acGet.id).toBe(approvalId);
 
-        const acGetList = await approvalController.getApprovalsForExecution(tenantId, executionId);
+        const acGetList = await approvalController.getApprovalsForExecution(
+          tenantId,
+          executionId,
+        );
         expect(acGetList.length).toBe(1);
 
-        const acReject = await approvalController.reject(tenantId, approvalId, { comments: 'no' }, { user: { id: 'm-1' } });
+        const acReject = await approvalController.reject(
+          tenantId,
+          approvalId,
+          { comments: 'no' },
+          { user: { id: 'm-1' } },
+        );
         expect(acReject.approvalStatus).toBe(ApprovalStatusEnum.REJECTED);
       });
 
@@ -1450,25 +1861,42 @@ describe('Workflow Orchestration Services & Controllers', () => {
         mockRepository.deleteSchedule.mockResolvedValue(true);
         mockRepository.findSchedules.mockResolvedValue([schedule]);
 
-        const scCreate = await scheduleController.createSchedule(tenantId, { workflowId, cronExpression: '0 * * * *' });
+        const scCreate = await scheduleController.createSchedule(tenantId, {
+          workflowId,
+          cronExpression: '0 * * * *',
+        });
         expect(scCreate).toBeDefined();
 
-        const scGet = await scheduleController.getSchedule(tenantId, scheduleId);
+        const scGet = await scheduleController.getSchedule(
+          tenantId,
+          scheduleId,
+        );
         expect(scGet.id).toBe(scheduleId);
 
         const scFind = await scheduleController.findSchedules(tenantId, 'true');
         expect(scFind.length).toBe(1);
 
-        const scToggle = await scheduleController.toggleSchedule(tenantId, scheduleId, false);
+        const scToggle = await scheduleController.toggleSchedule(
+          tenantId,
+          scheduleId,
+          false,
+        );
         expect(scToggle.isActive).toBe(false);
 
-        const scDelete = await scheduleController.deleteSchedule(tenantId, scheduleId);
+        const scDelete = await scheduleController.deleteSchedule(
+          tenantId,
+          scheduleId,
+        );
         expect(scDelete).toEqual({ success: true });
       });
 
       it('should call auditController endpoint', async () => {
         mockRepository.findAuditLogs.mockResolvedValue([{ action: 'RUN' }]);
-        const acLogs = await auditController.getAuditLogs(tenantId, workflowId, executionId);
+        const acLogs = await auditController.getAuditLogs(
+          tenantId,
+          workflowId,
+          executionId,
+        );
         expect(acLogs.length).toBe(1);
       });
     });

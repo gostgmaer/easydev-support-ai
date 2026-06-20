@@ -30,12 +30,24 @@ export class WorkflowTrigger extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowId(): string { return this.props.workflowId; }
-  get triggerType(): TriggerTypeEnum { return this.props.triggerType; }
-  get configuration(): Record<string, any> { return this.props.configuration || {}; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowId(): string {
+    return this.props.workflowId;
+  }
+  get triggerType(): TriggerTypeEnum {
+    return this.props.triggerType;
+  }
+  get configuration(): Record<string, any> {
+    return this.props.configuration || {};
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
   public toJSON() {
     return {
@@ -74,14 +86,30 @@ export class WorkflowCondition extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowId(): string { return this.props.workflowId; }
-  get triggerId(): string | undefined { return this.props.triggerId; }
-  get field(): string { return this.props.field; }
-  get operator(): string { return this.props.operator; }
-  get value(): string { return this.props.value; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowId(): string {
+    return this.props.workflowId;
+  }
+  get triggerId(): string | undefined {
+    return this.props.triggerId;
+  }
+  get field(): string {
+    return this.props.field;
+  }
+  get operator(): string {
+    return this.props.operator;
+  }
+  get value(): string {
+    return this.props.value;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
   public toJSON() {
     return {
@@ -122,13 +150,27 @@ export class WorkflowAction extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowId(): string { return this.props.workflowId; }
-  get actionType(): ActionTypeEnum { return this.props.actionType; }
-  get configuration(): Record<string, any> { return this.props.configuration; }
-  get sequenceOrder(): number { return this.props.sequenceOrder; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowId(): string {
+    return this.props.workflowId;
+  }
+  get actionType(): ActionTypeEnum {
+    return this.props.actionType;
+  }
+  get configuration(): Record<string, any> {
+    return this.props.configuration;
+  }
+  get sequenceOrder(): number {
+    return this.props.sequenceOrder;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
   public toJSON() {
     return {
@@ -170,15 +212,33 @@ export class WorkflowApproval extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowExecutionId(): string { return this.props.workflowExecutionId; }
-  get approverId(): string { return this.props.approverId; }
-  get approvalStatus(): ApprovalStatusEnum { return this.props.approvalStatus; }
-  get comments(): string | undefined { return this.props.comments; }
-  get approvedAt(): Date | undefined { return this.props.approvedAt; }
-  get expiresAt(): Date | undefined { return this.props.expiresAt; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowExecutionId(): string {
+    return this.props.workflowExecutionId;
+  }
+  get approverId(): string {
+    return this.props.approverId;
+  }
+  get approvalStatus(): ApprovalStatusEnum {
+    return this.props.approvalStatus;
+  }
+  get comments(): string | undefined {
+    return this.props.comments;
+  }
+  get approvedAt(): Date | undefined {
+    return this.props.approvedAt;
+  }
+  get expiresAt(): Date | undefined {
+    return this.props.expiresAt;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
   public approve(comments?: string): void {
     this.props.approvalStatus = ApprovalStatusEnum.APPROVED;
@@ -244,15 +304,33 @@ export class WorkflowSchedule extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowId(): string { return this.props.workflowId; }
-  get cronExpression(): string { return this.props.cronExpression; }
-  get timezone(): string { return this.props.timezone; }
-  get nextRunAt(): Date | undefined { return this.props.nextRunAt; }
-  get lastRunAt(): Date | undefined { return this.props.lastRunAt; }
-  get isActive(): boolean { return this.props.isActive; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowId(): string {
+    return this.props.workflowId;
+  }
+  get cronExpression(): string {
+    return this.props.cronExpression;
+  }
+  get timezone(): string {
+    return this.props.timezone;
+  }
+  get nextRunAt(): Date | undefined {
+    return this.props.nextRunAt;
+  }
+  get lastRunAt(): Date | undefined {
+    return this.props.lastRunAt;
+  }
+  get isActive(): boolean {
+    return this.props.isActive;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
   public updateRun(nextRun: Date): void {
     this.props.lastRunAt = new Date();
@@ -316,19 +394,45 @@ export class WorkflowTemplate extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get name(): string { return this.props.name; }
-  get description(): string | undefined { return this.props.description; }
-  get workflowType(): WorkflowTypeEnum { return this.props.workflowType; }
-  get status(): WorkflowStatusEnum { return this.props.status; }
-  get isSystem(): boolean { return this.props.isSystem || false; }
-  get triggers(): WorkflowTrigger[] { return this.props.triggers || []; }
-  get conditions(): WorkflowCondition[] { return this.props.conditions || []; }
-  get actions(): WorkflowAction[] { return this.props.actions || []; }
-  get variables(): Record<string, { type: string; value: string }> { return this.props.variables || {}; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get name(): string {
+    return this.props.name;
+  }
+  get description(): string | undefined {
+    return this.props.description;
+  }
+  get workflowType(): WorkflowTypeEnum {
+    return this.props.workflowType;
+  }
+  get status(): WorkflowStatusEnum {
+    return this.props.status;
+  }
+  get isSystem(): boolean {
+    return this.props.isSystem || false;
+  }
+  get triggers(): WorkflowTrigger[] {
+    return this.props.triggers || [];
+  }
+  get conditions(): WorkflowCondition[] {
+    return this.props.conditions || [];
+  }
+  get actions(): WorkflowAction[] {
+    return this.props.actions || [];
+  }
+  get variables(): Record<string, { type: string; value: string }> {
+    return this.props.variables || {};
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public static create(
     id: string,
@@ -337,7 +441,11 @@ export class WorkflowTemplate extends AggregateRoot<string> {
     return new WorkflowTemplate(id, props);
   }
 
-  public update(props: Partial<Pick<WorkflowTemplateProps, 'name' | 'description' | 'status'>>): void {
+  public update(
+    props: Partial<
+      Pick<WorkflowTemplateProps, 'name' | 'description' | 'status'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,
@@ -356,7 +464,9 @@ export class WorkflowTemplate extends AggregateRoot<string> {
     this.props.updatedAt = new Date();
   }
 
-  public setVariables(variables: Record<string, { type: string; value: string }>): void {
+  public setVariables(
+    variables: Record<string, { type: string; value: string }>,
+  ): void {
     this.props.variables = variables;
     this.props.updatedAt = new Date();
   }
@@ -424,21 +534,51 @@ export class WorkflowExecution extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get workflowId(): string { return this.props.workflowId; }
-  get executionStatus(): WorkflowStatusEnum { return this.props.executionStatus; }
-  get startedAt(): Date { return this.props.startedAt!; }
-  get completedAt(): Date | undefined { return this.props.completedAt; }
-  get executionTimeMs(): number { return this.props.executionTimeMs || 0; }
-  get triggerSource(): string { return this.props.triggerSource; }
-  get triggerReferenceId(): string | undefined { return this.props.triggerReferenceId; }
-  get context(): Record<string, any> { return this.props.context; }
-  get result(): Record<string, any> | undefined { return this.props.result; }
-  get error(): Record<string, any> | undefined { return this.props.error; }
-  get approvals(): WorkflowApproval[] { return this.props.approvals || []; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get workflowId(): string {
+    return this.props.workflowId;
+  }
+  get executionStatus(): WorkflowStatusEnum {
+    return this.props.executionStatus;
+  }
+  get startedAt(): Date {
+    return this.props.startedAt!;
+  }
+  get completedAt(): Date | undefined {
+    return this.props.completedAt;
+  }
+  get executionTimeMs(): number {
+    return this.props.executionTimeMs || 0;
+  }
+  get triggerSource(): string {
+    return this.props.triggerSource;
+  }
+  get triggerReferenceId(): string | undefined {
+    return this.props.triggerReferenceId;
+  }
+  get context(): Record<string, any> {
+    return this.props.context;
+  }
+  get result(): Record<string, any> | undefined {
+    return this.props.result;
+  }
+  get error(): Record<string, any> | undefined {
+    return this.props.error;
+  }
+  get approvals(): WorkflowApproval[] {
+    return this.props.approvals || [];
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
   public static create(
     id: string,

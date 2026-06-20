@@ -247,15 +247,22 @@ export class AnalyticsAggregationService {
   }
 
   async aggregateHourly(tenantId: string, timestamp: Date): Promise<void> {
-    this.logger.log(`Running hourly aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`);
+    this.logger.log(
+      `Running hourly aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`,
+    );
     // Rollup raw hourly metrics into hourly tables (calculated from raw events)
     const startTime = new Date(timestamp);
     startTime.setMinutes(0, 0, 0);
     const endTime = new Date(startTime);
     endTime.setHours(endTime.getHours() + 1);
 
-    const events = await this.repository.findEvents(tenantId, undefined, startTime, endTime);
-    
+    const events = await this.repository.findEvents(
+      tenantId,
+      undefined,
+      startTime,
+      endTime,
+    );
+
     // Group events by eventName and aggregate counts
     const eventCounts: Record<string, number> = {};
     for (const event of events) {
@@ -276,17 +283,29 @@ export class AnalyticsAggregationService {
   }
 
   async aggregateDaily(tenantId: string, timestamp: Date): Promise<void> {
-    this.logger.log(`Running daily aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`);
+    this.logger.log(
+      `Running daily aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`,
+    );
     const startOfDay = new Date(timestamp);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(endOfDay.getDate() + 1);
 
     // Sum up hourly metrics for the day
-    const hourlyEventTypes = ['conversation.created', 'message.sent', 'ticket.created', 'ai.workflow.completed'];
+    const hourlyEventTypes = [
+      'conversation.created',
+      'message.sent',
+      'ticket.created',
+      'ai.workflow.completed',
+    ];
 
     for (const metricType of hourlyEventTypes) {
-      const hourlyMetrics = await this.repository.getHourlyMetrics(tenantId, metricType, startOfDay, endOfDay);
+      const hourlyMetrics = await this.repository.getHourlyMetrics(
+        tenantId,
+        metricType,
+        startOfDay,
+        endOfDay,
+      );
       const totalValue = hourlyMetrics.reduce((sum, m) => sum + m.value, 0);
 
       await this.repository.saveDailyMetric(
@@ -302,7 +321,9 @@ export class AnalyticsAggregationService {
   }
 
   async aggregateWeekly(tenantId: string, timestamp: Date): Promise<void> {
-    this.logger.log(`Running weekly aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`);
+    this.logger.log(
+      `Running weekly aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`,
+    );
     // Rollup daily metrics into weekly metrics
     const startOfWeek = new Date(timestamp);
     const day = startOfWeek.getDay();
@@ -313,10 +334,20 @@ export class AnalyticsAggregationService {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 7);
 
-    const metricTypes = ['conversation.created', 'message.sent', 'ticket.created', 'ai.workflow.completed'];
+    const metricTypes = [
+      'conversation.created',
+      'message.sent',
+      'ticket.created',
+      'ai.workflow.completed',
+    ];
 
     for (const metricType of metricTypes) {
-      const dailyMetrics = await this.repository.getDailyMetrics(tenantId, metricType, startOfWeek, endOfWeek);
+      const dailyMetrics = await this.repository.getDailyMetrics(
+        tenantId,
+        metricType,
+        startOfWeek,
+        endOfWeek,
+      );
       const totalValue = dailyMetrics.reduce((sum, m) => sum + m.value, 0);
 
       await this.repository.saveDailyMetric(
@@ -332,14 +363,34 @@ export class AnalyticsAggregationService {
   }
 
   async aggregateMonthly(tenantId: string, timestamp: Date): Promise<void> {
-    this.logger.log(`Running monthly aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`);
-    const startOfMonth = new Date(timestamp.getFullYear(), timestamp.getMonth(), 1);
-    const endOfMonth = new Date(timestamp.getFullYear(), timestamp.getMonth() + 1, 1);
+    this.logger.log(
+      `Running monthly aggregations for Tenant ${tenantId} at ${timestamp.toISOString()}`,
+    );
+    const startOfMonth = new Date(
+      timestamp.getFullYear(),
+      timestamp.getMonth(),
+      1,
+    );
+    const endOfMonth = new Date(
+      timestamp.getFullYear(),
+      timestamp.getMonth() + 1,
+      1,
+    );
 
-    const metricTypes = ['conversation.created', 'message.sent', 'ticket.created', 'ai.workflow.completed'];
+    const metricTypes = [
+      'conversation.created',
+      'message.sent',
+      'ticket.created',
+      'ai.workflow.completed',
+    ];
 
     for (const metricType of metricTypes) {
-      const dailyMetrics = await this.repository.getDailyMetrics(tenantId, metricType, startOfMonth, endOfMonth);
+      const dailyMetrics = await this.repository.getDailyMetrics(
+        tenantId,
+        metricType,
+        startOfMonth,
+        endOfMonth,
+      );
       const totalValue = dailyMetrics.reduce((sum, m) => sum + m.value, 0);
 
       await this.repository.saveDailyMetric(

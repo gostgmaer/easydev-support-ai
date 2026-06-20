@@ -47,45 +47,87 @@ export class Channel extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get name(): string { return this.props.name; }
-  get type(): ChannelType { return this.props.type; }
-  get status(): ChannelStatus { return this.props.status; }
-  get provider(): ChannelProvider { return this.props.provider; }
-  get isActive(): boolean { return this.props.isActive; }
-  get isDefault(): boolean { return this.props.isDefault; }
-  get metadata(): Record<string, any> { return this.props.metadata || {}; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get deletedAt(): Date | undefined { return this.props.deletedAt; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get name(): string {
+    return this.props.name;
+  }
+  get type(): ChannelType {
+    return this.props.type;
+  }
+  get status(): ChannelStatus {
+    return this.props.status;
+  }
+  get provider(): ChannelProvider {
+    return this.props.provider;
+  }
+  get isActive(): boolean {
+    return this.props.isActive;
+  }
+  get isDefault(): boolean {
+    return this.props.isDefault;
+  }
+  get metadata(): Record<string, any> {
+    return this.props.metadata || {};
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get deletedAt(): Date | undefined {
+    return this.props.deletedAt;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
-  get configuration(): ChannelConfiguration | undefined { return this.props.configuration; }
-  get webhook(): ChannelWebhook | undefined { return this.props.webhook; }
-  get templates(): ChannelTemplate[] { return this.props.templates || []; }
-  get rateLimit(): ChannelRateLimit | undefined { return this.props.rateLimit; }
+  get configuration(): ChannelConfiguration | undefined {
+    return this.props.configuration;
+  }
+  get webhook(): ChannelWebhook | undefined {
+    return this.props.webhook;
+  }
+  get templates(): ChannelTemplate[] {
+    return this.props.templates || [];
+  }
+  get rateLimit(): ChannelRateLimit | undefined {
+    return this.props.rateLimit;
+  }
 
-  public static create(id: string, props: Omit<ChannelProps, 'createdAt' | 'updatedAt' | 'version' | 'templates'>): Channel {
+  public static create(
+    id: string,
+    props: Omit<
+      ChannelProps,
+      'createdAt' | 'updatedAt' | 'version' | 'templates'
+    >,
+  ): Channel {
     const channel = new Channel(id, props);
     channel.addDomainEvent(
       new ChannelCreatedEvent(
         channel.tenantId,
         channel.id,
         channel.name,
-        channel.type.value
-      )
+        channel.type.value,
+      ),
     );
     return channel;
   }
 
-  public update(props: Partial<Pick<ChannelProps, 'name' | 'metadata' | 'isDefault'>>): void {
+  public update(
+    props: Partial<Pick<ChannelProps, 'name' | 'metadata' | 'isDefault'>>,
+  ): void {
     this.props = {
       ...this.props,
       ...props,
       updatedAt: new Date(),
       version: this.props.version! + 1,
     };
-    this.addDomainEvent(new ChannelUpdatedEvent(this.tenantId, this.id, this.name));
+    this.addDomainEvent(
+      new ChannelUpdatedEvent(this.tenantId, this.id, this.name),
+    );
   }
 
   public enable(): void {
@@ -117,7 +159,9 @@ export class Channel extends AggregateRoot<string> {
   }
 
   public addTemplate(template: ChannelTemplate): void {
-    const exists = this.templates.some((t) => t.templateName === template.templateName);
+    const exists = this.templates.some(
+      (t) => t.templateName === template.templateName,
+    );
     if (!exists) {
       this.templates.push(template);
       this.props.updatedAt = new Date();
@@ -125,7 +169,9 @@ export class Channel extends AggregateRoot<string> {
   }
 
   public removeTemplate(templateName: string): void {
-    const index = this.templates.findIndex((t) => t.templateName === templateName);
+    const index = this.templates.findIndex(
+      (t) => t.templateName === templateName,
+    );
     if (index !== -1) {
       this.templates.splice(index, 1);
       this.props.updatedAt = new Date();

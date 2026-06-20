@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Delete, Body, Headers, Param, Query, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -8,9 +21,7 @@ import type { Request } from 'express';
 
 @Controller('v1/connectors')
 export class ConnectorWebhooksController {
-  constructor(
-    private readonly webhookService: ConnectorWebhookService,
-  ) {}
+  constructor(private readonly webhookService: ConnectorWebhookService) {}
 
   @Post(':id/webhooks')
   @UseGuards(TenantGuard, RbacGuard)
@@ -37,7 +48,10 @@ export class ConnectorWebhooksController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') connectorId: string,
   ) {
-    const webhooks = await this.webhookService.getWebhooks(tenantId, connectorId);
+    const webhooks = await this.webhookService.getWebhooks(
+      tenantId,
+      connectorId,
+    );
     return webhooks.map((w) => w.toJSON());
   }
 
@@ -65,7 +79,7 @@ export class ConnectorWebhooksController {
   ) {
     // Determine rawBody if available
     const rawBody = (req as any).rawBody || '';
-    
+
     return this.webhookService.handleIncomingWebhook(
       headers['x-tenant-id'] || '00000000-0000-0000-0000-000000000000', // default fallback if needed, or extract from request
       webhookId,

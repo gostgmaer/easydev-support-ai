@@ -48,7 +48,7 @@ describe('AssignmentRuleService', () => {
         teamId,
         AssignmentStrategyEnum.SKILL_BASED,
         1,
-        { minSkill: 5 }
+        { minSkill: 5 },
       );
 
       expect(rule).toBeDefined();
@@ -62,7 +62,12 @@ describe('AssignmentRuleService', () => {
       teamRepo.findById.mockResolvedValue(null);
 
       await expect(
-        service.createRule(tenantId, teamId, AssignmentStrategyEnum.SKILL_BASED, 1)
+        service.createRule(
+          tenantId,
+          teamId,
+          AssignmentStrategyEnum.SKILL_BASED,
+          1,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });

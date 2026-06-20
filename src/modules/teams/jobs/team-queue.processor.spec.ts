@@ -32,14 +32,21 @@ describe('TeamQueueProcessor', () => {
       providers: [
         TeamQueueProcessor,
         { provide: AgentAssignmentService, useValue: mockAssignmentService },
-        { provide: AgentAvailabilityService, useValue: mockAvailabilityService },
+        {
+          provide: AgentAvailabilityService,
+          useValue: mockAvailabilityService,
+        },
         { provide: AgentProfileService, useValue: mockProfileService },
       ],
     }).compile();
 
     processor = module.get<TeamQueueProcessor>(TeamQueueProcessor);
-    assignmentService = module.get<AgentAssignmentService>(AgentAssignmentService);
-    availabilityService = module.get<AgentAvailabilityService>(AgentAvailabilityService);
+    assignmentService = module.get<AgentAssignmentService>(
+      AgentAssignmentService,
+    );
+    availabilityService = module.get<AgentAvailabilityService>(
+      AgentAvailabilityService,
+    );
     profileService = module.get<AgentProfileService>(AgentProfileService);
 
     jest.clearAllMocks();
@@ -71,7 +78,7 @@ describe('TeamQueueProcessor', () => {
         'team-1',
         'entity-1',
         'CONVERSATION',
-        { requiredSkill: 5 }
+        { requiredSkill: 5 },
       );
     });
 
@@ -98,9 +105,13 @@ describe('TeamQueueProcessor', () => {
       const res = await processor.handleJob(job as any);
 
       expect(res).toEqual({ status: 'synced' });
-      expect(availabilityService.updateAvailability).toHaveBeenCalledWith(tenantId, 'agent-1', {
-        status: 'AWAY',
-      });
+      expect(availabilityService.updateAvailability).toHaveBeenCalledWith(
+        tenantId,
+        'agent-1',
+        {
+          status: 'AWAY',
+        },
+      );
     });
 
     it('should handle load-balancer-job and align load differences', async () => {
@@ -123,7 +134,11 @@ describe('TeamQueueProcessor', () => {
       const res = await processor.handleJob(job as any);
 
       expect(res).toEqual({ actualLoad: 5 });
-      expect(availabilityService.updateLoad).toHaveBeenCalledWith(tenantId, 'agent-1', 4);
+      expect(availabilityService.updateLoad).toHaveBeenCalledWith(
+        tenantId,
+        'agent-1',
+        4,
+      );
     });
 
     it('should handle capacity-calculation-job', async () => {
@@ -159,7 +174,9 @@ describe('TeamQueueProcessor', () => {
         },
       };
 
-      await expect(processor.handleJob(job as any)).rejects.toThrow('Unknown job name: unknown-job');
+      await expect(processor.handleJob(job as any)).rejects.toThrow(
+        'Unknown job name: unknown-job',
+      );
     });
   });
 });

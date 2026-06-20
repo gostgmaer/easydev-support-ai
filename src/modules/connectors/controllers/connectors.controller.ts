@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Put, Delete, Body, Headers, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -33,7 +46,10 @@ export class ConnectorsController {
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: InstallConnectorDto,
   ) {
-    const connector = await this.connectorService.installConnector(tenantId, dto);
+    const connector = await this.connectorService.installConnector(
+      tenantId,
+      dto,
+    );
     return connector.toJSON();
   }
 
@@ -44,7 +60,11 @@ export class ConnectorsController {
     @Param('id') id: string,
     @Body() dto: ConfigureConnectorDto,
   ) {
-    const connector = await this.connectorService.updateConnector(tenantId, id, dto);
+    const connector = await this.connectorService.updateConnector(
+      tenantId,
+      id,
+      dto,
+    );
     return connector.toJSON();
   }
 
@@ -77,7 +97,10 @@ export class ConnectorsController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
   ) {
-    const connector = await this.connectorService.activateConnector(tenantId, id);
+    const connector = await this.connectorService.activateConnector(
+      tenantId,
+      id,
+    );
     return connector.toJSON();
   }
 
@@ -97,7 +120,10 @@ export class ConnectorsController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
   ) {
-    const connector = await this.connectorService.disableConnector(tenantId, id);
+    const connector = await this.connectorService.disableConnector(
+      tenantId,
+      id,
+    );
     return connector.toJSON();
   }
 
@@ -138,7 +164,9 @@ export class ConnectorsController {
     @Param('id') id: string,
     @Body() dto: ConfigureOAuthDto,
   ) {
-    const expiresAt = dto.expiresIn ? new Date(Date.now() + dto.expiresIn * 1000) : undefined;
+    const expiresAt = dto.expiresIn
+      ? new Date(Date.now() + dto.expiresIn * 1000)
+      : undefined;
     const credential = await this.credentialService.saveCredential(
       tenantId,
       id,
@@ -172,7 +200,11 @@ export class ConnectorsController {
     @Param('id') id: string,
     @Body() dto: MapCapabilitiesDto,
   ) {
-    const connector = await this.connectorService.mapCapabilities(tenantId, id, dto);
+    const connector = await this.connectorService.mapCapabilities(
+      tenantId,
+      id,
+      dto,
+    );
     return connector.toJSON();
   }
 
@@ -193,7 +225,11 @@ export class ConnectorsController {
     @Param('id') id: string,
     @Body() dto: CreateInstanceDto,
   ) {
-    const instance = await this.connectorService.createInstance(tenantId, id, dto);
+    const instance = await this.connectorService.createInstance(
+      tenantId,
+      id,
+      dto,
+    );
     return instance.toJSON();
   }
 
@@ -213,7 +249,10 @@ export class ConnectorsController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('instanceId') instanceId: string,
   ) {
-    const success = await this.connectorService.deleteInstance(tenantId, instanceId);
+    const success = await this.connectorService.deleteInstance(
+      tenantId,
+      instanceId,
+    );
     return { success };
   }
 }

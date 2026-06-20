@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import axios from 'axios';
 import { CapabilityResolver } from './capability-resolver';
 import { ConnectorFactory } from './connector-factory';
@@ -9,7 +15,11 @@ import { ConnectorExecution } from '../domain/connector-execution.entity';
 import { ConnectorRateLimit } from '../domain/connector-rate-limit.entity';
 import { ExecutionStatusEnum, AuthTypeEnum } from '../domain/value-objects';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
-import { ConnectorExecutedEvent, ConnectorFailedEvent, ConnectorRetryEvent } from '@easydev/shared-events';
+import {
+  ConnectorExecutedEvent,
+  ConnectorFailedEvent,
+  ConnectorRetryEvent,
+} from '@easydev/shared-events';
 import { ConnectorEventPublisher } from '../services/connector-event.publisher';
 import Redis from 'ioredis';
 
@@ -65,7 +75,10 @@ export class ExecutionEngine {
     );
 
     // 1. Resolve capability
-    const resolved = await this.capabilityResolver.resolve(tenantId, capabilityType);
+    const resolved = await this.capabilityResolver.resolve(
+      tenantId,
+      capabilityType,
+    );
     if (!resolved) {
       throw new HttpException(
         `Capability ${capabilityType} is not registered or configured for tenant ${tenantId}`,
@@ -86,7 +99,7 @@ export class ExecutionEngine {
     const breaker = await this.cbManager.getBreaker(tenantId, connector.id);
     if (!breaker.canRequest()) {
       this.logger.warn(`Circuit breaker is OPEN for connector ${connector.id}`);
-      
+
       // Save open circuit execution record
       const execution = new ConnectorExecution(crypto.randomUUID(), {
         tenantId,
@@ -104,7 +117,7 @@ export class ExecutionEngine {
         error: 'Circuit Breaker Open',
       });
       await this.repository.saveExecution(execution, tenantId);
-      
+
       throw new HttpException(
         `Circuit breaker is OPEN for connector ${connector.name}. Execution blocked.`,
         HttpStatus.SERVICE_UNAVAILABLE,
@@ -115,7 +128,7 @@ export class ExecutionEngine {
     const rateLimitExceeded = await this.checkRateLimit(tenantId, connector.id);
     if (rateLimitExceeded) {
       this.logger.warn(`Rate limit exceeded for connector ${connector.id}`);
-      
+
       const execution = new ConnectorExecution(crypto.randomUUID(), {
         tenantId,
         connectorId: connector.id,
@@ -132,7 +145,7 @@ export class ExecutionEngine {
         error: 'Rate Limit Exceeded',
       });
       await this.repository.saveExecution(execution, tenantId);
-      
+
       throw new HttpException(
         `Rate limit exceeded for connector ${connector.name}.`,
         HttpStatus.TOO_MANY_REQUESTS,
@@ -142,12 +155,23 @@ export class ExecutionEngine {
     // 4. Retrieve and Decrypt credentials (and refresh OAuth if needed)
     let authConfig = { authType: AuthTypeEnum.NONE, data: null as any };
     if (connector.authType !== AuthTypeEnum.NONE) {
-      let credential = await this.repository.getActiveCredential(tenantId, connector.id);
+      let credential = await this.repository.getActiveCredential(
+        tenantId,
+        connector.id,
+      );
       if (credential) {
         // Refresh token if expired
-        if (credential.authType === AuthTypeEnum.OAUTH2 && credential.expiresAt && credential.expiresAt.getTime() < Date.now()) {
+        if (
+          credential.authType === AuthTypeEnum.OAUTH2 &&
+          credential.expiresAt &&
+          credential.expiresAt.getTime() < Date.now()
+        ) {
           try {
-            credential = await this.credentialManager.refreshOAuthToken(tenantId, credential, this.repository);
+            credential = await this.credentialManager.refreshOAuthToken(
+              tenantId,
+              credential,
+              this.repository,
+            );
           } catch (err: any) {
             this.logger.error(`OAuth Refresh failed: ${err.message}`);
           }
@@ -204,7 +228,7 @@ export class ExecutionEngine {
       // Update success
       execution.markSuccess(response.status, response.data, latencyMs);
       await this.repository.saveExecution(execution, tenantId);
-      
+
       // Update Circuit Breaker
       breaker.recordSuccess();
       await this.cbManager.saveBreaker(tenantId, connector.id, breaker);
@@ -219,14 +243,22 @@ export class ExecutionEngine {
 
       // Fire Events
       await this.eventPublisher.publish(
-        new ConnectorExecutedEvent(tenantId, connector.id, capability.name, response.status, latencyMs),
+        new ConnectorExecutedEvent(
+          tenantId,
+          connector.id,
+          capability.name,
+          response.status,
+          latencyMs,
+        ),
       );
 
       return response.data;
     } catch (error: any) {
       const latencyMs = Date.now() - startTime;
       const statusCode = error.response?.status || 500;
-      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      const errorMsg = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : error.message;
 
       // Update failure
       execution.markFailed(errorMsg, latencyMs, statusCode);
@@ -253,7 +285,12 @@ export class ExecutionEngine {
 
         // Publish retry event
         await this.eventPublisher.publish(
-          new ConnectorRetryEvent(tenantId, connector.id, executionId, attempt + 1),
+          new ConnectorRetryEvent(
+            tenantId,
+            connector.id,
+            executionId,
+            attempt + 1,
+          ),
         );
 
         // Schedule retry job
@@ -274,11 +311,18 @@ export class ExecutionEngine {
           },
         );
 
-        this.logger.log(`Scheduled retry attempt ${attempt + 1} for execution ${executionId}`);
+        this.logger.log(
+          `Scheduled retry attempt ${attempt + 1} for execution ${executionId}`,
+        );
       } else {
         // Publish failure event if all retries exhausted
         await this.eventPublisher.publish(
-          new ConnectorFailedEvent(tenantId, connector.id, capability.name, errorMsg),
+          new ConnectorFailedEvent(
+            tenantId,
+            connector.id,
+            capability.name,
+            errorMsg,
+          ),
         );
       }
 
@@ -289,10 +333,13 @@ export class ExecutionEngine {
     }
   }
 
-  private async checkRateLimit(tenantId: string, connectorId: string): Promise<boolean> {
+  private async checkRateLimit(
+    tenantId: string,
+    connectorId: string,
+  ): Promise<boolean> {
     const key = `connector:rate:${tenantId}:${connectorId}`;
     const limit = await this.repository.getRateLimit(tenantId, connectorId);
-    
+
     if (!limit) {
       return false; // No limit configured
     }
@@ -330,7 +377,9 @@ export class ExecutionEngine {
 
         return currentUsage > maxRequests;
       } catch (err: any) {
-        this.logger.debug(`Redis rate limit script error: ${err.message}. Degrading to DB.`);
+        this.logger.debug(
+          `Redis rate limit script error: ${err.message}. Degrading to DB.`,
+        );
       }
     }
 
@@ -345,7 +394,11 @@ export class ExecutionEngine {
     return false;
   }
 
-  private async syncRateLimitUsage(tenantId: string, limit: ConnectorRateLimit, currentUsage: number): Promise<void> {
+  private async syncRateLimitUsage(
+    tenantId: string,
+    limit: ConnectorRateLimit,
+    currentUsage: number,
+  ): Promise<void> {
     try {
       limit.updateUsage(currentUsage);
       await this.repository.upsertRateLimit(limit, tenantId);

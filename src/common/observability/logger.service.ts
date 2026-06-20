@@ -9,7 +9,7 @@ export class StructuredLogger extends ConsoleLogger {
       ? {
           correlationId: store.get('correlationId'),
           requestId: store.get('requestId'),
-          traceId: store.get('traceId')
+          traceId: store.get('traceId'),
         }
       : {};
 
@@ -18,7 +18,7 @@ export class StructuredLogger extends ConsoleLogger {
       timestamp: new Date().toISOString(),
       context,
       message,
-      ...traceData
+      ...traceData,
     };
 
     if (process.env.NODE_ENV === 'production') {
@@ -35,7 +35,7 @@ export class StructuredLogger extends ConsoleLogger {
       ? {
           correlationId: store.get('correlationId'),
           requestId: store.get('requestId'),
-          traceId: store.get('traceId')
+          traceId: store.get('traceId'),
         }
       : {};
 
@@ -45,7 +45,7 @@ export class StructuredLogger extends ConsoleLogger {
       context,
       message,
       stack,
-      ...traceData
+      ...traceData,
     };
 
     if (process.env.NODE_ENV === 'production') {

@@ -56,7 +56,9 @@ describe('CustomerController', () => {
     controller = module.get<CustomerController>(CustomerController);
     customerService = module.get<CustomerService>(CustomerService);
     profileService = module.get<CustomerProfileService>(CustomerProfileService);
-    timelineService = module.get<CustomerTimelineService>(CustomerTimelineService);
+    timelineService = module.get<CustomerTimelineService>(
+      CustomerTimelineService,
+    );
 
     jest.clearAllMocks();
   });
@@ -70,7 +72,9 @@ describe('CustomerController', () => {
       };
       mockCustomerService.create.mockResolvedValue(mockResult);
 
-      const res = await controller.create(tenantId, dto, { user: { id: 'u1' } });
+      const res = await controller.create(tenantId, dto, {
+        user: { id: 'u1' },
+      });
 
       expect(res).toEqual({ id: 'c1', email: 'test@easydev.com' });
       expect(customerService.create).toHaveBeenCalledWith(tenantId, dto, 'u1');
@@ -104,10 +108,17 @@ describe('CustomerController', () => {
       };
       mockCustomerService.update.mockResolvedValue(mockResult);
 
-      const res = await controller.update(tenantId, 'c1', dto, { user: { id: 'u1' } });
+      const res = await controller.update(tenantId, 'c1', dto, {
+        user: { id: 'u1' },
+      });
 
       expect(res).toEqual({ id: 'c1', email: 'new@easydev.com' });
-      expect(customerService.update).toHaveBeenCalledWith(tenantId, 'c1', dto, 'u1');
+      expect(customerService.update).toHaveBeenCalledWith(
+        tenantId,
+        'c1',
+        dto,
+        'u1',
+      );
     });
   });
 
@@ -120,9 +131,15 @@ describe('CustomerController', () => {
 
     it('should restore a customer', async () => {
       const tenantId = randomUUID();
-      const res = await controller.restore(tenantId, 'c1', { user: { id: 'u1' } });
+      const res = await controller.restore(tenantId, 'c1', {
+        user: { id: 'u1' },
+      });
       expect(res).toEqual({ success: true });
-      expect(customerService.restore).toHaveBeenCalledWith(tenantId, 'c1', 'u1');
+      expect(customerService.restore).toHaveBeenCalledWith(
+        tenantId,
+        'c1',
+        'u1',
+      );
     });
   });
 
@@ -132,10 +149,17 @@ describe('CustomerController', () => {
       const mockResult = { toJSON: () => ({ id: 'target' }) };
       mockCustomerService.merge.mockResolvedValue(mockResult);
 
-      const res = await controller.merge(tenantId, 'source', 'target', { user: { id: 'u1' } });
+      const res = await controller.merge(tenantId, 'source', 'target', {
+        user: { id: 'u1' },
+      });
 
       expect(res).toEqual({ id: 'target' });
-      expect(customerService.merge).toHaveBeenCalledWith(tenantId, 'source', 'target', 'u1');
+      expect(customerService.merge).toHaveBeenCalledWith(
+        tenantId,
+        'source',
+        'target',
+        'u1',
+      );
     });
   });
 });

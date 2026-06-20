@@ -49,15 +49,47 @@ jest.mock('@easydev/database', () => {
     },
     schema: {
       aiAgents: { id: 'aiAgents.id', tenantId: 'aiAgents.tenantId' },
-      aiAgentProfiles: { agentId: 'aiAgentProfiles.agentId', tenantId: 'aiAgentProfiles.tenantId' },
-      aiModelConfigurations: { agentId: 'aiModelConfigurations.agentId', tenantId: 'aiModelConfigurations.tenantId' },
-      aiConversationSessions: { id: 'aiConversationSessions.id', tenantId: 'aiConversationSessions.tenantId', conversationId: 'aiConversationSessions.conversationId' },
-      aiWorkflowExecutions: { id: 'aiWorkflowExecutions.id', tenantId: 'aiWorkflowExecutions.tenantId' },
-      aiToolRequests: { id: 'aiToolRequests.id', tenantId: 'aiToolRequests.tenantId' },
-      aiToolResults: { id: 'aiToolResults.id', tenantId: 'aiToolResults.tenantId', toolRequestId: 'aiToolResults.toolRequestId' },
-      aiEscalations: { id: 'aiEscalations.id', tenantId: 'aiEscalations.tenantId', status: 'aiEscalations.status' },
-      aiUsageMetrics: { id: 'aiUsageMetrics.id', tenantId: 'aiUsageMetrics.tenantId', agentId: 'aiUsageMetrics.agentId', date: 'aiUsageMetrics.date' },
-      aiResponseLogs: { id: 'aiResponseLogs.id', tenantId: 'aiResponseLogs.tenantId' },
+      aiAgentProfiles: {
+        agentId: 'aiAgentProfiles.agentId',
+        tenantId: 'aiAgentProfiles.tenantId',
+      },
+      aiModelConfigurations: {
+        agentId: 'aiModelConfigurations.agentId',
+        tenantId: 'aiModelConfigurations.tenantId',
+      },
+      aiConversationSessions: {
+        id: 'aiConversationSessions.id',
+        tenantId: 'aiConversationSessions.tenantId',
+        conversationId: 'aiConversationSessions.conversationId',
+      },
+      aiWorkflowExecutions: {
+        id: 'aiWorkflowExecutions.id',
+        tenantId: 'aiWorkflowExecutions.tenantId',
+      },
+      aiToolRequests: {
+        id: 'aiToolRequests.id',
+        tenantId: 'aiToolRequests.tenantId',
+      },
+      aiToolResults: {
+        id: 'aiToolResults.id',
+        tenantId: 'aiToolResults.tenantId',
+        toolRequestId: 'aiToolResults.toolRequestId',
+      },
+      aiEscalations: {
+        id: 'aiEscalations.id',
+        tenantId: 'aiEscalations.tenantId',
+        status: 'aiEscalations.status',
+      },
+      aiUsageMetrics: {
+        id: 'aiUsageMetrics.id',
+        tenantId: 'aiUsageMetrics.tenantId',
+        agentId: 'aiUsageMetrics.agentId',
+        date: 'aiUsageMetrics.date',
+      },
+      aiResponseLogs: {
+        id: 'aiResponseLogs.id',
+        tenantId: 'aiResponseLogs.tenantId',
+      },
     },
   };
 });
@@ -442,7 +474,12 @@ describe('AI Integration Drizzle Repository', () => {
         updatedAt: new Date(),
       },
     ]);
-    const listed = await repo.findUsageMetrics(tenantId, agentId, '2026-06-01', '2026-06-30');
+    const listed = await repo.findUsageMetrics(
+      tenantId,
+      agentId,
+      '2026-06-01',
+      '2026-06-30',
+    );
     expect(listed.length).toBe(1);
 
     // Get non-existent usage metric

@@ -40,10 +40,12 @@ export enum AssignmentStrategyEnum {
   LEAST_LOADED = 'LEAST_LOADED',
   SKILL_BASED = 'SKILL_BASED',
   PRIORITY_BASED = 'PRIORITY_BASED',
-  MANUAL = 'MANUAL'
+  MANUAL = 'MANUAL',
 }
 
-export class AssignmentStrategy extends ValueObject<{ value: AssignmentStrategyEnum }> {
+export class AssignmentStrategy extends ValueObject<{
+  value: AssignmentStrategyEnum;
+}> {
   constructor(value: AssignmentStrategyEnum) {
     if (!Object.values(AssignmentStrategyEnum).includes(value)) {
       throw new Error(`Invalid assignment strategy: ${value}`);
@@ -86,15 +88,25 @@ export interface AgentCapacityProps {
 
 export class AgentCapacity extends ValueObject<AgentCapacityProps> {
   constructor(props: AgentCapacityProps) {
-    if (props.capacity < 0 || props.maxConcurrentConversations < 0 || props.maxOpenTickets < 0) {
+    if (
+      props.capacity < 0 ||
+      props.maxConcurrentConversations < 0 ||
+      props.maxOpenTickets < 0
+    ) {
       throw new Error('Agent capacity metrics cannot be negative');
     }
     super(props);
   }
 
-  get capacity(): number { return this.props.capacity; }
-  get maxConcurrentConversations(): number { return this.props.maxConcurrentConversations; }
-  get maxOpenTickets(): number { return this.props.maxOpenTickets; }
+  get capacity(): number {
+    return this.props.capacity;
+  }
+  get maxConcurrentConversations(): number {
+    return this.props.maxConcurrentConversations;
+  }
+  get maxOpenTickets(): number {
+    return this.props.maxOpenTickets;
+  }
 
   public static create(props: AgentCapacityProps): AgentCapacity {
     return new AgentCapacity(props);

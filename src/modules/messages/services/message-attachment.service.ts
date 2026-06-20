@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import {
@@ -177,7 +172,10 @@ export class MessageAttachmentService {
       tenantId,
       attachmentId,
     );
-    const owner = await this.messageRepo.findById(attachment.messageId, tenantId);
+    const owner = await this.messageRepo.findById(
+      attachment.messageId,
+      tenantId,
+    );
     if (owner) {
       await this.readModel.refresh(tenantId, owner.conversationId);
     }

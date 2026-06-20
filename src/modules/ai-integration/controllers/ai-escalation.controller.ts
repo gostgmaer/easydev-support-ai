@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Headers, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Headers,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -15,7 +23,10 @@ export class AiEscalationController {
     @Headers('x-tenant-id') tenantId: string,
     @Query('status') status?: string,
   ) {
-    const escalations = await this.escalationService.findEscalations(tenantId, status);
+    const escalations = await this.escalationService.findEscalations(
+      tenantId,
+      status,
+    );
     return escalations.map((e) => e.toJSON());
   }
 
@@ -25,7 +36,10 @@ export class AiEscalationController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
   ) {
-    const escalation = await this.escalationService.resolveEscalation(tenantId, id);
+    const escalation = await this.escalationService.resolveEscalation(
+      tenantId,
+      id,
+    );
     return escalation.toJSON();
   }
 }

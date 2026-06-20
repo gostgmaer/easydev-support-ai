@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import { db, schema } from '@easydev/database';
 import { eq } from 'drizzle-orm';
@@ -39,7 +45,9 @@ export class WebhookDispatcher {
     const resolvedTenantId = webhook.tenantId;
 
     if (webhook.status !== 'ACTIVE') {
-      throw new UnauthorizedException(`Webhook with ID ${webhookId} is currently INACTIVE`);
+      throw new UnauthorizedException(
+        `Webhook with ID ${webhookId} is currently INACTIVE`,
+      );
     }
 
     // 2. Validate Signature if secret is configured
@@ -48,18 +56,27 @@ export class WebhookDispatcher {
       const incomingSignature = headers[sigHeaderName];
 
       if (!incomingSignature) {
-        throw new UnauthorizedException(`Missing signature header: ${webhook.signatureHeader}`);
+        throw new UnauthorizedException(
+          `Missing signature header: ${webhook.signatureHeader}`,
+        );
       }
 
-      const bodyToSign = rawBody || (typeof payload === 'string' ? payload : JSON.stringify(payload));
+      const bodyToSign =
+        rawBody ||
+        (typeof payload === 'string' ? payload : JSON.stringify(payload));
       const expectedSignature = crypto
         .createHmac('sha256', webhook.secret)
         .update(bodyToSign)
         .digest('hex');
 
-      const isBufferEqual = this.safeCompare(incomingSignature, expectedSignature);
+      const isBufferEqual = this.safeCompare(
+        incomingSignature,
+        expectedSignature,
+      );
       if (!isBufferEqual) {
-        this.logger.warn(`Signature verification failed for webhook ID ${webhookId}`);
+        this.logger.warn(
+          `Signature verification failed for webhook ID ${webhookId}`,
+        );
         throw new UnauthorizedException('Signature verification failed');
       }
     }

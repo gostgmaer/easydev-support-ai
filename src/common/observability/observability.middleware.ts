@@ -8,7 +8,8 @@ export const traceStorage = new AsyncLocalStorage<Map<string, string>>();
 @Injectable()
 export class ObservabilityMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const correlationId = (req.headers['x-correlation-id'] as string) || uuidv4();
+    const correlationId =
+      (req.headers['x-correlation-id'] as string) || uuidv4();
     const requestId = (req.headers['x-request-id'] as string) || uuidv4();
     const traceId = (req.headers['x-trace-id'] as string) || uuidv4();
 
@@ -19,7 +20,7 @@ export class ObservabilityMiddleware implements NestMiddleware {
     const store = new Map<string, string>([
       ['correlationId', correlationId],
       ['requestId', requestId],
-      ['traceId', traceId]
+      ['traceId', traceId],
     ]);
 
     traceStorage.run(store, () => {

@@ -12,7 +12,13 @@ export class KnowledgeChunkService {
   public async saveChunks(
     tenantId: string,
     documentId: string,
-    chunksData: { content: string; chunkIndex: number; tokenCount: number; externalRef?: string; metadata?: Record<string, any> }[],
+    chunksData: {
+      content: string;
+      chunkIndex: number;
+      tokenCount: number;
+      externalRef?: string;
+      metadata?: Record<string, any>;
+    }[],
   ): Promise<void> {
     const chunks = chunksData.map((d) => {
       const hash = crypto.createHash('sha256').update(d.content).digest('hex');
@@ -31,11 +37,17 @@ export class KnowledgeChunkService {
     await this.repository.saveChunks(chunks, tenantId);
   }
 
-  public async getChunks(tenantId: string, documentId: string): Promise<KnowledgeChunk[]> {
+  public async getChunks(
+    tenantId: string,
+    documentId: string,
+  ): Promise<KnowledgeChunk[]> {
     return this.repository.getChunksByDocumentId(documentId, tenantId);
   }
 
-  public async deleteChunks(tenantId: string, documentId: string): Promise<void> {
+  public async deleteChunks(
+    tenantId: string,
+    documentId: string,
+  ): Promise<void> {
     await this.repository.deleteChunksByDocumentId(documentId, tenantId);
   }
 }

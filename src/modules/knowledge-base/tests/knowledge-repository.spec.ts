@@ -51,15 +51,36 @@ jest.mock('@easydev/database', () => {
       transaction: jest.fn((cb) => cb(queryBuilder)),
     },
     schema: {
-      knowledgeSources: { id: 'sources.id', tenantId: 'sources.tenant_id', deletedAt: 'sources.deleted_at' },
-      knowledgeDocuments: { id: 'docs.id', tenantId: 'docs.tenant_id', deletedAt: 'docs.deleted_at' },
+      knowledgeSources: {
+        id: 'sources.id',
+        tenantId: 'sources.tenant_id',
+        deletedAt: 'sources.deleted_at',
+      },
+      knowledgeDocuments: {
+        id: 'docs.id',
+        tenantId: 'docs.tenant_id',
+        deletedAt: 'docs.deleted_at',
+      },
       knowledgeChunks: { id: 'chunks.id', tenantId: 'chunks.tenant_id' },
-      knowledgeCategories: { id: 'categories.id', tenantId: 'categories.tenant_id', deletedAt: 'categories.deleted_at' },
+      knowledgeCategories: {
+        id: 'categories.id',
+        tenantId: 'categories.tenant_id',
+        deletedAt: 'categories.deleted_at',
+      },
       knowledgeTags: { name: 'tags.name', tenantId: 'tags.tenant_id' },
       knowledgeVersions: { id: 'versions.id', tenantId: 'versions.tenant_id' },
-      knowledgePermissions: { id: 'permissions.id', tenantId: 'permissions.tenant_id' },
-      knowledgeSyncJobs: { id: 'sync_jobs.id', tenantId: 'sync_jobs.tenant_id' },
-      knowledgeSearchLogs: { id: 'search_logs.id', tenantId: 'search_logs.tenant_id' },
+      knowledgePermissions: {
+        id: 'permissions.id',
+        tenantId: 'permissions.tenant_id',
+      },
+      knowledgeSyncJobs: {
+        id: 'sync_jobs.id',
+        tenantId: 'sync_jobs.tenant_id',
+      },
+      knowledgeSearchLogs: {
+        id: 'search_logs.id',
+        tenantId: 'search_logs.tenant_id',
+      },
     },
   };
 });
@@ -99,7 +120,17 @@ describe('Knowledge Drizzle Repository', () => {
     });
 
     it('should find source by id or return null', async () => {
-      mockResults.push([{ id: sourceId, tenantId, name: 'PDF', sourceType: 'PDF', status: 'ACTIVE', syncStatus: 'PENDING', documentCount: 0 }]);
+      mockResults.push([
+        {
+          id: sourceId,
+          tenantId,
+          name: 'PDF',
+          sourceType: 'PDF',
+          status: 'ACTIVE',
+          syncStatus: 'PENDING',
+          documentCount: 0,
+        },
+      ]);
       const found = await repo.getSourceById(sourceId, tenantId);
       expect(found).toBeDefined();
       expect(found?.name).toBe('PDF');
@@ -110,7 +141,17 @@ describe('Knowledge Drizzle Repository', () => {
     });
 
     it('should find all sources', async () => {
-      mockResults.push([{ id: sourceId, tenantId, name: 'PDF', sourceType: 'PDF', status: 'ACTIVE', syncStatus: 'PENDING', documentCount: 0 }]);
+      mockResults.push([
+        {
+          id: sourceId,
+          tenantId,
+          name: 'PDF',
+          sourceType: 'PDF',
+          status: 'ACTIVE',
+          syncStatus: 'PENDING',
+          documentCount: 0,
+        },
+      ]);
       const res = await repo.findSources(tenantId);
       expect(res.data.length).toBe(1);
     });
@@ -128,8 +169,22 @@ describe('Knowledge Drizzle Repository', () => {
 
   describe('Documents Operations', () => {
     it('should find by id, find by slug, and find all active', async () => {
-      const row = { id: docId, tenantId, sourceId, title: 'Title', slug: 'slug', documentType: 'PDF', status: 'ACTIVE', language: 'en', version: 1, syncStatus: 'PENDING', ingestionStatus: 'PENDING', embeddingStatus: 'PENDING', chunkCount: 0 };
-      
+      const row = {
+        id: docId,
+        tenantId,
+        sourceId,
+        title: 'Title',
+        slug: 'slug',
+        documentType: 'PDF',
+        status: 'ACTIVE',
+        language: 'en',
+        version: 1,
+        syncStatus: 'PENDING',
+        ingestionStatus: 'PENDING',
+        embeddingStatus: 'PENDING',
+        chunkCount: 0,
+      };
+
       mockResults.push([row]);
       const foundId = await repo.findById(docId, tenantId);
       expect(foundId).toBeDefined();
@@ -185,8 +240,22 @@ describe('Knowledge Drizzle Repository', () => {
     });
 
     it('should findDocuments with query options', async () => {
-      const row = { id: docId, tenantId, sourceId, title: 'Title', slug: 'slug', documentType: 'PDF', status: 'ACTIVE', language: 'en', version: 1, syncStatus: 'PENDING', ingestionStatus: 'PENDING', embeddingStatus: 'PENDING', chunkCount: 0 };
-      
+      const row = {
+        id: docId,
+        tenantId,
+        sourceId,
+        title: 'Title',
+        slug: 'slug',
+        documentType: 'PDF',
+        status: 'ACTIVE',
+        language: 'en',
+        version: 1,
+        syncStatus: 'PENDING',
+        ingestionStatus: 'PENDING',
+        embeddingStatus: 'PENDING',
+        chunkCount: 0,
+      };
+
       mockResults.push([row], [row]); // count and rows query
       const res = await repo.findDocuments(tenantId, {
         sourceId,
@@ -217,7 +286,17 @@ describe('Knowledge Drizzle Repository', () => {
       await repo.saveChunks([chunk], tenantId, docId);
       expect(db.transaction).toHaveBeenCalled();
 
-      mockResults.push([{ id: 'chunk-1', tenantId, documentId: docId, chunkIndex: 0, chunkHash: 'hash', content: 'content', tokenCount: 2 }]);
+      mockResults.push([
+        {
+          id: 'chunk-1',
+          tenantId,
+          documentId: docId,
+          chunkIndex: 0,
+          chunkHash: 'hash',
+          content: 'content',
+          tokenCount: 2,
+        },
+      ]);
       const chunks = await repo.getChunksByDocumentId(docId, tenantId);
       expect(chunks.length).toBe(1);
 
@@ -228,7 +307,11 @@ describe('Knowledge Drizzle Repository', () => {
 
   describe('Categories and Tags', () => {
     it('should manage categories (insert, update, delete)', async () => {
-      const cat = new KnowledgeCategory(catId, { tenantId, name: 'Cat', sortOrder: 1 });
+      const cat = new KnowledgeCategory(catId, {
+        tenantId,
+        name: 'Cat',
+        sortOrder: 1,
+      });
 
       mockResults.push([]);
       await repo.saveCategory(cat, tenantId);
@@ -286,27 +369,53 @@ describe('Knowledge Drizzle Repository', () => {
 
   describe('Versions & Search Logs & Sync Jobs', () => {
     it('should manage versions', async () => {
-      const ver = new KnowledgeVersion('ver-1', { tenantId, documentId: docId, versionNumber: 1 });
+      const ver = new KnowledgeVersion('ver-1', {
+        tenantId,
+        documentId: docId,
+        versionNumber: 1,
+      });
       await repo.saveVersion(ver, tenantId);
       expect(db.insert).toHaveBeenCalled();
 
-      mockResults.push([{ id: 'ver-1', tenantId, documentId: docId, versionNumber: 1 }]);
+      mockResults.push([
+        { id: 'ver-1', tenantId, documentId: docId, versionNumber: 1 },
+      ]);
       const versions = await repo.getVersionsByDocumentId(docId, tenantId);
       expect(versions.length).toBe(1);
     });
 
     it('should manage search logs', async () => {
-      const log = new KnowledgeSearchLog('log-1', { tenantId, query: 'test', resultsCount: 1, latencyMs: 50, source: 'API' });
+      const log = new KnowledgeSearchLog('log-1', {
+        tenantId,
+        query: 'test',
+        resultsCount: 1,
+        latencyMs: 50,
+        source: 'API',
+      });
       await repo.addSearchLog(log, tenantId);
       expect(db.insert).toHaveBeenCalled();
 
-      mockResults.push([{ id: 'log-1', tenantId, query: 'test', resultsCount: 1, latencyMs: 50, source: 'API' }]);
+      mockResults.push([
+        {
+          id: 'log-1',
+          tenantId,
+          query: 'test',
+          resultsCount: 1,
+          latencyMs: 50,
+          source: 'API',
+        },
+      ]);
       const logs = await repo.getSearchLogs(tenantId);
       expect(logs.length).toBe(1);
     });
 
     it('should manage sync jobs', async () => {
-      const job = new KnowledgeSyncJob('job-1', { tenantId, sourceId, jobType: 'CRAWL', status: 'PENDING' });
+      const job = new KnowledgeSyncJob('job-1', {
+        tenantId,
+        sourceId,
+        jobType: 'CRAWL',
+        status: 'PENDING',
+      });
 
       mockResults.push([]);
       await repo.saveSyncJob(job, tenantId);
@@ -316,7 +425,18 @@ describe('Knowledge Drizzle Repository', () => {
       await repo.saveSyncJob(job, tenantId);
       expect(db.update).toHaveBeenCalled();
 
-      mockResults.push([{ id: 'job-1', tenantId, sourceId, jobType: 'CRAWL', status: 'PENDING', totalItems: 0, processedItems: 0, failedItems: 0 }]);
+      mockResults.push([
+        {
+          id: 'job-1',
+          tenantId,
+          sourceId,
+          jobType: 'CRAWL',
+          status: 'PENDING',
+          totalItems: 0,
+          processedItems: 0,
+          failedItems: 0,
+        },
+      ]);
       const found = await repo.getSyncJobById('job-1', tenantId);
       expect(found).toBeDefined();
 
@@ -324,7 +444,18 @@ describe('Knowledge Drizzle Repository', () => {
       const notFound = await repo.getSyncJobById('missing', tenantId);
       expect(notFound).toBeNull();
 
-      mockResults.push([{ id: 'job-1', tenantId, sourceId, jobType: 'CRAWL', status: 'PENDING', totalItems: 0, processedItems: 0, failedItems: 0 }]);
+      mockResults.push([
+        {
+          id: 'job-1',
+          tenantId,
+          sourceId,
+          jobType: 'CRAWL',
+          status: 'PENDING',
+          totalItems: 0,
+          processedItems: 0,
+          failedItems: 0,
+        },
+      ]);
       const all = await repo.findSyncJobs(tenantId, sourceId);
       expect(all.length).toBe(1);
     });
@@ -332,7 +463,12 @@ describe('Knowledge Drizzle Repository', () => {
 
   describe('Permissions operations', () => {
     it('should save, get, and delete permission', async () => {
-      const perm = new KnowledgePermission('perm-1', { tenantId, documentId: docId, role: 'agent', accessLevel: 'READ' });
+      const perm = new KnowledgePermission('perm-1', {
+        tenantId,
+        documentId: docId,
+        role: 'agent',
+        accessLevel: 'READ',
+      });
 
       mockResults.push([]);
       await repo.savePermission(perm, tenantId);
@@ -342,7 +478,15 @@ describe('Knowledge Drizzle Repository', () => {
       await repo.savePermission(perm, tenantId);
       expect(db.update).toHaveBeenCalled();
 
-      mockResults.push([{ id: 'perm-1', tenantId, documentId: docId, role: 'agent', accessLevel: 'READ' }]);
+      mockResults.push([
+        {
+          id: 'perm-1',
+          tenantId,
+          documentId: docId,
+          role: 'agent',
+          accessLevel: 'READ',
+        },
+      ]);
       const perms = await repo.getPermissionsByDocumentId(docId, tenantId);
       expect(perms.length).toBe(1);
 
@@ -358,27 +502,83 @@ describe('Knowledge Drizzle Repository', () => {
     it('should checkPermission with various parameters', async () => {
       // 1. Inherit default access when no rules exist
       mockResults.push([]);
-      let allowed = await repo.checkPermission(docId, tenantId, 'team-1', 'agent', 'READ');
+      let allowed = await repo.checkPermission(
+        docId,
+        tenantId,
+        'team-1',
+        'agent',
+        'READ',
+      );
       expect(allowed).toBe(true);
 
       // 2. Allowed matches role and role has write access level
-      mockResults.push([{ id: 'perm-1', tenantId, documentId: docId, role: 'agent', accessLevel: 'WRITE' }]);
-      allowed = await repo.checkPermission(docId, tenantId, undefined, 'agent', 'READ');
+      mockResults.push([
+        {
+          id: 'perm-1',
+          tenantId,
+          documentId: docId,
+          role: 'agent',
+          accessLevel: 'WRITE',
+        },
+      ]);
+      allowed = await repo.checkPermission(
+        docId,
+        tenantId,
+        undefined,
+        'agent',
+        'READ',
+      );
       expect(allowed).toBe(true);
 
       // 3. Allowed matches team and team has write access level
-      mockResults.push([{ id: 'perm-2', tenantId, documentId: docId, teamId: 'team-1', accessLevel: 'WRITE' }]);
-      allowed = await repo.checkPermission(docId, tenantId, 'team-1', 'agent', 'WRITE');
+      mockResults.push([
+        {
+          id: 'perm-2',
+          tenantId,
+          documentId: docId,
+          teamId: 'team-1',
+          accessLevel: 'WRITE',
+        },
+      ]);
+      allowed = await repo.checkPermission(
+        docId,
+        tenantId,
+        'team-1',
+        'agent',
+        'WRITE',
+      );
       expect(allowed).toBe(true);
 
       // 4. Disallowed matches team but level is insufficient
-      mockResults.push([{ id: 'perm-3', tenantId, documentId: docId, teamId: 'team-1', accessLevel: 'READ' }]);
-      allowed = await repo.checkPermission(docId, tenantId, 'team-1', 'agent', 'WRITE');
+      mockResults.push([
+        {
+          id: 'perm-3',
+          tenantId,
+          documentId: docId,
+          teamId: 'team-1',
+          accessLevel: 'READ',
+        },
+      ]);
+      allowed = await repo.checkPermission(
+        docId,
+        tenantId,
+        'team-1',
+        'agent',
+        'WRITE',
+      );
       expect(allowed).toBe(false);
 
       // 5. Allowed matches public (no team and no role)
-      mockResults.push([{ id: 'perm-4', tenantId, documentId: docId, accessLevel: 'READ' }]);
-      allowed = await repo.checkPermission(docId, tenantId, 'team-1', 'agent', 'READ');
+      mockResults.push([
+        { id: 'perm-4', tenantId, documentId: docId, accessLevel: 'READ' },
+      ]);
+      allowed = await repo.checkPermission(
+        docId,
+        tenantId,
+        'team-1',
+        'agent',
+        'READ',
+      );
       expect(allowed).toBe(true);
     });
   });

@@ -28,7 +28,8 @@ export class AIPlatformClient {
 
   constructor() {
     this.baseUrl = process.env.EASYDEV_AI_URL || 'https://api.easydev.ai';
-    this.apiKey = process.env.EASYDEV_AI_API_KEY || 'easydev_ai_api_key_default';
+    this.apiKey =
+      process.env.EASYDEV_AI_API_KEY || 'easydev_ai_api_key_default';
   }
 
   public async ingestDocument(
@@ -38,8 +39,10 @@ export class AIPlatformClient {
     mimeType: string,
     options: Record<string, any> = {},
   ): Promise<IngestResponse> {
-    this.logger.log(`Calling AI Platform ingest for document ${documentId} (tenant ${tenantId})`);
-    
+    this.logger.log(
+      `Calling AI Platform ingest for document ${documentId} (tenant ${tenantId})`,
+    );
+
     try {
       const response = await axios.post<IngestResponse>(
         `${this.baseUrl}/v1/documents/ingest`,
@@ -53,7 +56,7 @@ export class AIPlatformClient {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           timeout: 30000,
@@ -62,12 +65,19 @@ export class AIPlatformClient {
       return response.data;
     } catch (error: any) {
       this.logger.error(`AI Platform ingest call failed: ${error.message}`);
-      throw new Error(`AI Platform Ingestion failed: ${error.response?.data?.message || error.message}`);
+      throw new Error(
+        `AI Platform Ingestion failed: ${error.response?.data?.message || error.message}`,
+      );
     }
   }
 
-  public async embedTexts(tenantId: string, texts: string[]): Promise<EmbedResponse> {
-    this.logger.log(`Calling AI Platform embed for ${texts.length} text segments (tenant ${tenantId})`);
+  public async embedTexts(
+    tenantId: string,
+    texts: string[],
+  ): Promise<EmbedResponse> {
+    this.logger.log(
+      `Calling AI Platform embed for ${texts.length} text segments (tenant ${tenantId})`,
+    );
 
     try {
       const response = await axios.post<EmbedResponse>(
@@ -78,7 +88,7 @@ export class AIPlatformClient {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           timeout: 20000,
@@ -87,7 +97,9 @@ export class AIPlatformClient {
       return response.data;
     } catch (error: any) {
       this.logger.error(`AI Platform embedding call failed: ${error.message}`);
-      throw new Error(`AI Platform Embedding failed: ${error.response?.data?.message || error.message}`);
+      throw new Error(
+        `AI Platform Embedding failed: ${error.response?.data?.message || error.message}`,
+      );
     }
   }
 
@@ -97,7 +109,9 @@ export class AIPlatformClient {
     documents: string[],
     topK = 5,
   ): Promise<RerankResponse> {
-    this.logger.log(`Calling AI Platform rerank for query (tenant ${tenantId})`);
+    this.logger.log(
+      `Calling AI Platform rerank for query (tenant ${tenantId})`,
+    );
 
     try {
       const response = await axios.post<RerankResponse>(
@@ -110,7 +124,7 @@ export class AIPlatformClient {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           timeout: 20000,
@@ -119,7 +133,9 @@ export class AIPlatformClient {
       return response.data;
     } catch (error: any) {
       this.logger.error(`AI Platform reranking call failed: ${error.message}`);
-      throw new Error(`AI Platform Reranking failed: ${error.response?.data?.message || error.message}`);
+      throw new Error(
+        `AI Platform Reranking failed: ${error.response?.data?.message || error.message}`,
+      );
     }
   }
 }

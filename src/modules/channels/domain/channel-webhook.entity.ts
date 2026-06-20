@@ -27,18 +27,42 @@ export class ChannelWebhook extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get channelId(): string { return this.props.channelId; }
-  get webhookUrl(): string { return this.props.webhookUrl; }
-  get webhookSecret(): string | undefined { return this.props.webhookSecret; }
-  get verificationToken(): string | undefined { return this.props.verificationToken; }
-  get status(): string { return this.props.status || 'ACTIVE'; }
-  get lastReceivedAt(): Date | undefined { return this.props.lastReceivedAt; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get channelId(): string {
+    return this.props.channelId;
+  }
+  get webhookUrl(): string {
+    return this.props.webhookUrl;
+  }
+  get webhookSecret(): string | undefined {
+    return this.props.webhookSecret;
+  }
+  get verificationToken(): string | undefined {
+    return this.props.verificationToken;
+  }
+  get status(): string {
+    return this.props.status || 'ACTIVE';
+  }
+  get lastReceivedAt(): Date | undefined {
+    return this.props.lastReceivedAt;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
-  public update(props: Partial<Omit<ChannelWebhookProps, 'tenantId' | 'channelId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<
+      Omit<ChannelWebhookProps, 'tenantId' | 'channelId' | 'createdAt'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

@@ -2,7 +2,10 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { IAiRepository } from '../repositories/ai-repository.interface';
 import { AiUsageMetric } from '../domain/entities';
 import { AiEventPublisher } from './ai-event.publisher';
-import { AiUsageRecordedEvent, AiResponseGeneratedEvent } from '@easydev/shared-events';
+import {
+  AiUsageRecordedEvent,
+  AiResponseGeneratedEvent,
+} from '@easydev/shared-events';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -24,7 +27,9 @@ export class AiUsageService {
     toolCallsCount = 0,
   ): Promise<AiUsageMetric> {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    this.logger.log(`Recording usage metrics for agent ${agentId} on ${today} (tokens: ${tokens}, cost: $${cost})`);
+    this.logger.log(
+      `Recording usage metrics for agent ${agentId} on ${today} (tokens: ${tokens}, cost: $${cost})`,
+    );
 
     let metric = await this.repository.getUsageMetric(agentId, today, tenantId);
     if (!metric) {
@@ -57,7 +62,12 @@ export class AiUsageService {
     startDate?: string,
     endDate?: string,
   ): Promise<AiUsageMetric[]> {
-    return this.repository.findUsageMetrics(tenantId, agentId, startDate, endDate);
+    return this.repository.findUsageMetrics(
+      tenantId,
+      agentId,
+      startDate,
+      endDate,
+    );
   }
 
   public async logResponse(
@@ -88,7 +98,14 @@ export class AiUsageService {
     );
 
     await this.eventPublisher.publish(
-      new AiResponseGeneratedEvent(tenantId, conversationId, messageId, responseType, tokensUsed, cost),
+      new AiResponseGeneratedEvent(
+        tenantId,
+        conversationId,
+        messageId,
+        responseType,
+        tokensUsed,
+        cost,
+      ),
     );
   }
 }

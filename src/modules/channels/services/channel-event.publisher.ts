@@ -9,17 +9,19 @@ export class ChannelEventPublisher {
   constructor(private readonly queueService: QueueService) {}
 
   async publish(event: DomainEvent): Promise<void> {
-    const eventName = (event.constructor as any).eventName || event.constructor.name;
-    this.logger.log(`Publishing Channel Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`);
+    const eventName =
+      (event.constructor as any).eventName || event.constructor.name;
+    this.logger.log(
+      `Publishing Channel Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`,
+    );
 
     try {
       // Trigger background jobs if necessary on events
       if (eventName === 'channel.health.failed') {
-        await this.queueService.addJob(
-          'channel-queue',
-          'channel-health-job',
-          { channelId: event.getAggregateId(), action: 'check' }
-        );
+        await this.queueService.addJob('channel-queue', 'channel-health-job', {
+          channelId: event.getAggregateId(),
+          action: 'check',
+        });
       }
     } catch (err: any) {
       this.logger.error(`Failed to handle event queueing: ${err.message}`);

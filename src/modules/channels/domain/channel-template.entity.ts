@@ -28,18 +28,42 @@ export class ChannelTemplate extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get channelId(): string { return this.props.channelId; }
-  get templateName(): string { return this.props.templateName; }
-  get templateType(): string { return this.props.templateType; }
-  get templateContent(): string { return this.props.templateContent; }
-  get variables(): Record<string, any> { return this.props.variables || {}; }
-  get isActive(): boolean { return this.props.isActive !== false; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version || 1; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get channelId(): string {
+    return this.props.channelId;
+  }
+  get templateName(): string {
+    return this.props.templateName;
+  }
+  get templateType(): string {
+    return this.props.templateType;
+  }
+  get templateContent(): string {
+    return this.props.templateContent;
+  }
+  get variables(): Record<string, any> {
+    return this.props.variables || {};
+  }
+  get isActive(): boolean {
+    return this.props.isActive !== false;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version || 1;
+  }
 
-  public update(props: Partial<Omit<ChannelTemplateProps, 'tenantId' | 'channelId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<
+      Omit<ChannelTemplateProps, 'tenantId' | 'channelId' | 'createdAt'>
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

@@ -30,7 +30,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Ticket Categories')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/ticket-categories')
@@ -46,7 +50,11 @@ export class TicketCategoryController {
     @Body() dto: CreateCategoryDto,
     @Req() req: any,
   ) {
-    const category = await this.categoryService.create(tenantId, dto, req.user?.id);
+    const category = await this.categoryService.create(
+      tenantId,
+      dto,
+      req.user?.id,
+    );
     return category.toJSON();
   }
 
@@ -84,7 +92,12 @@ export class TicketCategoryController {
     @Body() dto: UpdateCategoryDto,
     @Req() req: any,
   ) {
-    const category = await this.categoryService.update(tenantId, id, dto, req.user?.id);
+    const category = await this.categoryService.update(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return category.toJSON();
   }
 

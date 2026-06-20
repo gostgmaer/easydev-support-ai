@@ -99,7 +99,10 @@ export class MessageInboundService {
   async ingest(
     tenantId: string,
     dto: InboundMessageDto,
-  ): Promise<{ deduplicated: boolean; message?: ReturnType<Message['toJSON']> }> {
+  ): Promise<{
+    deduplicated: boolean;
+    message?: ReturnType<Message['toJSON']>;
+  }> {
     const normalized = this.normalize(dto);
     this.validate(normalized);
 
@@ -155,7 +158,10 @@ export class MessageInboundService {
    * HTTP entry point: never processes the message inline. The webhook handler
    * only enqueues; the worker invokes {@link ingest}.
    */
-  async enqueueWebhook(tenantId: string, dto: InboundMessageDto): Promise<void> {
+  async enqueueWebhook(
+    tenantId: string,
+    dto: InboundMessageDto,
+  ): Promise<void> {
     await this.queueService.addJob(QUEUES.MESSAGE, 'message-inbound-job', {
       tenantId,
       payload: dto,

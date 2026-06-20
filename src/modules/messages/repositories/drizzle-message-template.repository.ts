@@ -9,10 +9,11 @@ import {
 import { MessageMapper } from './message.mapper';
 
 @Injectable()
-export class DrizzleMessageTemplateRepository
-  implements IMessageTemplateRepository
-{
-  async findById(id: string, tenantId: string): Promise<MessageTemplate | null> {
+export class DrizzleMessageTemplateRepository implements IMessageTemplateRepository {
+  async findById(
+    id: string,
+    tenantId: string,
+  ): Promise<MessageTemplate | null> {
     const [row] = await db
       .select()
       .from(schema.messageTemplates)

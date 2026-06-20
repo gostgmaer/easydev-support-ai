@@ -74,7 +74,10 @@ export class WorkflowMapper {
     });
   }
 
-  public static executionToDomain(raw: any, approvals: any[] = []): WorkflowExecution {
+  public static executionToDomain(
+    raw: any,
+    approvals: any[] = [],
+  ): WorkflowExecution {
     return new WorkflowExecution(raw.id, {
       tenantId: raw.tenantId,
       workflowId: raw.workflowId,

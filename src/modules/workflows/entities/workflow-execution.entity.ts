@@ -6,10 +6,19 @@ export class WorkflowExecution extends BaseTenantEntity {
   @Column({ type: 'uuid', name: 'workflow_id' })
   workflowId: string;
 
-  @Column({ type: 'varchar', length: 50, name: 'execution_status', default: 'RUNNING' })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    name: 'execution_status',
+    default: 'RUNNING',
+  })
   executionStatus: string;
 
-  @Column({ type: 'timestamp', name: 'started_at', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp',
+    name: 'started_at',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   startedAt: Date;
 
   @Column({ type: 'timestamp', name: 'completed_at', nullable: true })
@@ -21,7 +30,12 @@ export class WorkflowExecution extends BaseTenantEntity {
   @Column({ type: 'varchar', length: 50, name: 'trigger_source' })
   triggerSource: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'trigger_reference_id', nullable: true })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    name: 'trigger_reference_id',
+    nullable: true,
+  })
   triggerReferenceId: string;
 
   @Column({ type: 'jsonb' })

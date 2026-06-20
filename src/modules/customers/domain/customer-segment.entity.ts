@@ -24,16 +24,34 @@ export class CustomerSegment extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get segmentName(): string { return this.props.segmentName; }
-  get segmentType(): 'STATIC' | 'DYNAMIC' { return this.props.segmentType; }
-  get rules(): any { return this.props.rules; }
-  get description(): string | undefined { return this.props.description; }
-  get isActive(): boolean { return this.props.isActive; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get segmentName(): string {
+    return this.props.segmentName;
+  }
+  get segmentType(): 'STATIC' | 'DYNAMIC' {
+    return this.props.segmentType;
+  }
+  get rules(): any {
+    return this.props.rules;
+  }
+  get description(): string | undefined {
+    return this.props.description;
+  }
+  get isActive(): boolean {
+    return this.props.isActive;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
-  public update(props: Partial<Omit<CustomerSegmentProps, 'tenantId' | 'createdAt'>>): void {
+  public update(
+    props: Partial<Omit<CustomerSegmentProps, 'tenantId' | 'createdAt'>>,
+  ): void {
     this.props = {
       ...this.props,
       ...props,

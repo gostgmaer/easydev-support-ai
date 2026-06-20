@@ -192,8 +192,6 @@ jest.mock('@easydev/database', () => {
   };
 });
 
-
-
 import { db } from '@easydev/database';
 const mockDbInstance = db as any;
 
@@ -204,7 +202,6 @@ function mockDbResolve(value: any) {
 }
 
 describe('DrizzleAnalyticsRepository', () => {
-
   let repository: DrizzleAnalyticsRepository;
   const tenantId = 'tenant-123';
   const reportId = 'report-123';
@@ -216,7 +213,9 @@ describe('DrizzleAnalyticsRepository', () => {
       providers: [DrizzleAnalyticsRepository],
     }).compile();
 
-    repository = module.get<DrizzleAnalyticsRepository>(DrizzleAnalyticsRepository);
+    repository = module.get<DrizzleAnalyticsRepository>(
+      DrizzleAnalyticsRepository,
+    );
   });
 
   describe('Events', () => {
@@ -265,7 +264,12 @@ describe('DrizzleAnalyticsRepository', () => {
         },
       ]);
 
-      const events = await repository.findEvents(tenantId, 'conversation.created', new Date(), new Date());
+      const events = await repository.findEvents(
+        tenantId,
+        'conversation.created',
+        new Date(),
+        new Date(),
+      );
       expect(events).toHaveLength(1);
       expect(events[0].id).toBe('evt-1');
     });
@@ -514,7 +518,12 @@ describe('DrizzleAnalyticsRepository', () => {
         },
       ]);
 
-      const list = await repository.getHourlyMetrics(tenantId, 'conversation.created', new Date(), new Date());
+      const list = await repository.getHourlyMetrics(
+        tenantId,
+        'conversation.created',
+        new Date(),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
       expect(list[0].value).toBe(12.34);
     });
@@ -533,7 +542,12 @@ describe('DrizzleAnalyticsRepository', () => {
         },
       ]);
 
-      const list = await repository.getDailyMetrics(tenantId, 'conversation.created', new Date(), new Date());
+      const list = await repository.getDailyMetrics(
+        tenantId,
+        'conversation.created',
+        new Date(),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
       expect(list[0].value).toBe(12.34);
     });
@@ -542,51 +556,97 @@ describe('DrizzleAnalyticsRepository', () => {
   describe('All other tenant-specific metric types', () => {
     it('Tenant metrics - save and get', async () => {
       mockDbResolve([]);
-      await repository.saveTenantMetrics({ tenantId, timestamp: new Date(), conversationsCount: 5 });
+      await repository.saveTenantMetrics({
+        tenantId,
+        timestamp: new Date(),
+        conversationsCount: 5,
+      });
       expect(mockDbInstance.insert).toHaveBeenCalled();
 
       mockDbResolve([{ id: 't-1' }]);
-      await repository.saveTenantMetrics({ tenantId, timestamp: new Date(), conversationsCount: 5 });
+      await repository.saveTenantMetrics({
+        tenantId,
+        timestamp: new Date(),
+        conversationsCount: 5,
+      });
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 't-1', tenantId, timestamp: new Date() }]);
-      const list = await repository.getTenantMetrics(tenantId, new Date(), new Date());
+      const list = await repository.getTenantMetrics(
+        tenantId,
+        new Date(),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
     });
 
     it('Agent metrics - save, get, summary', async () => {
       mockDbResolve([]);
-      await repository.saveAgentMetrics({ tenantId, agentId: 'agent-1', timestamp: new Date() });
+      await repository.saveAgentMetrics({
+        tenantId,
+        agentId: 'agent-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.insert).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'a-1' }]);
-      await repository.saveAgentMetrics({ tenantId, agentId: 'agent-1', timestamp: new Date() });
+      await repository.saveAgentMetrics({
+        tenantId,
+        agentId: 'agent-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'a-1' }]);
-      const metrics = await repository.getAgentMetrics(tenantId, 'agent-1', new Date(), new Date());
+      const metrics = await repository.getAgentMetrics(
+        tenantId,
+        'agent-1',
+        new Date(),
+        new Date(),
+      );
       expect(metrics).toHaveLength(1);
 
       mockDbResolve([{ id: 'a-1' }]);
-      const summary = await repository.getAgentMetricsSummary(tenantId, new Date(), new Date());
+      const summary = await repository.getAgentMetricsSummary(
+        tenantId,
+        new Date(),
+        new Date(),
+      );
       expect(summary).toHaveLength(1);
     });
 
     it('Channel metrics - save, get, summary', async () => {
       mockDbResolve([]);
-      await repository.saveChannelMetrics({ tenantId, channelId: 'c-1', timestamp: new Date() });
+      await repository.saveChannelMetrics({
+        tenantId,
+        channelId: 'c-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.insert).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'c-1' }]);
-      await repository.saveChannelMetrics({ tenantId, channelId: 'c-1', timestamp: new Date() });
+      await repository.saveChannelMetrics({
+        tenantId,
+        channelId: 'c-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'c-1' }]);
-      const metrics = await repository.getChannelMetrics(tenantId, 'c-1', new Date(), new Date());
+      const metrics = await repository.getChannelMetrics(
+        tenantId,
+        'c-1',
+        new Date(),
+        new Date(),
+      );
       expect(metrics).toHaveLength(1);
 
       mockDbResolve([{ id: 'c-1' }]);
-      const summary = await repository.getChannelMetricsSummary(tenantId, new Date(), new Date());
+      const summary = await repository.getChannelMetricsSummary(
+        tenantId,
+        new Date(),
+        new Date(),
+      );
       expect(summary).toHaveLength(1);
     });
 
@@ -600,49 +660,92 @@ describe('DrizzleAnalyticsRepository', () => {
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'ai-1' }]);
-      const list = await repository.getAiMetrics(tenantId, new Date(), new Date());
+      const list = await repository.getAiMetrics(
+        tenantId,
+        new Date(),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
     });
 
     it('Ticket metrics - save and get', async () => {
       mockDbResolve([]);
-      await repository.saveTicketMetrics({ tenantId, timestamp: new Date(), status: 'OPEN', priority: 'HIGH' });
+      await repository.saveTicketMetrics({
+        tenantId,
+        timestamp: new Date(),
+        status: 'OPEN',
+        priority: 'HIGH',
+      });
       expect(mockDbInstance.insert).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'ticket-1' }]);
-      await repository.saveTicketMetrics({ tenantId, timestamp: new Date(), status: 'OPEN', priority: 'HIGH' });
+      await repository.saveTicketMetrics({
+        tenantId,
+        timestamp: new Date(),
+        status: 'OPEN',
+        priority: 'HIGH',
+      });
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'ticket-1' }]);
-      const list = await repository.getTicketMetrics(tenantId, new Date(), new Date());
+      const list = await repository.getTicketMetrics(
+        tenantId,
+        new Date(),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
     });
 
     it('Workflow metrics - save, get, summary', async () => {
       mockDbResolve([]);
-      await repository.saveWorkflowMetrics({ tenantId, workflowId: 'wf-1', timestamp: new Date() });
+      await repository.saveWorkflowMetrics({
+        tenantId,
+        workflowId: 'wf-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.insert).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'wf-1' }]);
-      await repository.saveWorkflowMetrics({ tenantId, workflowId: 'wf-1', timestamp: new Date() });
+      await repository.saveWorkflowMetrics({
+        tenantId,
+        workflowId: 'wf-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'wf-1' }]);
-      const list = await repository.getWorkflowMetrics(tenantId, 'wf-1', new Date(), new Date());
+      const list = await repository.getWorkflowMetrics(
+        tenantId,
+        'wf-1',
+        new Date(),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
 
       mockDbResolve([{ id: 'wf-1' }]);
-      const summary = await repository.getWorkflowMetricsSummary(tenantId, new Date(), new Date());
+      const summary = await repository.getWorkflowMetricsSummary(
+        tenantId,
+        new Date(),
+        new Date(),
+      );
       expect(summary).toHaveLength(1);
     });
 
     it('Customer metrics - save and get', async () => {
       mockDbResolve([]);
-      await repository.saveCustomerMetrics({ tenantId, customerId: 'cust-1', timestamp: new Date() });
+      await repository.saveCustomerMetrics({
+        tenantId,
+        customerId: 'cust-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.insert).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'cust-1' }]);
-      await repository.saveCustomerMetrics({ tenantId, customerId: 'cust-1', timestamp: new Date() });
+      await repository.saveCustomerMetrics({
+        tenantId,
+        customerId: 'cust-1',
+        timestamp: new Date(),
+      });
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'cust-1' }]);

@@ -9,16 +9,20 @@ export class TeamEventPublisher {
   constructor(private readonly queueService: QueueService) {}
 
   async publish(event: DomainEvent): Promise<void> {
-    const eventName = (event.constructor as any).eventName || event.constructor.name;
-    this.logger.log(`Publishing Team Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`);
+    const eventName =
+      (event.constructor as any).eventName || event.constructor.name;
+    this.logger.log(
+      `Publishing Team Domain Event: ${eventName} for aggregate: ${event.getAggregateId()}`,
+    );
 
     try {
-      if (eventName === 'agent.assigned' || eventName === 'availability.updated') {
-        await this.queueService.addJob(
-          'team-queue',
-          'load-balancer-job',
-          { agentProfileId: event.getAggregateId() }
-        );
+      if (
+        eventName === 'agent.assigned' ||
+        eventName === 'availability.updated'
+      ) {
+        await this.queueService.addJob('team-queue', 'load-balancer-job', {
+          agentProfileId: event.getAggregateId(),
+        });
       }
     } catch (err: any) {
       this.logger.error(`Failed to enqueue load-balancer-job: ${err.message}`);

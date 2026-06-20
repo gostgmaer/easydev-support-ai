@@ -29,7 +29,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Message Drafts')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/drafts')
@@ -39,7 +43,9 @@ export class DraftController {
   private authorOf(req: any): string {
     const authorId = req.user?.id;
     if (!authorId) {
-      throw new BadRequestException('Authenticated author is required for drafts');
+      throw new BadRequestException(
+        'Authenticated author is required for drafts',
+      );
     }
     return authorId;
   }
@@ -53,7 +59,11 @@ export class DraftController {
     @Body() dto: SaveDraftDto,
     @Req() req: any,
   ) {
-    const draft = await this.draftService.save(tenantId, this.authorOf(req), dto);
+    const draft = await this.draftService.save(
+      tenantId,
+      this.authorOf(req),
+      dto,
+    );
     return draft.toJSON();
   }
 

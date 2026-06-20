@@ -9,10 +9,7 @@ import { TicketPriorityEnum } from '../domain/value-objects';
 import { ConfigureSlaDto } from '../dtos';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
-import {
-  addBusinessMinutes,
-  addCalendarMinutes,
-} from './business-hours';
+import { addBusinessMinutes, addCalendarMinutes } from './business-hours';
 
 interface SlaTarget {
   responseMinutes: number;
@@ -22,10 +19,16 @@ interface SlaTarget {
 // Default SLA matrix per priority (minutes). Tunable via SLA policies.
 const DEFAULT_SLA_MATRIX: Record<TicketPriorityEnum, SlaTarget> = {
   [TicketPriorityEnum.LOW]: { responseMinutes: 480, resolutionMinutes: 5760 },
-  [TicketPriorityEnum.MEDIUM]: { responseMinutes: 240, resolutionMinutes: 2880 },
+  [TicketPriorityEnum.MEDIUM]: {
+    responseMinutes: 240,
+    resolutionMinutes: 2880,
+  },
   [TicketPriorityEnum.HIGH]: { responseMinutes: 60, resolutionMinutes: 1440 },
   [TicketPriorityEnum.URGENT]: { responseMinutes: 30, resolutionMinutes: 480 },
-  [TicketPriorityEnum.CRITICAL]: { responseMinutes: 15, resolutionMinutes: 240 },
+  [TicketPriorityEnum.CRITICAL]: {
+    responseMinutes: 15,
+    resolutionMinutes: 240,
+  },
 };
 
 const SLA_SWEEP_BATCH = 500;

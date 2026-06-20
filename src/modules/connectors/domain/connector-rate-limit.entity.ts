@@ -28,8 +28,7 @@ export class ConnectorRateLimit extends Entity<string> {
       windowSeconds,
       maxRequests: props.maxRequests || 1000,
       currentUsage: props.currentUsage || 0,
-      resetAt:
-        props.resetAt || new Date(Date.now() + windowSeconds * 1000),
+      resetAt: props.resetAt || new Date(Date.now() + windowSeconds * 1000),
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
       version: props.version || 1,
@@ -70,9 +69,7 @@ export class ConnectorRateLimit extends Entity<string> {
   private rollWindowIfNeeded(now: Date): void {
     if (now.getTime() >= this.props.resetAt!.getTime()) {
       this.props.currentUsage = 0;
-      this.props.resetAt = new Date(
-        now.getTime() + this.windowSeconds * 1000,
-      );
+      this.props.resetAt = new Date(now.getTime() + this.windowSeconds * 1000);
     }
   }
 

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import axios from 'axios';
 
 // Services
@@ -150,23 +154,45 @@ describe('Knowledge Module Services and Controllers', () => {
     }).compile();
 
     sourceService = module.get<KnowledgeSourceService>(KnowledgeSourceService);
-    documentService = module.get<KnowledgeDocumentService>(KnowledgeDocumentService);
+    documentService = module.get<KnowledgeDocumentService>(
+      KnowledgeDocumentService,
+    );
     chunkService = module.get<KnowledgeChunkService>(KnowledgeChunkService);
-    categoryService = module.get<KnowledgeCategoryService>(KnowledgeCategoryService);
-    versionService = module.get<KnowledgeVersionService>(KnowledgeVersionService);
-    permissionService = module.get<KnowledgePermissionService>(KnowledgePermissionService);
+    categoryService = module.get<KnowledgeCategoryService>(
+      KnowledgeCategoryService,
+    );
+    versionService = module.get<KnowledgeVersionService>(
+      KnowledgeVersionService,
+    );
+    permissionService = module.get<KnowledgePermissionService>(
+      KnowledgePermissionService,
+    );
     syncService = module.get<KnowledgeSyncService>(KnowledgeSyncService);
     searchService = module.get<KnowledgeSearchService>(KnowledgeSearchService);
     crawlerService = module.get<CrawlerService>(CrawlerService);
     aiClient = module.get<AIPlatformClient>(AIPlatformClient);
-    eventPublisher = module.get<KnowledgeEventPublisher>(KnowledgeEventPublisher);
-    queueProcessor = module.get<KnowledgeQueueProcessor>(KnowledgeQueueProcessor);
+    eventPublisher = module.get<KnowledgeEventPublisher>(
+      KnowledgeEventPublisher,
+    );
+    queueProcessor = module.get<KnowledgeQueueProcessor>(
+      KnowledgeQueueProcessor,
+    );
 
-    sourceController = module.get<KnowledgeSourceController>(KnowledgeSourceController);
-    documentController = module.get<KnowledgeDocumentController>(KnowledgeDocumentController);
-    categoryController = module.get<KnowledgeCategoryController>(KnowledgeCategoryController);
-    searchController = module.get<KnowledgeSearchController>(KnowledgeSearchController);
-    versionController = module.get<KnowledgeVersionController>(KnowledgeVersionController);
+    sourceController = module.get<KnowledgeSourceController>(
+      KnowledgeSourceController,
+    );
+    documentController = module.get<KnowledgeDocumentController>(
+      KnowledgeDocumentController,
+    );
+    categoryController = module.get<KnowledgeCategoryController>(
+      KnowledgeCategoryController,
+    );
+    searchController = module.get<KnowledgeSearchController>(
+      KnowledgeSearchController,
+    );
+    versionController = module.get<KnowledgeVersionController>(
+      KnowledgeVersionController,
+    );
   });
 
   describe('CrawlerService', () => {
@@ -184,7 +210,11 @@ describe('Knowledge Module Services and Controllers', () => {
         `,
       });
 
-      const pages = await crawlerService.crawlWebsite('https://example.com', 1, 0);
+      const pages = await crawlerService.crawlWebsite(
+        'https://example.com',
+        1,
+        0,
+      );
       expect(pages.length).toBe(1);
       expect(pages[0].title).toBe('Scraped Page');
       expect(pages[0].content).toContain('Hello world');
@@ -193,7 +223,11 @@ describe('Knowledge Module Services and Controllers', () => {
 
     it('should handle crawl errors gracefully', async () => {
       mockedAxios.get.mockRejectedValueOnce(new Error('Network error'));
-      const pages = await crawlerService.crawlWebsite('https://example.com', 1, 0);
+      const pages = await crawlerService.crawlWebsite(
+        'https://example.com',
+        1,
+        0,
+      );
       expect(pages.length).toBe(0);
     });
 
@@ -208,36 +242,53 @@ describe('Knowledge Module Services and Controllers', () => {
         `,
       });
 
-      const urls = await crawlerService.parseSitemap('https://example.com/sitemap.xml');
+      const urls = await crawlerService.parseSitemap(
+        'https://example.com/sitemap.xml',
+      );
       expect(urls.length).toBe(2);
       expect(urls).toContain('https://example.com/page-1');
     });
 
     it('should handle sitemap fetch errors gracefully', async () => {
       mockedAxios.get.mockRejectedValueOnce(new Error('500 Internal Error'));
-      const urls = await crawlerService.parseSitemap('https://example.com/sitemap.xml');
+      const urls = await crawlerService.parseSitemap(
+        'https://example.com/sitemap.xml',
+      );
       expect(urls.length).toBe(0);
     });
   });
 
   describe('AIPlatformClient', () => {
     it('should trigger document ingestion', async () => {
-      const mockResult = { jobId: 'job-123', status: 'PROCESSING', chunks: [{ content: 'c1', tokenCount: 10, hash: 'h1' }] };
+      const mockResult = {
+        jobId: 'job-123',
+        status: 'PROCESSING',
+        chunks: [{ content: 'c1', tokenCount: 10, hash: 'h1' }],
+      };
       mockedAxios.post.mockResolvedValueOnce({ data: mockResult });
 
-      const res = await aiClient.ingestDocument(tenantId, docId, 'https://file.url', 'application/pdf');
+      const res = await aiClient.ingestDocument(
+        tenantId,
+        docId,
+        'https://file.url',
+        'application/pdf',
+      );
       expect(res.jobId).toBe('job-123');
       expect(res.chunks?.length).toBe(1);
     });
 
     it('should generate embeddings', async () => {
-      mockedAxios.post.mockResolvedValueOnce({ data: { embeddings: [[0.1, 0.2]] } });
+      mockedAxios.post.mockResolvedValueOnce({
+        data: { embeddings: [[0.1, 0.2]] },
+      });
       const res = await aiClient.embedTexts(tenantId, ['hello']);
       expect(res.embeddings.length).toBe(1);
     });
 
     it('should rerank documents', async () => {
-      mockedAxios.post.mockResolvedValueOnce({ data: { results: [{ index: 0, score: 0.95 }] } });
+      mockedAxios.post.mockResolvedValueOnce({
+        data: { results: [{ index: 0, score: 0.95 }] },
+      });
       const res = await aiClient.rerank(tenantId, 'query', ['doc1']);
       expect(res.results[0].score).toBe(0.95);
     });
@@ -245,7 +296,11 @@ describe('Knowledge Module Services and Controllers', () => {
 
   describe('KnowledgeSourceService', () => {
     it('should create and save a source', async () => {
-      const dto = { name: 'Support PDF', sourceType: SourceTypeEnum.PDF, uri: 'https://docs.com/doc.pdf' };
+      const dto = {
+        name: 'Support PDF',
+        sourceType: SourceTypeEnum.PDF,
+        uri: 'https://docs.com/doc.pdf',
+      };
       mockRepo.saveSource.mockImplementationOnce((src) => Promise.resolve(src));
 
       const source = await sourceService.createSource(tenantId, dto);
@@ -256,15 +311,23 @@ describe('Knowledge Module Services and Controllers', () => {
 
     it('should throw NotFoundException if source not found', async () => {
       mockRepo.getSourceById.mockResolvedValueOnce(null);
-      await expect(sourceService.getSource(tenantId, sourceId)).rejects.toThrow(NotFoundException);
+      await expect(sourceService.getSource(tenantId, sourceId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should update an existing source', async () => {
-      const source = KnowledgeSource.create(sourceId, { tenantId, name: 'Old Name', sourceType: SourceTypeEnum.MANUAL });
+      const source = KnowledgeSource.create(sourceId, {
+        tenantId,
+        name: 'Old Name',
+        sourceType: SourceTypeEnum.MANUAL,
+      });
       mockRepo.getSourceById.mockResolvedValueOnce(source);
       mockRepo.saveSource.mockImplementationOnce((src) => Promise.resolve(src));
 
-      const updated = await sourceService.updateSource(tenantId, sourceId, { name: 'New Name' });
+      const updated = await sourceService.updateSource(tenantId, sourceId, {
+        name: 'New Name',
+      });
       expect(updated.name).toBe('New Name');
     });
 
@@ -277,55 +340,81 @@ describe('Knowledge Module Services and Controllers', () => {
 
   describe('KnowledgeCategoryService', () => {
     it('should create, get, find, update and delete a category', async () => {
-      const category = new KnowledgeCategory(catId, { tenantId, name: 'Support API', sortOrder: 1 });
+      const category = new KnowledgeCategory(catId, {
+        tenantId,
+        name: 'Support API',
+        sortOrder: 1,
+      });
       mockRepo.saveCategory.mockResolvedValueOnce(category);
       mockRepo.getCategoryById.mockResolvedValueOnce(category);
       mockRepo.findCategories.mockResolvedValueOnce([category]);
       mockRepo.deleteCategory.mockResolvedValueOnce(true);
 
-      const created = await categoryService.createCategory(tenantId, { name: 'Support API', sortOrder: 1 });
+      const created = await categoryService.createCategory(tenantId, {
+        name: 'Support API',
+        sortOrder: 1,
+      });
       expect(created.name).toBe('Support API');
 
       const got = await categoryService.getCategory(tenantId, catId);
       expect(got.id).toBe(catId);
 
       mockRepo.getCategoryById.mockResolvedValueOnce(null);
-      await expect(categoryService.getCategory(tenantId, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(
+        categoryService.getCategory(tenantId, 'missing'),
+      ).rejects.toThrow(NotFoundException);
 
       const all = await categoryService.findCategories(tenantId);
       expect(all.length).toBe(1);
 
       mockRepo.getCategoryById.mockResolvedValueOnce(category);
       mockRepo.saveCategory.mockResolvedValueOnce(category);
-      const updated = await categoryService.updateCategory(tenantId, catId, { name: 'Support API v2' });
+      const updated = await categoryService.updateCategory(tenantId, catId, {
+        name: 'Support API v2',
+      });
       expect(updated.name).toBe('Support API v2');
 
       const del = await categoryService.deleteCategory(tenantId, catId);
       expect(del).toBe(true);
 
       mockRepo.deleteCategory.mockResolvedValueOnce(false);
-      await expect(categoryService.deleteCategory(tenantId, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(
+        categoryService.deleteCategory(tenantId, 'missing'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('KnowledgePermissionService extra methods', () => {
     it('should add, get and delete permissions', async () => {
-      const perm = new KnowledgePermission('perm-1', { tenantId, documentId: docId, role: 'agent', accessLevel: 'READ' });
+      const perm = new KnowledgePermission('perm-1', {
+        tenantId,
+        documentId: docId,
+        role: 'agent',
+        accessLevel: 'READ',
+      });
       mockRepo.savePermission.mockResolvedValueOnce(perm);
       mockRepo.getPermissionsByDocumentId.mockResolvedValueOnce([perm]);
       mockRepo.deletePermission.mockResolvedValueOnce(true);
 
-      const added = await permissionService.addPermission(tenantId, docId, { role: 'agent', accessLevel: 'READ' });
+      const added = await permissionService.addPermission(tenantId, docId, {
+        role: 'agent',
+        accessLevel: 'READ',
+      });
       expect(added.role).toBe('agent');
 
       const all = await permissionService.getPermissions(tenantId, docId);
       expect(all.length).toBe(1);
 
-      const deleted = await permissionService.deletePermission(tenantId, 'perm-1');
+      const deleted = await permissionService.deletePermission(
+        tenantId,
+        'perm-1',
+      );
       expect(deleted).toBe(true);
 
       mockRepo.deletePermission.mockResolvedValueOnce(false);
-      await expect(permissionService.deletePermission(tenantId, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(
+        permissionService.deletePermission(tenantId, 'missing'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -347,7 +436,9 @@ describe('Knowledge Module Services and Controllers', () => {
 
     it('should throw NotFoundException if getDocument is null', async () => {
       mockRepo.findById.mockResolvedValueOnce(null);
-      await expect(documentService.getDocument(tenantId, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(
+        documentService.getDocument(tenantId, 'missing'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should delete a document or throw NotFoundException', async () => {
@@ -355,7 +446,9 @@ describe('Knowledge Module Services and Controllers', () => {
       expect(await documentService.deleteDocument(tenantId, docId)).toBe(true);
 
       mockRepo.delete.mockResolvedValueOnce(false);
-      await expect(documentService.deleteDocument(tenantId, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(
+        documentService.deleteDocument(tenantId, 'missing'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should publish a document and snapshot the version', async () => {
@@ -377,7 +470,12 @@ describe('Knowledge Module Services and Controllers', () => {
       mockRepo.save.mockImplementationOnce((d) => Promise.resolve(d));
       mockRepo.saveVersion.mockResolvedValueOnce({});
 
-      const published = await documentService.publishDocument(tenantId, docId, { changeSummary: 'First publication' }, 'user-1');
+      const published = await documentService.publishDocument(
+        tenantId,
+        docId,
+        { changeSummary: 'First publication' },
+        'user-1',
+      );
       expect(published.status.value).toBe(DocumentStatusEnum.ACTIVE);
       expect(published.version).toBe(2);
       expect(mockRepo.saveVersion).toHaveBeenCalled();
@@ -401,35 +499,80 @@ describe('Knowledge Module Services and Controllers', () => {
       mockRepo.findById.mockResolvedValueOnce(doc);
       mockRepo.save.mockImplementationOnce((d) => Promise.resolve(d));
 
-      const archived = await documentService.archiveDocument(tenantId, docId, 'user-1');
+      const archived = await documentService.archiveDocument(
+        tenantId,
+        docId,
+        'user-1',
+      );
       expect(archived.status.value).toBe(DocumentStatusEnum.ARCHIVED);
     });
   });
 
   describe('KnowledgePermissionService', () => {
     it('should check permissions properly', async () => {
-      mockRepo.checkPermission.mockImplementation((docId, tenantId, teamId, role, requiredLevel) => {
-        if (role === 'tenant_admin') return Promise.resolve(true);
-        if (role === 'agent' && teamId === 'team-2' && requiredLevel === 'READ') return Promise.resolve(true);
-        if (role === 'agent' && teamId === 'team-1' && requiredLevel === 'WRITE') return Promise.resolve(true);
-        if (role === 'agent' && teamId === 'team-1' && requiredLevel === 'MANAGE') return Promise.resolve(false);
-        return Promise.resolve(false);
-      });
+      mockRepo.checkPermission.mockImplementation(
+        (docId, tenantId, teamId, role, requiredLevel) => {
+          if (role === 'tenant_admin') return Promise.resolve(true);
+          if (
+            role === 'agent' &&
+            teamId === 'team-2' &&
+            requiredLevel === 'READ'
+          )
+            return Promise.resolve(true);
+          if (
+            role === 'agent' &&
+            teamId === 'team-1' &&
+            requiredLevel === 'WRITE'
+          )
+            return Promise.resolve(true);
+          if (
+            role === 'agent' &&
+            teamId === 'team-1' &&
+            requiredLevel === 'MANAGE'
+          )
+            return Promise.resolve(false);
+          return Promise.resolve(false);
+        },
+      );
 
       // 1. Tenant Admin has universal access
-      let allowed = await permissionService.checkAccess(tenantId, docId, 'team-1', 'tenant_admin', 'WRITE');
+      let allowed = await permissionService.checkAccess(
+        tenantId,
+        docId,
+        'team-1',
+        'tenant_admin',
+        'WRITE',
+      );
       expect(allowed).toBe(true);
 
       // 2. Permission match wildcard roles
-      allowed = await permissionService.checkAccess(tenantId, docId, 'team-2', 'agent', 'READ');
+      allowed = await permissionService.checkAccess(
+        tenantId,
+        docId,
+        'team-2',
+        'agent',
+        'READ',
+      );
       expect(allowed).toBe(true);
 
       // 3. Team match write
-      allowed = await permissionService.checkAccess(tenantId, docId, 'team-1', 'agent', 'WRITE');
+      allowed = await permissionService.checkAccess(
+        tenantId,
+        docId,
+        'team-1',
+        'agent',
+        'WRITE',
+      );
       expect(allowed).toBe(true);
 
       // 4. Insufficient role access level
-      allowed = await permissionService.checkAccess(tenantId, docId, 'team-1', 'agent', 'MANAGE');
+      allowed = await permissionService.checkAccess(
+        tenantId,
+        docId,
+        'team-1',
+        'agent',
+        'MANAGE',
+      );
       expect(allowed).toBe(false);
     });
   });
@@ -476,7 +619,9 @@ describe('Knowledge Module Services and Controllers', () => {
 
     it('should throw BadRequestException if document is missing during ingestion trigger', async () => {
       mockRepo.findById.mockResolvedValueOnce(null);
-      await expect(syncService.triggerIngestion(tenantId, docId)).rejects.toThrow(BadRequestException);
+      await expect(
+        syncService.triggerIngestion(tenantId, docId),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if document lacks url or uri', async () => {
@@ -494,7 +639,9 @@ describe('Knowledge Module Services and Controllers', () => {
         embeddingStatus: EmbeddingStatusEnum.PENDING,
       });
       mockRepo.findById.mockResolvedValueOnce(doc);
-      await expect(syncService.triggerIngestion(tenantId, docId)).rejects.toThrow(BadRequestException);
+      await expect(
+        syncService.triggerIngestion(tenantId, docId),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should handle triggerIngestion errors gracefully and fail the document status', async () => {
@@ -513,7 +660,9 @@ describe('Knowledge Module Services and Controllers', () => {
         fileUrl: 'https://docs.com/doc.pdf',
       });
       mockRepo.findById.mockResolvedValueOnce(doc);
-      jest.spyOn(aiClient, 'ingestDocument').mockRejectedValueOnce(new Error('AI platform offline'));
+      jest
+        .spyOn(aiClient, 'ingestDocument')
+        .mockRejectedValueOnce(new Error('AI platform offline'));
 
       await syncService.triggerIngestion(tenantId, docId);
       expect(doc.status.value).toBe(DocumentStatusEnum.FAILED);
@@ -522,7 +671,9 @@ describe('Knowledge Module Services and Controllers', () => {
 
     it('should throw BadRequestException when triggering website crawl for missing source', async () => {
       mockRepo.getSourceById.mockResolvedValueOnce(null);
-      await expect(syncService.triggerWebsiteCrawl(tenantId, sourceId)).rejects.toThrow(BadRequestException);
+      await expect(
+        syncService.triggerWebsiteCrawl(tenantId, sourceId),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should trigger website crawl and enqueue BullMQ job', async () => {
@@ -534,7 +685,11 @@ describe('Knowledge Module Services and Controllers', () => {
       });
       mockRepo.getSourceById.mockResolvedValueOnce(source);
       await syncService.triggerWebsiteCrawl(tenantId, sourceId);
-      expect(mockQueueService.addJob).toHaveBeenCalledWith(QUEUES.KNOWLEDGE, 'knowledge-crawl-job', expect.any(Object));
+      expect(mockQueueService.addJob).toHaveBeenCalledWith(
+        QUEUES.KNOWLEDGE,
+        'knowledge-crawl-job',
+        expect.any(Object),
+      );
     });
 
     it('should return early from processCrawlJob if job or source is missing', async () => {
@@ -565,28 +720,40 @@ describe('Knowledge Module Services and Controllers', () => {
       mockRepo.saveSource.mockResolvedValue(null);
 
       jest.spyOn(crawlerService, 'crawlWebsite').mockResolvedValueOnce([
-        { url: 'https://mysite.com/home', title: 'Home', content: 'Welcome to home', checksum: 'c1' },
-        { url: 'https://mysite.com/docs', title: 'Docs', content: 'Our API Docs', checksum: 'c2' },
+        {
+          url: 'https://mysite.com/home',
+          title: 'Home',
+          content: 'Welcome to home',
+          checksum: 'c1',
+        },
+        {
+          url: 'https://mysite.com/docs',
+          title: 'Docs',
+          content: 'Our API Docs',
+          checksum: 'c2',
+        },
       ]);
 
       // Mock creation and ingestion on nested calls
-      jest.spyOn(documentService, 'createDocument').mockImplementation((tenId, dto) => {
-        return Promise.resolve(
-          KnowledgeDocument.create('doc-tmp', {
-            tenantId: tenId,
-            sourceId: dto.sourceId,
-            title: dto.title,
-            slug: dto.slug,
-            documentType: dto.documentType,
-            status: DocumentStatus.create(DocumentStatusEnum.DRAFT),
-            language: DocumentLanguage.create(dto.language),
-            version: 1,
-            syncStatus: SyncStatusEnum.PENDING,
-            ingestionStatus: IngestionStatusEnum.PENDING,
-            embeddingStatus: EmbeddingStatusEnum.PENDING,
-          }),
-        );
-      });
+      jest
+        .spyOn(documentService, 'createDocument')
+        .mockImplementation((tenId, dto) => {
+          return Promise.resolve(
+            KnowledgeDocument.create('doc-tmp', {
+              tenantId: tenId,
+              sourceId: dto.sourceId,
+              title: dto.title,
+              slug: dto.slug,
+              documentType: dto.documentType,
+              status: DocumentStatus.create(DocumentStatusEnum.DRAFT),
+              language: DocumentLanguage.create(dto.language),
+              version: 1,
+              syncStatus: SyncStatusEnum.PENDING,
+              ingestionStatus: IngestionStatusEnum.PENDING,
+              embeddingStatus: EmbeddingStatusEnum.PENDING,
+            }),
+          );
+        });
 
       jest.spyOn(syncService, 'triggerIngestion').mockResolvedValue(undefined);
 
@@ -617,28 +784,32 @@ describe('Knowledge Module Services and Controllers', () => {
       mockRepo.saveSyncJob.mockResolvedValue(null);
       mockRepo.saveSource.mockResolvedValue(null);
 
-      jest.spyOn(crawlerService, 'parseSitemap').mockResolvedValueOnce([
-        'https://mysite.com/page1',
-        'https://mysite.com/page2',
-      ]);
+      jest
+        .spyOn(crawlerService, 'parseSitemap')
+        .mockResolvedValueOnce([
+          'https://mysite.com/page1',
+          'https://mysite.com/page2',
+        ]);
 
-      jest.spyOn(documentService, 'createDocument').mockImplementation((tenId, dto) => {
-        return Promise.resolve(
-          KnowledgeDocument.create('doc-tmp-sitemap', {
-            tenantId: tenId,
-            sourceId: dto.sourceId,
-            title: dto.title,
-            slug: dto.slug,
-            documentType: dto.documentType,
-            status: DocumentStatus.create(DocumentStatusEnum.DRAFT),
-            language: DocumentLanguage.create(dto.language),
-            version: 1,
-            syncStatus: SyncStatusEnum.PENDING,
-            ingestionStatus: IngestionStatusEnum.PENDING,
-            embeddingStatus: EmbeddingStatusEnum.PENDING,
-          }),
-        );
-      });
+      jest
+        .spyOn(documentService, 'createDocument')
+        .mockImplementation((tenId, dto) => {
+          return Promise.resolve(
+            KnowledgeDocument.create('doc-tmp-sitemap', {
+              tenantId: tenId,
+              sourceId: dto.sourceId,
+              title: dto.title,
+              slug: dto.slug,
+              documentType: dto.documentType,
+              status: DocumentStatus.create(DocumentStatusEnum.DRAFT),
+              language: DocumentLanguage.create(dto.language),
+              version: 1,
+              syncStatus: SyncStatusEnum.PENDING,
+              ingestionStatus: IngestionStatusEnum.PENDING,
+              embeddingStatus: EmbeddingStatusEnum.PENDING,
+            }),
+          );
+        });
 
       jest.spyOn(syncService, 'triggerIngestion').mockResolvedValue(undefined);
 
@@ -703,7 +874,10 @@ describe('Knowledge Module Services and Controllers', () => {
         embeddingStatus: EmbeddingStatusEnum.EMBEDDED,
       });
 
-      mockRepo.findDocuments.mockResolvedValueOnce({ data: [doc1, doc2], total: 2 });
+      mockRepo.findDocuments.mockResolvedValueOnce({
+        data: [doc1, doc2],
+        total: 2,
+      });
       mockRepo.addSearchLog.mockResolvedValueOnce(null);
 
       jest.spyOn(aiClient, 'rerank').mockResolvedValueOnce({
@@ -713,7 +887,9 @@ describe('Knowledge Module Services and Controllers', () => {
         ],
       });
 
-      const results = await searchService.search(tenantId, { query: 'Developer guide manual instructions' });
+      const results = await searchService.search(tenantId, {
+        query: 'Developer guide manual instructions',
+      });
       expect(results.length).toBe(2);
       expect(results[0].document.title).toBe('Developer manual');
       expect(results[0].score).toBe(0.99);
@@ -722,7 +898,9 @@ describe('Knowledge Module Services and Controllers', () => {
 
   describe('KnowledgeQueueProcessor', () => {
     it('should handle crawl job', async () => {
-      jest.spyOn(syncService, 'processCrawlJob').mockResolvedValueOnce(undefined);
+      jest
+        .spyOn(syncService, 'processCrawlJob')
+        .mockResolvedValueOnce(undefined);
 
       const job: any = {
         id: 'job-1',
@@ -735,7 +913,11 @@ describe('Knowledge Module Services and Controllers', () => {
       };
 
       await queueProcessor.handleJob(job);
-      expect(syncService.processCrawlJob).toHaveBeenCalledWith(tenantId, sourceId, 'sync-job-1');
+      expect(syncService.processCrawlJob).toHaveBeenCalledWith(
+        tenantId,
+        sourceId,
+        'sync-job-1',
+      );
     });
 
     it('should handle index and cleanup jobs', async () => {
@@ -764,34 +946,78 @@ describe('Knowledge Module Services and Controllers', () => {
 
   describe('Controllers', () => {
     it('SourceController CRUD', async () => {
-      const source = KnowledgeSource.create(sourceId, { tenantId, name: 'S1', sourceType: SourceTypeEnum.CSV });
+      const source = KnowledgeSource.create(sourceId, {
+        tenantId,
+        name: 'S1',
+        sourceType: SourceTypeEnum.CSV,
+      });
       jest.spyOn(sourceService, 'createSource').mockResolvedValueOnce(source);
       jest.spyOn(sourceService, 'getSource').mockResolvedValueOnce(source);
-      jest.spyOn(sourceService, 'findSources').mockResolvedValueOnce({ data: [source], total: 1 });
+      jest
+        .spyOn(sourceService, 'findSources')
+        .mockResolvedValueOnce({ data: [source], total: 1 });
       jest.spyOn(sourceService, 'updateSource').mockResolvedValueOnce(source);
       jest.spyOn(sourceService, 'deleteSource').mockResolvedValueOnce(true);
-      jest.spyOn(syncService, 'triggerWebsiteCrawl').mockResolvedValueOnce(undefined);
+      jest
+        .spyOn(syncService, 'triggerWebsiteCrawl')
+        .mockResolvedValueOnce(undefined);
 
-      expect(await sourceController.createSource(tenantId, { name: 'S1', sourceType: SourceTypeEnum.CSV })).toBeDefined();
-      expect(await sourceController.getSource(tenantId, sourceId)).toBeDefined();
+      expect(
+        await sourceController.createSource(tenantId, {
+          name: 'S1',
+          sourceType: SourceTypeEnum.CSV,
+        }),
+      ).toBeDefined();
+      expect(
+        await sourceController.getSource(tenantId, sourceId),
+      ).toBeDefined();
       expect(await sourceController.findSources(tenantId, {})).toBeDefined();
-      expect(await sourceController.updateSource(tenantId, sourceId, { name: 'New S1' })).toBeDefined();
+      expect(
+        await sourceController.updateSource(tenantId, sourceId, {
+          name: 'New S1',
+        }),
+      ).toBeDefined();
       await sourceController.deleteSource(tenantId, sourceId);
-      expect(await sourceController.triggerSync(tenantId, sourceId)).toEqual({ status: 'sync_triggered' });
+      expect(await sourceController.triggerSync(tenantId, sourceId)).toEqual({
+        status: 'sync_triggered',
+      });
     });
 
     it('CategoryController CRUD', async () => {
-      const category = new KnowledgeCategory(catId, { tenantId, name: 'Cat1', sortOrder: 1 });
-      jest.spyOn(categoryService, 'createCategory').mockResolvedValueOnce(category);
-      jest.spyOn(categoryService, 'getCategory').mockResolvedValueOnce(category);
-      jest.spyOn(categoryService, 'findCategories').mockResolvedValueOnce([category]);
-      jest.spyOn(categoryService, 'updateCategory').mockResolvedValueOnce(category);
+      const category = new KnowledgeCategory(catId, {
+        tenantId,
+        name: 'Cat1',
+        sortOrder: 1,
+      });
+      jest
+        .spyOn(categoryService, 'createCategory')
+        .mockResolvedValueOnce(category);
+      jest
+        .spyOn(categoryService, 'getCategory')
+        .mockResolvedValueOnce(category);
+      jest
+        .spyOn(categoryService, 'findCategories')
+        .mockResolvedValueOnce([category]);
+      jest
+        .spyOn(categoryService, 'updateCategory')
+        .mockResolvedValueOnce(category);
       jest.spyOn(categoryService, 'deleteCategory').mockResolvedValueOnce(true);
 
-      expect(await categoryController.createCategory(tenantId, { name: 'Cat1', sortOrder: 1 })).toBeDefined();
-      expect(await categoryController.getCategory(tenantId, catId)).toBeDefined();
+      expect(
+        await categoryController.createCategory(tenantId, {
+          name: 'Cat1',
+          sortOrder: 1,
+        }),
+      ).toBeDefined();
+      expect(
+        await categoryController.getCategory(tenantId, catId),
+      ).toBeDefined();
       expect(await categoryController.findCategories(tenantId)).toBeDefined();
-      expect(await categoryController.updateCategory(tenantId, catId, { name: 'Cat2' })).toBeDefined();
+      expect(
+        await categoryController.updateCategory(tenantId, catId, {
+          name: 'Cat2',
+        }),
+      ).toBeDefined();
       await categoryController.deleteCategory(tenantId, catId);
     });
 
@@ -813,40 +1039,100 @@ describe('Knowledge Module Services and Controllers', () => {
       jest.spyOn(permissionService, 'checkAccess').mockResolvedValue(true);
       jest.spyOn(documentService, 'createDocument').mockResolvedValueOnce(doc);
       jest.spyOn(documentService, 'getDocument').mockResolvedValueOnce(doc);
-      jest.spyOn(documentService, 'findDocuments').mockResolvedValueOnce({ data: [doc], total: 1 });
+      jest
+        .spyOn(documentService, 'findDocuments')
+        .mockResolvedValueOnce({ data: [doc], total: 1 });
       jest.spyOn(documentService, 'updateDocument').mockResolvedValueOnce(doc);
       jest.spyOn(documentService, 'publishDocument').mockResolvedValueOnce(doc);
       jest.spyOn(documentService, 'archiveDocument').mockResolvedValueOnce(doc);
       jest.spyOn(documentService, 'deleteDocument').mockResolvedValueOnce(true);
-      jest.spyOn(syncService, 'triggerIngestion').mockResolvedValueOnce(undefined);
+      jest
+        .spyOn(syncService, 'triggerIngestion')
+        .mockResolvedValueOnce(undefined);
 
-      const perm = new KnowledgePermission('perm-1', { tenantId, documentId: docId, role: 'agent', accessLevel: 'READ' });
-      jest.spyOn(permissionService, 'addPermission').mockResolvedValueOnce(perm);
-      jest.spyOn(permissionService, 'getPermissions').mockResolvedValueOnce([perm]);
-      jest.spyOn(permissionService, 'deletePermission').mockResolvedValueOnce(true);
+      const perm = new KnowledgePermission('perm-1', {
+        tenantId,
+        documentId: docId,
+        role: 'agent',
+        accessLevel: 'READ',
+      });
+      jest
+        .spyOn(permissionService, 'addPermission')
+        .mockResolvedValueOnce(perm);
+      jest
+        .spyOn(permissionService, 'getPermissions')
+        .mockResolvedValueOnce([perm]);
+      jest
+        .spyOn(permissionService, 'deletePermission')
+        .mockResolvedValueOnce(true);
 
-      expect(await documentController.createDocument(tenantId, {
-        sourceId,
-        title: 'Doc',
-        slug: 'doc',
-        documentType: DocumentTypeEnum.PDF,
-        language: 'en',
-      })).toBeDefined();
+      expect(
+        await documentController.createDocument(tenantId, {
+          sourceId,
+          title: 'Doc',
+          slug: 'doc',
+          documentType: DocumentTypeEnum.PDF,
+          language: 'en',
+        }),
+      ).toBeDefined();
 
-      expect(await documentController.getDocument(tenantId, docId, 'agent', 'team-1')).toBeDefined();
-      expect(await documentController.findDocuments(tenantId, {})).toBeDefined();
-      expect(await documentController.updateDocument(tenantId, docId, { title: 'New Doc' }, 'agent', 'team-1')).toBeDefined();
-      expect(await documentController.publishDocument(tenantId, docId, { changeSummary: 'Publish' }, 'user-1')).toBeDefined();
-      expect(await documentController.archiveDocument(tenantId, docId, 'user-1')).toBeDefined();
-      expect(await documentController.triggerIngest(tenantId, docId)).toEqual({ status: 'ingest_triggered' });
+      expect(
+        await documentController.getDocument(
+          tenantId,
+          docId,
+          'agent',
+          'team-1',
+        ),
+      ).toBeDefined();
+      expect(
+        await documentController.findDocuments(tenantId, {}),
+      ).toBeDefined();
+      expect(
+        await documentController.updateDocument(
+          tenantId,
+          docId,
+          { title: 'New Doc' },
+          'agent',
+          'team-1',
+        ),
+      ).toBeDefined();
+      expect(
+        await documentController.publishDocument(
+          tenantId,
+          docId,
+          { changeSummary: 'Publish' },
+          'user-1',
+        ),
+      ).toBeDefined();
+      expect(
+        await documentController.archiveDocument(tenantId, docId, 'user-1'),
+      ).toBeDefined();
+      expect(await documentController.triggerIngest(tenantId, docId)).toEqual({
+        status: 'ingest_triggered',
+      });
 
       // Test access denied on write
       jest.spyOn(permissionService, 'checkAccess').mockResolvedValueOnce(false);
-      await expect(documentController.updateDocument(tenantId, docId, { title: 'New Doc' }, 'agent', 'team-1')).rejects.toThrow(ForbiddenException);
+      await expect(
+        documentController.updateDocument(
+          tenantId,
+          docId,
+          { title: 'New Doc' },
+          'agent',
+          'team-1',
+        ),
+      ).rejects.toThrow(ForbiddenException);
 
       // Permissions CRUD
-      expect(await documentController.addPermission(tenantId, docId, { role: 'agent', accessLevel: 'READ' })).toBeDefined();
-      expect(await documentController.getPermissions(tenantId, docId)).toBeDefined();
+      expect(
+        await documentController.addPermission(tenantId, docId, {
+          role: 'agent',
+          accessLevel: 'READ',
+        }),
+      ).toBeDefined();
+      expect(
+        await documentController.getPermissions(tenantId, docId),
+      ).toBeDefined();
       await documentController.deletePermission(tenantId, 'perm-1');
     });
 
@@ -854,8 +1140,12 @@ describe('Knowledge Module Services and Controllers', () => {
       jest.spyOn(searchService, 'search').mockResolvedValueOnce([]);
       jest.spyOn(versionService, 'getVersions').mockResolvedValueOnce([]);
 
-      expect(await searchController.search(tenantId, { query: 'test' }, 'user-1')).toBeDefined();
-      expect(await versionController.getVersions(tenantId, docId)).toBeDefined();
+      expect(
+        await searchController.search(tenantId, { query: 'test' }, 'user-1'),
+      ).toBeDefined();
+      expect(
+        await versionController.getVersions(tenantId, docId),
+      ).toBeDefined();
     });
   });
 });

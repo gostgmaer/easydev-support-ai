@@ -13,11 +13,18 @@ export class ConversationSearchService {
     private readonly conversationRepo: IConversationRepository,
   ) {}
 
-  async search(tenantId: string, query: string, limit = 20): Promise<Conversation[]> {
+  async search(
+    tenantId: string,
+    query: string,
+    limit = 20,
+  ): Promise<Conversation[]> {
     return this.conversationRepo.search(tenantId, query, limit);
   }
 
   async filter(tenantId: string, query: ConversationQueryDto) {
-    return this.conversationRepo.findPaginated(tenantId, query as ConversationQueryOptions);
+    return this.conversationRepo.findPaginated(
+      tenantId,
+      query as ConversationQueryOptions,
+    );
   }
 }

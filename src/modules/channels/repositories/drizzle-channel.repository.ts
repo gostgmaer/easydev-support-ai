@@ -6,8 +6,15 @@ import { ChannelConfiguration } from '../domain/channel-configuration.entity';
 import { ChannelWebhook } from '../domain/channel-webhook.entity';
 import { ChannelTemplate } from '../domain/channel-template.entity';
 import { ChannelRateLimit } from '../domain/channel-rate-limit.entity';
-import { ChannelType, ChannelStatus, ChannelProvider } from '../domain/value-objects';
-import { IChannelRepository, ChannelQueryOptions } from './channel-repository.interface';
+import {
+  ChannelType,
+  ChannelStatus,
+  ChannelProvider,
+} from '../domain/value-objects';
+import {
+  IChannelRepository,
+  ChannelQueryOptions,
+} from './channel-repository.interface';
 
 class ChannelMapper {
   public static toDomain(
@@ -15,7 +22,7 @@ class ChannelMapper {
     rawConfig?: any,
     rawWebhook?: any,
     rawTemplates: any[] = [],
-    rawRateLimit?: any
+    rawRateLimit?: any,
   ): Channel {
     const type = ChannelType.create(rawChannel.type);
     const status = ChannelStatus.create(rawChannel.status);
@@ -65,7 +72,7 @@ class ChannelMapper {
           createdAt: t.createdAt,
           updatedAt: t.updatedAt,
           version: t.version,
-        })
+        }),
     );
 
     const rateLimit = rawRateLimit
@@ -113,8 +120,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         and(
           eq(schema.channels.id, id),
           eq(schema.channels.tenantId, tenantId),
-          sql`${schema.channels.deletedAt} IS NULL`
-        )
+          sql`${schema.channels.deletedAt} IS NULL`,
+        ),
       );
 
     if (!rawChannel) return null;
@@ -125,8 +132,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelConfigurations.channelId, id),
-          eq(schema.channelConfigurations.tenantId, tenantId)
-        )
+          eq(schema.channelConfigurations.tenantId, tenantId),
+        ),
       );
 
     const [rawWebhook] = await db
@@ -135,8 +142,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelWebhooks.channelId, id),
-          eq(schema.channelWebhooks.tenantId, tenantId)
-        )
+          eq(schema.channelWebhooks.tenantId, tenantId),
+        ),
       );
 
     const rawTemplates = await db
@@ -145,8 +152,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelTemplates.channelId, id),
-          eq(schema.channelTemplates.tenantId, tenantId)
-        )
+          eq(schema.channelTemplates.tenantId, tenantId),
+        ),
       );
 
     const [rawRateLimit] = await db
@@ -155,11 +162,17 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelRateLimits.channelId, id),
-          eq(schema.channelRateLimits.tenantId, tenantId)
-        )
+          eq(schema.channelRateLimits.tenantId, tenantId),
+        ),
       );
 
-    return ChannelMapper.toDomain(rawChannel, rawConfig, rawWebhook, rawTemplates, rawRateLimit);
+    return ChannelMapper.toDomain(
+      rawChannel,
+      rawConfig,
+      rawWebhook,
+      rawTemplates,
+      rawRateLimit,
+    );
   }
 
   async findByName(name: string, tenantId: string): Promise<Channel | null> {
@@ -170,8 +183,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         and(
           eq(schema.channels.name, name),
           eq(schema.channels.tenantId, tenantId),
-          sql`${schema.channels.deletedAt} IS NULL`
-        )
+          sql`${schema.channels.deletedAt} IS NULL`,
+        ),
       );
 
     if (!rawChannel) return null;
@@ -185,8 +198,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channels.tenantId, tenantId),
-          sql`${schema.channels.deletedAt} IS NULL`
-        )
+          sql`${schema.channels.deletedAt} IS NULL`,
+        ),
       );
 
     const result: Channel[] = [];
@@ -199,7 +212,7 @@ export class DrizzleChannelRepository implements IChannelRepository {
 
   async findPaginated(
     tenantId: string,
-    options: ChannelQueryOptions
+    options: ChannelQueryOptions,
   ): Promise<{ data: Channel[]; total: number }> {
     const limit = options.limit || 20;
     const page = options.page || 1;
@@ -219,7 +232,10 @@ export class DrizzleChannelRepository implements IChannelRepository {
     }
 
     const whereClause = and(...conditions);
-    const order = options.sortOrder === 'DESC' ? desc(schema.channels.createdAt) : asc(schema.channels.createdAt);
+    const order =
+      options.sortOrder === 'DESC'
+        ? desc(schema.channels.createdAt)
+        : asc(schema.channels.createdAt);
 
     const rawChannels = await db
       .select()
@@ -267,8 +283,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         .where(
           and(
             eq(schema.channels.id, channel.id),
-            eq(schema.channels.tenantId, tenantId)
-          )
+            eq(schema.channels.tenantId, tenantId),
+          ),
         );
 
       if (existing) {
@@ -278,8 +294,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
           .where(
             and(
               eq(schema.channels.id, channel.id),
-              eq(schema.channels.tenantId, tenantId)
-            )
+              eq(schema.channels.tenantId, tenantId),
+            ),
           );
       } else {
         await tx.insert(schema.channels).values({
@@ -310,10 +326,7 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .select()
       .from(schema.channels)
       .where(
-        and(
-          eq(schema.channels.id, id),
-          eq(schema.channels.tenantId, tenantId)
-        )
+        and(eq(schema.channels.id, id), eq(schema.channels.tenantId, tenantId)),
       );
 
     if (!existing) return false;
@@ -325,24 +338,24 @@ export class DrizzleChannelRepository implements IChannelRepository {
         isActive: false,
       })
       .where(
-        and(
-          eq(schema.channels.id, id),
-          eq(schema.channels.tenantId, tenantId)
-        )
+        and(eq(schema.channels.id, id), eq(schema.channels.tenantId, tenantId)),
       );
 
     return true;
   }
 
-  async findConfigByChannelId(channelId: string, tenantId: string): Promise<ChannelConfiguration | null> {
+  async findConfigByChannelId(
+    channelId: string,
+    tenantId: string,
+  ): Promise<ChannelConfiguration | null> {
     const [row] = await db
       .select()
       .from(schema.channelConfigurations)
       .where(
         and(
           eq(schema.channelConfigurations.channelId, channelId),
-          eq(schema.channelConfigurations.tenantId, tenantId)
-        )
+          eq(schema.channelConfigurations.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -361,11 +374,18 @@ export class DrizzleChannelRepository implements IChannelRepository {
     });
   }
 
-  async saveConfig(config: ChannelConfiguration, tenantId: string): Promise<void> {
+  async saveConfig(
+    config: ChannelConfiguration,
+    tenantId: string,
+  ): Promise<void> {
     await this.saveConfigInternal(db, config, tenantId);
   }
 
-  private async saveConfigInternal(txOrDb: any, config: ChannelConfiguration, tenantId: string): Promise<void> {
+  private async saveConfigInternal(
+    txOrDb: any,
+    config: ChannelConfiguration,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: config.id,
       tenantId: config.tenantId,
@@ -386,8 +406,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelConfigurations.id, config.id),
-          eq(schema.channelConfigurations.tenantId, tenantId)
-        )
+          eq(schema.channelConfigurations.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -397,8 +417,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         .where(
           and(
             eq(schema.channelConfigurations.id, config.id),
-            eq(schema.channelConfigurations.tenantId, tenantId)
-          )
+            eq(schema.channelConfigurations.tenantId, tenantId),
+          ),
         );
     } else {
       await txOrDb.insert(schema.channelConfigurations).values({
@@ -409,15 +429,18 @@ export class DrizzleChannelRepository implements IChannelRepository {
     }
   }
 
-  async findWebhookByChannelId(channelId: string, tenantId: string): Promise<ChannelWebhook | null> {
+  async findWebhookByChannelId(
+    channelId: string,
+    tenantId: string,
+  ): Promise<ChannelWebhook | null> {
     const [row] = await db
       .select()
       .from(schema.channelWebhooks)
       .where(
         and(
           eq(schema.channelWebhooks.channelId, channelId),
-          eq(schema.channelWebhooks.tenantId, tenantId)
-        )
+          eq(schema.channelWebhooks.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -439,7 +462,11 @@ export class DrizzleChannelRepository implements IChannelRepository {
     await this.saveWebhookInternal(db, webhook, tenantId);
   }
 
-  private async saveWebhookInternal(txOrDb: any, webhook: ChannelWebhook, tenantId: string): Promise<void> {
+  private async saveWebhookInternal(
+    txOrDb: any,
+    webhook: ChannelWebhook,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: webhook.id,
       tenantId: webhook.tenantId,
@@ -459,8 +486,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelWebhooks.id, webhook.id),
-          eq(schema.channelWebhooks.tenantId, tenantId)
-        )
+          eq(schema.channelWebhooks.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -470,8 +497,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         .where(
           and(
             eq(schema.channelWebhooks.id, webhook.id),
-            eq(schema.channelWebhooks.tenantId, tenantId)
-          )
+            eq(schema.channelWebhooks.tenantId, tenantId),
+          ),
         );
     } else {
       await txOrDb.insert(schema.channelWebhooks).values({
@@ -482,15 +509,18 @@ export class DrizzleChannelRepository implements IChannelRepository {
     }
   }
 
-  async findTemplatesByChannelId(channelId: string, tenantId: string): Promise<ChannelTemplate[]> {
+  async findTemplatesByChannelId(
+    channelId: string,
+    tenantId: string,
+  ): Promise<ChannelTemplate[]> {
     const rows = await db
       .select()
       .from(schema.channelTemplates)
       .where(
         and(
           eq(schema.channelTemplates.channelId, channelId),
-          eq(schema.channelTemplates.tenantId, tenantId)
-        )
+          eq(schema.channelTemplates.tenantId, tenantId),
+        ),
       );
 
     return rows.map(
@@ -506,11 +536,15 @@ export class DrizzleChannelRepository implements IChannelRepository {
           createdAt: t.createdAt,
           updatedAt: t.updatedAt,
           version: t.version,
-        })
+        }),
     );
   }
 
-  async findTemplateByName(channelId: string, name: string, tenantId: string): Promise<ChannelTemplate | null> {
+  async findTemplateByName(
+    channelId: string,
+    name: string,
+    tenantId: string,
+  ): Promise<ChannelTemplate | null> {
     const [row] = await db
       .select()
       .from(schema.channelTemplates)
@@ -518,8 +552,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         and(
           eq(schema.channelTemplates.channelId, channelId),
           eq(schema.channelTemplates.templateName, name),
-          eq(schema.channelTemplates.tenantId, tenantId)
-        )
+          eq(schema.channelTemplates.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -537,7 +571,10 @@ export class DrizzleChannelRepository implements IChannelRepository {
     });
   }
 
-  async saveTemplate(template: ChannelTemplate, tenantId: string): Promise<void> {
+  async saveTemplate(
+    template: ChannelTemplate,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: template.id,
       tenantId: template.tenantId,
@@ -557,8 +594,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelTemplates.id, template.id),
-          eq(schema.channelTemplates.tenantId, tenantId)
-        )
+          eq(schema.channelTemplates.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -568,8 +605,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         .where(
           and(
             eq(schema.channelTemplates.id, template.id),
-            eq(schema.channelTemplates.tenantId, tenantId)
-          )
+            eq(schema.channelTemplates.tenantId, tenantId),
+          ),
         );
     } else {
       await db.insert(schema.channelTemplates).values({
@@ -580,27 +617,34 @@ export class DrizzleChannelRepository implements IChannelRepository {
     }
   }
 
-  async deleteTemplate(channelId: string, templateName: string, tenantId: string): Promise<void> {
+  async deleteTemplate(
+    channelId: string,
+    templateName: string,
+    tenantId: string,
+  ): Promise<void> {
     await db
       .delete(schema.channelTemplates)
       .where(
         and(
           eq(schema.channelTemplates.channelId, channelId),
           eq(schema.channelTemplates.templateName, templateName),
-          eq(schema.channelTemplates.tenantId, tenantId)
-        )
+          eq(schema.channelTemplates.tenantId, tenantId),
+        ),
       );
   }
 
-  async findRateLimitByChannelId(channelId: string, tenantId: string): Promise<ChannelRateLimit | null> {
+  async findRateLimitByChannelId(
+    channelId: string,
+    tenantId: string,
+  ): Promise<ChannelRateLimit | null> {
     const [row] = await db
       .select()
       .from(schema.channelRateLimits)
       .where(
         and(
           eq(schema.channelRateLimits.channelId, channelId),
-          eq(schema.channelRateLimits.tenantId, tenantId)
-        )
+          eq(schema.channelRateLimits.tenantId, tenantId),
+        ),
       );
 
     if (!row) return null;
@@ -617,11 +661,18 @@ export class DrizzleChannelRepository implements IChannelRepository {
     });
   }
 
-  async saveRateLimit(rateLimit: ChannelRateLimit, tenantId: string): Promise<void> {
+  async saveRateLimit(
+    rateLimit: ChannelRateLimit,
+    tenantId: string,
+  ): Promise<void> {
     await this.saveRateLimitInternal(db, rateLimit, tenantId);
   }
 
-  private async saveRateLimitInternal(txOrDb: any, rateLimit: ChannelRateLimit, tenantId: string): Promise<void> {
+  private async saveRateLimitInternal(
+    txOrDb: any,
+    rateLimit: ChannelRateLimit,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: rateLimit.id,
       tenantId: rateLimit.tenantId,
@@ -640,8 +691,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
       .where(
         and(
           eq(schema.channelRateLimits.id, rateLimit.id),
-          eq(schema.channelRateLimits.tenantId, tenantId)
-        )
+          eq(schema.channelRateLimits.tenantId, tenantId),
+        ),
       );
 
     if (existing) {
@@ -651,8 +702,8 @@ export class DrizzleChannelRepository implements IChannelRepository {
         .where(
           and(
             eq(schema.channelRateLimits.id, rateLimit.id),
-            eq(schema.channelRateLimits.tenantId, tenantId)
-          )
+            eq(schema.channelRateLimits.tenantId, tenantId),
+          ),
         );
     } else {
       await txOrDb.insert(schema.channelRateLimits).values({

@@ -1,9 +1,25 @@
-import { Controller, Get, Post, Put, Delete, Body, Headers, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Headers,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AiAgentService } from '../services/ai-agent.service';
-import { CreateAgentDto, UpdateAgentDto, AgentProfileDto, ModelConfigDto } from '../dtos/ai.dto';
+import {
+  CreateAgentDto,
+  UpdateAgentDto,
+  AgentProfileDto,
+  ModelConfigDto,
+} from '../dtos/ai.dto';
 
 @Controller('v1/ai-agents')
 @UseGuards(TenantGuard, RbacGuard)
@@ -79,7 +95,11 @@ export class AiAgentController {
     @Param('id') id: string,
     @Body() dto: ModelConfigDto,
   ) {
-    const agent = await this.agentService.setAgentModelConfig(tenantId, id, dto);
+    const agent = await this.agentService.setAgentModelConfig(
+      tenantId,
+      id,
+      dto,
+    );
     return agent.toJSON();
   }
 }

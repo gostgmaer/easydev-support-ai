@@ -17,7 +17,9 @@ export class CapabilityResolver {
     tenantId: string,
     capabilityType: CapabilityTypeEnum,
   ): Promise<{ connector: Connector; capability: ConnectorCapability } | null> {
-    this.logger.debug(`Resolving capability ${capabilityType} for tenant ${tenantId}`);
+    this.logger.debug(
+      `Resolving capability ${capabilityType} for tenant ${tenantId}`,
+    );
     return this.repository.resolveCapability(tenantId, capabilityType);
   }
 }

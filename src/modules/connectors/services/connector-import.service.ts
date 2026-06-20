@@ -34,12 +34,13 @@ export class ConnectorImportService {
 
     // 2. Discover Authentication Type
     let authType = AuthTypeEnum.NONE;
-    const securitySchemes = spec.components?.securitySchemes || spec.securityDefinitions || {};
-    
+    const securitySchemes =
+      spec.components?.securitySchemes || spec.securityDefinitions || {};
+
     for (const [key, value] of Object.entries<any>(securitySchemes)) {
       const type = value.type?.toLowerCase();
       const scheme = value.scheme?.toLowerCase();
-      
+
       if (type === 'http' && scheme === 'bearer') {
         authType = AuthTypeEnum.BEARER;
         break;
@@ -62,7 +63,8 @@ export class ConnectorImportService {
       connectorType: dto.connectorType,
       baseUrl,
       authType,
-      description: spec.info?.description || spec.info?.title || 'Imported Connector',
+      description:
+        spec.info?.description || spec.info?.title || 'Imported Connector',
       config: { openapi: { version: spec.openapi || spec.swagger } },
     });
 
@@ -72,7 +74,11 @@ export class ConnectorImportService {
 
     for (const [path, pathItem] of Object.entries<any>(paths)) {
       for (const [method, operation] of Object.entries<any>(pathItem)) {
-        if (!['get', 'post', 'put', 'patch', 'delete'].includes(method.toLowerCase())) {
+        if (
+          !['get', 'post', 'put', 'patch', 'delete'].includes(
+            method.toLowerCase(),
+          )
+        ) {
           continue;
         }
 
@@ -81,7 +87,12 @@ export class ConnectorImportService {
         const operationId = operation.operationId || '';
 
         // Auto Map Capability Type
-        const capabilityType = this.mapToCapabilityType(path, method, summary, operationId);
+        const capabilityType = this.mapToCapabilityType(
+          path,
+          method,
+          summary,
+          operationId,
+        );
 
         // Discovery Request and Response Schemas
         const inputSchema = this.extractInputSchema(operation);
@@ -89,8 +100,12 @@ export class ConnectorImportService {
 
         mappedCapabilities.push({
           capabilityType,
-          name: operation.summary || operationId || `${method.toUpperCase()} ${path}`,
-          description: operation.description || `Endpoint ${method.toUpperCase()} ${path}`,
+          name:
+            operation.summary ||
+            operationId ||
+            `${method.toUpperCase()} ${path}`,
+          description:
+            operation.description || `Endpoint ${method.toUpperCase()} ${path}`,
           method: method.toUpperCase() as any,
           path,
           inputSchema,
@@ -116,10 +131,18 @@ export class ConnectorImportService {
   ): CapabilityTypeEnum {
     const searchStr = `${path} ${summary} ${operationId}`.toLowerCase();
 
-    if (searchStr.includes('track') || (searchStr.includes('order') && (searchStr.includes('status') || searchStr.includes('find')))) {
+    if (
+      searchStr.includes('track') ||
+      (searchStr.includes('order') &&
+        (searchStr.includes('status') || searchStr.includes('find')))
+    ) {
       return CapabilityTypeEnum.ORDER_TRACKING;
     }
-    if (searchStr.includes('inventory') || searchStr.includes('stock') || searchStr.includes('warehouse')) {
+    if (
+      searchStr.includes('inventory') ||
+      searchStr.includes('stock') ||
+      searchStr.includes('warehouse')
+    ) {
       return CapabilityTypeEnum.INVENTORY_LOOKUP;
     }
     if (searchStr.includes('refund')) {
@@ -128,31 +151,64 @@ export class ConnectorImportService {
     if (searchStr.includes('return')) {
       return CapabilityTypeEnum.RETURN_REQUEST;
     }
-    if (searchStr.includes('product') && (searchStr.includes('search') || searchStr.includes('query') || searchStr.includes('list'))) {
+    if (
+      searchStr.includes('product') &&
+      (searchStr.includes('search') ||
+        searchStr.includes('query') ||
+        searchStr.includes('list'))
+    ) {
       return CapabilityTypeEnum.PRODUCT_SEARCH;
     }
-    if (searchStr.includes('product') && (searchStr.includes('detail') || searchStr.includes('get') || searchStr.includes('find'))) {
+    if (
+      searchStr.includes('product') &&
+      (searchStr.includes('detail') ||
+        searchStr.includes('get') ||
+        searchStr.includes('find'))
+    ) {
       return CapabilityTypeEnum.PRODUCT_DETAILS;
     }
-    if (searchStr.includes('customer') || searchStr.includes('contact') || searchStr.includes('profile')) {
+    if (
+      searchStr.includes('customer') ||
+      searchStr.includes('contact') ||
+      searchStr.includes('profile')
+    ) {
       return CapabilityTypeEnum.CUSTOMER_LOOKUP;
     }
     if (searchStr.includes('invoice') || searchStr.includes('billing')) {
       return CapabilityTypeEnum.INVOICE_LOOKUP;
     }
-    if (searchStr.includes('payment') || searchStr.includes('charge') || searchStr.includes('transaction')) {
+    if (
+      searchStr.includes('payment') ||
+      searchStr.includes('charge') ||
+      searchStr.includes('transaction')
+    ) {
       return CapabilityTypeEnum.PAYMENT_LOOKUP;
     }
-    if (searchStr.includes('appointment') || searchStr.includes('booking') || searchStr.includes('schedule')) {
+    if (
+      searchStr.includes('appointment') ||
+      searchStr.includes('booking') ||
+      searchStr.includes('schedule')
+    ) {
       return CapabilityTypeEnum.APPOINTMENT_BOOKING;
     }
-    if (searchStr.includes('lead') || searchStr.includes('deal') || searchStr.includes('opportunity')) {
+    if (
+      searchStr.includes('lead') ||
+      searchStr.includes('deal') ||
+      searchStr.includes('opportunity')
+    ) {
       return CapabilityTypeEnum.LEAD_CREATION;
     }
-    if (searchStr.includes('subscription') || searchStr.includes('membership')) {
+    if (
+      searchStr.includes('subscription') ||
+      searchStr.includes('membership')
+    ) {
       return CapabilityTypeEnum.SUBSCRIPTION_LOOKUP;
     }
-    if (searchStr.includes('ticket') || searchStr.includes('case') || searchStr.includes('support')) {
+    if (
+      searchStr.includes('ticket') ||
+      searchStr.includes('case') ||
+      searchStr.includes('support')
+    ) {
       return CapabilityTypeEnum.TICKET_CREATION;
     }
     if (searchStr.includes('crm')) {
@@ -189,7 +245,8 @@ export class ConnectorImportService {
   }
 
   private extractOutputSchema(operation: any): Record<string, any> {
-    const successResponse = operation.responses?.['200'] || operation.responses?.['201'];
+    const successResponse =
+      operation.responses?.['200'] || operation.responses?.['201'];
     if (successResponse?.content?.['application/json']?.schema) {
       return successResponse.content['application/json'].schema;
     }

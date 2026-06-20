@@ -43,35 +43,83 @@ export class Team extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get name(): string { return this.props.name; }
-  get description(): string | undefined { return this.props.description; }
-  get department(): string | undefined { return this.props.department; }
-  get priority(): number { return this.props.priority; }
-  get isActive(): boolean { return this.props.isActive; }
-  get metadata(): Record<string, any> { return this.props.metadata || {}; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get deletedAt(): Date | undefined { return this.props.deletedAt; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get name(): string {
+    return this.props.name;
+  }
+  get description(): string | undefined {
+    return this.props.description;
+  }
+  get department(): string | undefined {
+    return this.props.department;
+  }
+  get priority(): number {
+    return this.props.priority;
+  }
+  get isActive(): boolean {
+    return this.props.isActive;
+  }
+  get metadata(): Record<string, any> {
+    return this.props.metadata || {};
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get deletedAt(): Date | undefined {
+    return this.props.deletedAt;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
-  get members(): TeamMember[] { return this.props.members || []; }
-  get rules(): AssignmentRule[] { return this.props.rules || []; }
+  get members(): TeamMember[] {
+    return this.props.members || [];
+  }
+  get rules(): AssignmentRule[] {
+    return this.props.rules || [];
+  }
 
-  public static create(id: string, props: Omit<TeamProps, 'createdAt' | 'updatedAt' | 'version' | 'members' | 'rules'>): Team {
+  public static create(
+    id: string,
+    props: Omit<
+      TeamProps,
+      'createdAt' | 'updatedAt' | 'version' | 'members' | 'rules'
+    >,
+  ): Team {
     const team = new Team(id, props);
-    team.addDomainEvent(new TeamCreatedEvent(team.tenantId, team.id, team.name));
+    team.addDomainEvent(
+      new TeamCreatedEvent(team.tenantId, team.id, team.name),
+    );
     return team;
   }
 
-  public update(props: Partial<Pick<TeamProps, 'name' | 'description' | 'department' | 'priority' | 'isActive' | 'metadata'>>): void {
+  public update(
+    props: Partial<
+      Pick<
+        TeamProps,
+        | 'name'
+        | 'description'
+        | 'department'
+        | 'priority'
+        | 'isActive'
+        | 'metadata'
+      >
+    >,
+  ): void {
     this.props = {
       ...this.props,
       ...props,
       updatedAt: new Date(),
       version: this.props.version! + 1,
     };
-    this.addDomainEvent(new TeamUpdatedEvent(this.tenantId, this.id, this.name));
+    this.addDomainEvent(
+      new TeamUpdatedEvent(this.tenantId, this.id, this.name),
+    );
   }
 
   public archive(): void {
@@ -83,28 +131,47 @@ export class Team extends AggregateRoot<string> {
   }
 
   public addMember(member: TeamMember): void {
-    const exists = this.members.some((m) => m.agentProfileId === member.agentProfileId);
+    const exists = this.members.some(
+      (m) => m.agentProfileId === member.agentProfileId,
+    );
     if (!exists) {
       this.members.push(member);
       this.props.updatedAt = new Date();
-      this.addDomainEvent(new AgentAssignedEvent(this.tenantId, member.agentProfileId, this.id));
+      this.addDomainEvent(
+        new AgentAssignedEvent(this.tenantId, member.agentProfileId, this.id),
+      );
     }
   }
 
   public removeMember(agentProfileId: string): void {
-    const index = this.members.findIndex((m) => m.agentProfileId === agentProfileId);
+    const index = this.members.findIndex(
+      (m) => m.agentProfileId === agentProfileId,
+    );
     if (index !== -1) {
       this.members.splice(index, 1);
       this.props.updatedAt = new Date();
     }
   }
 
-  public moveMember(agentProfileId: string, fromTeamId: string, toTeamId: string): void {
-    const index = this.members.findIndex((m) => m.agentProfileId === agentProfileId);
+  public moveMember(
+    agentProfileId: string,
+    fromTeamId: string,
+    toTeamId: string,
+  ): void {
+    const index = this.members.findIndex(
+      (m) => m.agentProfileId === agentProfileId,
+    );
     if (index !== -1) {
       this.members.splice(index, 1);
       this.props.updatedAt = new Date();
-      this.addDomainEvent(new AgentTransferredEvent(this.tenantId, agentProfileId, fromTeamId, toTeamId));
+      this.addDomainEvent(
+        new AgentTransferredEvent(
+          this.tenantId,
+          agentProfileId,
+          fromTeamId,
+          toTeamId,
+        ),
+      );
     }
   }
 

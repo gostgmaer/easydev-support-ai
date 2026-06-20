@@ -39,8 +39,10 @@ export interface ConnectorLogInput {
   context?: Record<string, any>;
 }
 
-export interface IConnectorRepository
-  extends ITenantRepository<Connector, string> {
+export interface IConnectorRepository extends ITenantRepository<
+  Connector,
+  string
+> {
   findBySlug(tenantId: string, slug: string): Promise<Connector | null>;
   findPaginated(
     tenantId: string,
@@ -98,10 +100,7 @@ export interface IConnectorRepository
   ): Promise<ConnectorCredential[]>;
 
   // Executions
-  saveExecution(
-    execution: ConnectorExecution,
-    tenantId: string,
-  ): Promise<void>;
+  saveExecution(execution: ConnectorExecution, tenantId: string): Promise<void>;
   getExecution(
     tenantId: string,
     executionId: string,

@@ -108,11 +108,9 @@ describe('MessageDeliveryService', () => {
       variables: { name: 'Jane' },
     });
 
-    expect(mockTemplate.render).toHaveBeenCalledWith(
-      tenantId,
-      'greeting',
-      { name: 'Jane' },
-    );
+    expect(mockTemplate.render).toHaveBeenCalledWith(tenantId, 'greeting', {
+      name: 'Jane',
+    });
     expect(result.content).toBe('Hello Jane');
   });
 
@@ -144,7 +142,9 @@ describe('MessageDeliveryService', () => {
   it('marks FAILED and rethrows when the channel dispatch fails (for DLQ)', async () => {
     const message = buildMessage(tenantId, messageId);
     mockRepo.findById.mockResolvedValue(message);
-    mockChannel.sendOutgoingMessage.mockRejectedValue(new Error('provider down'));
+    mockChannel.sendOutgoingMessage.mockRejectedValue(
+      new Error('provider down'),
+    );
 
     await expect(service.dispatch(tenantId, messageId)).rejects.toThrow(
       'provider down',

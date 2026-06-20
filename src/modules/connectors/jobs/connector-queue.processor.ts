@@ -54,7 +54,9 @@ export class ConnectorQueueProcessor extends BaseWorker {
         }
 
       case 'connector-sync-job':
-        this.logger.log(`Processing connector-sync-job ${job.id} for connector ${job.data.connectorId}`);
+        this.logger.log(
+          `Processing connector-sync-job ${job.id} for connector ${job.data.connectorId}`,
+        );
         // Background sync task - e.g. sync specs/config, or sync cached definitions
         return {
           synced: true,
@@ -63,7 +65,9 @@ export class ConnectorQueueProcessor extends BaseWorker {
         };
 
       case 'connector-webhook-job':
-        this.logger.log(`Processing connector-webhook-job ${job.id} for webhook ${job.data.webhookId}`);
+        this.logger.log(
+          `Processing connector-webhook-job ${job.id} for webhook ${job.data.webhookId}`,
+        );
         // Log webhook invocation or forward to events
         return {
           processed: true,

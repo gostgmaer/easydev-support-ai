@@ -21,9 +21,7 @@ import { Customer } from './entities/customer.entity';
 import { CustomerSegment } from './entities/customer-segment.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Customer, CustomerSegment]),
-  ],
+  imports: [TypeOrmModule.forFeature([Customer, CustomerSegment])],
   controllers: [
     CustomerController,
     CustomerSegmentController,

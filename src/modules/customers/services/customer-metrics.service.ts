@@ -8,13 +8,13 @@ import { randomUUID } from 'crypto';
 export class CustomerMetricsService {
   constructor(
     @Inject('ICustomerRepository')
-    private readonly customerRepo: ICustomerRepository
+    private readonly customerRepo: ICustomerRepository,
   ) {}
 
   async updateMetrics(
     tenantId: string,
     customerId: string,
-    dto: CustomerMetricsDto
+    dto: CustomerMetricsDto,
   ): Promise<CustomerMetrics> {
     const customer = await this.customerRepo.findById(customerId, tenantId);
     if (!customer) {
@@ -48,7 +48,10 @@ export class CustomerMetricsService {
     return metrics;
   }
 
-  async recalculateMetrics(tenantId: string, customerId: string): Promise<CustomerMetrics> {
+  async recalculateMetrics(
+    tenantId: string,
+    customerId: string,
+  ): Promise<CustomerMetrics> {
     const customer = await this.customerRepo.findById(customerId, tenantId);
     if (!customer) {
       throw new NotFoundException(`Customer with ID ${customerId} not found`);
@@ -62,7 +65,10 @@ export class CustomerMetricsService {
       totalConversations: currentConversations + 1,
       totalSpend: (metrics?.totalSpend || 0) + 100, // standard increment
       lifetimeValue: (metrics?.lifetimeValue || 0) + 100,
-      sentimentScore: Math.min(1, Math.max(-1, (metrics?.sentimentScore || 0) + 0.1)),
+      sentimentScore: Math.min(
+        1,
+        Math.max(-1, (metrics?.sentimentScore || 0) + 0.1),
+      ),
       vipStatus: (metrics?.lifetimeValue || 0) + 100 > 1000,
     };
 

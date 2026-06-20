@@ -24,16 +24,30 @@ export class WorkflowEngineService {
     triggerType: TriggerTypeEnum,
     context: Record<string, any>,
   ): Promise<void> {
-    this.logger.log(`Evaluating event triggers for tenant ${tenantId}, triggerType: ${triggerType}`);
+    this.logger.log(
+      `Evaluating event triggers for tenant ${tenantId}, triggerType: ${triggerType}`,
+    );
 
-    const matchedTemplates = await this.triggerService.findTriggeredTemplates(tenantId, triggerType);
-    this.logger.log(`Found ${matchedTemplates.length} matching template(s) for trigger ${triggerType}`);
+    const matchedTemplates = await this.triggerService.findTriggeredTemplates(
+      tenantId,
+      triggerType,
+    );
+    this.logger.log(
+      `Found ${matchedTemplates.length} matching template(s) for trigger ${triggerType}`,
+    );
 
     for (const template of matchedTemplates) {
       const match = this.evaluateConditions(template.conditions, context);
       if (match) {
-        this.logger.log(`Conditions matched for template: ${template.name}. Initiating execution.`);
-        await this.runWorkflowTemplate(tenantId, template, context, triggerType);
+        this.logger.log(
+          `Conditions matched for template: ${template.name}. Initiating execution.`,
+        );
+        await this.runWorkflowTemplate(
+          tenantId,
+          template,
+          context,
+          triggerType,
+        );
       }
     }
   }
@@ -47,7 +61,8 @@ export class WorkflowEngineService {
     const execution = await this.executionService.createExecution(tenantId, {
       workflowId: template.id,
       triggerSource,
-      triggerReferenceId: context.id || context.conversationId || context.ticketId,
+      triggerReferenceId:
+        context.id || context.conversationId || context.ticketId,
       context,
     });
 
@@ -61,9 +76,16 @@ export class WorkflowEngineService {
     );
 
     // Run actions asynchronously in background, catching errors
-    this.executeWorkflowActions(tenantId, template, execution.id, context).catch(async (error) => {
+    this.executeWorkflowActions(
+      tenantId,
+      template,
+      execution.id,
+      context,
+    ).catch(async (error) => {
       this.logger.error(`Execution ${execution.id} failed: ${error.message}`);
-      await this.executionService.failExecution(tenantId, execution.id, { message: error.message });
+      await this.executionService.failExecution(tenantId, execution.id, {
+        message: error.message,
+      });
       await this.auditService.logAudit(
         tenantId,
         template.id,
@@ -83,13 +105,23 @@ export class WorkflowEngineService {
     approverId: string,
     comments?: string,
   ): Promise<void> {
-    this.logger.log(`Resuming execution ${executionId} (approved: ${approved})`);
+    this.logger.log(
+      `Resuming execution ${executionId} (approved: ${approved})`,
+    );
 
-    const execution = await this.executionService.getExecution(tenantId, executionId);
-    const template = await this.templateService.getTemplate(tenantId, execution.workflowId);
+    const execution = await this.executionService.getExecution(
+      tenantId,
+      executionId,
+    );
+    const template = await this.templateService.getTemplate(
+      tenantId,
+      execution.workflowId,
+    );
 
     if (execution.executionStatus !== WorkflowStatusEnum.PAUSED) {
-      throw new Error(`Workflow execution ${executionId} is not in PAUSED state`);
+      throw new Error(
+        `Workflow execution ${executionId} is not in PAUSED state`,
+      );
     }
 
     if (!approved) {
@@ -122,13 +154,24 @@ export class WorkflowEngineService {
       (a) => a.actionType === 'APPROVAL', // Resume after approval
     );
 
-    const remainingActions = approvalActionIndex !== -1 
-      ? template.actions.slice(approvalActionIndex + 1) 
-      : template.actions;
+    const remainingActions =
+      approvalActionIndex !== -1
+        ? template.actions.slice(approvalActionIndex + 1)
+        : template.actions;
 
-    this.executeActionsList(tenantId, remainingActions, executionId, execution.context, template.id).catch(async (error) => {
-      this.logger.error(`Resumed execution ${executionId} failed: ${error.message}`);
-      await this.executionService.failExecution(tenantId, executionId, { message: error.message });
+    this.executeActionsList(
+      tenantId,
+      remainingActions,
+      executionId,
+      execution.context,
+      template.id,
+    ).catch(async (error) => {
+      this.logger.error(
+        `Resumed execution ${executionId} failed: ${error.message}`,
+      );
+      await this.executionService.failExecution(tenantId, executionId, {
+        message: error.message,
+      });
       await this.auditService.logAudit(
         tenantId,
         template.id,
@@ -139,7 +182,10 @@ export class WorkflowEngineService {
     });
   }
 
-  private evaluateConditions(conditions: WorkflowCondition[], context: Record<string, any>): boolean {
+  private evaluateConditions(
+    conditions: WorkflowCondition[],
+    context: Record<string, any>,
+  ): boolean {
     for (const cond of conditions) {
       const actualVal = context[cond.field];
       const targetVal = cond.value;
@@ -149,7 +195,12 @@ export class WorkflowEngineService {
           if (String(actualVal) !== String(targetVal)) return false;
           break;
         case 'CONTAINS':
-          if (!String(actualVal).toLowerCase().includes(String(targetVal).toLowerCase())) return false;
+          if (
+            !String(actualVal)
+              .toLowerCase()
+              .includes(String(targetVal).toLowerCase())
+          )
+            return false;
           break;
         case 'GT':
           if (Number(actualVal) <= Number(targetVal)) return false;
@@ -170,7 +221,13 @@ export class WorkflowEngineService {
     executionId: string,
     context: Record<string, any>,
   ): Promise<void> {
-    await this.executeActionsList(tenantId, template.actions, executionId, context, template.id);
+    await this.executeActionsList(
+      tenantId,
+      template.actions,
+      executionId,
+      context,
+      template.id,
+    );
   }
 
   private async executeActionsList(
@@ -183,8 +240,13 @@ export class WorkflowEngineService {
     const results: Record<string, any> = {};
 
     for (const action of actionsList) {
-      const actionResult = await this.actionService.executeAction(tenantId, action, context, executionId);
-      
+      const actionResult = await this.actionService.executeAction(
+        tenantId,
+        action,
+        context,
+        executionId,
+      );
+
       results[action.id || action.sequenceOrder] = actionResult;
 
       if (actionResult && actionResult.paused) {
@@ -201,7 +263,11 @@ export class WorkflowEngineService {
       }
     }
 
-    await this.executionService.completeExecution(tenantId, executionId, results);
+    await this.executionService.completeExecution(
+      tenantId,
+      executionId,
+      results,
+    );
     await this.auditService.logAudit(
       tenantId,
       templateId,

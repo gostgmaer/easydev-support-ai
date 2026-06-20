@@ -14,9 +14,20 @@ import {
   HttpCode,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TeamService } from '../services/team.service';
-import { CreateTeamDto, UpdateTeamDto, TeamQueryDto, AssignAgentDto } from '../dtos';
+import {
+  CreateTeamDto,
+  UpdateTeamDto,
+  TeamQueryDto,
+  AssignAgentDto,
+} from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -24,7 +35,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Teams')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/teams')
@@ -34,11 +49,14 @@ export class TeamController {
   @Post()
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Create a new team' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Team created successfully' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Team created successfully',
+  })
   async create(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: CreateTeamDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
     const team = await this.teamService.create(tenantId, dto, req.user?.id);
     return team.toJSON();
@@ -49,7 +67,7 @@ export class TeamController {
   @ApiOperation({ summary: 'List, filter, and paginate teams' })
   async findPaginated(
     @Headers('x-tenant-id') tenantId: string,
-    @Query() query: TeamQueryDto
+    @Query() query: TeamQueryDto,
   ) {
     const result = await this.teamService.findPaginated(tenantId, query);
     return {
@@ -61,7 +79,10 @@ export class TeamController {
   @Get(':id')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Get a team by ID' })
-  async findById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async findById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const team = await this.teamService.findById(tenantId, id);
     return team.toJSON();
   }
@@ -73,7 +94,7 @@ export class TeamController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Body() dto: UpdateTeamDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
     const team = await this.teamService.update(tenantId, id, dto, req.user?.id);
     return team.toJSON();
@@ -86,7 +107,7 @@ export class TeamController {
   async archive(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
     await this.teamService.archive(tenantId, id, req.user?.id);
   }
@@ -98,9 +119,15 @@ export class TeamController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Body() dto: AssignAgentDto,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    await this.teamService.addAgent(tenantId, id, dto.agentProfileId, dto.role, req.user?.id);
+    await this.teamService.addAgent(
+      tenantId,
+      id,
+      dto.agentProfileId,
+      dto.role,
+      req.user?.id,
+    );
     return { success: true };
   }
 
@@ -112,9 +139,14 @@ export class TeamController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Param('agentProfileId') agentProfileId: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    await this.teamService.removeAgent(tenantId, id, agentProfileId, req.user?.id);
+    await this.teamService.removeAgent(
+      tenantId,
+      id,
+      agentProfileId,
+      req.user?.id,
+    );
   }
 
   @Post(':id/transfer')
@@ -125,9 +157,15 @@ export class TeamController {
     @Param('id') id: string,
     @Body('toTeamId') toTeamId: string,
     @Body('agentProfileId') agentProfileId: string,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    await this.teamService.moveAgent(tenantId, id, toTeamId, agentProfileId, req.user?.id);
+    await this.teamService.moveAgent(
+      tenantId,
+      id,
+      toTeamId,
+      agentProfileId,
+      req.user?.id,
+    );
     return { success: true };
   }
 }

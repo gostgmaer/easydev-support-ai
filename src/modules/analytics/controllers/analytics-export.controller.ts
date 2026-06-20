@@ -1,5 +1,20 @@
-import { Controller, Post, Get, Body, Param, Headers, UseGuards, Res } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Headers,
+  UseGuards,
+  Res,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -21,14 +36,19 @@ export class AnalyticsExportController {
 
   @Post('manual')
   @Roles('tenant_admin', 'manager')
-  @ApiOperation({ summary: 'Manually trigger an export generation and delivery' })
+  @ApiOperation({
+    summary: 'Manually trigger an export generation and delivery',
+  })
   @ApiResponse({ status: 200, description: 'Export successfully queued.' })
   async triggerManualExport(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: ExportReportDto,
   ) {
     await this.exportService.triggerExport(tenantId, dto);
-    return { success: true, message: 'Export triggered and queued for delivery.' };
+    return {
+      success: true,
+      message: 'Export triggered and queued for delivery.',
+    };
   }
 
   @Get('download/:filename')
@@ -40,9 +60,17 @@ export class AnalyticsExportController {
     @Param('filename') filename: string,
     @Res() res: Response,
   ) {
-    const format = filename.endsWith('.csv') ? 'CSV' : filename.endsWith('.pdf') ? 'PDF' : 'JSON';
+    const format = filename.endsWith('.csv')
+      ? 'CSV'
+      : filename.endsWith('.pdf')
+        ? 'PDF'
+        : 'JSON';
     const reportId = 'dummy-report-id';
-    const { buffer, mimeType } = await this.exportService.generateExport(tenantId, reportId, format);
+    const { buffer, mimeType } = await this.exportService.generateExport(
+      tenantId,
+      reportId,
+      format,
+    );
 
     res.set({
       'Content-Type': mimeType,

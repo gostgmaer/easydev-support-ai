@@ -9,7 +9,12 @@ import {
   UseInterceptors,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { ConversationAssignmentService } from '../services/conversation-assignment.service';
 import {
@@ -24,12 +29,18 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Conversation Assignment')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/conversations/:conversationId/assignment')
 export class ConversationAssignmentController {
-  constructor(private readonly assignmentService: ConversationAssignmentService) {}
+  constructor(
+    private readonly assignmentService: ConversationAssignmentService,
+  ) {}
 
   @Post('manual')
   @Roles('tenant_admin', 'support_agent')
@@ -54,14 +65,21 @@ export class ConversationAssignmentController {
   @Post('auto')
   @Roles('tenant_admin', 'support_agent')
   @Throttle({ default: { limit: 120, ttl: 60000 } })
-  @ApiOperation({ summary: 'Auto-assign a conversation via the team assignment engine' })
+  @ApiOperation({
+    summary: 'Auto-assign a conversation via the team assignment engine',
+  })
   async autoAssign(
     @Headers('x-tenant-id') tenantId: string,
     @Param('conversationId') conversationId: string,
     @Body() dto: AutoAssignConversationDto,
     @Req() req: any,
   ) {
-    const conversation = await this.assignmentService.autoAssign(tenantId, conversationId, dto.teamId, req.user?.id);
+    const conversation = await this.assignmentService.autoAssign(
+      tenantId,
+      conversationId,
+      dto.teamId,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
@@ -74,15 +92,26 @@ export class ConversationAssignmentController {
     @Body() dto: TransferConversationDto,
     @Req() req: any,
   ) {
-    const conversation = await this.assignmentService.transfer(tenantId, conversationId, dto.toAgentProfileId, req.user?.id);
+    const conversation = await this.assignmentService.transfer(
+      tenantId,
+      conversationId,
+      dto.toAgentProfileId,
+      req.user?.id,
+    );
     return conversation.toJSON();
   }
 
   @Get()
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'List assignment history for a conversation' })
-  async list(@Headers('x-tenant-id') tenantId: string, @Param('conversationId') conversationId: string) {
-    const assignments = await this.assignmentService.listAssignments(tenantId, conversationId);
+  async list(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
+    const assignments = await this.assignmentService.listAssignments(
+      tenantId,
+      conversationId,
+    );
     return assignments.map((a) => a.toJSON());
   }
 }

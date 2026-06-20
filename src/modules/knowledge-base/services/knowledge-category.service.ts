@@ -27,7 +27,10 @@ export class KnowledgeCategoryService {
     return this.repository.saveCategory(category, tenantId);
   }
 
-  public async getCategory(tenantId: string, id: string): Promise<KnowledgeCategory> {
+  public async getCategory(
+    tenantId: string,
+    id: string,
+  ): Promise<KnowledgeCategory> {
     const category = await this.repository.getCategoryById(id, tenantId);
     if (!category) {
       throw new NotFoundException(`Knowledge Category ${id} not found`);

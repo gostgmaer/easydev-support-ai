@@ -22,7 +22,10 @@ export class ConnectorFactory {
     config: Record<string, any> = {},
   ): PreparedRequest {
     // 1. Substitute variables in path and baseUrl
-    let resolvedUrl = this.resolveUrlTemplates(`${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, params);
+    let resolvedUrl = this.resolveUrlTemplates(
+      `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`,
+      params,
+    );
 
     // 2. Separate query parameters vs request body
     const bodyMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
@@ -38,7 +41,7 @@ export class ConnectorFactory {
     // 3. Prepare headers
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
 
     // Apply authentication
@@ -81,7 +84,10 @@ export class ConnectorFactory {
     };
   }
 
-  private resolveUrlTemplates(template: string, params: Record<string, any>): string {
+  private resolveUrlTemplates(
+    template: string,
+    params: Record<string, any>,
+  ): string {
     let resolved = template;
     for (const [key, value] of Object.entries(params)) {
       const regex = new RegExp(`{${key}}`, 'g');
@@ -122,7 +128,9 @@ export class ConnectorFactory {
       case AuthTypeEnum.BASIC:
         const username = data.username || '';
         const password = data.password || '';
-        const base64Creds = Buffer.from(`${username}:${password}`).toString('base64');
+        const base64Creds = Buffer.from(`${username}:${password}`).toString(
+          'base64',
+        );
         headers['Authorization'] = `Basic ${base64Creds}`;
         break;
 
@@ -133,7 +141,10 @@ export class ConnectorFactory {
       case AuthTypeEnum.HMAC:
         // HMAC logic, typically involves signing the body
         const secret = data.clientSecret || data.secret;
-        headers[data.signatureHeader || 'x-signature'] = this.calculateHmac(secret, queryParams);
+        headers[data.signatureHeader || 'x-signature'] = this.calculateHmac(
+          secret,
+          queryParams,
+        );
         break;
     }
   }

@@ -22,7 +22,10 @@ describe('ConversationQueueProcessor', () => {
       providers: [
         ConversationQueueProcessor,
         { provide: ConversationService, useValue: mockConversationService },
-        { provide: ConversationAssignmentService, useValue: mockAssignmentService },
+        {
+          provide: ConversationAssignmentService,
+          useValue: mockAssignmentService,
+        },
         { provide: ConversationSummaryService, useValue: mockSummaryService },
         { provide: InboxService, useValue: mockInboxService },
       ],
@@ -35,7 +38,10 @@ describe('ConversationQueueProcessor', () => {
   it('routes conversation-assignment-job to the assignment service', async () => {
     const conversationId = randomUUID();
     const teamId = randomUUID();
-    mockAssignmentService.autoAssign.mockResolvedValue({ id: conversationId, assignedAgentId: 'a1' });
+    mockAssignmentService.autoAssign.mockResolvedValue({
+      id: conversationId,
+      assignedAgentId: 'a1',
+    });
 
     const job: Partial<Job> = {
       name: 'conversation-assignment-job',
@@ -44,13 +50,20 @@ describe('ConversationQueueProcessor', () => {
     };
     const res = await processor.handleJob(job as any);
 
-    expect(mockAssignmentService.autoAssign).toHaveBeenCalledWith(tenantId, conversationId, teamId, undefined);
+    expect(mockAssignmentService.autoAssign).toHaveBeenCalledWith(
+      tenantId,
+      conversationId,
+      teamId,
+      undefined,
+    );
     expect(res.assignedAgentId).toBe('a1');
   });
 
   it('routes conversation-summary-job and invalidates the inbox cache', async () => {
     const conversationId = randomUUID();
-    mockSummaryService.rebuild.mockResolvedValue({ toJSON: () => ({ conversationId }) });
+    mockSummaryService.rebuild.mockResolvedValue({
+      toJSON: () => ({ conversationId }),
+    });
 
     const job: Partial<Job> = {
       name: 'conversation-summary-job',
@@ -59,7 +72,10 @@ describe('ConversationQueueProcessor', () => {
     };
     const res = await processor.handleJob(job as any);
 
-    expect(mockSummaryService.rebuild).toHaveBeenCalledWith(tenantId, conversationId);
+    expect(mockSummaryService.rebuild).toHaveBeenCalledWith(
+      tenantId,
+      conversationId,
+    );
     expect(mockInboxService.invalidate).toHaveBeenCalledWith(tenantId);
     expect(res.rebuilt).toBe(true);
   });
@@ -76,7 +92,10 @@ describe('ConversationQueueProcessor', () => {
   });
 
   it('routes conversation-archive-job', async () => {
-    mockConversationService.archive.mockResolvedValue({ id: 'c1', status: { value: 'ARCHIVED' } });
+    mockConversationService.archive.mockResolvedValue({
+      id: 'c1',
+      status: { value: 'ARCHIVED' },
+    });
     const job: Partial<Job> = {
       name: 'conversation-archive-job',
       id: 'j4',
@@ -87,7 +106,13 @@ describe('ConversationQueueProcessor', () => {
   });
 
   it('throws on an unknown job name', async () => {
-    const job: Partial<Job> = { name: 'nope', id: 'j5', data: { _tenantContext: { tenantId } } };
-    await expect(processor.handleJob(job as any)).rejects.toThrow('Unknown job name: nope');
+    const job: Partial<Job> = {
+      name: 'nope',
+      id: 'j5',
+      data: { _tenantContext: { tenantId } },
+    };
+    await expect(processor.handleJob(job as any)).rejects.toThrow(
+      'Unknown job name: nope',
+    );
   });
 });

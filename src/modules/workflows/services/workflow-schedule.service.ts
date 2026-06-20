@@ -11,9 +11,12 @@ export class WorkflowScheduleService {
     private readonly repository: IWorkflowRepository,
   ) {}
 
-  public async createSchedule(tenantId: string, dto: CreateScheduleDto): Promise<WorkflowSchedule> {
+  public async createSchedule(
+    tenantId: string,
+    dto: CreateScheduleDto,
+  ): Promise<WorkflowSchedule> {
     const scheduleId = crypto.randomUUID();
-    
+
     // Simple calculation: next run is 1 hour from now
     const nextRun = new Date(Date.now() + 3600000);
 
@@ -29,7 +32,10 @@ export class WorkflowScheduleService {
     return this.repository.saveSchedule(schedule, tenantId);
   }
 
-  public async getSchedule(tenantId: string, id: string): Promise<WorkflowSchedule> {
+  public async getSchedule(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowSchedule> {
     const schedule = await this.repository.getScheduleById(id, tenantId);
     if (!schedule) {
       throw new NotFoundException(`Workflow schedule with ID ${id} not found`);
@@ -37,7 +43,10 @@ export class WorkflowScheduleService {
     return schedule;
   }
 
-  public async findSchedules(tenantId: string, activeOnly?: boolean): Promise<WorkflowSchedule[]> {
+  public async findSchedules(
+    tenantId: string,
+    activeOnly?: boolean,
+  ): Promise<WorkflowSchedule[]> {
     return this.repository.findSchedules(tenantId, activeOnly);
   }
 
@@ -49,14 +58,21 @@ export class WorkflowScheduleService {
     return deleted;
   }
 
-  public async recordExecutionRun(tenantId: string, id: string): Promise<WorkflowSchedule> {
+  public async recordExecutionRun(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowSchedule> {
     const schedule = await this.getSchedule(tenantId, id);
     const nextRun = new Date(Date.now() + 3600000); // schedule next hour
     schedule.updateRun(nextRun);
     return this.repository.saveSchedule(schedule, tenantId);
   }
 
-  public async toggleSchedule(tenantId: string, id: string, active: boolean): Promise<WorkflowSchedule> {
+  public async toggleSchedule(
+    tenantId: string,
+    id: string,
+    active: boolean,
+  ): Promise<WorkflowSchedule> {
     const schedule = await this.getSchedule(tenantId, id);
     schedule.toggle(active);
     return this.repository.saveSchedule(schedule, tenantId);

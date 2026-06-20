@@ -22,7 +22,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { MessageTemplateService } from '../services/message-template.service';
-import { CreateTemplateDto, UpdateTemplateDto, TemplateQueryDto } from '../dtos';
+import {
+  CreateTemplateDto,
+  UpdateTemplateDto,
+  TemplateQueryDto,
+} from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -30,7 +34,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Message Templates')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/message-templates')
@@ -46,7 +54,11 @@ export class TemplateController {
     @Body() dto: CreateTemplateDto,
     @Req() req: any,
   ) {
-    const template = await this.templateService.create(tenantId, dto, req.user?.id);
+    const template = await this.templateService.create(
+      tenantId,
+      dto,
+      req.user?.id,
+    );
     return template.toJSON();
   }
 
@@ -84,7 +96,12 @@ export class TemplateController {
     @Body() dto: UpdateTemplateDto,
     @Req() req: any,
   ) {
-    const template = await this.templateService.update(tenantId, id, dto, req.user?.id);
+    const template = await this.templateService.update(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
     return template.toJSON();
   }
 
