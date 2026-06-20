@@ -8,7 +8,7 @@ export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
 
   constructor(
-    @InjectQueue('incoming-messages') private readonly incomingQueue: Queue,
+    @InjectQueue('inbound-messages') private readonly incomingQueue: Queue,
     private readonly normalizationService: NormalizationService,
   ) {}
 

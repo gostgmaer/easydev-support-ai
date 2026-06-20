@@ -1,0 +1,12 @@
+{
+  "name": "@easydev/shared-kernel",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "rxjs": "^7.8.1"
+  }
+}

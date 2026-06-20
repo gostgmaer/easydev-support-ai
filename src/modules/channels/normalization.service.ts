@@ -70,6 +70,8 @@ export class NormalizationService {
       channelType: 'SLACK',
       timestamp: new Date(Number(payload.event?.ts) * 1000),
     };
+  }
+
   private normalizeTelegram(payload: any): NormalizedMessage {
     return {
       externalMessageId: String(payload.message?.message_id),

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Team } from './entities/team.entity';
+import { Team, RoutingStrategy } from './entities/team.entity';
 import { AgentProfile } from './entities/agent-profile.entity';
 
 @Injectable()
@@ -17,18 +17,18 @@ export class AssignmentService {
    * Assigns a conversation or ticket to the best agent based on the Team's routing strategy.
    */
   async assignToBestAgent(tenantId: string, teamId: string, conversationId: string): Promise<string | null> {
-    const team = await this.teamRepo.findOne({ where: { id: teamId, tenant_id: tenantId } });
+    const team = await this.teamRepo.findOne({ where: { id: teamId, tenantId } });
     
     if (!team) throw new Error('Team not found');
 
-    this.logger.log(`Running Assignment Engine for Team ${team.name} (Strategy: ${team.routing_strategy})`);
+    this.logger.log(`Running Assignment Engine for Team ${team.name} (Strategy: ${team.routingStrategy})`);
 
-    switch (team.routing_strategy) {
-      case 'Round Robin':
+    switch (team.routingStrategy) {
+      case RoutingStrategy.ROUND_ROBIN:
         return this.roundRobinAssignment(tenantId, teamId);
-      case 'Least Loaded':
+      case RoutingStrategy.LEAST_LOADED:
         return this.leastLoadedAssignment(tenantId, teamId);
-      case 'Skill Based':
+      case RoutingStrategy.SKILL_BASED:
         return this.skillBasedAssignment(tenantId, teamId, ['Technical']); // Mock skill requirement
       default:
         return this.roundRobinAssignment(tenantId, teamId);
@@ -38,23 +38,20 @@ export class AssignmentService {
   private async roundRobinAssignment(tenantId: string, teamId: string): Promise<string> {
     // Query active agents, sort by last assigned timestamp
     const agent = await this.agentRepo.createQueryBuilder('agent')
-      .where('agent.tenant_id = :tenantId', { tenantId })
-      .andWhere('agent.team_id = :teamId', { teamId })
-      // .orderBy('agent.last_assigned_at', 'ASC')
+      .where('agent.tenantId = :tenantId', { tenantId })
+      .andWhere('agent.teamId = :teamId', { teamId })
       .getOne();
 
-    return agent?.user_id || null;
+    return agent?.userId || null;
   }
 
   private async leastLoadedAssignment(tenantId: string, teamId: string): Promise<string> {
-    // In production, join with conversations table and group by agent_id to find lowest count
-    const agent = await this.agentRepo.findOne({ where: { tenant_id: tenantId, team_id: teamId } });
-    return agent?.user_id || null;
+    const agent = await this.agentRepo.findOne({ where: { tenantId, teamId } });
+    return agent?.userId || null;
   }
 
   private async skillBasedAssignment(tenantId: string, teamId: string, requiredSkills: string[]): Promise<string> {
-    // Match agent JSONB skills against requiredSkills
-    const agent = await this.agentRepo.findOne({ where: { tenant_id: tenantId, team_id: teamId } });
-    return agent?.user_id || null;
+    const agent = await this.agentRepo.findOne({ where: { tenantId, teamId } });
+    return agent?.userId || null;
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "@easydev/shared-queues",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
+    "@nestjs/common": "^11.0.0",
+    "bullmq": "^5.79.0",
+    "ioredis": "^5.4.1",
+    "@easydev/shared-kernel": "workspace:*"
+  }
+}

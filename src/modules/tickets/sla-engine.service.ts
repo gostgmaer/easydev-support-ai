@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Ticket } from './entities/ticket.entity';
+import { Ticket, TicketPriority } from './entities/ticket.entity';
 import { TicketSla } from './entities/ticket-sla.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -16,8 +16,6 @@ export class SlaEngineService {
 
   /**
    * Runs every minute to check for SLA breaches across all tenants.
-   * In a massive multi-tenant environment, this might be handled via BullMQ 
-   * delayed jobs rather than a single CRON, but CRON works for batch processing.
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async checkSlaBreaches() {
@@ -25,30 +23,37 @@ export class SlaEngineService {
 
     const now = new Date();
     
-    // Find all Open or In Progress tickets that have an SLA defined
-    // and where the current time > due_date, and haven't been marked breached yet
-    const atRiskTickets = await this.ticketRepo.createQueryBuilder('ticket')
-      .where('ticket.status IN (:...statuses)', { statuses: ['Open', 'In Progress'] })
-      .andWhere('ticket.dueDate < :now', { now })
+    // Find all SLA configurations that are breached but not marked as breached
+    const breachedSlas = await this.slaRepo.createQueryBuilder('sla')
+      .leftJoinAndSelect('sla.ticket', 'ticket')
+      .where('(sla.isResponseBreached = :breachedVal AND sla.firstRespondedAt IS NULL AND sla.firstResponseDue < :now) OR (sla.isResolutionBreached = :breachedVal AND sla.resolvedAt IS NULL AND sla.resolutionDue < :now)', { breachedVal: false, now })
       .getMany();
 
-    if (atRiskTickets.length === 0) return;
+    if (breachedSlas.length === 0) return;
 
-    this.logger.warn(`Found ${atRiskTickets.length} SLA breaches! Executing escalation rules...`);
+    this.logger.warn(`Found ${breachedSlas.length} SLA breaches! Executing escalation rules...`);
 
-    for (const ticket of atRiskTickets) {
-      await this.escalateTicket(ticket);
+    for (const sla of breachedSlas) {
+      if (sla.firstResponseDue < now && !sla.isResponseBreached && !sla.firstRespondedAt) {
+        sla.isResponseBreached = true;
+      }
+      if (sla.resolutionDue < now && !sla.isResolutionBreached && !sla.resolvedAt) {
+        sla.isResolutionBreached = true;
+      }
+      await this.slaRepo.save(sla);
+
+      if (sla.ticket) {
+        await this.escalateTicket(sla.ticket);
+      }
     }
   }
 
   private async escalateTicket(ticket: Ticket) {
-    // 1. Mark ticket priority as Critical
-    ticket.priority = 'Critical';
+    // 1. Mark ticket priority as URGENT
+    ticket.priority = TicketPriority.URGENT;
     
-    // 2. Add an internal audit note about the breach
-    
-    // 3. Dispatch an Escalation Event (e.g., notify Manager)
-    this.logger.log(`Escalating Ticket ${ticket.id} for Tenant ${ticket.tenant_id}`);
+    // 2. Dispatch an Escalation Event (e.g., notify Manager)
+    this.logger.log(`Escalating Ticket ${ticket.id} for Tenant ${ticket.tenantId}`);
     
     await this.ticketRepo.save(ticket);
   }

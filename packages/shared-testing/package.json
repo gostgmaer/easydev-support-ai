@@ -1,0 +1,18 @@
+{
+  "name": "@easydev/shared-testing",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "dependencies": {
+    "@easydev/shared-kernel": "workspace:*",
+    "@easydev/database": "workspace:*",
+    "pg": "^8.11.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.6",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.7.3"
+  }
+}

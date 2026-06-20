@@ -1,0 +1,17 @@
+{
+  "name": "@easydev/database",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "dependencies": {
+    "drizzle-orm": "^0.30.10",
+    "pg": "^8.11.5",
+    "@easydev/shared-kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.22.8",
+    "@types/pg": "^8.11.6",
+    "typescript": "^5.7.3"
+  }
+}
