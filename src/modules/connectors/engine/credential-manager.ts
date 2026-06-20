@@ -11,7 +11,9 @@ export class CredentialManager {
   private readonly secretKey: Buffer;
 
   constructor() {
-    const rawKey = process.env.CONNECTOR_ENCRYPTION_KEY || 'easydev_connector_secret_key_32_bytes_long_fallback';
+    const rawKey =
+      process.env.CONNECTOR_ENCRYPTION_KEY ||
+      'easydev_connector_secret_key_32_bytes_long_fallback';
     // Ensure the key is exactly 32 bytes
     this.secretKey = crypto.scryptSync(rawKey, 'salt', 32);
   }
@@ -19,7 +21,7 @@ export class CredentialManager {
   public encrypt(data: any): { encryptedData: string; keyId: string } {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv(this.algorithm, this.secretKey, iv);
-    
+
     const plaintext = typeof data === 'string' ? data : JSON.stringify(data);
     let encrypted = cipher.update(plaintext, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -40,8 +42,12 @@ export class CredentialManager {
 
       const iv = Buffer.from(parts[0], 'hex');
       const encryptedText = parts[1];
-      const decipher = crypto.createDecipheriv(this.algorithm, this.secretKey, iv);
-      
+      const decipher = crypto.createDecipheriv(
+        this.algorithm,
+        this.secretKey,
+        iv,
+      );
+
       let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
 
@@ -62,25 +68,35 @@ export class CredentialManager {
     repository: IConnectorRepository,
   ): Promise<ConnectorCredential> {
     const dec = this.decrypt<any>(credential.encryptedData);
-    if (credential.authType !== 'OAUTH2' || !dec.refreshToken || !dec.tokenUrl) {
+    if (
+      credential.authType !== 'OAUTH2' ||
+      !dec.refreshToken ||
+      !dec.tokenUrl
+    ) {
       return credential;
     }
 
-    this.logger.log(`Refreshing OAuth token for connector credential ${credential.id} under tenant ${tenantId}`);
+    this.logger.log(
+      `Refreshing OAuth token for connector credential ${credential.id} under tenant ${tenantId}`,
+    );
 
     try {
-      const response = await axios.post(dec.tokenUrl, {
-        grant_type: 'refresh_token',
-        client_id: dec.clientId,
-        client_secret: dec.clientSecret,
-        refresh_token: dec.refreshToken,
-      }, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 10000,
-      });
+      const response = await axios.post(
+        dec.tokenUrl,
+        {
+          grant_type: 'refresh_token',
+          client_id: dec.clientId,
+          client_secret: dec.clientSecret,
+          refresh_token: dec.refreshToken,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        },
+      );
 
       const { access_token, expires_in, refresh_token } = response.data;
-      
+
       const newDec = {
         ...dec,
         accessToken: access_token,
@@ -88,16 +104,22 @@ export class CredentialManager {
       };
 
       const { encryptedData, keyId } = this.encrypt(newDec);
-      
-      const expiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : undefined;
+
+      const expiresAt = expires_in
+        ? new Date(Date.now() + expires_in * 1000)
+        : undefined;
       credential.rotate(encryptedData, expiresAt);
-      
+
       await repository.saveCredential(credential, tenantId);
-      
-      this.logger.log(`OAuth token refreshed successfully for credential ${credential.id}`);
+
+      this.logger.log(
+        `OAuth token refreshed successfully for credential ${credential.id}`,
+      );
       return credential;
     } catch (error: any) {
-      this.logger.error(`Failed to refresh OAuth token for credential ${credential.id}: ${error.message}`);
+      this.logger.error(
+        `Failed to refresh OAuth token for credential ${credential.id}: ${error.message}`,
+      );
       throw new Error(`OAuth token refresh failed: ${error.message}`);
     }
   }

@@ -1216,3 +1216,144 @@ export class AiUsageRecordedEvent extends DomainEvent {
     return this.agentId;
   }
 }
+
+export class WorkflowCreatedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowId: string,
+    public readonly name: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowId;
+  }
+}
+
+export class WorkflowUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowId;
+  }
+}
+
+export class WorkflowActivatedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.activated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowId;
+  }
+}
+
+export class WorkflowPausedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.paused';
+  constructor(
+    public readonly tenantId: string,
+    public readonly workflowId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.workflowId;
+  }
+}
+
+export class WorkflowExecutionStartedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.execution.started';
+  constructor(
+    public readonly tenantId: string,
+    public readonly executionId: string,
+    public readonly workflowId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.executionId;
+  }
+}
+
+export class WorkflowExecutionCompletedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.execution.completed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly executionId: string,
+    public readonly workflowId: string,
+    public readonly result?: any,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.executionId;
+  }
+}
+
+export class WorkflowExecutionFailedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.execution.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly executionId: string,
+    public readonly workflowId: string,
+    public readonly error: any,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.executionId;
+  }
+}
+
+export class WorkflowApprovalRequestedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.approval.requested';
+  constructor(
+    public readonly tenantId: string,
+    public readonly approvalId: string,
+    public readonly executionId: string,
+    public readonly approverId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.approvalId;
+  }
+}
+
+export class WorkflowApprovedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.approved';
+  constructor(
+    public readonly tenantId: string,
+    public readonly approvalId: string,
+    public readonly executionId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.approvalId;
+  }
+}
+
+export class WorkflowRejectedEvent extends DomainEvent {
+  static readonly eventName = 'workflow.rejected';
+  constructor(
+    public readonly tenantId: string,
+    public readonly approvalId: string,
+    public readonly executionId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.approvalId;
+  }
+}
+

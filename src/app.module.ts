@@ -50,8 +50,18 @@ import { ConnectorLog } from './modules/connectors/entities/connector-log.entity
 import { KnowledgeDocument } from './modules/knowledge-base/entities/knowledge-document.entity';
 import { KnowledgeSource } from './modules/knowledge-base/entities/knowledge-source.entity';
 import { KnowledgeChunk } from './modules/knowledge-base/entities/knowledge-chunk.entity';
-import { Workflow } from './modules/workflows/entities/workflow.entity';
-import { WorkflowExecution } from './modules/workflows/entities/workflow-execution.entity';
+import {
+  WorkflowTemplate,
+  WorkflowVersion,
+  WorkflowExecution,
+  WorkflowTrigger,
+  WorkflowCondition,
+  WorkflowAction,
+  WorkflowApproval,
+  WorkflowSchedule,
+  WorkflowAuditLog,
+  WorkflowVariable,
+} from './modules/workflows/entities';
 import { AnalyticsEvent } from './modules/analytics/entities/analytics-event.entity';
 import { CsatSurvey } from './modules/analytics/entities/csat-survey.entity';
 import { AuditLog } from './modules/iam/entities/audit-log.entity';
@@ -97,8 +107,16 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
           KnowledgeDocument,
           KnowledgeSource,
           KnowledgeChunk,
-          Workflow,
+          WorkflowTemplate,
+          WorkflowVersion,
           WorkflowExecution,
+          WorkflowTrigger,
+          WorkflowCondition,
+          WorkflowAction,
+          WorkflowApproval,
+          WorkflowSchedule,
+          WorkflowAuditLog,
+          WorkflowVariable,
           AnalyticsEvent,
           CsatSurvey,
           AuditLog,
