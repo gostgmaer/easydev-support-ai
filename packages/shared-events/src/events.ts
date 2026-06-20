@@ -43,6 +43,92 @@ export class ConversationClosedEvent extends DomainEvent {
   }
 }
 
+export class ConversationUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'conversation.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly status: string,
+    public readonly priority: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class ConversationTransferredEvent extends DomainEvent {
+  static readonly eventName = 'conversation.transferred';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly fromAgentId: string | undefined,
+    public readonly toAgentId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class ConversationTaggedEvent extends DomainEvent {
+  static readonly eventName = 'conversation.tagged';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly tag: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class ConversationNoteAddedEvent extends DomainEvent {
+  static readonly eventName = 'conversation.note_added';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly noteId: string,
+    public readonly authorId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class ConversationResolvedEvent extends DomainEvent {
+  static readonly eventName = 'conversation.resolved';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly resolvedBy?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class ConversationArchivedEvent extends DomainEvent {
+  static readonly eventName = 'conversation.archived';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
 export class MessageReceivedEvent extends DomainEvent {
   static readonly eventName = 'message.received';
   constructor(

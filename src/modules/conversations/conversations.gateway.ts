@@ -63,6 +63,12 @@ export class ConversationsGateway
     this.server.to(`tenant_${tenantId}`).emit('newMessage', payload);
   }
 
+  // Push realtime inbox/summary updates to all agents of a tenant
+  broadcastInboxUpdate(tenantId: string, payload: any) {
+    if (!this.server) return;
+    this.server.to(`tenant_${tenantId}`).emit('inbox.updated', payload);
+  }
+
   // Allow agents to send typing indicators
   @SubscribeMessage('typing')
   handleTyping(
