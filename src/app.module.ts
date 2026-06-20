@@ -36,6 +36,8 @@ import {
 } from './modules/ai-integration/ai-integration.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { WidgetModule } from './modules/widget/widget.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { HardeningModule } from './modules/hardening/hardening.module';
 
 // Entities
 import { Customer } from './modules/customers/entities/customer.entity';
@@ -165,6 +167,8 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     QueueModule,
     SettingsModule,
     WidgetModule,
+    ScheduleModule.forRoot(),
+    HardeningModule,
   ],
   controllers: [AppController],
   providers: [

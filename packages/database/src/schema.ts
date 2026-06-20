@@ -3501,3 +3501,22 @@ export const widgetInstallations = supportAgentSchema.table(
     ),
   }),
 );
+
+// 132. Transactional Outbox Events Table
+export const outboxEvents = supportAgentSchema.table(
+  'outbox_events',
+  {
+    ...commonColumns,
+    eventName: varchar('event_name', { length: 255 }).notNull(),
+    payload: jsonb('payload').notNull(),
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, PROCESSED, FAILED
+    attempts: integer('attempts').default(0).notNull(),
+    lastError: text('last_error'),
+    processedAt: timestamp('processed_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_outbox_tenant').on(table.tenantId),
+    statusIdx: index('idx_outbox_status').on(table.tenantId, table.status),
+  }),
+);
+

@@ -1,0 +1,43 @@
+# --- BUILD STAGE ---
+FROM node:22-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Install pnpm and build requirements
+RUN npm install -g pnpm
+
+# Copy workspace lock and configs
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.build.json ./
+COPY packages ./packages
+
+# Copy app source code
+COPY src ./src
+
+# Install all dependencies and build
+RUN pnpm install --frozen-lockfile
+RUN pnpm run build:packages
+RUN pnpm run build
+
+# --- RUN STAGE ---
+FROM node:22-alpine AS runner
+
+WORKDIR /usr/src/app
+
+RUN npm install -g pnpm pm2
+
+# Copy runtime files
+COPY --from=builder /usr/src/app/package.json ./
+COPY --from=builder /usr/src/app/pnpm-lock.yaml ./
+COPY --from=builder /usr/src/app/pnpm-workspace.yaml ./
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/packages ./packages
+COPY --from=builder /usr/src/app/ecosystem.config.js ./
+
+# Install only production dependencies
+RUN pnpm install --prod --frozen-lockfile
+
+EXPOSE 3000
+
+ENV NODE_ENV=production
+
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]
