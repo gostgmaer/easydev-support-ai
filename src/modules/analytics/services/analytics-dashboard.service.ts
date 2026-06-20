@@ -212,7 +212,7 @@ export class AnalyticsDashboardService {
     endDate: Date;
   } {
     const endDate = new Date();
-    let startDate = new Date();
+    const startDate = new Date();
 
     switch (timeRange) {
       case 'Last 24 Hours':

@@ -2753,4 +2753,146 @@ export const tenantUsageLimits = supportAgentSchema.table(
   }),
 );
 
+// 104. Inbox Views Table
+export const inboxViews = supportAgentSchema.table(
+  'inbox_views',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    customerId: uuid('customer_id'),
+    channelId: uuid('channel_id'),
+    assignedAgentId: uuid('assigned_agent_id'),
+    assignedTeamId: uuid('assigned_team_id'),
+    status: varchar('status', { length: 50 }).notNull(), // OPEN, SNOOZED, RESOLVED, ARCHIVED, etc.
+    priority: varchar('priority', { length: 50 }).default('MEDIUM').notNull(), // LOW, MEDIUM, HIGH, URGENT
+    sentiment: varchar('sentiment', { length: 50 }), // POSITIVE, NEUTRAL, NEGATIVE
+    lastMessage: text('last_message'),
+    lastMessageAt: timestamp('last_message_at'),
+    lastMessageType: varchar('last_message_type', { length: 50 }), // TEXT, IMAGE, FILE, etc.
+    unreadCount: integer('unread_count').default(0).notNull(),
+    openTicketCount: integer('open_ticket_count').default(0).notNull(),
+    aiConfidenceScore: doublePrecision('ai_confidence_score'),
+    waitingSince: timestamp('waiting_since'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_views_tenant').on(table.tenantId),
+    convTenantUnique: uniqueIndex('uq_inbox_views_conv_tenant').on(table.tenantId, table.conversationId),
+    statusIdx: index('idx_inbox_views_status').on(table.tenantId, table.status),
+    agentIdx: index('idx_inbox_views_agent').on(table.tenantId, table.assignedAgentId),
+    teamIdx: index('idx_inbox_views_team').on(table.tenantId, table.assignedTeamId),
+  }),
+);
+
+// 105. Inbox Filters Table
+export const inboxFilters = supportAgentSchema.table(
+  'inbox_filters',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    filterDefinition: jsonb('filter_definition').notNull(),
+    isSystem: boolean('is_system').default(false).notNull(),
+    isShared: boolean('is_shared').default(false).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_filters_tenant').on(table.tenantId),
+  }),
+);
+
+// 106. Inbox Saved Views Table
+export const inboxSavedViews = supportAgentSchema.table(
+  'inbox_saved_views',
+  {
+    ...commonColumns,
+    userId: uuid('user_id').notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    filterId: uuid('filter_id').notNull(),
+    sortConfiguration: jsonb('sort_configuration'),
+    columnConfiguration: jsonb('column_configuration'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_saved_views_tenant').on(table.tenantId),
+    userViewIdx: index('idx_inbox_saved_views_user').on(table.tenantId, table.userId),
+  }),
+);
+
+// 107. Inbox Assignments Table
+export const inboxAssignments = supportAgentSchema.table(
+  'inbox_assignments',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    assignedAgentId: uuid('assigned_agent_id'),
+    assignedTeamId: uuid('assigned_team_id'),
+    assignmentType: varchar('assignment_type', { length: 50 }).notNull(), // ROUND_ROBIN, FORCE, TRANSFER, AUTO
+    assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_assignments_tenant').on(table.tenantId),
+    convIdx: index('idx_inbox_assignments_conv').on(table.tenantId, table.conversationId),
+  }),
+);
+
+// 108. Inbox Presence Table
+export const inboxPresence = supportAgentSchema.table(
+  'inbox_presence',
+  {
+    ...commonColumns,
+    userId: uuid('user_id').notNull(),
+    status: varchar('status', { length: 50 }).notNull(), // ONLINE, OFFLINE, AWAY, BUSY
+    lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+    activeConversationId: uuid('active_conversation_id'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_presence_tenant').on(table.tenantId),
+    userTenantUnique: uniqueIndex('uq_inbox_presence_user_tenant').on(table.tenantId, table.userId),
+  }),
+);
+
+// 109. Inbox Snoozes Table
+export const inboxSnoozes = supportAgentSchema.table(
+  'inbox_snoozes',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    snoozedUntil: timestamp('snoozed_until').notNull(),
+    reason: varchar('reason', { length: 255 }),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_snoozes_tenant').on(table.tenantId),
+    convTenantUnique: uniqueIndex('uq_inbox_snoozes_conv_tenant').on(table.tenantId, table.conversationId),
+  }),
+);
+
+// 110. Inbox Bookmarks Table
+export const inboxBookmarks = supportAgentSchema.table(
+  'inbox_bookmarks',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    userId: uuid('user_id').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_bookmarks_tenant').on(table.tenantId),
+    userConvUnique: uniqueIndex('uq_inbox_bookmarks_user_conv').on(table.tenantId, table.userId, table.conversationId),
+  }),
+);
+
+// 111. Inbox Activity Feed Table
+export const inboxActivityFeed = supportAgentSchema.table(
+  'inbox_activity_feed',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id').notNull(),
+    eventType: varchar('event_type', { length: 100 }).notNull(), // ASSIGNED, SNOOZED, BOOKMARKED, MESSAGE, WORKFLOW, TICKET
+    actorId: uuid('actor_id'), // User ID, Agent ID, or SYSTEM (NULL)
+    eventData: jsonb('event_data'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_inbox_activity_tenant').on(table.tenantId),
+    convIdx: index('idx_inbox_activity_conv').on(table.tenantId, table.conversationId),
+  }),
+);
+
+
 

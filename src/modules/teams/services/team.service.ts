@@ -69,7 +69,7 @@ export class TeamService {
       throw new NotFoundException(`Team ${id} not found`);
     }
 
-    team.update(dto as any);
+    team.update(dto);
     const saved = await this.teamRepo.save(team, tenantId);
     await this.eventPublisher.publishAll(team.domainEvents);
     team.clearEvents();

@@ -342,6 +342,6 @@ export class TicketService {
   }
 
   async findPaginated(tenantId: string, query: TicketQueryDto) {
-    return this.ticketRepo.findPaginated(tenantId, query as TicketQueryOptions);
+    return this.ticketRepo.findPaginated(tenantId, query);
   }
 }

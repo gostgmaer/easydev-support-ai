@@ -29,7 +29,7 @@ export class ConnectorMapper {
       ),
       name: raw.name,
       description: raw.description || undefined,
-      method: (raw.method || 'GET') as any,
+      method: raw.method || 'GET',
       path: raw.path,
       requestMapping: (raw.requestMapping as Record<string, any>) || undefined,
       responseMapping:

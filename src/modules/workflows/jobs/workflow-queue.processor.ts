@@ -17,7 +17,7 @@ export class WorkflowQueueProcessor extends BaseWorker {
     private readonly templateService: WorkflowTemplateService,
     @Optional() queueService?: QueueService,
   ) {
-    super('WorkflowQueueProcessor', 'workflow-queue' as any, queueService);
+    super('WorkflowQueueProcessor', 'workflow-queue', queueService);
   }
 
   async handleJob(job: Job<any, any, string>): Promise<any> {

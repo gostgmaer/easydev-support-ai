@@ -417,7 +417,7 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
           eq(schema.customers.id, schema.customerSegmentMembers.customerId),
           eq(schema.customerSegmentMembers.segmentId, options.segmentId),
         ),
-      ) as any;
+      );
     }
 
     const dataRows = await (query as any)
@@ -445,7 +445,7 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
           eq(schema.customers.id, schema.customerSegmentMembers.customerId),
           eq(schema.customerSegmentMembers.segmentId, options.segmentId),
         ),
-      ) as any;
+      );
     }
 
     const [countResult] = await (countQuery as any).where(whereClause);
@@ -529,7 +529,7 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 1,
-      } as any);
+      });
     }
   }
 

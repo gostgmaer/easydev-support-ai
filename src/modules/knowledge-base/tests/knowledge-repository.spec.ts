@@ -283,7 +283,7 @@ describe('Knowledge Drizzle Repository', () => {
       });
 
       mockResults.push([], []); // delete and insert results inside transaction
-      await repo.saveChunks([chunk], tenantId, docId);
+      await repo.saveChunks([chunk], tenantId);
       expect(db.transaction).toHaveBeenCalled();
 
       mockResults.push([

@@ -17,6 +17,7 @@ export const QUEUES = {
   TEAM: 'team-queue',
   CHANNEL: 'channel-queue',
   SETTINGS: 'settings-queue',
+  INBOX: 'inbox-queue',
   DEAD_LETTER: 'dead-letter-queue',
 } as const;
 

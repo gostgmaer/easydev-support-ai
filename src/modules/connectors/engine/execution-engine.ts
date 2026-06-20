@@ -177,7 +177,7 @@ export class ExecutionEngine {
           }
         }
         authConfig = {
-          authType: credential.authType as AuthTypeEnum,
+          authType: credential.authType,
           data: this.credentialManager.decrypt(credential.encryptedData),
         };
       }
@@ -185,7 +185,7 @@ export class ExecutionEngine {
 
     // 5. Build Request
     const { config, url } = this.connectorFactory.prepareRequest(
-      connector.connectorType.value as any,
+      connector.connectorType.value,
       connector.baseUrl || '',
       capability.method,
       capability.path,

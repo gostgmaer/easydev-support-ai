@@ -92,7 +92,7 @@ describe('CustomerController', () => {
       };
       mockCustomerService.findPaginated.mockResolvedValue(mockResult);
 
-      const res = await controller.findPaginated(tenantId, query as any);
+      const res = await controller.findPaginated(tenantId, query);
 
       expect(res.data).toEqual([{ id: 'c1' }]);
       expect(res.total).toBe(1);

@@ -157,13 +157,11 @@ export class DrizzleConversationRepository implements IConversationRepository {
             ),
           );
       } else {
-        await tx
-          .insert(schema.conversations)
-          .values({
-            ...raw,
-            createdAt: conversation.createdAt,
-            updatedAt: conversation.createdAt,
-          });
+        await tx.insert(schema.conversations).values({
+          ...raw,
+          createdAt: conversation.createdAt,
+          updatedAt: conversation.createdAt,
+        });
       }
 
       for (const tag of conversation.tags) {

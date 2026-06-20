@@ -42,7 +42,7 @@ export class InboxController {
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.listInbox(tenantId, query as InboxQueryOptions);
+    return this.inboxService.listInbox(tenantId, query);
   }
 
   @Get('unread')
@@ -52,7 +52,7 @@ export class InboxController {
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.unreadCount(tenantId, query as InboxQueryOptions);
+    return this.inboxService.unreadCount(tenantId, query);
   }
 
   @Get('mine')
@@ -64,11 +64,7 @@ export class InboxController {
     @Req() req: any,
   ) {
     const agentProfileId = req.user?.agentProfileId || req.user?.id;
-    return this.inboxService.myConversations(
-      tenantId,
-      agentProfileId,
-      query as InboxQueryOptions,
-    );
+    return this.inboxService.myConversations(tenantId, agentProfileId, query);
   }
 
   @Get('unassigned')
@@ -78,7 +74,7 @@ export class InboxController {
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.unassigned(tenantId, query as InboxQueryOptions);
+    return this.inboxService.unassigned(tenantId, query);
   }
 
   @Get('team/:teamId')
@@ -89,11 +85,7 @@ export class InboxController {
     @Param('teamId') teamId: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.teamConversations(
-      tenantId,
-      teamId,
-      query as InboxQueryOptions,
-    );
+    return this.inboxService.teamConversations(tenantId, teamId, query);
   }
 
   @Get('priority/:priority')
@@ -104,10 +96,6 @@ export class InboxController {
     @Param('priority') priority: string,
     @Query() query: InboxQueryDto,
   ) {
-    return this.inboxService.priorityView(
-      tenantId,
-      priority,
-      query as InboxQueryOptions,
-    );
+    return this.inboxService.priorityView(tenantId, priority, query);
   }
 }

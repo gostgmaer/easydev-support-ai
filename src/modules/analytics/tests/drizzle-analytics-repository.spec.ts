@@ -749,7 +749,12 @@ describe('DrizzleAnalyticsRepository', () => {
       expect(mockDbInstance.update).toHaveBeenCalled();
 
       mockDbResolve([{ id: 'cust-1' }]);
-      const list = await repository.getCustomerMetrics(tenantId, 'cust-1');
+      const list = await repository.getCustomerMetrics(
+        tenantId,
+        'cust-1',
+        new Date(Date.now() - 86400000),
+        new Date(),
+      );
       expect(list).toHaveLength(1);
     });
   });

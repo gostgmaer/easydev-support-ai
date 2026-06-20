@@ -18,7 +18,7 @@ export class SettingsQueueProcessor extends BaseWorker {
     private readonly auditService: AuditService,
     @Optional() queueService?: QueueService,
   ) {
-    super('SettingsQueueProcessor', 'settings-queue' as any, queueService);
+    super('SettingsQueueProcessor', 'settings-queue', queueService);
     this.initRedis();
   }
 

@@ -284,10 +284,7 @@ export class MessageService {
   }
 
   async findPaginated(tenantId: string, query: MessageQueryDto) {
-    return this.messageRepo.findPaginated(
-      tenantId,
-      query as MessageQueryOptions,
-    );
+    return this.messageRepo.findPaginated(tenantId, query);
   }
 
   async findByConversation(
@@ -295,11 +292,7 @@ export class MessageService {
     conversationId: string,
     query: MessageQueryDto,
   ) {
-    return this.messageRepo.findByConversation(
-      tenantId,
-      conversationId,
-      query as MessageQueryOptions,
-    );
+    return this.messageRepo.findByConversation(tenantId, conversationId, query);
   }
 
   async bulkUpdateStatus(

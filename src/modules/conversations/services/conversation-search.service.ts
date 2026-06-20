@@ -22,9 +22,6 @@ export class ConversationSearchService {
   }
 
   async filter(tenantId: string, query: ConversationQueryDto) {
-    return this.conversationRepo.findPaginated(
-      tenantId,
-      query as ConversationQueryOptions,
-    );
+    return this.conversationRepo.findPaginated(tenantId, query);
   }
 }

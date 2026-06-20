@@ -24,6 +24,7 @@ import { TicketsModule } from './modules/tickets/tickets.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { InboxModule } from './modules/inbox/inbox.module';
 import { IamModule } from './modules/iam/iam.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import {
@@ -152,6 +153,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     TeamsModule,
     KnowledgeBaseModule,
     AnalyticsModule,
+    InboxModule,
     IamModule,
     NotificationsModule,
     AiIntegrationModule,

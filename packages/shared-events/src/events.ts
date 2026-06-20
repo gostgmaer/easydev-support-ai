@@ -1357,3 +1357,89 @@ export class WorkflowRejectedEvent extends DomainEvent {
   }
 }
 
+export class InboxUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'inbox.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class InboxAssignmentChangedEvent extends DomainEvent {
+  static readonly eventName = 'inbox.assignment.changed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly assignedAgentId?: string,
+    public readonly assignedTeamId?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class InboxBookmarkedEvent extends DomainEvent {
+  static readonly eventName = 'inbox.bookmarked';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly userId: string,
+    public readonly bookmarked: boolean,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class InboxSnoozedEvent extends DomainEvent {
+  static readonly eventName = 'inbox.snoozed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly conversationId: string,
+    public readonly snoozedUntil: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
+}
+
+export class InboxPresenceUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'inbox.presence.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly userId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.userId;
+  }
+}
+
+export class InboxViewCreatedEvent extends DomainEvent {
+  static readonly eventName = 'inbox.view.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly savedViewId: string,
+    public readonly userId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.savedViewId;
+  }
+}
+

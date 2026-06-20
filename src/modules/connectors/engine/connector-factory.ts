@@ -70,7 +70,7 @@ export class ConnectorFactory {
     }
 
     const axiosConfig: AxiosRequestConfig = {
-      method: method.toUpperCase() as any,
+      method: method.toUpperCase(),
       url: resolvedUrl,
       headers,
       params: Object.keys(queryParams).length > 0 ? queryParams : undefined,

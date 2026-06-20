@@ -95,7 +95,7 @@ export class CrawlerService {
       }
 
       // Simple regex-based <loc> extraction
-      const locRegex = <RegExp>/<loc>(https?:\/\/[^\s<]+)<\/loc>/g;
+      const locRegex = /<loc>(https?:\/\/[^\s<]+)<\/loc>/g;
       const urls: string[] = [];
       let match;
       while ((match = locRegex.exec(xml)) !== null) {

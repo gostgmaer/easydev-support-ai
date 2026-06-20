@@ -56,7 +56,7 @@ describe('MessageInboundService', () => {
       channelId,
       customerId: randomUUID(),
       content: 'hi',
-    } as any);
+    });
 
     expect(queue.addJob).toHaveBeenCalledWith(
       'message-queue',
@@ -79,7 +79,7 @@ describe('MessageInboundService', () => {
       conversationId: randomUUID(),
       externalMessageId: 'ext-1',
       content: 'dup',
-    } as any);
+    });
 
     expect(result.deduplicated).toBe(true);
     expect(repo.save).not.toHaveBeenCalled();
@@ -95,7 +95,7 @@ describe('MessageInboundService', () => {
       conversationId,
       externalMessageId: 'ext-2',
       content: 'hello',
-    } as any);
+    });
 
     expect(result.deduplicated).toBe(false);
     expect(result.message?.direction).toBe('INBOUND');
@@ -112,7 +112,7 @@ describe('MessageInboundService', () => {
       channelId,
       customerId: randomUUID(),
       content: 'first contact',
-    } as any);
+    });
 
     expect(conversations.create).toHaveBeenCalled();
     expect(result.message?.conversationId).toBe(newConversationId);

@@ -23,7 +23,7 @@ export class CustomerMetricsService {
 
     let metrics = customer.metrics;
     if (metrics) {
-      metrics.update(dto as any);
+      metrics.update(dto);
     } else {
       metrics = new CustomerMetrics(randomUUID(), {
         tenantId,
@@ -59,7 +59,7 @@ export class CustomerMetricsService {
 
     // In a real scenario, this would query tickets/conversations to aggregate counts
     // We will increment total conversations and recalculate sentiment
-    let metrics = customer.metrics;
+    const metrics = customer.metrics;
     const currentConversations = metrics?.totalConversations || 0;
     const recalculatedDto: CustomerMetricsDto = {
       totalConversations: currentConversations + 1,

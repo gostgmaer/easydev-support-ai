@@ -63,7 +63,7 @@ export class BusinessHoursEngine {
       return null;
     }
 
-    let checkDate = new Date(date.getTime());
+    const checkDate = new Date(date.getTime());
     for (let i = 0; i < 30; i++) {
       // Check up to 30 days ahead
       const isHoliday = await this.isHoliday(tenantId, checkDate);
