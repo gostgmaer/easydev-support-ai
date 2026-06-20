@@ -989,3 +989,88 @@ export class KnowledgeSyncCompletedEvent extends DomainEvent {
     return this.sourceId;
   }
 }
+
+export class ConnectorCreatedEvent extends DomainEvent {
+  static readonly eventName = 'connector.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly connectorId: string,
+    public readonly connectorType: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
+}
+
+export class ConnectorUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'connector.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly connectorId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
+}
+
+export class ConnectorFailedEvent extends DomainEvent {
+  static readonly eventName = 'connector.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly connectorId: string,
+    public readonly capabilityName: string,
+    public readonly reason: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
+}
+
+export class ConnectorRetryEvent extends DomainEvent {
+  static readonly eventName = 'connector.retry';
+  constructor(
+    public readonly tenantId: string,
+    public readonly connectorId: string,
+    public readonly executionId: string,
+    public readonly attempt: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
+}
+
+export class ConnectorHealthFailedEvent extends DomainEvent {
+  static readonly eventName = 'connector.health.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly connectorId: string,
+    public readonly reason: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
+}
+
+export class ConnectorHealthRestoredEvent extends DomainEvent {
+  static readonly eventName = 'connector.health.restored';
+  constructor(
+    public readonly tenantId: string,
+    public readonly connectorId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
+}

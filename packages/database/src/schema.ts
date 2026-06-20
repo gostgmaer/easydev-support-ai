@@ -1581,3 +1581,267 @@ export const knowledgeSearchLogs = supportAgentSchema.table(
     };
   },
 );
+
+// 51. Connectors Table
+export const connectors = supportAgentSchema.table(
+  'connectors',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    slug: varchar('slug', { length: 300 }).notNull(),
+    connectorType: varchar('connector_type', { length: 50 }).notNull(), // REST_API, GRAPHQL, WEBHOOK, SHOPIFY, WOOCOMMERCE, MAGENTO, HUBSPOT, SALESFORCE, ZOHO, JIRA, CUSTOM
+    description: text('description'),
+    baseUrl: text('base_url'),
+    authType: varchar('auth_type', { length: 50 }).default('NONE').notNull(), // NONE, API_KEY, BEARER, BASIC, OAUTH2, HMAC
+    status: varchar('status', { length: 50 }).default('DRAFT').notNull(), // DRAFT, ACTIVE, PAUSED, DISABLED, ERROR
+    healthStatus: varchar('health_status', { length: 50 })
+      .default('UNKNOWN')
+      .notNull(), // UNKNOWN, HEALTHY, DEGRADED, UNHEALTHY
+    openApiSpec: jsonb('openapi_spec'),
+    config: jsonb('config'),
+    lastHealthCheckAt: timestamp('last_health_check_at'),
+    lastError: text('last_error'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connectors_tenant').on(table.tenantId),
+      slugUnique: uniqueIndex('uq_connectors_slug').on(
+        table.tenantId,
+        table.slug,
+      ),
+      typeIdx: index('idx_connectors_type').on(
+        table.tenantId,
+        table.connectorType,
+        table.status,
+      ),
+      healthIdx: index('idx_connectors_health').on(
+        table.tenantId,
+        table.healthStatus,
+      ),
+    };
+  },
+);
+
+// 52. Connector Instances Table
+export const connectorInstances = supportAgentSchema.table(
+  'connector_instances',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    environment: varchar('environment', { length: 50 })
+      .default('production')
+      .notNull(),
+    status: varchar('status', { length: 50 }).default('ACTIVE').notNull(), // ACTIVE, PAUSED, DISABLED
+    healthStatus: varchar('health_status', { length: 50 })
+      .default('UNKNOWN')
+      .notNull(),
+    config: jsonb('config'),
+    lastHealthCheckAt: timestamp('last_health_check_at'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_instances_tenant').on(table.tenantId),
+      connectorIdx: index('idx_connector_instances_connector').on(
+        table.tenantId,
+        table.connectorId,
+        table.status,
+      ),
+    };
+  },
+);
+
+// 53. Connector Capabilities Table
+export const connectorCapabilities = supportAgentSchema.table(
+  'connector_capabilities',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    capabilityType: varchar('capability_type', { length: 60 }).notNull(), // ORDER_TRACKING, PRODUCT_SEARCH, ... CUSTOM_ACTION
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    method: varchar('method', { length: 10 }).default('GET').notNull(), // GET, POST, PUT, PATCH, DELETE
+    path: text('path').notNull(),
+    requestMapping: jsonb('request_mapping'),
+    responseMapping: jsonb('response_mapping'),
+    inputSchema: jsonb('input_schema'),
+    outputSchema: jsonb('output_schema'),
+    enabled: boolean('enabled').default(true).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_capabilities_tenant').on(table.tenantId),
+      connectorIdx: index('idx_connector_capabilities_connector').on(
+        table.tenantId,
+        table.connectorId,
+      ),
+      capabilityUnique: uniqueIndex('uq_connector_capabilities_type').on(
+        table.tenantId,
+        table.connectorId,
+        table.capabilityType,
+      ),
+    };
+  },
+);
+
+// 54. Connector Credentials Table
+export const connectorCredentials = supportAgentSchema.table(
+  'connector_credentials',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    instanceId: uuid('instance_id').references(() => connectorInstances.id, {
+      onDelete: 'cascade',
+    }),
+    authType: varchar('auth_type', { length: 50 }).default('NONE').notNull(),
+    encryptedData: text('encrypted_data').notNull(),
+    keyId: varchar('key_id', { length: 100 }),
+    status: varchar('status', { length: 50 }).default('ACTIVE').notNull(), // ACTIVE, EXPIRED, ROTATING, REVOKED
+    expiresAt: timestamp('expires_at'),
+    rotatedAt: timestamp('rotated_at'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_credentials_tenant').on(table.tenantId),
+      connectorIdx: index('idx_connector_credentials_connector').on(
+        table.tenantId,
+        table.connectorId,
+        table.status,
+      ),
+    };
+  },
+);
+
+// 55. Connector Logs Table
+export const connectorLogs = supportAgentSchema.table(
+  'connector_logs',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    instanceId: uuid('instance_id'),
+    executionId: uuid('execution_id'),
+    level: varchar('level', { length: 20 }).default('INFO').notNull(), // DEBUG, INFO, WARN, ERROR
+    message: text('message').notNull(),
+    context: jsonb('context'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_logs_tenant').on(table.tenantId),
+      connectorIdx: index('idx_connector_logs_connector').on(
+        table.tenantId,
+        table.connectorId,
+        table.createdAt,
+      ),
+    };
+  },
+);
+
+// 56. Connector Executions Table
+export const connectorExecutions = supportAgentSchema.table(
+  'connector_executions',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    instanceId: uuid('instance_id'),
+    capabilityId: uuid('capability_id'),
+    capabilityType: varchar('capability_type', { length: 60 }).notNull(),
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, RUNNING, SUCCESS, FAILED, RETRYING, CIRCUIT_OPEN
+    statusCode: integer('status_code'),
+    requestPayload: jsonb('request_payload'),
+    responsePayload: jsonb('response_payload'),
+    error: text('error'),
+    attempt: integer('attempt').default(1).notNull(),
+    latencyMs: integer('latency_ms').default(0).notNull(),
+    workflowId: uuid('workflow_id'),
+    conversationId: uuid('conversation_id'),
+    ticketId: uuid('ticket_id'),
+    idempotencyKey: varchar('idempotency_key', { length: 128 }),
+    startedAt: timestamp('started_at'),
+    completedAt: timestamp('completed_at'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_executions_tenant').on(table.tenantId),
+      connectorIdx: index('idx_connector_executions_connector').on(
+        table.tenantId,
+        table.connectorId,
+        table.status,
+        table.createdAt,
+      ),
+      capabilityIdx: index('idx_connector_executions_capability').on(
+        table.tenantId,
+        table.capabilityType,
+      ),
+      idempotencyIdx: index('idx_connector_executions_idempotency').on(
+        table.tenantId,
+        table.idempotencyKey,
+      ),
+    };
+  },
+);
+
+// 57. Connector Webhooks Table
+export const connectorWebhooks = supportAgentSchema.table(
+  'connector_webhooks',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    instanceId: uuid('instance_id'),
+    url: text('url').notNull(),
+    secret: text('secret'),
+    signatureHeader: varchar('signature_header', { length: 100 })
+      .default('x-signature')
+      .notNull(),
+    events: jsonb('events'),
+    status: varchar('status', { length: 50 }).default('ACTIVE').notNull(), // ACTIVE, INACTIVE
+    lastTriggeredAt: timestamp('last_triggered_at'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_webhooks_tenant').on(table.tenantId),
+      connectorIdx: index('idx_connector_webhooks_connector').on(
+        table.tenantId,
+        table.connectorId,
+      ),
+    };
+  },
+);
+
+// 58. Connector Rate Limits Table
+export const connectorRateLimits = supportAgentSchema.table(
+  'connector_rate_limits',
+  {
+    ...commonColumns,
+    connectorId: uuid('connector_id')
+      .references(() => connectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    instanceId: uuid('instance_id'),
+    windowSeconds: integer('window_seconds').default(60).notNull(),
+    maxRequests: integer('max_requests').default(1000).notNull(),
+    currentUsage: integer('current_usage').default(0).notNull(),
+    resetAt: timestamp('reset_at').defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_connector_rate_limits_tenant').on(table.tenantId),
+      connectorUnique: uniqueIndex('uq_connector_rate_limits_connector').on(
+        table.tenantId,
+        table.connectorId,
+      ),
+    };
+  },
+);
