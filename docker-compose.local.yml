@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   api:
-    image: ghcr.io/easydev/easydev-support-ai:local-latest
+    image: easydev-support-ai-api:local
     build:
       context: .
       dockerfile: Dockerfile.api
@@ -27,13 +27,32 @@ services:
         condition: service_healthy
 
   worker:
-    image: ghcr.io/easydev/easydev-support-ai:local-latest
+    image: easydev-support-ai-worker:local
     build:
       context: .
       dockerfile: Dockerfile.worker
     environment:
       - NODE_ENV=development
       - RUN_WORKERS=true
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  webhook:
+    image: easydev-support-ai-webhook:local
+    build:
+      context: .
+      dockerfile: Dockerfile.webhook
+    environment:
+      - NODE_ENV=development
+      - RUN_WEBHOOKS=true
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:
@@ -76,6 +95,17 @@ services:
       interval: 5s
       timeout: 2s
       retries: 5
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./deployment/nginx-local.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - frontend-network
+    depends_on:
+      - api
 
 volumes:
   postgres-data:
