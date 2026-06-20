@@ -1,16 +1,66 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TicketsController } from './tickets.controller';
-import { TicketsService } from './tickets.service';
-import { SlaEngineService } from './sla-engine.service';
-import { Ticket } from './entities/ticket.entity';
-import { TicketComment } from './entities/ticket-comment.entity';
-import { TicketSla } from './entities/ticket-sla.entity';
+import { ScheduleModule } from '@nestjs/schedule';
+
+import { CustomersModule } from '../customers/customers.module';
+import { TeamsModule } from '../teams/teams.module';
+
+import { TicketController } from './controllers/ticket.controller';
+import { TicketCommentController } from './controllers/ticket-comment.controller';
+import { TicketCategoryController } from './controllers/ticket-category.controller';
+import { TicketApprovalController } from './controllers/ticket-approval.controller';
+import { TicketSLAController } from './controllers/ticket-sla.controller';
+
+import {
+  TicketService,
+  TicketAssignmentService,
+  TicketCommentService,
+  TicketSLAService,
+  TicketApprovalService,
+  TicketCategoryService,
+  TicketEscalationService,
+  TicketEventPublisher,
+} from './services';
+
+import { DrizzleTicketRepository } from './repositories/drizzle-ticket.repository';
+import { DrizzleTicketCategoryRepository } from './repositories/drizzle-ticket-category.repository';
+import { TicketQueueProcessor } from './jobs/ticket-queue.processor';
+import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Ticket, TicketComment, TicketSla])],
-  controllers: [TicketsController],
-  providers: [TicketsService, SlaEngineService],
-  exports: [TicketsService, SlaEngineService],
+  imports: [ScheduleModule.forRoot(), CustomersModule, TeamsModule],
+  controllers: [
+    TicketController,
+    TicketCommentController,
+    TicketCategoryController,
+    TicketApprovalController,
+    TicketSLAController,
+  ],
+  providers: [
+    TicketService,
+    TicketAssignmentService,
+    TicketCommentService,
+    TicketSLAService,
+    TicketApprovalService,
+    TicketCategoryService,
+    TicketEscalationService,
+    TicketEventPublisher,
+    TicketQueueProcessor,
+    SlaMonitorScheduler,
+    {
+      provide: 'ITicketRepository',
+      useClass: DrizzleTicketRepository,
+    },
+    {
+      provide: 'ITicketCategoryRepository',
+      useClass: DrizzleTicketCategoryRepository,
+    },
+  ],
+  exports: [
+    TicketService,
+    TicketAssignmentService,
+    TicketSLAService,
+    TicketEscalationService,
+    'ITicketRepository',
+  ],
 })
 export class TicketsModule {}
