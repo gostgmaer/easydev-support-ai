@@ -8,11 +8,7 @@
     "rootDir": "./src",
     "strict": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "paths": {
-      "@easydev/shared-kernel": ["../shared-kernel/src/index.ts"],
-      "@easydev/database": ["../database/src/index.ts"]
-    }
+    "esModuleInterop": true
   },
   "include": ["src/**/*"]
 }

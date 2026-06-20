@@ -4,8 +4,8 @@ export abstract class BaseEntity extends AggregateRoot<string> {
   public tenantId: string;
   public createdAt: Date;
   public updatedAt: Date;
-  public createdBy: string;
-  public updatedBy: string;
+  public createdBy?: string;
+  public updatedBy?: string;
   public deletedAt: Date | null;
   public version: number;
 

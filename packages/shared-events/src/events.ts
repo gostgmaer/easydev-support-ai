@@ -363,3 +363,132 @@ export class AssignmentCompletedEvent extends DomainEvent {
   }
 }
 
+export class ChannelCreatedEvent extends DomainEvent {
+  static readonly eventName = 'channel.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly channelId: string,
+    public readonly name: string,
+    public readonly type: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.channelId;
+  }
+}
+
+export class ChannelUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'channel.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly channelId: string,
+    public readonly name: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.channelId;
+  }
+}
+
+export class ChannelDisabledEvent extends DomainEvent {
+  static readonly eventName = 'channel.disabled';
+  constructor(
+    public readonly tenantId: string,
+    public readonly channelId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.channelId;
+  }
+}
+
+export class ChannelEnabledEvent extends DomainEvent {
+  static readonly eventName = 'channel.enabled';
+  constructor(
+    public readonly tenantId: string,
+    public readonly channelId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.channelId;
+  }
+}
+
+export class ChannelHealthFailedEvent extends DomainEvent {
+  static readonly eventName = 'channel.health.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly channelId: string,
+    public readonly error: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.channelId;
+  }
+}
+
+export class ChannelHealthRestoredEvent extends DomainEvent {
+  static readonly eventName = 'channel.health.restored';
+  constructor(
+    public readonly tenantId: string,
+    public readonly channelId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.channelId;
+  }
+}
+
+export class MessageNormalizedEvent extends DomainEvent {
+  static readonly eventName = 'message.normalized';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly channelId: string,
+    public readonly originalPayload: any,
+    public readonly normalizedPayload: any,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class MessageFailedEvent extends DomainEvent {
+  static readonly eventName = 'message.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly channelId: string,
+    public readonly error: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class WebhookReceivedEvent extends DomainEvent {
+  static readonly eventName = 'webhook.received';
+  constructor(
+    public readonly tenantId: string,
+    public readonly webhookId: string,
+    public readonly channelId: string,
+    public readonly payload: any,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.webhookId;
+  }
+}
+
+
