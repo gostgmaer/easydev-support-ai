@@ -48,7 +48,10 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         AgentAssignmentService,
         { provide: 'ITeamRepository', useValue: mockTeamRepo },
         { provide: 'IAgentProfileRepository', useValue: mockProfileRepo },
-        { provide: 'IAgentAvailabilityRepository', useValue: mockAvailabilityRepo },
+        {
+          provide: 'IAgentAvailabilityRepository',
+          useValue: mockAvailabilityRepo,
+        },
         { provide: TeamEventPublisher, useValue: mockEventPublisher },
         { provide: AuditService, useValue: mockAuditService },
       ],
@@ -71,25 +74,41 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
     it('should throw NotFoundException if team does not exist', async () => {
       teamRepo.findById.mockResolvedValue(null);
       await expect(
-        service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION')
+        service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION'),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if team has no members', async () => {
-      const team = Team.create(teamId, { tenantId, name: 'Team A', priority: 1, isActive: true });
+      const team = Team.create(teamId, {
+        tenantId,
+        name: 'Team A',
+        priority: 1,
+        isActive: true,
+      });
       teamRepo.findById.mockResolvedValue(team);
       teamRepo.findRules.mockResolvedValue([]);
       teamRepo.findTeamMembers.mockResolvedValue([]);
 
       await expect(
-        service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION')
+        service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION'),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should route using Fallback when no agent is online with capacity', async () => {
-      const team = Team.create(teamId, { tenantId, name: 'Team A', priority: 1, isActive: true });
+      const team = Team.create(teamId, {
+        tenantId,
+        name: 'Team A',
+        priority: 1,
+        isActive: true,
+      });
       const agentId = randomUUID();
-      const member = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agentId, role: 'MEMBER', isPrimary: false });
+      const member = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agentId,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
 
       teamRepo.findById.mockResolvedValue(team);
       teamRepo.findRules.mockResolvedValue([]);
@@ -101,7 +120,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 1',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -118,23 +141,56 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
       profileRepo.findById.mockResolvedValue(agent);
       availabilityRepo.findByAgentProfileId.mockResolvedValue(availability);
 
-      const assignedAgentId = await service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION');
+      const assignedAgentId = await service.assignEntity(
+        tenantId,
+        teamId,
+        entityId,
+        'CONVERSATION',
+      );
 
       expect(assignedAgentId).toBe(agentId);
-      expect(availabilityRepo.updateCounters).toHaveBeenCalledWith(agentId, 1, 0, tenantId);
+      expect(availabilityRepo.updateCounters).toHaveBeenCalledWith(
+        agentId,
+        1,
+        0,
+        tenantId,
+      );
       expect(publisher.publish).toHaveBeenCalled();
     });
 
     it('should route using Round Robin when strategy is default/ROUND_ROBIN', async () => {
-      const team = Team.create(teamId, { tenantId, name: 'Team A', priority: 1, isActive: true });
+      const team = Team.create(teamId, {
+        tenantId,
+        name: 'Team A',
+        priority: 1,
+        isActive: true,
+      });
       const agent1Id = randomUUID();
       const agent2Id = randomUUID();
-      const member1 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent1Id, role: 'MEMBER', isPrimary: false });
-      const member2 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent2Id, role: 'MEMBER', isPrimary: false });
+      const member1 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent1Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
+      const member2 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent2Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
 
       teamRepo.findById.mockResolvedValue(team);
       teamRepo.findRules.mockResolvedValue([
-        new AssignmentRule(randomUUID(), { tenantId, teamId, ruleType: 'ROUND_ROBIN', priority: 1, isActive: true }),
+        new AssignmentRule(randomUUID(), {
+          tenantId,
+          teamId,
+          ruleType: AssignmentStrategyEnum.ROUND_ROBIN,
+          priority: 1,
+          isActive: true,
+        }),
       ]);
       teamRepo.findTeamMembers.mockResolvedValue([member1, member2]);
 
@@ -143,7 +199,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 1',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -152,7 +212,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 2',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -189,20 +253,48 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
       });
 
       // Round Robin selects agent seen longest time ago (agent1)
-      const assigned = await service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION');
+      const assigned = await service.assignEntity(
+        tenantId,
+        teamId,
+        entityId,
+        'CONVERSATION',
+      );
       expect(assigned).toBe(agent1Id);
     });
 
     it('should route using LEAST_LOADED strategy', async () => {
-      const team = Team.create(teamId, { tenantId, name: 'Team A', priority: 1, isActive: true });
+      const team = Team.create(teamId, {
+        tenantId,
+        name: 'Team A',
+        priority: 1,
+        isActive: true,
+      });
       const agent1Id = randomUUID();
       const agent2Id = randomUUID();
-      const member1 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent1Id, role: 'MEMBER', isPrimary: false });
-      const member2 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent2Id, role: 'MEMBER', isPrimary: false });
+      const member1 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent1Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
+      const member2 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent2Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
 
       teamRepo.findById.mockResolvedValue(team);
       teamRepo.findRules.mockResolvedValue([
-        new AssignmentRule(randomUUID(), { tenantId, teamId, ruleType: 'LEAST_LOADED', priority: 1, isActive: true }),
+        new AssignmentRule(randomUUID(), {
+          tenantId,
+          teamId,
+          ruleType: AssignmentStrategyEnum.LEAST_LOADED,
+          priority: 1,
+          isActive: true,
+        }),
       ]);
       teamRepo.findTeamMembers.mockResolvedValue([member1, member2]);
 
@@ -211,7 +303,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 1',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -220,7 +316,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 2',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0,
         timezone: 'UTC',
       });
@@ -255,20 +355,48 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         return Promise.resolve(null);
       });
 
-      const assigned = await service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION');
+      const assigned = await service.assignEntity(
+        tenantId,
+        teamId,
+        entityId,
+        'CONVERSATION',
+      );
       expect(assigned).toBe(agent2Id);
     });
 
     it('should route using SKILL_BASED strategy', async () => {
-      const team = Team.create(teamId, { tenantId, name: 'Team A', priority: 1, isActive: true });
+      const team = Team.create(teamId, {
+        tenantId,
+        name: 'Team A',
+        priority: 1,
+        isActive: true,
+      });
       const agent1Id = randomUUID();
       const agent2Id = randomUUID();
-      const member1 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent1Id, role: 'MEMBER', isPrimary: false });
-      const member2 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent2Id, role: 'MEMBER', isPrimary: false });
+      const member1 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent1Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
+      const member2 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent2Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
 
       teamRepo.findById.mockResolvedValue(team);
       teamRepo.findRules.mockResolvedValue([
-        new AssignmentRule(randomUUID(), { tenantId, teamId, ruleType: 'SKILL_BASED', priority: 1, isActive: true }),
+        new AssignmentRule(randomUUID(), {
+          tenantId,
+          teamId,
+          ruleType: AssignmentStrategyEnum.SKILL_BASED,
+          priority: 1,
+          isActive: true,
+        }),
       ]);
       teamRepo.findTeamMembers.mockResolvedValue([member1, member2]);
 
@@ -277,7 +405,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 1',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 4.0, // lower skill
         timezone: 'UTC',
       });
@@ -286,7 +418,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 2',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 9.5, // higher skill
         timezone: 'UTC',
       });
@@ -321,20 +457,49 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         return Promise.resolve(null);
       });
 
-      const assigned = await service.assignEntity(tenantId, teamId, entityId, 'CONVERSATION', { requiredSkill: 8.0 });
+      const assigned = await service.assignEntity(
+        tenantId,
+        teamId,
+        entityId,
+        'CONVERSATION',
+        { requiredSkill: 8.0 },
+      );
       expect(assigned).toBe(agent2Id);
     });
 
     it('should route using PRIORITY_BASED strategy', async () => {
-      const team = Team.create(teamId, { tenantId, name: 'Team A', priority: 1, isActive: true });
+      const team = Team.create(teamId, {
+        tenantId,
+        name: 'Team A',
+        priority: 1,
+        isActive: true,
+      });
       const agent1Id = randomUUID();
       const agent2Id = randomUUID();
-      const member1 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent1Id, role: 'MEMBER', isPrimary: false });
-      const member2 = new TeamMember(randomUUID(), { tenantId, teamId, agentProfileId: agent2Id, role: 'MEMBER', isPrimary: false });
+      const member1 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent1Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
+      const member2 = new TeamMember(randomUUID(), {
+        tenantId,
+        teamId,
+        agentProfileId: agent2Id,
+        role: 'MEMBER',
+        isPrimary: false,
+      });
 
       teamRepo.findById.mockResolvedValue(team);
       teamRepo.findRules.mockResolvedValue([
-        new AssignmentRule(randomUUID(), { tenantId, teamId, ruleType: 'PRIORITY_BASED', priority: 1, isActive: true }),
+        new AssignmentRule(randomUUID(), {
+          tenantId,
+          teamId,
+          ruleType: AssignmentStrategyEnum.PRIORITY_BASED,
+          priority: 1,
+          isActive: true,
+        }),
       ]);
       teamRepo.findTeamMembers.mockResolvedValue([member1, member2]);
 
@@ -343,7 +508,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 1',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 9.0, // high skill
         timezone: 'UTC',
       });
@@ -352,7 +521,11 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
         userId: randomUUID(),
         displayName: 'Agent 2',
         status: 'ACTIVE',
-        capacity: AgentCapacity.create({ capacity: 10, maxConcurrentConversations: 5, maxOpenTickets: 20 }),
+        capacity: AgentCapacity.create({
+          capacity: 10,
+          maxConcurrentConversations: 5,
+          maxOpenTickets: 20,
+        }),
         skillScore: 5.0, // lower skill
         timezone: 'UTC',
       });
@@ -388,7 +561,12 @@ describe('AgentAssignmentService (Assignment Engine)', () => {
       });
 
       // Priority strategy prioritizes high skill score, then lower currentLoad
-      const assigned = await service.assignEntity(tenantId, teamId, entityId, 'TICKET');
+      const assigned = await service.assignEntity(
+        tenantId,
+        teamId,
+        entityId,
+        'TICKET',
+      );
       expect(assigned).toBe(agent1Id);
     });
   });

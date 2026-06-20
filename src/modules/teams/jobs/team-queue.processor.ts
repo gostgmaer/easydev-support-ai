@@ -1,7 +1,7 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker } from '@easydev/shared-queues';
-import { Injectable } from '@nestjs/common';
+import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { Injectable, Optional } from '@nestjs/common';
 import { AgentAssignmentService } from '../services/agent-assignment.service';
 import { AgentAvailabilityService } from '../services/agent-availability.service';
 import { AgentProfileService } from '../services/agent-profile.service';
@@ -12,9 +12,10 @@ export class TeamQueueProcessor extends BaseWorker {
   constructor(
     private readonly assignmentService: AgentAssignmentService,
     private readonly availabilityService: AgentAvailabilityService,
-    private readonly profileService: AgentProfileService
+    private readonly profileService: AgentProfileService,
+    @Optional() queueService?: QueueService,
   ) {
-    super('TeamQueueProcessor');
+    super('TeamQueueProcessor', QUEUES.TEAM, queueService);
   }
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
