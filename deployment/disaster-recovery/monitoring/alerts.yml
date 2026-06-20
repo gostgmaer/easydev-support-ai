@@ -1,0 +1,57 @@
+groups:
+  - name: disaster-recovery-alerts
+    rules:
+      # Alert: PostgreSQL Backup Failure (Trigger if no successful backup in 25 hours)
+      - alert: PostgresBackupFailed
+        expr: time() - postgres_last_backup_time_seconds > 90000
+        for: 5m
+        labels:
+          severity: critical
+          tier: database
+        annotations:
+          summary: "PostgreSQL daily backup is overdue or failing"
+          description: "No successful PostgreSQL database backup has been recorded in the last 25 hours. Data loss risk is high."
+
+      # Alert: Redis Backup Failure (Trigger if no successful snapshot backup in 25 hours)
+      - alert: RedisBackupFailed
+        expr: time() - redis_last_backup_time_seconds > 90000
+        for: 5m
+        labels:
+          severity: warning
+          tier: cache
+        annotations:
+          summary: "Redis snapshot backup is overdue or failing"
+          description: "No successful Redis snapshot backup has been recorded in the last 25 hours."
+
+      # Alert: Restore Job Failed (Fires instantly on restore failure logs)
+      - alert: RestoreOperationFailed
+        expr: dr_restore_status{status="FAILED"} == 1
+        for: 1m
+        labels:
+          severity: page
+          tier: disaster-recovery
+        annotations:
+          summary: "Disaster Recovery restore operation failed"
+          description: "A database or cache restore process failed validation. Immediate manual intervention required to prevent service downtime."
+
+      # Alert: Disk Space Low on Backup Partition
+      - alert: BackupPartitionDiskSpaceLow
+        expr: (node_filesystem_free_bytes{mountpoint="/backups"} / node_filesystem_size_bytes{mountpoint="/backups"}) * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+          tier: infrastructure
+        annotations:
+          summary: "Backup partition disk space is low (< 15%)"
+          description: "The host disk space allocated to backups in /backups has dropped below 15%. Expired backups will be purged automatically, but check disk usage."
+
+      # Alert: S3 Upload Failure rate (Fires if uploads fail)
+      - alert: ObjectStorageSyncFailed
+        expr: rate(object_storage_upload_failures_total[10m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          tier: storage
+        annotations:
+          summary: "Backup upload to S3 / Object Storage is failing"
+          description: "AWS S3 / Object Storage upload sync operations are failing. Backups are currently staged locally."
