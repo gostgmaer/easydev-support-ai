@@ -10,7 +10,9 @@ export class ConversationCreatedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.conversationId; }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
 }
 
 export class ConversationAssignedEvent extends DomainEvent {
@@ -22,7 +24,9 @@ export class ConversationAssignedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.conversationId; }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
 }
 
 export class ConversationClosedEvent extends DomainEvent {
@@ -34,7 +38,9 @@ export class ConversationClosedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.conversationId; }
+  getAggregateId(): string {
+    return this.conversationId;
+  }
 }
 
 export class MessageReceivedEvent extends DomainEvent {
@@ -48,7 +54,9 @@ export class MessageReceivedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.messageId; }
+  getAggregateId(): string {
+    return this.messageId;
+  }
 }
 
 export class MessageSentEvent extends DomainEvent {
@@ -62,7 +70,9 @@ export class MessageSentEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.messageId; }
+  getAggregateId(): string {
+    return this.messageId;
+  }
 }
 
 export class TicketCreatedEvent extends DomainEvent {
@@ -76,7 +86,9 @@ export class TicketCreatedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.ticketId; }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
 }
 
 export class TicketResolvedEvent extends DomainEvent {
@@ -88,7 +100,9 @@ export class TicketResolvedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.ticketId; }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
 }
 
 export class CustomerCreatedEvent extends DomainEvent {
@@ -101,7 +115,9 @@ export class CustomerCreatedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.customerId; }
+  getAggregateId(): string {
+    return this.customerId;
+  }
 }
 
 export class ConnectorExecutedEvent extends DomainEvent {
@@ -115,7 +131,9 @@ export class ConnectorExecutedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.connectorId; }
+  getAggregateId(): string {
+    return this.connectorId;
+  }
 }
 
 export class WorkflowStartedEvent extends DomainEvent {
@@ -127,7 +145,9 @@ export class WorkflowStartedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.workflowId; }
+  getAggregateId(): string {
+    return this.workflowId;
+  }
 }
 
 export class WorkflowCompletedEvent extends DomainEvent {
@@ -140,5 +160,7 @@ export class WorkflowCompletedEvent extends DomainEvent {
   ) {
     super();
   }
-  getAggregateId(): string { return this.workflowId; }
+  getAggregateId(): string {
+    return this.workflowId;
+  }
 }

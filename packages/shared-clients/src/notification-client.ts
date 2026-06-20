@@ -8,13 +8,18 @@ export class NotificationClient extends BaseClient {
     this.apiKey = apiKey;
   }
 
-  async sendEmail(tenantId: string, to: string, templateId: string, data: any): Promise<boolean> {
+  async sendEmail(
+    tenantId: string,
+    to: string,
+    templateId: string,
+    data: any,
+  ): Promise<boolean> {
     try {
       await this.request({
         method: 'POST',
         url: '/v1/email',
         data: { tenant_id: tenantId, to, template_id: templateId, data },
-        headers: { 'Authorization': `Bearer ${this.apiKey}` }
+        headers: { Authorization: `Bearer ${this.apiKey}` },
       });
       return true;
     } catch (e: any) {
@@ -23,13 +28,17 @@ export class NotificationClient extends BaseClient {
     }
   }
 
-  async sendSMS(tenantId: string, to: string, message: string): Promise<boolean> {
+  async sendSMS(
+    tenantId: string,
+    to: string,
+    message: string,
+  ): Promise<boolean> {
     try {
       await this.request({
         method: 'POST',
         url: '/v1/sms',
         data: { tenant_id: tenantId, to, message },
-        headers: { 'Authorization': `Bearer ${this.apiKey}` }
+        headers: { Authorization: `Bearer ${this.apiKey}` },
       });
       return true;
     } catch (e: any) {
@@ -38,13 +47,18 @@ export class NotificationClient extends BaseClient {
     }
   }
 
-  async sendPush(tenantId: string, userId: string, title: string, body: string): Promise<boolean> {
+  async sendPush(
+    tenantId: string,
+    userId: string,
+    title: string,
+    body: string,
+  ): Promise<boolean> {
     try {
       await this.request({
         method: 'POST',
         url: '/v1/push',
         data: { tenant_id: tenantId, user_id: userId, title, body },
-        headers: { 'Authorization': `Bearer ${this.apiKey}` }
+        headers: { Authorization: `Bearer ${this.apiKey}` },
       });
       return true;
     } catch (e: any) {

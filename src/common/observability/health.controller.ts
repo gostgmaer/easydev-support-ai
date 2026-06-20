@@ -1,5 +1,5 @@
 import { Controller, Get, Res } from '@nestjs/common';
-import { Response } from 'express';
+import * as express from 'express';
 import { MetricsService } from './metrics.service';
 
 @Controller()
@@ -19,7 +19,7 @@ export class HealthController {
   }
 
   @Get('metrics')
-  getMetrics(@Res() res: Response) {
+  getMetrics(@Res() res: express.Response) {
     res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
     res.end(this.metricsService.getMetricsString());
   }

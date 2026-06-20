@@ -22,26 +22,30 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@easydev/database": "workspace:*",
+    "@easydev/shared-clients": "workspace:*",
+    "@easydev/shared-contracts": "workspace:*",
+    "@easydev/shared-events": "workspace:*",
+    "@easydev/shared-kernel": "workspace:*",
+    "@easydev/shared-queues": "workspace:*",
+    "@easydev/shared-testing": "workspace:*",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.27",
+    "@nestjs/schedule": "^6.1.3",
     "@nestjs/typeorm": "^11.0.2",
     "@nestjs/websockets": "^11.1.27",
+    "axios": "^1.18.0",
     "bullmq": "^5.79.0",
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3",
     "typeorm": "^1.0.0",
-    "@easydev/shared-kernel": "workspace:*",
-    "@easydev/database": "workspace:*",
-    "@easydev/shared-events": "workspace:*",
-    "@easydev/shared-contracts": "workspace:*",
-    "@easydev/shared-clients": "workspace:*",
-    "@easydev/shared-queues": "workspace:*",
-    "@easydev/shared-testing": "workspace:*"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -53,6 +57,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
+    "@types/uuid": "^9.0.8",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -74,7 +79,11 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/packages"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -82,7 +91,7 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage",
     "testEnvironment": "node"
   }
 }

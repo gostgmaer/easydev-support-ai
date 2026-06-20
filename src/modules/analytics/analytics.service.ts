@@ -11,10 +11,9 @@ export class AnalyticsService {
 
   async trackEvent(tenantId: string, eventType: string, payload: any) {
     const event = this.analyticsRepo.create({
-      tenant_id: tenantId,
-      event_type: eventType,
+      tenantId,
+      eventType,
       payload,
-      created_at: new Date(),
     });
     
     // In production with billions of rows, this might write to TimescaleDB or ClickHouse

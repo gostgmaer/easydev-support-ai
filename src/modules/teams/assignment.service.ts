@@ -35,7 +35,7 @@ export class AssignmentService {
     }
   }
 
-  private async roundRobinAssignment(tenantId: string, teamId: string): Promise<string> {
+  private async roundRobinAssignment(tenantId: string, teamId: string): Promise<string | null> {
     // Query active agents, sort by last assigned timestamp
     const agent = await this.agentRepo.createQueryBuilder('agent')
       .where('agent.tenantId = :tenantId', { tenantId })
@@ -45,12 +45,12 @@ export class AssignmentService {
     return agent?.userId || null;
   }
 
-  private async leastLoadedAssignment(tenantId: string, teamId: string): Promise<string> {
+  private async leastLoadedAssignment(tenantId: string, teamId: string): Promise<string | null> {
     const agent = await this.agentRepo.findOne({ where: { tenantId, teamId } });
     return agent?.userId || null;
   }
 
-  private async skillBasedAssignment(tenantId: string, teamId: string, requiredSkills: string[]): Promise<string> {
+  private async skillBasedAssignment(tenantId: string, teamId: string, requiredSkills: string[]): Promise<string | null> {
     const agent = await this.agentRepo.findOne({ where: { tenantId, teamId } });
     return agent?.userId || null;
   }

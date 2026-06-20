@@ -10,7 +10,10 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@easydev/shared-kernel": ["../shared-kernel/src/index.ts"]
+    }
   },
   "include": ["src/**/*"]
 }

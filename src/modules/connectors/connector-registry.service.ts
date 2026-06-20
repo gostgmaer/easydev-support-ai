@@ -18,8 +18,8 @@ export class ConnectorRegistryService {
     // E.g. capabilityName = 'ORDER_TRACKING'
     const capability = await this.capabilityRepo.createQueryBuilder('cap')
       .innerJoinAndSelect('cap.connectorInstance', 'instance')
-      .where('instance.tenant_id = :tenantId', { tenantId })
-      .andWhere('cap.capability = :capabilityName', { capabilityName })
+      .where('instance.tenantId = :tenantId', { tenantId })
+      .andWhere('cap.name = :capabilityName', { capabilityName })
       .getOne();
 
     if (!capability) {
@@ -29,7 +29,7 @@ export class ConnectorRegistryService {
 
     return {
       endpoint: capability.endpoint, // e.g. "https://{shop}.myshopify.com/admin/api/2026/orders"
-      credentials: capability.connectorInstance.credentials, // Decrypted OAuth tokens or API Keys
+      credentials: capability.connectorInstance.credentialsEncrypted, // Decrypted OAuth tokens or API Keys
     };
   }
 }
