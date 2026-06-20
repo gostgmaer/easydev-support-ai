@@ -544,7 +544,6 @@ export class CustomerMetricsUpdatedEvent extends DomainEvent {
   }
 }
 
-
 export class ConnectorExecutedEvent extends DomainEvent {
   static readonly eventName = 'connector.executed';
   constructor(
@@ -845,8 +844,6 @@ export class WebhookReceivedEvent extends DomainEvent {
     return this.webhookId;
   }
 }
-
-
 
 export class KnowledgeSourceCreatedEvent extends DomainEvent {
   static readonly eventName = 'knowledge.source.created';
@@ -1697,4 +1694,131 @@ export class WidgetMessageReceivedEvent extends DomainEvent {
   }
 }
 
+export class SecurityLoginDetectedEvent extends DomainEvent {
+  static readonly eventName = 'security.login.detected';
+  constructor(
+    public readonly tenantId: string,
+    public readonly userId: string,
+    public readonly ipAddress: string,
+    public readonly timestamp: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.userId;
+  }
+}
 
+export class SecurityPermissionDeniedEvent extends DomainEvent {
+  static readonly eventName = 'security.permission.denied';
+  constructor(
+    public readonly tenantId: string,
+    public readonly userId: string,
+    public readonly requiredPermission: string,
+    public readonly resource: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.userId;
+  }
+}
+
+export class SecurityApiKeyCreatedEvent extends DomainEvent {
+  static readonly eventName = 'security.api_key.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly apiKeyId: string,
+    public readonly createdBy: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.apiKeyId;
+  }
+}
+
+export class SecurityApiKeyRevokedEvent extends DomainEvent {
+  static readonly eventName = 'security.api_key.revoked';
+  constructor(
+    public readonly tenantId: string,
+    public readonly apiKeyId: string,
+    public readonly revokedBy: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.apiKeyId;
+  }
+}
+
+export class SecurityWebhookFailedEvent extends DomainEvent {
+  static readonly eventName = 'security.webhook.failed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly webhookId: string,
+    public readonly reason: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.webhookId;
+  }
+}
+
+export class SecurityPiiDetectedEvent extends DomainEvent {
+  static readonly eventName = 'security.pii.detected';
+  constructor(
+    public readonly tenantId: string,
+    public readonly fieldName: string,
+    public readonly entityType: string,
+    public readonly actionTaken: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.tenantId;
+  }
+}
+
+export class SecurityPromptInjectionDetectedEvent extends DomainEvent {
+  static readonly eventName = 'security.prompt_injection.detected';
+  constructor(
+    public readonly tenantId: string,
+    public readonly inputSnippet: string,
+    public readonly actionTaken: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.tenantId;
+  }
+}
+
+export class SecurityRateLimitTriggeredEvent extends DomainEvent {
+  static readonly eventName = 'security.rate_limit.triggered';
+  constructor(
+    public readonly tenantId: string,
+    public readonly targetKey: string,
+    public readonly limitType: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.tenantId;
+  }
+}
+
+export class SecuritySuspiciousActivityDetectedEvent extends DomainEvent {
+  static readonly eventName = 'security.suspicious_activity.detected';
+  constructor(
+    public readonly tenantId: string,
+    public readonly activityType: string,
+    public readonly details: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.tenantId;
+  }
+}

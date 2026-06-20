@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:packages": "tsc -b packages/shared-kernel packages/shared-contracts packages/database packages/shared-events packages/shared-queues packages/shared-clients packages/shared-testing packages/observability",
+    "build:packages": "tsc -b packages/shared-kernel packages/shared-contracts packages/database packages/shared-events packages/shared-queues packages/shared-clients packages/shared-testing packages/observability packages/security",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -26,6 +26,7 @@
   "dependencies": {
     "@easydev/database": "workspace:*",
     "@easydev/observability": "workspace:*",
+    "@easydev/security": "workspace:*",
     "@easydev/shared-clients": "workspace:*",
     "@easydev/shared-contracts": "workspace:*",
     "@easydev/shared-events": "workspace:*",
@@ -110,7 +111,8 @@
       "^@easydev/shared-clients$": "<rootDir>/packages/shared-clients/src/index.ts",
       "^@easydev/shared-queues$": "<rootDir>/packages/shared-queues/src/index.ts",
       "^@easydev/shared-testing$": "<rootDir>/packages/shared-testing/src/index.ts",
-      "^@easydev/observability$": "<rootDir>/packages/observability/src/index.ts"
+      "^@easydev/observability$": "<rootDir>/packages/observability/src/index.ts",
+      "^@easydev/security$": "<rootDir>/packages/security/src/index.ts"
     }
   }
 }
