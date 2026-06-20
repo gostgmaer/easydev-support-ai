@@ -1,0 +1,233 @@
+version: '3.8'
+
+services:
+  api:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    deploy:
+      replicas: 2
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ENABLE_OTEL=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
+    networks:
+      - frontend-network
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  webhook:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.webhook
+    environment:
+      - NODE_ENV=production
+      - RUN_WEBHOOKS=true
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-conversation:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NODE_ENV=production
+      - PROCESS_QUEUE=conversation-queue
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-workflow:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NODE_ENV=production
+      - PROCESS_QUEUE=workflow-queue
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-analytics:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NODE_ENV=production
+      - PROCESS_QUEUE=analytics-queue
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-connector:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NODE_ENV=production
+      - PROCESS_QUEUE=connector-queue
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-notification:
+    image: ghcr.io/easydev/easydev-support-ai:staging-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NODE_ENV=production
+      - PROCESS_QUEUE=notification-queue
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=support_ai_staging
+      - POSTGRES_PASSWORD=staging_password_secure_99
+      - POSTGRES_DB=easydev_support_ai_staging
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - database-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U support_ai_staging -d easydev_support_ai_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - database-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./deployment/nginx-blue-green.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - frontend-network
+    depends_on:
+      - api
+
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - internal-network
+      - frontend-network
+
+  loki:
+    image: grafana/loki:2.9.2
+    networks:
+      - internal-network
+      - frontend-network
+
+  tempo:
+    image: grafana/tempo:2.3.0
+    command: -config.file=/etc/tempo.yaml
+    volumes:
+      - ./tempo.yml:/etc/tempo.yaml
+    networks:
+      - internal-network
+      - frontend-network
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./packages/observability/src/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - internal-network
+      - frontend-network
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+volumes:
+  postgres-data:
+  redis-data:
+  grafana-data:
+
+networks:
+  frontend-network:
+  backend-network:
+  database-network:
+  internal-network:

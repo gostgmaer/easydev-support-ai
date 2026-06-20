@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  api:
+    image: ghcr.io/easydev/easydev-support-ai:local-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ENABLE_OTEL=false
+    networks:
+      - frontend-network
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: ghcr.io/easydev/easydev-support-ai:local-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - NODE_ENV=development
+      - RUN_WORKERS=true
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=easydev_support_ai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - database-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d easydev_support_ai"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - database-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  frontend-network:
+  backend-network:
+  database-network:
