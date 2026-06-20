@@ -2276,3 +2276,247 @@ export const workflowVariables = supportAgentSchema.table(
   },
 );
 
+// 79. Analytics Events
+export const analyticsEvents = supportAgentSchema.table(
+  'analytics_events',
+  {
+    ...commonColumns,
+    eventName: varchar('event_name', { length: 255 }).notNull(),
+    aggregateType: varchar('aggregate_type', { length: 100 }).notNull(),
+    aggregateId: uuid('aggregate_id').notNull(),
+    userId: uuid('user_id'),
+    timestamp: timestamp('timestamp').notNull(),
+    payload: jsonb('payload').notNull(),
+    metadata: jsonb('metadata'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_ev_tenant').on(table.tenantId),
+    eventIdx: index('idx_an_ev_name').on(table.tenantId, table.eventName),
+    tsIdx: index('idx_an_ev_ts').on(table.timestamp),
+  }),
+);
+
+// 80. Analytics Daily Metrics
+export const analyticsDailyMetrics = supportAgentSchema.table(
+  'analytics_daily_metrics',
+  {
+    ...commonColumns,
+    metricType: varchar('metric_type', { length: 100 }).notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    value: numeric('value').notNull(),
+    dimensions: jsonb('dimensions'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_daily_tenant').on(table.tenantId),
+    metricIdx: index('idx_an_daily_metric').on(table.tenantId, table.metricType),
+    tsIdx: index('idx_an_daily_ts').on(table.timestamp),
+  }),
+);
+
+// 81. Analytics Hourly Metrics
+export const analyticsHourlyMetrics = supportAgentSchema.table(
+  'analytics_hourly_metrics',
+  {
+    ...commonColumns,
+    metricType: varchar('metric_type', { length: 100 }).notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    value: numeric('value').notNull(),
+    dimensions: jsonb('dimensions'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_hourly_tenant').on(table.tenantId),
+    metricIdx: index('idx_an_hourly_metric').on(table.tenantId, table.metricType),
+    tsIdx: index('idx_an_hourly_ts').on(table.timestamp),
+  }),
+);
+
+// 82. Analytics Tenant Metrics
+export const analyticsTenantMetrics = supportAgentSchema.table(
+  'analytics_tenant_metrics',
+  {
+    ...commonColumns,
+    timestamp: timestamp('timestamp').notNull(),
+    conversationsCount: integer('conversations_count').default(0).notNull(),
+    messagesCount: integer('messages_count').default(0).notNull(),
+    ticketsCount: integer('tickets_count').default(0).notNull(),
+    resolvedTicketsCount: integer('resolved_tickets_count').default(0).notNull(),
+    averageResponseTime: numeric('average_response_time').default('0').notNull(),
+    averageResolutionTime: numeric('average_resolution_time').default('0').notNull(),
+    csatScore: numeric('csat_score').default('0').notNull(),
+    slaViolationRate: numeric('sla_violation_rate').default('0').notNull(),
+    estimatedCostSavings: numeric('estimated_cost_savings').default('0').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_tenant_m_tenant').on(table.tenantId),
+    tsIdx: index('idx_an_tenant_m_ts').on(table.timestamp),
+  }),
+);
+
+// 83. Analytics Agent Metrics
+export const analyticsAgentMetrics = supportAgentSchema.table(
+  'analytics_agent_metrics',
+  {
+    ...commonColumns,
+    agentId: uuid('agent_id').notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    assignedConversations: integer('assigned_conversations').default(0).notNull(),
+    resolvedConversations: integer('resolved_conversations').default(0).notNull(),
+    assignedTickets: integer('assigned_tickets').default(0).notNull(),
+    resolvedTickets: integer('resolved_tickets').default(0).notNull(),
+    averageResponseTime: numeric('average_response_time').default('0').notNull(),
+    averageResolutionTime: numeric('average_resolution_time').default('0').notNull(),
+    csatScore: numeric('csat_score').default('0').notNull(),
+    workload: integer('workload').default(0).notNull(),
+    utilization: numeric('utilization').default('0').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_agent_m_tenant').on(table.tenantId),
+    agentIdx: index('idx_an_agent_m_agent').on(table.tenantId, table.agentId),
+    tsIdx: index('idx_an_agent_m_ts').on(table.timestamp),
+  }),
+);
+
+// 84. Analytics Channel Metrics
+export const analyticsChannelMetrics = supportAgentSchema.table(
+  'analytics_channel_metrics',
+  {
+    ...commonColumns,
+    channelId: uuid('channel_id').notNull(),
+    channelType: varchar('channel_type', { length: 50 }).notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    messageCount: integer('message_count').default(0).notNull(),
+    conversationCount: integer('conversation_count').default(0).notNull(),
+    responseTime: numeric('response_time').default('0').notNull(),
+    deliverySuccessRate: numeric('delivery_success_rate').default('0').notNull(),
+    failureRate: numeric('failure_rate').default('0').notNull(),
+    usageVolume: integer('usage_volume').default(0).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_channel_m_tenant').on(table.tenantId),
+    channelIdx: index('idx_an_channel_m_chan').on(table.tenantId, table.channelId),
+    tsIdx: index('idx_an_channel_m_ts').on(table.timestamp),
+  }),
+);
+
+// 85. Analytics AI Metrics
+export const analyticsAiMetrics = supportAgentSchema.table(
+  'analytics_ai_metrics',
+  {
+    ...commonColumns,
+    timestamp: timestamp('timestamp').notNull(),
+    aiRequests: integer('ai_requests').default(0).notNull(),
+    tokensUsed: bigint('tokens_used', { mode: 'number' }).default(0).notNull(),
+    promptTokens: bigint('prompt_tokens', { mode: 'number' }).default(0).notNull(),
+    completionTokens: bigint('completion_tokens', { mode: 'number' }).default(0).notNull(),
+    estimatedCost: numeric('estimated_cost').default('0').notNull(),
+    responseTime: numeric('response_time').default('0').notNull(),
+    escalationRate: numeric('escalation_rate').default('0').notNull(),
+    aiResolutionRate: numeric('ai_resolution_rate').default('0').notNull(),
+    humanResolutionRate: numeric('human_resolution_rate').default('0').notNull(),
+    workflowExecutions: integer('workflow_executions').default(0).notNull(),
+    toolCalls: integer('tool_calls').default(0).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_ai_m_tenant').on(table.tenantId),
+    tsIdx: index('idx_an_ai_m_ts').on(table.timestamp),
+  }),
+);
+
+// 86. Analytics Ticket Metrics
+export const analyticsTicketMetrics = supportAgentSchema.table(
+  'analytics_ticket_metrics',
+  {
+    ...commonColumns,
+    timestamp: timestamp('timestamp').notNull(),
+    status: varchar('status', { length: 50 }).notNull(),
+    priority: varchar('priority', { length: 50 }).notNull(),
+    ticketCount: integer('ticket_count').default(0).notNull(),
+    responseTime: numeric('response_time').default('0').notNull(),
+    resolutionTime: numeric('resolution_time').default('0').notNull(),
+    slaViolationsCount: integer('sla_violations_count').default(0).notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_ticket_m_tenant').on(table.tenantId),
+    tsIdx: index('idx_an_ticket_m_ts').on(table.timestamp),
+  }),
+);
+
+// 87. Analytics Workflow Metrics
+export const analyticsWorkflowMetrics = supportAgentSchema.table(
+  'analytics_workflow_metrics',
+  {
+    ...commonColumns,
+    workflowId: uuid('workflow_id').notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    executionCount: integer('execution_count').default(0).notNull(),
+    successCount: integer('success_count').default(0).notNull(),
+    failureCount: integer('failure_count').default(0).notNull(),
+    averageDuration: numeric('average_duration').default('0').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_wf_m_tenant').on(table.tenantId),
+    wfIdx: index('idx_an_wf_m_wf').on(table.tenantId, table.workflowId),
+    tsIdx: index('idx_an_wf_m_ts').on(table.timestamp),
+  }),
+);
+
+// 88. Analytics Customer Metrics
+export const analyticsCustomerMetrics = supportAgentSchema.table(
+  'analytics_customer_metrics',
+  {
+    ...commonColumns,
+    customerId: uuid('customer_id').notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    lifetimeValue: numeric('lifetime_value').default('0').notNull(),
+    conversationCount: integer('conversation_count').default(0).notNull(),
+    ticketCount: integer('ticket_count').default(0).notNull(),
+    sentimentScore: numeric('sentiment_score').default('0').notNull(),
+    retentionScore: numeric('retention_score').default('0').notNull(),
+    riskScore: numeric('risk_score').default('0').notNull(),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_cust_m_tenant').on(table.tenantId),
+    custIdx: index('idx_an_cust_m_cust').on(table.tenantId, table.customerId),
+    tsIdx: index('idx_an_cust_m_ts').on(table.timestamp),
+  }),
+);
+
+// 89. Analytics Reports
+export const analyticsReports = supportAgentSchema.table(
+  'analytics_reports',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    reportType: varchar('report_type', { length: 50 }).notNull(),
+    timeRange: varchar('time_range', { length: 50 }).notNull(),
+    filters: jsonb('filters'),
+    parameters: jsonb('parameters'),
+    data: jsonb('data'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_rep_tenant').on(table.tenantId),
+  }),
+);
+
+// 90. Analytics Report Schedules
+export const analyticsReportSchedules = supportAgentSchema.table(
+  'analytics_report_schedules',
+  {
+    ...commonColumns,
+    reportId: uuid('report_id').references(() => analyticsReports.id, { onDelete: 'cascade' }).notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    cronExpression: varchar('cron_expression', { length: 50 }).notNull(),
+    timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
+    exportFormat: varchar('export_format', { length: 20 }).notNull(),
+    recipients: jsonb('recipients').notNull(),
+    isActive: boolean('is_active').default(true).notNull(),
+    nextRunAt: timestamp('next_run_at'),
+    lastRunAt: timestamp('last_run_at'),
+  },
+  (table) => ({
+    tenantIdx: index('idx_an_sched_tenant').on(table.tenantId),
+    reportIdx: index('idx_an_sched_rep').on(table.tenantId, table.reportId),
+  }),
+);
+

@@ -4,7 +4,11 @@ import { WorkflowExecution } from '../domain';
 import { ExecuteWorkflowDto } from '../dtos/workflow.dto';
 import { WorkflowStatusEnum } from '../domain/value-objects';
 import { WorkflowEventPublisher } from './workflow-event.publisher';
-import { WorkflowExecutionStartedEvent, WorkflowExecutionCompletedEvent, WorkflowExecutionFailedEvent } from '@easydev/shared-events';
+import {
+  WorkflowExecutionStartedEvent,
+  WorkflowExecutionCompletedEvent,
+  WorkflowExecutionFailedEvent,
+} from '@easydev/shared-events';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -15,9 +19,12 @@ export class WorkflowExecutionService {
     private readonly eventPublisher: WorkflowEventPublisher,
   ) {}
 
-  public async createExecution(tenantId: string, dto: ExecuteWorkflowDto): Promise<WorkflowExecution> {
+  public async createExecution(
+    tenantId: string,
+    dto: ExecuteWorkflowDto,
+  ): Promise<WorkflowExecution> {
     const executionId = crypto.randomUUID();
-    
+
     const execution = WorkflowExecution.create(executionId, {
       tenantId,
       workflowId: dto.workflowId,
@@ -32,7 +39,10 @@ export class WorkflowExecutionService {
     return saved;
   }
 
-  public async getExecution(tenantId: string, id: string): Promise<WorkflowExecution> {
+  public async getExecution(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowExecution> {
     const execution = await this.repository.getExecutionById(id, tenantId);
     if (!execution) {
       throw new NotFoundException(`Workflow execution with ID ${id} not found`);
@@ -40,11 +50,17 @@ export class WorkflowExecutionService {
     return execution;
   }
 
-  public async findExecutions(tenantId: string, options?: { workflowId?: string; status?: string }): Promise<WorkflowExecution[]> {
+  public async findExecutions(
+    tenantId: string,
+    options?: { workflowId?: string; status?: string },
+  ): Promise<WorkflowExecution[]> {
     return this.repository.findExecutions(tenantId, options);
   }
 
-  public async startExecution(tenantId: string, id: string): Promise<WorkflowExecution> {
+  public async startExecution(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowExecution> {
     const execution = await this.getExecution(tenantId, id);
     execution.start();
     const saved = await this.repository.saveExecution(execution, tenantId);
@@ -54,27 +70,48 @@ export class WorkflowExecutionService {
     return saved;
   }
 
-  public async completeExecution(tenantId: string, id: string, result: Record<string, any>): Promise<WorkflowExecution> {
+  public async completeExecution(
+    tenantId: string,
+    id: string,
+    result: Record<string, any>,
+  ): Promise<WorkflowExecution> {
     const execution = await this.getExecution(tenantId, id);
     execution.complete(result);
     const saved = await this.repository.saveExecution(execution, tenantId);
     await this.eventPublisher.publish(
-      new WorkflowExecutionCompletedEvent(tenantId, id, execution.workflowId, result),
+      new WorkflowExecutionCompletedEvent(
+        tenantId,
+        id,
+        execution.workflowId,
+        result,
+      ),
     );
     return saved;
   }
 
-  public async failExecution(tenantId: string, id: string, error: Record<string, any>): Promise<WorkflowExecution> {
+  public async failExecution(
+    tenantId: string,
+    id: string,
+    error: Record<string, any>,
+  ): Promise<WorkflowExecution> {
     const execution = await this.getExecution(tenantId, id);
     execution.fail(error);
     const saved = await this.repository.saveExecution(execution, tenantId);
     await this.eventPublisher.publish(
-      new WorkflowExecutionFailedEvent(tenantId, id, execution.workflowId, error),
+      new WorkflowExecutionFailedEvent(
+        tenantId,
+        id,
+        execution.workflowId,
+        error,
+      ),
     );
     return saved;
   }
 
-  public async pauseExecution(tenantId: string, id: string): Promise<WorkflowExecution> {
+  public async pauseExecution(
+    tenantId: string,
+    id: string,
+  ): Promise<WorkflowExecution> {
     const execution = await this.getExecution(tenantId, id);
     execution.pause();
     return this.repository.saveExecution(execution, tenantId);
