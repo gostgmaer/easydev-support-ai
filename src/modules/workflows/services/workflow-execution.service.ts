@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { IWorkflowRepository } from '../repositories/workflow-repository.interface';
+import type { IWorkflowRepository } from '../repositories/workflow-repository.interface';
 import { WorkflowExecution } from '../domain';
 import { ExecuteWorkflowDto } from '../dtos/workflow.dto';
 import { WorkflowStatusEnum } from '../domain/value-objects';

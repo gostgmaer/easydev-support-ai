@@ -1,5 +1,5 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { IWorkflowRepository } from '../repositories/workflow-repository.interface';
+import type { IWorkflowRepository } from '../repositories/workflow-repository.interface';
 import { WorkflowTemplate } from '../domain';
 import { TriggerTypeEnum, WorkflowStatusEnum } from '../domain/value-objects';
 

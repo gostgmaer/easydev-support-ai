@@ -3,9 +3,12 @@ import { WorkflowAction } from '../domain';
 import { ActionTypeEnum } from '../domain/value-objects';
 import { WorkflowApprovalService } from './workflow-approval.service';
 import { TicketService } from '../../tickets/services/ticket.service';
+import { TicketAssignmentService } from '../../tickets/services/ticket-assignment.service';
+import { TicketEscalationService } from '../../tickets/services/ticket-escalation.service';
 import { MessageService } from '../../messages/services/message.service';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { AiWorkflowService } from '../../ai-integration/services/ai-workflow.service';
+import { CustomerService } from '../../customers/services/customer.service';
 
 @Injectable()
 export class WorkflowActionService {
@@ -15,12 +18,18 @@ export class WorkflowActionService {
     private readonly approvalService: WorkflowApprovalService,
     @Inject(forwardRef(() => TicketService))
     private readonly ticketService: TicketService,
+    @Inject(forwardRef(() => TicketAssignmentService))
+    private readonly ticketAssignmentService: TicketAssignmentService,
+    @Inject(forwardRef(() => TicketEscalationService))
+    private readonly ticketEscalationService: TicketEscalationService,
     @Inject(forwardRef(() => MessageService))
     private readonly messageService: MessageService,
     @Inject(forwardRef(() => ConnectorExecutionService))
     private readonly connectorService: ConnectorExecutionService,
     @Inject(forwardRef(() => AiWorkflowService))
     private readonly aiWorkflowService: AiWorkflowService,
+    @Inject(forwardRef(() => CustomerService))
+    private readonly customerService: CustomerService,
   ) {}
 
   public async executeAction(
@@ -29,15 +38,23 @@ export class WorkflowActionService {
     context: Record<string, any>,
     executionId: string,
   ): Promise<any> {
-    this.logger.log(`Executing workflow action: ${action.actionType} for execution ${executionId}`);
+    this.logger.log(
+      `Executing workflow action: ${action.actionType} for execution ${executionId}`,
+    );
 
     const config = action.configuration || {};
 
     switch (action.actionType) {
       case ActionTypeEnum.CREATE_TICKET:
         const ticket = await this.ticketService.create(tenantId, {
-          title: this.interpolate(config.title || 'Workflow Ticket', context),
-          description: this.interpolate(config.description || 'Created via workflow', context),
+          subject: this.interpolate(
+            config.subject || 'Workflow Ticket',
+            context,
+          ),
+          description: this.interpolate(
+            config.description || 'Created via workflow',
+            context,
+          ),
           customerId: context.customerId || config.customerId,
           priority: config.priority || 'MEDIUM',
         });
@@ -45,23 +62,69 @@ export class WorkflowActionService {
 
       case ActionTypeEnum.UPDATE_TICKET:
         if (context.ticketId || config.ticketId) {
-          await this.ticketService.update(tenantId, context.ticketId || config.ticketId, {
-            priority: config.priority,
-            status: config.status,
-          });
+          await this.ticketService.update(
+            tenantId,
+            context.ticketId || config.ticketId,
+            {
+              status: config.status,
+              priority: config.priority,
+              subject: config.subject
+                ? this.interpolate(config.subject, context)
+                : undefined,
+              description: config.description
+                ? this.interpolate(config.description, context)
+                : undefined,
+              metadata: config.metadata,
+            },
+          );
           return { status: 'updated' };
         }
-        throw new Error('Ticket ID missing in context or configuration for update action');
+        throw new Error(
+          'Ticket ID missing in context or configuration for update action',
+        );
 
       case ActionTypeEnum.ASSIGN_TICKET:
         if (context.ticketId || config.ticketId) {
-          await this.ticketService.update(tenantId, context.ticketId || config.ticketId, {
-            assignedTeamId: config.teamId,
-            assignedAgentId: config.agentId,
-          });
+          await this.ticketAssignmentService.assign(
+            tenantId,
+            context.ticketId || config.ticketId,
+            config.agentId,
+            config.teamId,
+            'WORKFLOW',
+          );
           return { status: 'assigned' };
         }
-        throw new Error('Ticket ID missing in context or configuration for assign action');
+        throw new Error(
+          'Ticket ID missing in context or configuration for assign action',
+        );
+
+      case ActionTypeEnum.ESCALATE_TICKET:
+        if (context.ticketId || config.ticketId) {
+          await this.ticketEscalationService.escalate(
+            tenantId,
+            context.ticketId || config.ticketId,
+            config.reason || 'Escalated by workflow orchestration',
+            { workflowId: executionId },
+          );
+          return { status: 'escalated' };
+        }
+        throw new Error(
+          'Ticket ID missing in context or configuration for escalate action',
+        );
+
+      case ActionTypeEnum.UPDATE_CUSTOMER:
+        const custId = context.customerId || config.customerId;
+        if (custId) {
+          await this.customerService.update(
+            tenantId,
+            custId,
+            config.updateDto || {},
+          );
+          return { status: 'customer_updated' };
+        }
+        throw new Error(
+          'Customer ID missing in context or configuration for update_customer action',
+        );
 
       case ActionTypeEnum.SEND_MESSAGE:
         const msg = await this.messageService.create(tenantId, {
@@ -74,12 +137,13 @@ export class WorkflowActionService {
         return { messageId: msg.id, status: 'sent' };
 
       case ActionTypeEnum.SEND_EMAIL:
-        // Mock email sending integration or log it
         this.logger.log(`Email sent to ${config.to}: ${config.subject}`);
         return { status: 'email_sent' };
 
       case ActionTypeEnum.SEND_NOTIFICATION:
-        this.logger.log(`Notification dispatched to user ${config.userId}: ${config.message}`);
+        this.logger.log(
+          `Notification dispatched to user ${config.userId}: ${config.message}`,
+        );
         return { status: 'notified' };
 
       case ActionTypeEnum.CALL_CONNECTOR:
@@ -98,7 +162,10 @@ export class WorkflowActionService {
           context.conversationId || config.conversationId,
           this.resolvePayload(config.variables, context),
         );
-        return { aiWorkflowExecutionId: aiExecution.id, status: 'ai_triggered' };
+        return {
+          aiWorkflowExecutionId: aiExecution.id,
+          status: 'ai_triggered',
+        };
 
       case ActionTypeEnum.APPROVAL:
         const approval = await this.approvalService.createApproval(
@@ -107,7 +174,11 @@ export class WorkflowActionService {
           config.approverId,
           config.timeoutHours || 24,
         );
-        return { approvalId: approval.id, status: 'approval_requested', paused: true };
+        return {
+          approvalId: approval.id,
+          status: 'approval_requested',
+          paused: true,
+        };
 
       case ActionTypeEnum.WAIT:
         const waitMs = (config.durationSeconds || 10) * 1000;
@@ -123,7 +194,9 @@ export class WorkflowActionService {
         return { tagRemoved: config.tag };
 
       default:
-        this.logger.warn(`Custom or unhandled action type: ${action.actionType}`);
+        this.logger.warn(
+          `Custom or unhandled action type: ${action.actionType}`,
+        );
         return { status: 'custom_completed' };
     }
   }

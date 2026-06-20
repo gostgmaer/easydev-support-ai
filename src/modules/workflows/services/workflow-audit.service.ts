@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { IWorkflowRepository } from '../repositories/workflow-repository.interface';
+import type { IWorkflowRepository } from '../repositories/workflow-repository.interface';
 
 @Injectable()
 export class WorkflowAuditService {

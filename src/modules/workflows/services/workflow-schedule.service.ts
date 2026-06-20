@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { IWorkflowRepository } from '../repositories/workflow-repository.interface';
+import type { IWorkflowRepository } from '../repositories/workflow-repository.interface';
 import { WorkflowSchedule } from '../domain';
 import { CreateScheduleDto } from '../dtos/workflow.dto';
 import * as crypto from 'crypto';

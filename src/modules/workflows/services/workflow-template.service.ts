@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException, OnApplicationBootstrap, Logger } from '@nestjs/common';
-import { IWorkflowRepository } from '../repositories/workflow-repository.interface';
+import type { IWorkflowRepository } from '../repositories/workflow-repository.interface';
 import { WorkflowTemplate, WorkflowTrigger, WorkflowCondition, WorkflowAction } from '../domain';
 import { CreateTemplateDto, UpdateTemplateDto } from '../dtos/workflow.dto';
 import { WorkflowStatusEnum, WorkflowTypeEnum, TriggerTypeEnum, ActionTypeEnum } from '../domain/value-objects';
