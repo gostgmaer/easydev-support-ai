@@ -6,6 +6,7 @@ import type { JobsOptions } from 'bullmq';
  */
 export const QUEUES = {
   CONVERSATION: 'conversation-queue',
+  MESSAGE: 'message-queue',
   TICKET: 'ticket-queue',
   CONNECTOR: 'connector-queue',
   WORKFLOW: 'workflow-queue',

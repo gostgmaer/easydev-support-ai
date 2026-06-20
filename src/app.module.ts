@@ -14,6 +14,7 @@ import { IntegrationModule } from './integration/integration.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { ConnectorsModule } from './modules/connectors/connectors.module';
 import { ChannelsModule } from './modules/channels/channels.module';
+import { MessagesModule } from './modules/messages/messages.module';
 import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { ObservabilityModule } from './common/observability/observability.module';
 import { AuditModule } from './modules/audit/audit.module';
@@ -116,6 +117,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     ConversationsModule,
     ConnectorsModule,
     ChannelsModule,
+    MessagesModule,
     WorkflowsModule,
     CustomersModule,
     TicketsModule,

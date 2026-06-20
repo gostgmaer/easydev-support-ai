@@ -5,6 +5,7 @@ import {
   varchar,
   text,
   integer,
+  bigint,
   boolean,
   jsonb,
   numeric,
@@ -721,6 +722,548 @@ export const conversationMentions = supportAgentSchema.table(
       conversationIdx: index('idx_conversation_mentions_conversation').on(
         table.tenantId,
         table.conversationId,
+      ),
+    };
+  },
+);
+
+// 26. Messages Table (partition-ready: (tenant_id, conversation_id, created_at))
+export const messages = supportAgentSchema.table(
+  'messages',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id')
+      .references(() => conversations.id, { onDelete: 'cascade' })
+      .notNull(),
+    channelId: uuid('channel_id').references(() => channels.id, {
+      onDelete: 'set null',
+    }),
+    customerId: uuid('customer_id').references(() => customers.id, {
+      onDelete: 'set null',
+    }),
+    senderId: uuid('sender_id'),
+    senderType: varchar('sender_type', { length: 50 }).notNull(), // CUSTOMER, AGENT, BOT, SYSTEM, AI
+    messageType: varchar('message_type', { length: 50 })
+      .default('TEXT')
+      .notNull(), // TEXT, IMAGE, AUDIO, VIDEO, DOCUMENT, LOCATION, CONTACT, STICKER, SYSTEM, AI_RESPONSE, INTERNAL_NOTE
+    direction: varchar('direction', { length: 20 }).notNull(), // INBOUND, OUTBOUND
+    content: text('content'),
+    contentHtml: text('content_html'),
+    status: varchar('status', { length: 50 }).default('QUEUED').notNull(), // QUEUED, PROCESSING, SENT, DELIVERED, READ, FAILED, RETRYING, ARCHIVED
+    externalMessageId: varchar('external_message_id', { length: 255 }),
+    replyToMessageId: uuid('reply_to_message_id'),
+    threadId: uuid('thread_id'),
+    sentAt: timestamp('sent_at'),
+    deliveredAt: timestamp('delivered_at'),
+    readAt: timestamp('read_at'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_messages_tenant').on(table.tenantId),
+      conversationIdx: index('idx_messages_conversation').on(
+        table.tenantId,
+        table.conversationId,
+        table.createdAt,
+      ),
+      threadIdx: index('idx_messages_thread').on(
+        table.tenantId,
+        table.threadId,
+      ),
+      statusIdx: index('idx_messages_status').on(
+        table.tenantId,
+        table.status,
+      ),
+      directionIdx: index('idx_messages_direction').on(
+        table.tenantId,
+        table.conversationId,
+        table.direction,
+      ),
+      customerIdx: index('idx_messages_customer').on(
+        table.tenantId,
+        table.customerId,
+      ),
+      channelIdx: index('idx_messages_channel').on(
+        table.tenantId,
+        table.channelId,
+      ),
+      // Deduplication of inbound provider messages
+      externalUnique: uniqueIndex('uq_messages_external').on(
+        table.tenantId,
+        table.channelId,
+        table.externalMessageId,
+      ),
+    };
+  },
+);
+
+// 27. Message Attachments Table
+export const messageAttachments = supportAgentSchema.table(
+  'message_attachments',
+  {
+    ...commonColumns,
+    messageId: uuid('message_id')
+      .references(() => messages.id, { onDelete: 'cascade' })
+      .notNull(),
+    fileName: varchar('file_name', { length: 500 }).notNull(),
+    fileType: varchar('file_type', { length: 100 }),
+    fileSize: bigint('file_size', { mode: 'number' }),
+    storageProvider: varchar('storage_provider', { length: 100 }),
+    storagePath: varchar('storage_path', { length: 1000 }),
+    publicUrl: varchar('public_url', { length: 1000 }),
+    checksum: varchar('checksum', { length: 255 }),
+    thumbnailUrl: varchar('thumbnail_url', { length: 1000 }),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_message_attachments_tenant').on(table.tenantId),
+      messageIdx: index('idx_message_attachments_message').on(
+        table.tenantId,
+        table.messageId,
+      ),
+      checksumIdx: index('idx_message_attachments_checksum').on(
+        table.tenantId,
+        table.checksum,
+      ),
+    };
+  },
+);
+
+// 28. Message Delivery Status Table
+export const messageDeliveryStatus = supportAgentSchema.table(
+  'message_delivery_status',
+  {
+    ...commonColumns,
+    messageId: uuid('message_id')
+      .references(() => messages.id, { onDelete: 'cascade' })
+      .notNull(),
+    provider: varchar('provider', { length: 100 }),
+    providerMessageId: varchar('provider_message_id', { length: 255 }),
+    status: varchar('status', { length: 50 }).notNull(), // QUEUED, SENT, DELIVERED, READ, FAILED, RETRYING
+    attemptCount: integer('attempt_count').default(0).notNull(),
+    lastAttemptAt: timestamp('last_attempt_at'),
+    failureReason: text('failure_reason'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_message_delivery_tenant').on(table.tenantId),
+      messageIdx: index('idx_message_delivery_message').on(
+        table.tenantId,
+        table.messageId,
+      ),
+      providerMessageIdx: index('idx_message_delivery_provider_msg').on(
+        table.tenantId,
+        table.providerMessageId,
+      ),
+    };
+  },
+);
+
+// 29. Message Reactions Table
+export const messageReactions = supportAgentSchema.table(
+  'message_reactions',
+  {
+    ...commonColumns,
+    messageId: uuid('message_id')
+      .references(() => messages.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: uuid('user_id').notNull(),
+    reaction: varchar('reaction', { length: 50 }).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_message_reactions_tenant').on(table.tenantId),
+      messageIdx: index('idx_message_reactions_message').on(
+        table.tenantId,
+        table.messageId,
+      ),
+      reactionUnique: uniqueIndex('uq_message_reactions').on(
+        table.tenantId,
+        table.messageId,
+        table.userId,
+        table.reaction,
+      ),
+    };
+  },
+);
+
+// 30. Message Mentions Table
+export const messageMentions = supportAgentSchema.table(
+  'message_mentions',
+  {
+    ...commonColumns,
+    messageId: uuid('message_id')
+      .references(() => messages.id, { onDelete: 'cascade' })
+      .notNull(),
+    mentionedUserId: uuid('mentioned_user_id').notNull(),
+    mentionedBy: uuid('mentioned_by').notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_message_mentions_tenant').on(table.tenantId),
+      messageIdx: index('idx_message_mentions_message').on(
+        table.tenantId,
+        table.messageId,
+      ),
+      mentionedUserIdx: index('idx_message_mentions_user').on(
+        table.tenantId,
+        table.mentionedUserId,
+      ),
+    };
+  },
+);
+
+// 31. Message Templates Table
+export const messageTemplates = supportAgentSchema.table(
+  'message_templates',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    channelType: varchar('channel_type', { length: 50 }),
+    category: varchar('category', { length: 100 }),
+    content: text('content').notNull(),
+    contentHtml: text('content_html'),
+    variables: jsonb('variables'),
+    language: varchar('language', { length: 10 }).default('en').notNull(),
+    isActive: boolean('is_active').default(true).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_message_templates_tenant').on(table.tenantId),
+      nameUnique: uniqueIndex('uq_message_templates_name').on(
+        table.tenantId,
+        table.name,
+      ),
+      categoryIdx: index('idx_message_templates_category').on(
+        table.tenantId,
+        table.category,
+      ),
+    };
+  },
+);
+
+// 32. Message Drafts Table
+export const messageDrafts = supportAgentSchema.table(
+  'message_drafts',
+  {
+    ...commonColumns,
+    conversationId: uuid('conversation_id')
+      .references(() => conversations.id, { onDelete: 'cascade' })
+      .notNull(),
+    authorId: uuid('author_id').notNull(),
+    draftContent: text('draft_content').notNull(),
+    draftType: varchar('draft_type', { length: 50 }).default('TEXT').notNull(),
+    expiresAt: timestamp('expires_at'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_message_drafts_tenant').on(table.tenantId),
+      draftUnique: uniqueIndex('uq_message_drafts').on(
+        table.tenantId,
+        table.conversationId,
+        table.authorId,
+      ),
+      expiresIdx: index('idx_message_drafts_expires').on(table.expiresAt),
+    };
+  },
+);
+
+// 33. Ticket Categories Table
+export const ticketCategories = supportAgentSchema.table(
+  'ticket_categories',
+  {
+    ...commonColumns,
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    color: varchar('color', { length: 20 }),
+    isActive: boolean('is_active').default(true).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_categories_tenant').on(table.tenantId),
+      nameUnique: uniqueIndex('uq_ticket_categories_name').on(
+        table.tenantId,
+        table.name,
+      ),
+    };
+  },
+);
+
+// 34. Tickets Table
+export const tickets = supportAgentSchema.table(
+  'tickets',
+  {
+    ...commonColumns,
+    ticketNumber: varchar('ticket_number', { length: 50 }).notNull(),
+    customerId: uuid('customer_id').references(() => customers.id, {
+      onDelete: 'set null',
+    }),
+    conversationId: uuid('conversation_id').references(() => conversations.id, {
+      onDelete: 'set null',
+    }),
+    assignedAgentId: uuid('assigned_agent_id').references(
+      () => agentProfiles.id,
+      { onDelete: 'set null' },
+    ),
+    assignedTeamId: uuid('assigned_team_id').references(() => teams.id, {
+      onDelete: 'set null',
+    }),
+    categoryId: uuid('category_id').references(() => ticketCategories.id, {
+      onDelete: 'set null',
+    }),
+    priority: varchar('priority', { length: 50 }).default('MEDIUM').notNull(), // LOW, MEDIUM, HIGH, URGENT, CRITICAL
+    status: varchar('status', { length: 50 }).default('OPEN').notNull(), // OPEN, ASSIGNED, IN_PROGRESS, WAITING_CUSTOMER, WAITING_INTERNAL, APPROVAL_PENDING, RESOLVED, CLOSED, REOPENED, CANCELLED
+    source: varchar('source', { length: 50 }).default('MANUAL').notNull(), // MANUAL, CONVERSATION, AI_ESCALATION, EMAIL, WHATSAPP, WEBCHAT, API, WORKFLOW
+    subject: varchar('subject', { length: 500 }).notNull(),
+    description: text('description'),
+    resolutionSummary: text('resolution_summary'),
+    openedAt: timestamp('opened_at').defaultNow().notNull(),
+    firstResponseAt: timestamp('first_response_at'),
+    resolvedAt: timestamp('resolved_at'),
+    closedAt: timestamp('closed_at'),
+    metadata: jsonb('metadata'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_tickets_tenant').on(table.tenantId),
+      numberUnique: uniqueIndex('uq_tickets_number').on(
+        table.tenantId,
+        table.ticketNumber,
+      ),
+      queueIdx: index('idx_tickets_queue').on(
+        table.tenantId,
+        table.status,
+        table.priority,
+        table.openedAt,
+      ),
+      agentIdx: index('idx_tickets_agent').on(
+        table.tenantId,
+        table.assignedAgentId,
+        table.status,
+      ),
+      teamIdx: index('idx_tickets_team').on(
+        table.tenantId,
+        table.assignedTeamId,
+        table.status,
+      ),
+      customerIdx: index('idx_tickets_customer').on(
+        table.tenantId,
+        table.customerId,
+      ),
+      categoryIdx: index('idx_tickets_category').on(
+        table.tenantId,
+        table.categoryId,
+      ),
+      conversationIdx: index('idx_tickets_conversation').on(
+        table.tenantId,
+        table.conversationId,
+      ),
+    };
+  },
+);
+
+// 35. Ticket Comments Table
+export const ticketComments = supportAgentSchema.table(
+  'ticket_comments',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    authorId: uuid('author_id').notNull(),
+    comment: text('comment').notNull(),
+    visibility: varchar('visibility', { length: 50 })
+      .default('PUBLIC')
+      .notNull(), // PUBLIC, INTERNAL
+    attachmentsCount: integer('attachments_count').default(0).notNull(),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_comments_tenant').on(table.tenantId),
+      ticketIdx: index('idx_ticket_comments_ticket').on(
+        table.tenantId,
+        table.ticketId,
+        table.createdAt,
+      ),
+    };
+  },
+);
+
+// 36. Ticket Attachments Table
+export const ticketAttachments = supportAgentSchema.table(
+  'ticket_attachments',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    commentId: uuid('comment_id').references(() => ticketComments.id, {
+      onDelete: 'cascade',
+    }),
+    fileName: varchar('file_name', { length: 500 }).notNull(),
+    fileType: varchar('file_type', { length: 100 }),
+    fileSize: bigint('file_size', { mode: 'number' }),
+    fileUrl: varchar('file_url', { length: 1000 }),
+    checksum: varchar('checksum', { length: 255 }),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_attachments_tenant').on(table.tenantId),
+      ticketIdx: index('idx_ticket_attachments_ticket').on(
+        table.tenantId,
+        table.ticketId,
+      ),
+      commentIdx: index('idx_ticket_attachments_comment').on(
+        table.tenantId,
+        table.commentId,
+      ),
+    };
+  },
+);
+
+// 37. Ticket Assignments Table
+export const ticketAssignments = supportAgentSchema.table(
+  'ticket_assignments',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    agentId: uuid('agent_id').references(() => agentProfiles.id, {
+      onDelete: 'set null',
+    }),
+    teamId: uuid('team_id').references(() => teams.id, {
+      onDelete: 'set null',
+    }),
+    assignmentType: varchar('assignment_type', { length: 50 })
+      .default('MANUAL')
+      .notNull(), // MANUAL, AUTO, ROUND_ROBIN, LEAST_LOADED, SKILL_BASED, PRIORITY_BASED, TRANSFER, ESCALATION
+    assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+    assignedBy: uuid('assigned_by'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_assignments_tenant').on(table.tenantId),
+      ticketIdx: index('idx_ticket_assignments_ticket').on(
+        table.tenantId,
+        table.ticketId,
+      ),
+      agentIdx: index('idx_ticket_assignments_agent').on(
+        table.tenantId,
+        table.agentId,
+      ),
+    };
+  },
+);
+
+// 38. Ticket SLA Table
+export const ticketSla = supportAgentSchema.table(
+  'ticket_sla',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    policyId: uuid('policy_id'),
+    responseDueAt: timestamp('response_due_at'),
+    resolutionDueAt: timestamp('resolution_due_at'),
+    breached: boolean('breached').default(false).notNull(),
+    breachedAt: timestamp('breached_at'),
+    remainingSeconds: integer('remaining_seconds'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_sla_tenant').on(table.tenantId),
+      ticketUnique: uniqueIndex('uq_ticket_sla_ticket').on(
+        table.tenantId,
+        table.ticketId,
+      ),
+      // Drives the high-throughput SLA monitor sweep.
+      dueIdx: index('idx_ticket_sla_due').on(
+        table.tenantId,
+        table.breached,
+        table.resolutionDueAt,
+      ),
+    };
+  },
+);
+
+// 39. Ticket Tags Table
+export const ticketTags = supportAgentSchema.table(
+  'ticket_tags',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    tag: varchar('tag', { length: 100 }).notNull(),
+    color: varchar('color', { length: 20 }),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_tags_tenant').on(table.tenantId),
+      tagUnique: uniqueIndex('uq_ticket_tags').on(
+        table.tenantId,
+        table.ticketId,
+        table.tag,
+      ),
+      tagSearchIdx: index('idx_ticket_tags_search').on(
+        table.tenantId,
+        table.tag,
+      ),
+    };
+  },
+);
+
+// 40. Ticket Watchers Table
+export const ticketWatchers = supportAgentSchema.table(
+  'ticket_watchers',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: uuid('user_id').notNull(),
+    notificationPreferences: jsonb('notification_preferences'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_watchers_tenant').on(table.tenantId),
+      watcherUnique: uniqueIndex('uq_ticket_watchers').on(
+        table.tenantId,
+        table.ticketId,
+        table.userId,
+      ),
+    };
+  },
+);
+
+// 41. Ticket Approvals Table
+export const ticketApprovals = supportAgentSchema.table(
+  'ticket_approvals',
+  {
+    ...commonColumns,
+    ticketId: uuid('ticket_id')
+      .references(() => tickets.id, { onDelete: 'cascade' })
+      .notNull(),
+    approverId: uuid('approver_id').notNull(),
+    status: varchar('status', { length: 50 }).default('PENDING').notNull(), // PENDING, APPROVED, REJECTED
+    type: varchar('type', { length: 50 }).default('CUSTOM').notNull(), // REFUND, CREDIT, ESCALATION, CUSTOM
+    comments: text('comments'),
+    approvedAt: timestamp('approved_at'),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_ticket_approvals_tenant').on(table.tenantId),
+      ticketIdx: index('idx_ticket_approvals_ticket').on(
+        table.tenantId,
+        table.ticketId,
+      ),
+      approverIdx: index('idx_ticket_approvals_approver').on(
+        table.tenantId,
+        table.approverId,
+        table.status,
       ),
     };
   },

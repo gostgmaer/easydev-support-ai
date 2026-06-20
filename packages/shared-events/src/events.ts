@@ -161,6 +161,110 @@ export class MessageSentEvent extends DomainEvent {
   }
 }
 
+export class MessageCreatedEvent extends DomainEvent {
+  static readonly eventName = 'message.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly conversationId: string,
+    public readonly direction: string,
+    public readonly messageType: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class MessageDeliveredEvent extends DomainEvent {
+  static readonly eventName = 'message.delivered';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly conversationId: string,
+    public readonly provider?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class MessageReadEvent extends DomainEvent {
+  static readonly eventName = 'message.read';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly conversationId: string,
+    public readonly readBy?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class MessageRetriedEvent extends DomainEvent {
+  static readonly eventName = 'message.retried';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly conversationId: string,
+    public readonly attempt: number,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class MessageArchivedEvent extends DomainEvent {
+  static readonly eventName = 'message.archived';
+  constructor(
+    public readonly tenantId: string,
+    public readonly messageId: string,
+    public readonly conversationId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.messageId;
+  }
+}
+
+export class AttachmentUploadedEvent extends DomainEvent {
+  static readonly eventName = 'attachment.uploaded';
+  constructor(
+    public readonly tenantId: string,
+    public readonly attachmentId: string,
+    public readonly messageId: string,
+    public readonly fileName: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.attachmentId;
+  }
+}
+
+export class AttachmentDeletedEvent extends DomainEvent {
+  static readonly eventName = 'attachment.deleted';
+  constructor(
+    public readonly tenantId: string,
+    public readonly attachmentId: string,
+    public readonly messageId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.attachmentId;
+  }
+}
+
 export class TicketCreatedEvent extends DomainEvent {
   static readonly eventName = 'ticket.created';
   constructor(
@@ -183,6 +287,171 @@ export class TicketResolvedEvent extends DomainEvent {
     public readonly tenantId: string,
     public readonly ticketId: string,
     public readonly resolvedBy: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly status: string,
+    public readonly priority: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketAssignedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.assigned';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly agentId: string,
+    public readonly teamId?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketTransferredEvent extends DomainEvent {
+  static readonly eventName = 'ticket.transferred';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly fromAgentId: string | undefined,
+    public readonly toAgentId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketCommentedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.commented';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly commentId: string,
+    public readonly authorId: string,
+    public readonly visibility: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketEscalatedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.escalated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly reason: string,
+    public readonly priority: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketClosedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.closed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly closedBy?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketReopenedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.reopened';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly reopenedBy?: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketApprovalRequestedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.approval.requested';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly approvalId: string,
+    public readonly approverId: string,
+    public readonly type: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketApprovedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.approved';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly approvalId: string,
+    public readonly approverId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class TicketRejectedEvent extends DomainEvent {
+  static readonly eventName = 'ticket.rejected';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly approvalId: string,
+    public readonly approverId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.ticketId;
+  }
+}
+
+export class SlaBreachedEvent extends DomainEvent {
+  static readonly eventName = 'sla.breached';
+  constructor(
+    public readonly tenantId: string,
+    public readonly ticketId: string,
+    public readonly slaId: string,
+    public readonly breachType: string,
   ) {
     super();
   }
