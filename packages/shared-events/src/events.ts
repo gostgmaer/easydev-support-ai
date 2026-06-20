@@ -234,3 +234,132 @@ export class WorkflowCompletedEvent extends DomainEvent {
     return this.workflowId;
   }
 }
+
+export class TeamCreatedEvent extends DomainEvent {
+  static readonly eventName = 'team.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly teamId: string,
+    public readonly name: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.teamId;
+  }
+}
+
+export class TeamUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'team.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly teamId: string,
+    public readonly name: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.teamId;
+  }
+}
+
+export class TeamArchivedEvent extends DomainEvent {
+  static readonly eventName = 'team.archived';
+  constructor(
+    public readonly tenantId: string,
+    public readonly teamId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.teamId;
+  }
+}
+
+export class AgentCreatedEvent extends DomainEvent {
+  static readonly eventName = 'agent.created';
+  constructor(
+    public readonly tenantId: string,
+    public readonly agentProfileId: string,
+    public readonly userId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.agentProfileId;
+  }
+}
+
+export class AgentUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'agent.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly agentProfileId: string,
+    public readonly userId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.agentProfileId;
+  }
+}
+
+export class AgentAssignedEvent extends DomainEvent {
+  static readonly eventName = 'agent.assigned';
+  constructor(
+    public readonly tenantId: string,
+    public readonly agentProfileId: string,
+    public readonly teamId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.agentProfileId;
+  }
+}
+
+export class AgentTransferredEvent extends DomainEvent {
+  static readonly eventName = 'agent.transferred';
+  constructor(
+    public readonly tenantId: string,
+    public readonly agentProfileId: string,
+    public readonly fromTeamId: string,
+    public readonly toTeamId: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.agentProfileId;
+  }
+}
+
+export class AvailabilityUpdatedEvent extends DomainEvent {
+  static readonly eventName = 'availability.updated';
+  constructor(
+    public readonly tenantId: string,
+    public readonly agentProfileId: string,
+    public readonly status: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.agentProfileId;
+  }
+}
+
+export class AssignmentCompletedEvent extends DomainEvent {
+  static readonly eventName = 'assignment.completed';
+  constructor(
+    public readonly tenantId: string,
+    public readonly assignmentId: string,
+    public readonly agentProfileId: string,
+    public readonly entityId: string, // ticketId or conversationId
+    public readonly strategy: string,
+  ) {
+    super();
+  }
+  getAggregateId(): string {
+    return this.assignmentId;
+  }
+}
+

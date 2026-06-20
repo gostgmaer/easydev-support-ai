@@ -134,3 +134,171 @@ export const customerMetrics = supportAgentSchema.table('customer_metrics', {
     customerIdUnique: uniqueIndex('uq_customer_metrics_customer').on(table.tenantId, table.customerId),
   };
 });
+
+// 9. Teams Table
+export const teams = supportAgentSchema.table('teams', {
+  ...commonColumns,
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  department: varchar('department', { length: 100 }),
+  priority: integer('priority').default(1).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  metadata: jsonb('metadata'),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_teams_tenant').on(table.tenantId),
+    tenantNameUnique: uniqueIndex('uq_teams_tenant_name').on(table.tenantId, table.name),
+  };
+});
+
+// 10. Agent Profiles Table
+export const agentProfiles = supportAgentSchema.table('agent_profiles', {
+  ...commonColumns,
+  userId: uuid('user_id').notNull(),
+  employeeCode: varchar('employee_code', { length: 100 }),
+  displayName: varchar('display_name', { length: 200 }).notNull(),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  status: varchar('status', { length: 50 }).default('ACTIVE').notNull(), // ACTIVE, INACTIVE
+  capacity: integer('capacity').default(10).notNull(),
+  maxConcurrentConversations: integer('max_concurrent_conversations').default(5).notNull(),
+  maxOpenTickets: integer('max_open_tickets').default(20).notNull(),
+  skillScore: doublePrecision('skill_score').default(0.0).notNull(),
+  timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
+  languagePreferences: jsonb('language_preferences'), // Array of language strings: ['en', 'es']
+  metadata: jsonb('metadata'),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_agent_profiles_tenant').on(table.tenantId),
+    tenantUserIdUnique: uniqueIndex('uq_agent_profiles_tenant_user').on(table.tenantId, table.userId),
+    tenantEmpCodeUnique: uniqueIndex('uq_agent_profiles_tenant_emp_code').on(table.tenantId, table.employeeCode),
+  };
+});
+
+// 11. Team Members Table (Join Table)
+export const teamMembers = supportAgentSchema.table('team_members', {
+  ...commonColumns,
+  teamId: uuid('team_id').references(() => teams.id, { onDelete: 'cascade' }).notNull(),
+  agentProfileId: uuid('agent_profile_id').references(() => agentProfiles.id, { onDelete: 'cascade' }).notNull(),
+  role: varchar('role', { length: 50 }).default('MEMBER').notNull(), // LEADER, MEMBER
+  joinedAt: timestamp('joined_at').defaultNow().notNull(),
+  isPrimary: boolean('is_primary').default(false).notNull(),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_team_members_tenant').on(table.tenantId),
+    teamMemberUnique: uniqueIndex('uq_team_members').on(table.tenantId, table.teamId, table.agentProfileId),
+  };
+});
+
+// 12. Assignment Rules Table
+export const assignmentRules = supportAgentSchema.table('assignment_rules', {
+  ...commonColumns,
+  teamId: uuid('team_id').references(() => teams.id, { onDelete: 'cascade' }).notNull(),
+  ruleType: varchar('rule_type', { length: 50 }).notNull(), // ROUND_ROBIN, LEAST_LOADED, SKILL_BASED, PRIORITY_BASED, MANUAL
+  priority: integer('priority').default(1).notNull(),
+  configuration: jsonb('configuration'),
+  isActive: boolean('is_active').default(true).notNull(),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_assignment_rules_tenant').on(table.tenantId),
+    teamRuleTypeUnique: uniqueIndex('uq_team_rule_type').on(table.tenantId, table.teamId, table.ruleType),
+  };
+});
+
+// 13. Agent Availability Table
+export const agentAvailability = supportAgentSchema.table('agent_availability', {
+  ...commonColumns,
+  agentProfileId: uuid('agent_profile_id').references(() => agentProfiles.id, { onDelete: 'cascade' }).notNull(),
+  status: varchar('status', { length: 50 }).default('OFFLINE').notNull(), // ONLINE, OFFLINE, AWAY
+  lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+  workingHours: jsonb('working_hours'), // { timezone: 'UTC', slots: [{ start: '09:00', end: '17:00' }] }
+  currentLoad: integer('current_load').default(0).notNull(),
+  activeConversations: integer('active_conversations').default(0).notNull(),
+  activeTickets: integer('active_tickets').default(0).notNull(),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_agent_availability_tenant').on(table.tenantId),
+    agentProfileUnique: uniqueIndex('uq_agent_availability_profile').on(table.tenantId, table.agentProfileId),
+  };
+});
+
+// 14. Channels Table
+export const channels = supportAgentSchema.table('channels', {
+  ...commonColumns,
+  name: varchar('name', { length: 255 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // WHATSAPP, EMAIL, WEBCHAT, TELEGRAM, FACEBOOK, INSTAGRAM, SLACK, TEAMS, VOICE
+  status: varchar('status', { length: 50 }).default('ACTIVE').notNull(),
+  provider: varchar('provider', { length: 100 }).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  isDefault: boolean('is_default').default(false).notNull(),
+  metadata: jsonb('metadata'),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_channels_tenant').on(table.tenantId),
+    typeIdx: index('idx_channels_type').on(table.tenantId, table.type),
+    uniqueName: uniqueIndex('uq_channels_tenant_name').on(table.tenantId, table.name),
+  };
+});
+
+// 15. Channel Configurations Table
+export const channelConfigurations = supportAgentSchema.table('channel_configurations', {
+  ...commonColumns,
+  channelId: uuid('channel_id').references(() => channels.id, { onDelete: 'cascade' }).notNull(),
+  authenticationType: varchar('authentication_type', { length: 50 }).notNull(), // API_KEY, OAUTH2, BASIC
+  configuration: jsonb('configuration').notNull(),
+  credentials: jsonb('credentials').notNull(),
+  settings: jsonb('settings'),
+  healthStatus: varchar('health_status', { length: 50 }).default('UNKNOWN').notNull(),
+  lastHealthCheck: timestamp('last_health_check'),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_channel_config_tenant').on(table.tenantId),
+    channelUnique: uniqueIndex('uq_channel_config_channel').on(table.tenantId, table.channelId),
+  };
+});
+
+// 16. Channel Webhooks Table
+export const channelWebhooks = supportAgentSchema.table('channel_webhooks', {
+  ...commonColumns,
+  channelId: uuid('channel_id').references(() => channels.id, { onDelete: 'cascade' }).notNull(),
+  webhookUrl: varchar('webhook_url', { length: 500 }).notNull(),
+  webhookSecret: varchar('webhook_secret', { length: 255 }),
+  verificationToken: varchar('verification_token', { length: 255 }),
+  status: varchar('status', { length: 50 }).default('ACTIVE').notNull(),
+  lastReceivedAt: timestamp('last_received_at'),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_channel_webhooks_tenant').on(table.tenantId),
+    channelUnique: uniqueIndex('uq_channel_webhooks_channel').on(table.tenantId, table.channelId),
+  };
+});
+
+// 17. Channel Templates Table
+export const channelTemplates = supportAgentSchema.table('channel_templates', {
+  ...commonColumns,
+  channelId: uuid('channel_id').references(() => channels.id, { onDelete: 'cascade' }).notNull(),
+  templateName: varchar('template_name', { length: 255 }).notNull(),
+  templateType: varchar('template_type', { length: 50 }).notNull(), // TEXT, IMAGE, BUTTONS
+  templateContent: text('template_content').notNull(),
+  variables: jsonb('variables'),
+  isActive: boolean('is_active').default(true).notNull(),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_channel_templates_tenant').on(table.tenantId),
+    uniqueTemplate: uniqueIndex('uq_channel_templates_name').on(table.tenantId, table.channelId, table.templateName),
+  };
+});
+
+// 18. Channel Rate Limits Table
+export const channelRateLimits = supportAgentSchema.table('channel_rate_limits', {
+  ...commonColumns,
+  channelId: uuid('channel_id').references(() => channels.id, { onDelete: 'cascade' }).notNull(),
+  providerLimit: integer('provider_limit').default(100).notNull(),
+  tenantLimit: integer('tenant_limit').default(50).notNull(),
+  currentUsage: integer('current_usage').default(0).notNull(),
+  resetAt: timestamp('reset_at').notNull(),
+}, (table) => {
+  return {
+    tenantIdIdx: index('idx_channel_rate_limits_tenant').on(table.tenantId),
+    channelUnique: uniqueIndex('uq_channel_rate_limits_channel').on(table.tenantId, table.channelId),
+  };
+});
