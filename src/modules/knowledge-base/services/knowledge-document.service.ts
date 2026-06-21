@@ -69,8 +69,30 @@ export class KnowledgeDocumentService {
     return doc;
   }
 
+  public async getDocumentBySlug(
+    tenantId: string,
+    slug: string,
+  ): Promise<KnowledgeDocument> {
+    const doc = await this.repository.findBySlug(tenantId, slug);
+    if (!doc) {
+      throw new NotFoundException(`Knowledge Document "${slug}" not found`);
+    }
+    return doc;
+  }
+
   public async findDocuments(tenantId: string, options: any) {
     return this.repository.findDocuments(tenantId, options);
+  }
+
+  public async getDocumentContent(
+    tenantId: string,
+    documentId: string,
+  ): Promise<string> {
+    const chunks = await this.repository.getChunksByDocumentId(
+      documentId,
+      tenantId,
+    );
+    return chunks.map((c) => c.content).join('\n\n');
   }
 
   public async updateDocument(

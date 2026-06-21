@@ -38,6 +38,7 @@ import {
 } from './modules/ai-integration/ai-integration.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { WidgetModule } from './modules/widget/widget.module';
+import { PublicHelpModule } from './modules/public-help/public-help.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HardeningModule } from './modules/hardening/hardening.module';
 
@@ -169,6 +170,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     QueueModule,
     SettingsModule,
     WidgetModule,
+    PublicHelpModule,
     ScheduleModule.forRoot(),
     HardeningModule,
     TenantModule,
