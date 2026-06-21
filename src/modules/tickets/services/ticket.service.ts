@@ -1,6 +1,14 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  Logger,
+  forwardRef,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
+import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
 import type {
   ITicketRepository,
   TicketQueryOptions,
@@ -32,6 +40,8 @@ import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.servic
 
 @Injectable()
 export class TicketService {
+  private readonly logger = new Logger(TicketService.name);
+
   constructor(
     @Inject('ITicketRepository')
     private readonly ticketRepo: ITicketRepository,
@@ -41,7 +51,27 @@ export class TicketService {
     private readonly queueService: QueueService,
     private readonly auditService: AuditService,
     private readonly realtime: InboxRealtimeService,
+    @Inject(forwardRef(() => WorkflowEngineService))
+    private readonly workflowEngineService: WorkflowEngineService,
   ) {}
+
+  private async evaluateWorkflowTriggers(
+    tenantId: string,
+    triggerType: TriggerTypeEnum,
+    context: Record<string, any>,
+  ): Promise<void> {
+    try {
+      await this.workflowEngineService.evaluateEventTriggers(
+        tenantId,
+        triggerType,
+        context,
+      );
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to evaluate workflow triggers for ${triggerType}: ${err.message}`,
+      );
+    }
+  }
 
   private async persist(ticket: Ticket, tenantId: string): Promise<void> {
     await this.ticketRepo.save(ticket, tenantId);
@@ -111,6 +141,18 @@ export class TicketService {
       details: `Created ticket ${ticket.ticketNumber.value} (${ticketId})`,
     });
 
+    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.TICKET_CREATED, {
+      id: ticket.id,
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticketNumber.value,
+      status: ticket.status.value,
+      priority: ticket.priority.value,
+      customerId: ticket.customerId,
+      conversationId: ticket.conversationId,
+      categoryId: ticket.categoryId,
+      source: ticket.source.value,
+    });
+
     return ticket;
   }
 
@@ -152,6 +194,18 @@ export class TicketService {
       action: 'TICKET_UPDATE',
       details: `Updated ticket ${id}`,
     });
+
+    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.TICKET_UPDATED, {
+      id: ticket.id,
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticketNumber.value,
+      status: ticket.status.value,
+      priority: ticket.priority.value,
+      customerId: ticket.customerId,
+      conversationId: ticket.conversationId,
+      categoryId: ticket.categoryId,
+    });
+
     return ticket;
   }
 

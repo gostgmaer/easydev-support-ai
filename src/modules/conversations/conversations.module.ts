@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CustomersModule } from '../customers/customers.module';
 import { TeamsModule } from '../teams/teams.module';
+import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
 
 import { ConversationController } from './controllers/conversation.controller';
 import { ConversationAssignmentController } from './controllers/conversation-assignment.controller';
@@ -44,6 +45,7 @@ import { Attachment } from './entities/attachment.entity';
     ]),
     CustomersModule,
     TeamsModule,
+    forwardRef(() => AiIntegrationModule),
   ],
   controllers: [
     ConversationController,

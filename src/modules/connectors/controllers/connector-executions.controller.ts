@@ -71,4 +71,17 @@ export class ConnectorExecutionsController {
     );
     return execution.toJSON();
   }
+
+  @Post('executions/:executionId/retry')
+  @Roles('tenant_admin', 'agent')
+  public async retryExecution(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('executionId') executionId: string,
+  ) {
+    const result = await this.executionService.retryExecution(
+      tenantId,
+      executionId,
+    );
+    return { success: true, result };
+  }
 }

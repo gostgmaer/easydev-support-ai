@@ -7,6 +7,7 @@ import { ConversationAssignmentService } from '../services/conversation-assignme
 import { ConversationSummaryService } from '../services/conversation-summary.service';
 import { InboxService } from '../services/inbox.service';
 import { ConversationsGateway } from '../conversations.gateway';
+import { AiResponseService } from '../../ai-integration/services/ai-response.service';
 
 @Processor('conversation-queue')
 @Injectable()
@@ -16,6 +17,7 @@ export class ConversationQueueProcessor extends BaseWorker {
     private readonly assignmentService: ConversationAssignmentService,
     private readonly summaryService: ConversationSummaryService,
     private readonly inboxService: InboxService,
+    private readonly aiResponseService: AiResponseService,
     @Optional() private readonly gateway?: ConversationsGateway,
     @Optional() queueService?: QueueService,
   ) {
@@ -77,6 +79,16 @@ export class ConversationQueueProcessor extends BaseWorker {
           job.data.userId,
         );
         return { conversationId: archived.id, status: archived.status.value };
+      }
+
+      case 'ai-process-message': {
+        this.logger.log(`Processing ai-process-message job ${job.id}`);
+        return this.aiResponseService.processInboundMessage(
+          tenantId,
+          job.data.messageId,
+          job.data.conversationId,
+          job.data.messageText,
+        );
       }
 
       case 'conversation-analytics-job': {

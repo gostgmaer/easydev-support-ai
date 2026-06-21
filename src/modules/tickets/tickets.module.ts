@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { CustomersModule } from '../customers/customers.module';
 import { TeamsModule } from '../teams/teams.module';
 import { InboxModule } from '../inbox/inbox.module';
+import { WorkflowsModule } from '../workflows/workflows.module';
 
 import { TicketController } from './controllers/ticket.controller';
 import { TicketCommentController } from './controllers/ticket-comment.controller';
@@ -28,7 +29,13 @@ import { TicketQueueProcessor } from './jobs/ticket-queue.processor';
 import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), CustomersModule, TeamsModule, InboxModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    CustomersModule,
+    TeamsModule,
+    InboxModule,
+    forwardRef(() => WorkflowsModule),
+  ],
   controllers: [
     TicketController,
     TicketCommentController,

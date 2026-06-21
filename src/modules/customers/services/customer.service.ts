@@ -3,6 +3,8 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  Logger,
+  forwardRef,
 } from '@nestjs/common';
 import type { ICustomerRepository } from '../repositories/customer-repository.interface';
 import { Customer } from '../domain/customer.aggregate';
@@ -23,16 +25,40 @@ import {
 } from '../dtos';
 import { CustomerEventPublisher } from './customer-event.publisher';
 import { AuditService } from '../../audit/audit.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
+import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
 import { randomUUID } from 'crypto';
 
 @Injectable()
 export class CustomerService {
+  private readonly logger = new Logger(CustomerService.name);
+
   constructor(
     @Inject('ICustomerRepository')
     private readonly customerRepo: ICustomerRepository,
     private readonly eventPublisher: CustomerEventPublisher,
     private readonly auditService: AuditService,
+    @Inject(forwardRef(() => WorkflowEngineService))
+    private readonly workflowEngineService: WorkflowEngineService,
   ) {}
+
+  private async evaluateWorkflowTriggers(
+    tenantId: string,
+    triggerType: TriggerTypeEnum,
+    context: Record<string, any>,
+  ): Promise<void> {
+    try {
+      await this.workflowEngineService.evaluateEventTriggers(
+        tenantId,
+        triggerType,
+        context,
+      );
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to evaluate workflow triggers for ${triggerType}: ${err.message}`,
+      );
+    }
+  }
 
   async create(
     tenantId: string,
@@ -111,6 +137,14 @@ export class CustomerService {
       details: `Created customer ${customer.id} (${customer.email.value})`,
     });
 
+    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.CUSTOMER_CREATED, {
+      id: customer.id,
+      customerId: customer.id,
+      email: customer.email.value,
+      status: customer.status.value,
+      source: customer.source,
+    });
+
     return saved;
   }
 
@@ -180,6 +214,13 @@ export class CustomerService {
       userId,
       action: 'CUSTOMER_UPDATE',
       details: `Updated customer ${customer.id}`,
+    });
+
+    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.CUSTOMER_UPDATED, {
+      id: customer.id,
+      customerId: customer.id,
+      email: customer.email.value,
+      status: customer.status.value,
     });
 
     return saved;

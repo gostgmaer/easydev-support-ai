@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Job } from 'bullmq';
 import { randomUUID } from 'crypto';
 import { TicketQueueProcessor } from './ticket-queue.processor';
+import { TicketService } from '../services/ticket.service';
 import { TicketAssignmentService } from '../services/ticket-assignment.service';
 import { TicketEscalationService } from '../services/ticket-escalation.service';
 import { TicketSLAService } from '../services/ticket-sla.service';
@@ -10,6 +11,7 @@ import { QueueService } from '@easydev/shared-queues';
 describe('TicketQueueProcessor', () => {
   let processor: TicketQueueProcessor;
 
+  const mockTicketService = { create: jest.fn() };
   const mockAssignment = { autoAssign: jest.fn() };
   const mockEscalation = { escalate: jest.fn() };
   const mockSla = { runBreachSweep: jest.fn() };
@@ -21,6 +23,7 @@ describe('TicketQueueProcessor', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TicketQueueProcessor,
+        { provide: TicketService, useValue: mockTicketService },
         { provide: TicketAssignmentService, useValue: mockAssignment },
         { provide: TicketEscalationService, useValue: mockEscalation },
         { provide: TicketSLAService, useValue: mockSla },

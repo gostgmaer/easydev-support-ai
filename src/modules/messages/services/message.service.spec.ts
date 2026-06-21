@@ -8,6 +8,7 @@ import { ConversationService } from '../../conversations/services/conversation.s
 import { AuditService } from '../../audit/audit.service';
 import { WidgetSessionService } from '../../widget/services/widget-session.service';
 import { WidgetRealtimeService } from '../../widget/services/widget-realtime.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import { Message } from '../domain/message.aggregate';
 import {
   MessageType,
@@ -66,6 +67,7 @@ describe('MessageService', () => {
     findSessionIdsByConversation: jest.fn().mockResolvedValue([]),
   };
   const mockWidgetRealtimeService = { sendNewMessage: jest.fn() };
+  const mockWorkflowEngineService = { evaluateEventTriggers: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -78,6 +80,7 @@ describe('MessageService', () => {
         { provide: AuditService, useValue: mockAudit },
         { provide: WidgetSessionService, useValue: mockWidgetSessionService },
         { provide: WidgetRealtimeService, useValue: mockWidgetRealtimeService },
+        { provide: WorkflowEngineService, useValue: mockWorkflowEngineService },
       ],
     }).compile();
 

@@ -42,6 +42,8 @@ import { MessagesModule } from '../messages/messages.module';
 import { CustomersModule } from '../customers/customers.module';
 import { ConnectorsModule } from '../connectors/connectors.module';
 import { InboxModule } from '../inbox/inbox.module';
+import { WorkflowsModule } from '../workflows/workflows.module';
+import { KnowledgeBaseModule } from '../knowledge-base/knowledge-base.module';
 
 @Module({
   imports: [
@@ -57,7 +59,9 @@ import { InboxModule } from '../inbox/inbox.module';
     forwardRef(() => MessagesModule),
     forwardRef(() => CustomersModule),
     forwardRef(() => ConnectorsModule),
+    forwardRef(() => WorkflowsModule),
     InboxModule,
+    KnowledgeBaseModule,
   ],
   controllers: [
     AiAgentController,

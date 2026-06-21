@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { WorkflowTriggerService } from './workflow-trigger.service';
 import { WorkflowExecutionService } from './workflow-execution.service';
 import { WorkflowActionService } from './workflow-action.service';
@@ -14,6 +14,7 @@ export class WorkflowEngineService {
   constructor(
     private readonly triggerService: WorkflowTriggerService,
     private readonly executionService: WorkflowExecutionService,
+    @Inject(forwardRef(() => WorkflowActionService))
     private readonly actionService: WorkflowActionService,
     private readonly auditService: WorkflowAuditService,
     private readonly templateService: WorkflowTemplateService,

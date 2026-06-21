@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { ConversationsModule } from '../conversations/conversations.module';
 import { ChannelsModule } from '../channels/channels.module';
 import { CustomersModule } from '../customers/customers.module';
 import { WidgetModule } from '../widget/widget.module';
+import { WorkflowsModule } from '../workflows/workflows.module';
 
 import { MessageController } from './controllers/message.controller';
 import { AttachmentController } from './controllers/attachment.controller';
@@ -30,7 +31,13 @@ import { DrizzleMessageDraftRepository } from './repositories/drizzle-message-dr
 import { MessageQueueProcessor } from './jobs/message-queue.processor';
 
 @Module({
-  imports: [ConversationsModule, ChannelsModule, CustomersModule, WidgetModule],
+  imports: [
+    ConversationsModule,
+    ChannelsModule,
+    CustomersModule,
+    WidgetModule,
+    forwardRef(() => WorkflowsModule),
+  ],
   controllers: [
     MessageController,
     AttachmentController,

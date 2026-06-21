@@ -2,14 +2,17 @@ import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
+import { TicketService } from '../services/ticket.service';
 import { TicketAssignmentService } from '../services/ticket-assignment.service';
 import { TicketEscalationService } from '../services/ticket-escalation.service';
 import { TicketSLAService } from '../services/ticket-sla.service';
+import { CreateTicketDto } from '../dtos';
 
 @Processor('ticket-queue')
 @Injectable()
 export class TicketQueueProcessor extends BaseWorker {
   constructor(
+    private readonly ticketService: TicketService,
     private readonly assignmentService: TicketAssignmentService,
     private readonly escalationService: TicketEscalationService,
     private readonly slaService: TicketSLAService,
@@ -36,6 +39,19 @@ export class TicketQueueProcessor extends BaseWorker {
           job.data.userId,
         );
         return { ticketId: ticket.id, assignedAgentId: ticket.assignedAgentId };
+      }
+
+      case 'ticket-create-from-conversation': {
+        this.logger.log(`Processing ticket-create-from-conversation ${job.id}`);
+        const ticket = await this.ticketService.create(tenantId, {
+          subject: job.data.subject,
+          description: job.data.description,
+          customerId: job.data.customerId,
+          conversationId: job.data.conversationId,
+          priority: job.data.priority,
+          source: job.data.source,
+        } as CreateTicketDto);
+        return { ticketId: ticket.id };
       }
 
       case 'ticket-escalation-job': {

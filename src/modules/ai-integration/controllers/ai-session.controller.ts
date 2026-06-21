@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Body,
   Headers,
   Param,
@@ -11,11 +12,15 @@ import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AiConversationService } from '../services/ai-conversation.service';
+import { AiResponseService } from '../services/ai-response.service';
 
 @Controller('v1/ai-sessions')
 @UseGuards(TenantGuard, RbacGuard)
 export class AiSessionController {
-  constructor(private readonly conversationService: AiConversationService) {}
+  constructor(
+    private readonly conversationService: AiConversationService,
+    private readonly responseService: AiResponseService,
+  ) {}
 
   @Get('conversation/:conversationId')
   @Roles('tenant_admin', 'agent')
@@ -45,5 +50,17 @@ export class AiSessionController {
       state,
     );
     return session.toJSON();
+  }
+
+  @Post('conversation/:conversationId/suggest')
+  @Roles('tenant_admin', 'agent')
+  public async suggestDraft(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
+    return this.responseService.generateDraftSuggestion(
+      tenantId,
+      conversationId,
+    );
   }
 }

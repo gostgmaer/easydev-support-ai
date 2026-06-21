@@ -15,6 +15,7 @@ import { ConnectorFactory } from '../engine/connector-factory';
 import { CredentialManager } from '../engine/credential-manager';
 import { RetryEngine } from '../engine/retry-engine';
 import { QueueService } from '@easydev/shared-queues';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import {
   ConnectorTypeEnum,
   AuthTypeEnum,
@@ -58,6 +59,10 @@ describe('Connector Module Services', () => {
     addJob: jest.fn(),
   };
 
+  const mockWorkflowEngineService = {
+    evaluateEventTriggers: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -83,6 +88,10 @@ describe('Connector Module Services', () => {
         {
           provide: QueueService,
           useValue: mockQueueService,
+        },
+        {
+          provide: WorkflowEngineService,
+          useValue: mockWorkflowEngineService,
         },
       ],
     }).compile();

@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import type { IAiRepository } from '../repositories/ai-repository.interface';
 import { AiEscalation } from '../domain/entities';
 import {
@@ -13,6 +19,8 @@ import {
 import { CustomerService } from '../../customers/services/customer.service';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
+import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -26,6 +34,8 @@ export class AiEscalationService {
     private readonly conversationService: ConversationService,
     private readonly eventPublisher: AiEventPublisher,
     private readonly realtime: InboxRealtimeService,
+    @Inject(forwardRef(() => WorkflowEngineService))
+    private readonly workflowEngineService: WorkflowEngineService,
   ) {}
 
   public async evaluateEscalation(
@@ -173,6 +183,26 @@ export class AiEscalationService {
     } catch (err: any) {
       this.logger.warn(
         `Failed to update conversation priorities: ${err.message}`,
+      );
+    }
+
+    try {
+      await this.workflowEngineService.evaluateEventTriggers(
+        tenantId,
+        TriggerTypeEnum.AI_ESCALATED,
+        {
+          id: escalation.id,
+          escalationId: escalation.id,
+          conversationId,
+          reason,
+          confidenceScore,
+          sentimentScore,
+          target,
+        },
+      );
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to evaluate workflow triggers for AI_ESCALATED: ${err.message}`,
       );
     }
 

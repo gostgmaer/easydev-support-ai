@@ -2,7 +2,6 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
-const isPgBouncer = process.env.PGBOUNCER_MODE === 'true';
 const slowQueryThresholdMs = parseInt(
   process.env.SLOW_QUERY_THRESHOLD_MS || '100',
   10,

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CustomerService } from './customer.service';
 import { CustomerEventPublisher } from './customer-event.publisher';
 import { AuditService } from '../../audit/audit.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import { Customer } from '../domain/customer.aggregate';
 import {
   CustomerEmail,
@@ -45,6 +46,10 @@ describe('CustomerService', () => {
     log: jest.fn(),
   };
 
+  const mockWorkflowEngineService = {
+    evaluateEventTriggers: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,6 +57,7 @@ describe('CustomerService', () => {
         { provide: 'ICustomerRepository', useValue: mockCustomerRepo },
         { provide: CustomerEventPublisher, useValue: mockEventPublisher },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: WorkflowEngineService, useValue: mockWorkflowEngineService },
       ],
     }).compile();
 

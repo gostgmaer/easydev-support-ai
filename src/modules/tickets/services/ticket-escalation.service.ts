@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  Logger,
+  forwardRef,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import type { ITicketRepository } from '../repositories/ticket-repository.interface';
@@ -6,6 +12,8 @@ import { Ticket } from '../domain/ticket.aggregate';
 import { TicketAssignment } from '../domain/ticket-assignment.entity';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
+import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
 
 export interface EscalationSignals {
   aiConfidence?: number;
@@ -37,6 +45,8 @@ export class TicketEscalationService {
     private readonly queueService: QueueService,
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
+    @Inject(forwardRef(() => WorkflowEngineService))
+    private readonly workflowEngineService: WorkflowEngineService,
   ) {}
 
   private async getOrThrow(tenantId: string, id: string): Promise<Ticket> {
@@ -132,6 +142,26 @@ export class TicketEscalationService {
       action: 'TICKET_ESCALATE',
       details: `Escalated ticket ${ticketId} (${reason}) to ${ticket.priority.value}`,
     });
+
+    try {
+      await this.workflowEngineService.evaluateEventTriggers(
+        tenantId,
+        TriggerTypeEnum.TICKET_ESCALATED,
+        {
+          id: ticket.id,
+          ticketId: ticket.id,
+          reason,
+          status: ticket.status.value,
+          priority: ticket.priority.value,
+          customerId: ticket.customerId,
+          conversationId: ticket.conversationId,
+        },
+      );
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to evaluate workflow triggers for TICKET_ESCALATED: ${err.message}`,
+      );
+    }
 
     return ticket;
   }

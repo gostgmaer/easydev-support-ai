@@ -54,6 +54,9 @@ import { MessageService } from '../../messages/services/message.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
+import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
+import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
 
 // Guards & Decorators
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -145,6 +148,18 @@ describe('AI Integration Module Services and Controllers', () => {
     emitAiSessionUpdate: jest.fn(),
   };
 
+  const mockWorkflowEngineService = {
+    evaluateEventTriggers: jest.fn(),
+  };
+
+  const mockKnowledgeSearchService = {
+    search: jest.fn(),
+  };
+
+  const mockKnowledgeChunkService = {
+    getChunks: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [
@@ -179,6 +194,15 @@ describe('AI Integration Module Services and Controllers', () => {
           useValue: mockConnectorExecutionService,
         },
         { provide: InboxRealtimeService, useValue: mockRealtimeService },
+        { provide: WorkflowEngineService, useValue: mockWorkflowEngineService },
+        {
+          provide: KnowledgeSearchService,
+          useValue: mockKnowledgeSearchService,
+        },
+        {
+          provide: KnowledgeChunkService,
+          useValue: mockKnowledgeChunkService,
+        },
       ],
     })
       .overrideGuard(TenantGuard)

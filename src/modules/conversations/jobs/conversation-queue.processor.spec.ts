@@ -6,6 +6,7 @@ import { ConversationService } from '../services/conversation.service';
 import { ConversationAssignmentService } from '../services/conversation-assignment.service';
 import { ConversationSummaryService } from '../services/conversation-summary.service';
 import { InboxService } from '../services/inbox.service';
+import { AiResponseService } from '../../ai-integration/services/ai-response.service';
 
 describe('ConversationQueueProcessor', () => {
   let processor: ConversationQueueProcessor;
@@ -14,6 +15,7 @@ describe('ConversationQueueProcessor', () => {
   const mockAssignmentService = { autoAssign: jest.fn() };
   const mockSummaryService = { rebuild: jest.fn() };
   const mockInboxService = { invalidate: jest.fn() };
+  const mockAiResponseService = { processInboundMessage: jest.fn() };
 
   const tenantId = randomUUID();
 
@@ -28,6 +30,7 @@ describe('ConversationQueueProcessor', () => {
         },
         { provide: ConversationSummaryService, useValue: mockSummaryService },
         { provide: InboxService, useValue: mockInboxService },
+        { provide: AiResponseService, useValue: mockAiResponseService },
       ],
     }).compile();
 

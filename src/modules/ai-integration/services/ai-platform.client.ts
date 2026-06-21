@@ -225,6 +225,68 @@ export class AIPlatformClient {
     }
   }
 
+  public async interpretConnectorResult(
+    tenantId: string,
+    connectorType: string,
+    resultData: any,
+    context: Record<string, any> = {},
+  ): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/v1/connectors/interpret`,
+        {
+          tenantId,
+          connectorType,
+          resultData,
+          context,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 20000,
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Interpret connector result failed: ${error.message}`);
+      throw new Error(
+        `AI Platform interpret connector result failed: ${error.response?.data?.message || error.message}`,
+      );
+    }
+  }
+
+  public async generateEmailDraft(
+    tenantId: string,
+    context: Array<{ role: string; content: string }>,
+    lastCustomerMessage: string,
+  ): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/v1/email/draft`,
+        {
+          tenantId,
+          context,
+          lastCustomerMessage,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000,
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Generate email draft failed: ${error.message}`);
+      throw new Error(
+        `AI Platform generate email draft failed: ${error.response?.data?.message || error.message}`,
+      );
+    }
+  }
+
   public async submitToolResult(
     tenantId: string,
     workflowId: string,

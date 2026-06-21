@@ -3,6 +3,8 @@ import {
   Inject,
   NotFoundException,
   BadRequestException,
+  Logger,
+  forwardRef,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type {
@@ -32,9 +34,13 @@ import { ConversationService } from '../../conversations/services/conversation.s
 import { AuditService } from '../../audit/audit.service';
 import { WidgetSessionService } from '../../widget/services/widget-session.service';
 import { WidgetRealtimeService } from '../../widget/services/widget-realtime.service';
+import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
+import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
 
 @Injectable()
 export class MessageService {
+  private readonly logger = new Logger(MessageService.name);
+
   constructor(
     @Inject('IMessageRepository')
     private readonly messageRepo: IMessageRepository,
@@ -44,6 +50,8 @@ export class MessageService {
     private readonly auditService: AuditService,
     private readonly widgetSessionService: WidgetSessionService,
     private readonly widgetRealtimeService: WidgetRealtimeService,
+    @Inject(forwardRef(() => WorkflowEngineService))
+    private readonly workflowEngineService: WorkflowEngineService,
   ) {}
 
   private async persist(message: Message, tenantId: string): Promise<void> {
@@ -122,6 +130,27 @@ export class MessageService {
       action: 'MESSAGE_CREATE',
       details: `Created ${direction} message ${messageId} in conversation ${dto.conversationId}`,
     });
+
+    if (direction === MessageDirectionEnum.INBOUND) {
+      try {
+        await this.workflowEngineService.evaluateEventTriggers(
+          tenantId,
+          TriggerTypeEnum.MESSAGE_RECEIVED,
+          {
+            id: message.id,
+            messageId: message.id,
+            conversationId: message.conversationId,
+            channelId: message.channelId,
+            customerId: message.customerId,
+            content: message.content,
+          },
+        );
+      } catch (err: any) {
+        this.logger.warn(
+          `Failed to evaluate workflow triggers for MESSAGE_RECEIVED: ${err.message}`,
+        );
+      }
+    }
 
     return message;
   }

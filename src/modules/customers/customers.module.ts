@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WorkflowsModule } from '../workflows/workflows.module';
 import { CustomerController } from './controllers/customer.controller';
 import { CustomerSegmentController } from './controllers/customer-segment.controller';
 import { CustomerMetricsController } from './controllers/customer-metrics.controller';
@@ -21,7 +22,10 @@ import { Customer } from './entities/customer.entity';
 import { CustomerSegment } from './entities/customer-segment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Customer, CustomerSegment])],
+  imports: [
+    TypeOrmModule.forFeature([Customer, CustomerSegment]),
+    forwardRef(() => WorkflowsModule),
+  ],
   controllers: [
     CustomerController,
     CustomerSegmentController,

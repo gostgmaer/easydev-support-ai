@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { MessageService } from '../../messages/services/message.service';
 import { AiRoutingService } from './ai-routing.service';
@@ -7,11 +8,16 @@ import { AiEscalationService } from './ai-escalation.service';
 import { AiWorkflowService } from './ai-workflow.service';
 import { AiUsageService } from './ai-usage.service';
 import { AIPlatformClient } from './ai-platform.client';
+import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
+import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
 import {
   MessageDirectionEnum,
   MessageTypeEnum,
 } from '../../messages/domain/value-objects';
 import { ResponseTypeEnum } from '../domain/value-objects';
+
+const KNOWLEDGE_CONTEXT_DOC_LIMIT = 3;
+const KNOWLEDGE_CONTEXT_EXCERPT_LENGTH = 800;
 
 @Injectable()
 export class AiResponseService {
@@ -26,6 +32,8 @@ export class AiResponseService {
     private readonly workflowService: AiWorkflowService,
     private readonly usageService: AiUsageService,
     private readonly aiClient: AIPlatformClient,
+    private readonly knowledgeSearchService: KnowledgeSearchService,
+    private readonly knowledgeChunkService: KnowledgeChunkService,
   ) {}
 
   public async processInboundMessage(
@@ -94,14 +102,25 @@ export class AiResponseService {
           conversationId,
         );
 
+      // 5b. Knowledge Retrieval (RAG grounding)
+      const knowledgeContext = await this.retrieveKnowledgeContext(
+        tenantId,
+        messageText,
+      );
+
+      const baseSystemPrompt =
+        agent.systemPromptReference || 'You are an AI support agent.';
+      const groundedSystemPrompt = knowledgeContext
+        ? `${baseSystemPrompt}\n\nUse the following knowledge base articles to answer the customer's question if relevant. Ignore them if they don't apply:\n\n${knowledgeContext}`
+        : baseSystemPrompt;
+
       const execution = await this.workflowService.triggerWorkflow(
         tenantId,
         workflowId,
         conversationId,
         {
           prompt: messageText,
-          systemPrompt:
-            agent.systemPromptReference || 'You are an AI support agent.',
+          systemPrompt: groundedSystemPrompt,
           history: recallContext || [],
           configuration: agent.configuration,
         },
@@ -111,7 +130,7 @@ export class AiResponseService {
       const generateResult = await this.aiClient.generate(
         tenantId,
         messageText,
-        agent.systemPromptReference || '',
+        groundedSystemPrompt,
         agent.configuration || {},
       );
 
@@ -186,6 +205,132 @@ export class AiResponseService {
         -1.0,
       );
       throw err;
+    }
+  }
+
+  /**
+   * On-demand counterpart to processInboundMessage: an agent asks the AI for a
+   * suggested reply instead of waiting for the auto-pipeline. Generates a draft
+   * grounded the same way (knowledge retrieval + system prompt), but returns it
+   * for the agent to review/edit/send rather than auto-posting it as a message.
+   */
+  public async generateDraftSuggestion(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<{ content: string; confidence: number; cost: number }> {
+    const conversation = await this.conversationService.findById(
+      tenantId,
+      conversationId,
+    );
+    if (!conversation) {
+      throw new NotFoundException(`Conversation ${conversationId} not found`);
+    }
+
+    const agent = await this.routingService.selectAgent(tenantId, {
+      language: conversation.language?.value || 'en',
+    });
+    if (!agent) {
+      throw new NotFoundException(
+        `No active AI Agent found for tenant ${tenantId}`,
+      );
+    }
+
+    const latestMessages = await this.messageService.findByConversation(
+      tenantId,
+      conversationId,
+      {
+        sortOrder: 'DESC',
+        limit: 1,
+        direction: MessageDirectionEnum.INBOUND,
+      } as any,
+    );
+    const promptText = latestMessages.data[0]?.content || '';
+
+    const knowledgeContext = await this.retrieveKnowledgeContext(
+      tenantId,
+      promptText,
+    );
+
+    const baseSystemPrompt =
+      agent.systemPromptReference || 'You are an AI support agent.';
+    const groundedSystemPrompt = knowledgeContext
+      ? `${baseSystemPrompt}\n\nUse the following knowledge base articles to answer the customer's question if relevant. Ignore them if they don't apply:\n\n${knowledgeContext}`
+      : baseSystemPrompt;
+
+    const generateResult = await this.aiClient.generate(
+      tenantId,
+      promptText,
+      groundedSystemPrompt,
+      agent.configuration || {},
+    );
+
+    const replyText =
+      generateResult.text ||
+      'I am sorry, I could not generate a suggestion at this time.';
+    const confidence = generateResult.confidence || 0.9;
+    const tokensUsed = generateResult.tokensUsed || 100;
+    const cost = generateResult.cost || 0.002;
+    const maskedText = this.maskSensitiveData(replyText);
+
+    await this.usageService.logResponse(
+      tenantId,
+      conversationId,
+      randomUUID(),
+      undefined,
+      ResponseTypeEnum.SUGGESTION,
+      0,
+      confidence,
+      tokensUsed,
+      cost,
+    );
+    await this.usageService.recordUsage(
+      tenantId,
+      agent.id,
+      tokensUsed,
+      cost,
+      false,
+      0,
+    );
+
+    return { content: maskedText, confidence, cost };
+  }
+
+  private async retrieveKnowledgeContext(
+    tenantId: string,
+    query: string,
+  ): Promise<string> {
+    try {
+      const results = await this.knowledgeSearchService.search(tenantId, {
+        query,
+        limit: KNOWLEDGE_CONTEXT_DOC_LIMIT,
+      } as any);
+
+      if (!results || results.length === 0) {
+        return '';
+      }
+
+      const excerpts = await Promise.all(
+        results
+          .slice(0, KNOWLEDGE_CONTEXT_DOC_LIMIT)
+          .map(async (result: any) => {
+            const chunks = await this.knowledgeChunkService.getChunks(
+              tenantId,
+              result.document.id,
+            );
+            const content =
+              chunks[0]?.content?.slice(0, KNOWLEDGE_CONTEXT_EXCERPT_LENGTH) ||
+              '';
+            if (!content) {
+              return '';
+            }
+            return `[${result.document.title}]\n${content}`;
+          }),
+      );
+
+      return excerpts.filter((excerpt) => excerpt.length > 0).join('\n\n');
+    } catch (err: any) {
+      this.logger.warn(`Knowledge retrieval failed: ${err.message}`);
+      return '';
     }
   }
 
