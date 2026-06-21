@@ -6,6 +6,8 @@ import { MessageEventPublisher } from './message-event.publisher';
 import { MessageReadModelService } from './message-read-model.service';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { AuditService } from '../../audit/audit.service';
+import { WidgetSessionService } from '../../widget/services/widget-session.service';
+import { WidgetRealtimeService } from '../../widget/services/widget-realtime.service';
 import { Message } from '../domain/message.aggregate';
 import {
   MessageType,
@@ -60,6 +62,10 @@ describe('MessageService', () => {
     }),
   };
   const mockAudit = { log: jest.fn() };
+  const mockWidgetSessionService = {
+    findSessionIdsByConversation: jest.fn().mockResolvedValue([]),
+  };
+  const mockWidgetRealtimeService = { sendNewMessage: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -70,6 +76,8 @@ describe('MessageService', () => {
         { provide: MessageReadModelService, useValue: mockReadModel },
         { provide: ConversationService, useValue: mockConversations },
         { provide: AuditService, useValue: mockAudit },
+        { provide: WidgetSessionService, useValue: mockWidgetSessionService },
+        { provide: WidgetRealtimeService, useValue: mockWidgetRealtimeService },
       ],
     }).compile();
 

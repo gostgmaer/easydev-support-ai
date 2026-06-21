@@ -127,4 +127,9 @@ export class WidgetSessionService {
       throw new UnauthorizedException('Token validation failed');
     }
   }
+
+  async findSessionIdsByConversation(tenantId: string, conversationId: string): Promise<string[]> {
+    const links = await this.widgetRepo.getConversationLinksByConversationId(tenantId, conversationId);
+    return links.map((link) => link.widgetSessionId);
+  }
 }

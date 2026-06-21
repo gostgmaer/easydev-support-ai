@@ -30,6 +30,8 @@ import { MessageEventPublisher } from './message-event.publisher';
 import { MessageReadModelService } from './message-read-model.service';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { AuditService } from '../../audit/audit.service';
+import { WidgetSessionService } from '../../widget/services/widget-session.service';
+import { WidgetRealtimeService } from '../../widget/services/widget-realtime.service';
 
 @Injectable()
 export class MessageService {
@@ -40,6 +42,8 @@ export class MessageService {
     private readonly readModel: MessageReadModelService,
     private readonly conversationService: ConversationService,
     private readonly auditService: AuditService,
+    private readonly widgetSessionService: WidgetSessionService,
+    private readonly widgetRealtimeService: WidgetRealtimeService,
   ) {}
 
   private async persist(message: Message, tenantId: string): Promise<void> {
@@ -47,6 +51,20 @@ export class MessageService {
     await this.readModel.applyMessage(tenantId, message);
     await this.eventPublisher.publishAll(message.domainEvents);
     message.clearEvents();
+
+    // Push outbound (agent/system/ai) messages to any widget session linked to this
+    // conversation, so a customer browsing the widget sees the reply in realtime.
+    if (message.direction.value === MessageDirectionEnum.OUTBOUND) {
+      const sessionIds = await this.widgetSessionService.findSessionIdsByConversation(
+        tenantId,
+        message.conversationId,
+      );
+      await Promise.all(
+        sessionIds.map((sessionId) =>
+          this.widgetRealtimeService.sendNewMessage(tenantId, sessionId, message.toJSON()),
+        ),
+      );
+    }
   }
 
   private async getOrThrow(tenantId: string, id: string): Promise<Message> {

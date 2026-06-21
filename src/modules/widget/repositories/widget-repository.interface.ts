@@ -39,6 +39,7 @@ export interface IWidgetRepository {
 
   saveConversation(conversation: WidgetConversation): Promise<void>;
   getConversationsBySession(tenantId: string, sessionId: string): Promise<WidgetConversation[]>;
+  getConversationLinksByConversationId(tenantId: string, conversationId: string): Promise<WidgetConversation[]>;
 
   saveAuthToken(authToken: WidgetAuthToken): Promise<void>;
   getAuthToken(tenantId: string, tokenHash: string): Promise<WidgetAuthToken | null>;

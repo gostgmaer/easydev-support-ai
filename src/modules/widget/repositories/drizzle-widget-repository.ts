@@ -572,6 +572,23 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }));
   }
 
+  async getConversationLinksByConversationId(tenantId: string, conversationId: string): Promise<WidgetConversation[]> {
+    const rows = await db
+      .select()
+      .from(schema.widgetConversations)
+      .where(and(
+        eq(schema.widgetConversations.tenantId, tenantId),
+        eq(schema.widgetConversations.conversationId, conversationId)
+      ));
+
+    return rows.map((row) => new WidgetConversation(row.id, {
+      tenantId: row.tenantId,
+      widgetSessionId: row.widgetSessionId,
+      conversationId: row.conversationId,
+      linkedAt: row.linkedAt,
+    }));
+  }
+
   // ------------ Widget Auth Token ------------
   async saveAuthToken(authToken: WidgetAuthToken): Promise<void> {
     const raw = {
