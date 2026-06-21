@@ -54,6 +54,10 @@ export class InboxRealtimeController {
         'inbox.counters',
         'inbox.typing',
         'inbox.read-receipt',
+        'ticket.updated',
+        'ai.escalation.updated',
+        'ai.session.updated',
+        'workflow.execution.updated',
       ],
     };
   }

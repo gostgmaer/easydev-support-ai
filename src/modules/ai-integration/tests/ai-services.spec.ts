@@ -53,6 +53,7 @@ import { ConversationService } from '../../conversations/services/conversation.s
 import { MessageService } from '../../messages/services/message.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 
 // Guards & Decorators
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -139,6 +140,11 @@ describe('AI Integration Module Services and Controllers', () => {
     executeCapability: jest.fn(),
   };
 
+  const mockRealtimeService = {
+    emitAiEscalation: jest.fn(),
+    emitAiSessionUpdate: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [
@@ -172,6 +178,7 @@ describe('AI Integration Module Services and Controllers', () => {
           provide: ConnectorExecutionService,
           useValue: mockConnectorExecutionService,
         },
+        { provide: InboxRealtimeService, useValue: mockRealtimeService },
       ],
     })
       .overrideGuard(TenantGuard)

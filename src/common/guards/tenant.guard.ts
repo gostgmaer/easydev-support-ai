@@ -41,15 +41,25 @@ export class TenantGuard implements CanActivate {
   }
 
   private async validateWithIam(token: string, tenantId: string): Promise<any> {
-    // Mocked integration with external IAM
-    // const res = await axios.post(process.env.EASYDEV_IAM_URL + '/validate', { token, tenantId });
-    // return res.data;
+    const iamUrl = process.env.EASYDEV_IAM_URL;
 
-    // Fallback Mock for local dev
-    return {
-      isValid: true,
-      userId: 'user-123',
-      roles: ['support_agent', 'tenant_admin'],
-    };
+    if (!iamUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('EASYDEV_IAM_URL is not configured');
+      }
+      // Local dev fallback only: no IAM service configured.
+      return {
+        isValid: true,
+        userId: 'user-123',
+        roles: ['support_agent', 'tenant_admin'],
+      };
+    }
+
+    const res = await axios.post(
+      `${iamUrl}/v1/validate`,
+      { token, tenantId },
+      { timeout: 3000 },
+    );
+    return res.data;
   }
 }

@@ -78,6 +78,7 @@ export class ChannelWebhookController {
     @Param('channelId') channelId: string,
     @Body() payload: any,
     @Headers() headers: Record<string, any>,
+    @Req() req?: any,
   ) {
     // Note: We return 200 OK instantly to avoid provider timeouts,
     // and queue message validation & routing processes asynchronously.
@@ -86,6 +87,7 @@ export class ChannelWebhookController {
       channelId,
       payload,
       headers,
+      req?.rawBody,
     );
     return { status: 'queued' };
   }

@@ -41,6 +41,7 @@ import { ConversationsModule } from '../conversations/conversations.module';
 import { MessagesModule } from '../messages/messages.module';
 import { CustomersModule } from '../customers/customers.module';
 import { ConnectorsModule } from '../connectors/connectors.module';
+import { InboxModule } from '../inbox/inbox.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ConnectorsModule } from '../connectors/connectors.module';
     forwardRef(() => MessagesModule),
     forwardRef(() => CustomersModule),
     forwardRef(() => ConnectorsModule),
+    InboxModule,
   ],
   controllers: [
     AiAgentController,

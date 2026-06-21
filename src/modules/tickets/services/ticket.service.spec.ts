@@ -7,6 +7,7 @@ import { TicketSLAService } from './ticket-sla.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { AuditService } from '../../audit/audit.service';
 import { QueueService } from '@easydev/shared-queues';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 import { Ticket } from '../domain/ticket.aggregate';
 import {
   TicketNumber,
@@ -60,6 +61,7 @@ describe('TicketService', () => {
   };
   const mockQueue = { addJob: jest.fn() };
   const mockAudit = { log: jest.fn() };
+  const mockRealtime = { emitTicketUpdate: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -71,6 +73,7 @@ describe('TicketService', () => {
         { provide: CustomerService, useValue: mockCustomers },
         { provide: QueueService, useValue: mockQueue },
         { provide: AuditService, useValue: mockAudit },
+        { provide: InboxRealtimeService, useValue: mockRealtime },
       ],
     }).compile();
 

@@ -153,6 +153,21 @@ export class InboxRealtimeService
   async emitCounters(tenantId: string, counters: any): Promise<void> {
     await this.broadcast(tenantId, 'inbox.counters', counters);
   }
+  async emitTicketUpdate(tenantId: string, payload: any): Promise<void> {
+    await this.broadcast(tenantId, 'ticket.updated', payload);
+  }
+  async emitAiEscalation(tenantId: string, payload: any): Promise<void> {
+    await this.broadcast(tenantId, 'ai.escalation.updated', payload);
+  }
+  async emitAiSessionUpdate(tenantId: string, payload: any): Promise<void> {
+    await this.broadcast(tenantId, 'ai.session.updated', payload);
+  }
+  async emitWorkflowExecutionUpdate(
+    tenantId: string,
+    payload: any,
+  ): Promise<void> {
+    await this.broadcast(tenantId, 'workflow.execution.updated', payload);
+  }
 
   // Client → server events
   @SubscribeMessage('typing')

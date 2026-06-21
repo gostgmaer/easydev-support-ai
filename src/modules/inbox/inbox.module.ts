@@ -70,6 +70,7 @@ import { InboxCleanupScheduler } from './jobs/inbox-cleanup.scheduler';
     InboxPresenceService,
     InboxProjectionService,
     InboxSearchService,
+    InboxRealtimeService,
     'IInboxRepository',
   ],
 })

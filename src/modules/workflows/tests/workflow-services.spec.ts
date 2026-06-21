@@ -54,6 +54,7 @@ import { ConnectorExecutionService } from '../../connectors/services/connector-e
 import { AiWorkflowService } from '../../ai-integration/services/ai-workflow.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { QueueService } from '@easydev/shared-queues';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 
 describe('Workflow Orchestration Services & Controllers', () => {
   const tenantId = '00000000-0000-0000-0000-000000000000';
@@ -135,6 +136,10 @@ describe('Workflow Orchestration Services & Controllers', () => {
     update: jest.fn().mockResolvedValue({ id: 'cust-1' }),
   };
 
+  const mockRealtimeService = {
+    emitWorkflowExecutionUpdate: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -182,6 +187,10 @@ describe('Workflow Orchestration Services & Controllers', () => {
         {
           provide: CustomerService,
           useValue: mockCustomerService,
+        },
+        {
+          provide: InboxRealtimeService,
+          useValue: mockRealtimeService,
         },
         WorkflowEventPublisher,
         WorkflowTemplateService,

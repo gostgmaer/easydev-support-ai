@@ -43,6 +43,8 @@ export interface IChannelConnector {
     payload: any,
     signature: string,
     secret: string,
+    headers?: Record<string, any>,
+    rawBody?: string | Buffer,
   ): Promise<boolean>;
 
   normalizeMessage(

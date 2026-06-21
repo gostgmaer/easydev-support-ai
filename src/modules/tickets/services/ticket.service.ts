@@ -28,6 +28,7 @@ import { TicketEventPublisher } from './ticket-event.publisher';
 import { TicketSLAService } from './ticket-sla.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { AuditService } from '../../audit/audit.service';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 
 @Injectable()
 export class TicketService {
@@ -39,12 +40,14 @@ export class TicketService {
     private readonly customerService: CustomerService,
     private readonly queueService: QueueService,
     private readonly auditService: AuditService,
+    private readonly realtime: InboxRealtimeService,
   ) {}
 
   private async persist(ticket: Ticket, tenantId: string): Promise<void> {
     await this.ticketRepo.save(ticket, tenantId);
     await this.eventPublisher.publishAll(ticket.domainEvents);
     ticket.clearEvents();
+    await this.realtime.emitTicketUpdate(tenantId, ticket.toJSON());
   }
 
   private async getOrThrow(tenantId: string, id: string): Promise<Ticket> {

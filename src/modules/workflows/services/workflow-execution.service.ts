@@ -9,6 +9,7 @@ import {
   WorkflowExecutionCompletedEvent,
   WorkflowExecutionFailedEvent,
 } from '@easydev/shared-events';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class WorkflowExecutionService {
     @Inject('IWorkflowRepository')
     private readonly repository: IWorkflowRepository,
     private readonly eventPublisher: WorkflowEventPublisher,
+    private readonly realtime: InboxRealtimeService,
   ) {}
 
   public async createExecution(
@@ -36,6 +38,7 @@ export class WorkflowExecutionService {
     });
 
     const saved = await this.repository.saveExecution(execution, tenantId);
+    await this.realtime.emitWorkflowExecutionUpdate(tenantId, saved.toJSON());
     return saved;
   }
 
@@ -67,6 +70,7 @@ export class WorkflowExecutionService {
     await this.eventPublisher.publish(
       new WorkflowExecutionStartedEvent(tenantId, id, execution.workflowId),
     );
+    await this.realtime.emitWorkflowExecutionUpdate(tenantId, saved.toJSON());
     return saved;
   }
 
@@ -86,6 +90,7 @@ export class WorkflowExecutionService {
         result,
       ),
     );
+    await this.realtime.emitWorkflowExecutionUpdate(tenantId, saved.toJSON());
     return saved;
   }
 
@@ -105,6 +110,7 @@ export class WorkflowExecutionService {
         error,
       ),
     );
+    await this.realtime.emitWorkflowExecutionUpdate(tenantId, saved.toJSON());
     return saved;
   }
 
@@ -114,6 +120,8 @@ export class WorkflowExecutionService {
   ): Promise<WorkflowExecution> {
     const execution = await this.getExecution(tenantId, id);
     execution.pause();
-    return this.repository.saveExecution(execution, tenantId);
+    const saved = await this.repository.saveExecution(execution, tenantId);
+    await this.realtime.emitWorkflowExecutionUpdate(tenantId, saved.toJSON());
+    return saved;
   }
 }

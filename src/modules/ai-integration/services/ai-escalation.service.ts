@@ -12,6 +12,7 @@ import {
 } from '@easydev/shared-events';
 import { CustomerService } from '../../customers/services/customer.service';
 import { ConversationService } from '../../conversations/services/conversation.service';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class AiEscalationService {
     private readonly customerService: CustomerService,
     private readonly conversationService: ConversationService,
     private readonly eventPublisher: AiEventPublisher,
+    private readonly realtime: InboxRealtimeService,
   ) {}
 
   public async evaluateEscalation(
@@ -153,6 +155,7 @@ export class AiEscalationService {
         target,
       ),
     );
+    await this.realtime.emitAiEscalation(tenantId, escalation.toJSON());
 
     // Update conversation priority or status as well
     try {
@@ -204,6 +207,7 @@ export class AiEscalationService {
     await this.eventPublisher.publish(
       new AiEscalationResolvedEvent(tenantId, id, escalation.conversationId),
     );
+    await this.realtime.emitAiEscalation(tenantId, escalation.toJSON());
     return escalation;
   }
 }

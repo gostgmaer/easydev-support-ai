@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { CustomersModule } from '../customers/customers.module';
 import { TeamsModule } from '../teams/teams.module';
+import { InboxModule } from '../inbox/inbox.module';
 
 import { TicketController } from './controllers/ticket.controller';
 import { TicketCommentController } from './controllers/ticket-comment.controller';
@@ -27,7 +28,7 @@ import { TicketQueueProcessor } from './jobs/ticket-queue.processor';
 import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), CustomersModule, TeamsModule],
+  imports: [ScheduleModule.forRoot(), CustomersModule, TeamsModule, InboxModule],
   controllers: [
     TicketController,
     TicketCommentController,

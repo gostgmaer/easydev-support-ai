@@ -101,6 +101,7 @@ export class ChannelWebhookService {
     channelId: string,
     payload: any,
     headers: Record<string, any>,
+    rawBody?: string | Buffer,
   ): Promise<void> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);
@@ -114,16 +115,24 @@ export class ChannelWebhookService {
 
     const connector = this.connectorRegistry.getConnector(channel.type.value);
 
-    // Signature/validation checks
+    // Signature/validation checks. Each connector knows which header carries its
+    // provider's signature; this is just a best-effort positional fallback.
     const signature =
-      headers['x-hub-signature-256'] || headers['signature'] || '';
-    if (webhook.webhookSecret && signature) {
+      headers['x-hub-signature-256'] ||
+      headers['x-slack-signature'] ||
+      headers['x-telegram-bot-api-secret-token'] ||
+      headers['x-sendgrid-signature'] ||
+      headers['signature'] ||
+      '';
+    if (webhook.webhookSecret) {
       const isSignatureValid = await connector.verifySignature(
         tenantId,
         channelId,
         payload,
         signature,
         webhook.webhookSecret,
+        headers,
+        rawBody,
       );
       if (!isSignatureValid) {
         throw new BadRequestException('Invalid signature');

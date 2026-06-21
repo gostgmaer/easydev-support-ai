@@ -5,6 +5,7 @@ import { TicketAssignmentService } from './ticket-assignment.service';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
 import { AuditService } from '../../audit/audit.service';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 import { Ticket } from '../domain/ticket.aggregate';
 import {
   TicketNumber,
@@ -47,6 +48,7 @@ describe('TicketAssignmentService', () => {
   const mockEngine = { assignEntity: jest.fn() };
   const mockPublisher = { publishAll: jest.fn() };
   const mockAudit = { log: jest.fn() };
+  const mockRealtime = { emitTicketUpdate: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -56,6 +58,7 @@ describe('TicketAssignmentService', () => {
         { provide: AgentAssignmentService, useValue: mockEngine },
         { provide: TicketEventPublisher, useValue: mockPublisher },
         { provide: AuditService, useValue: mockAudit },
+        { provide: InboxRealtimeService, useValue: mockRealtime },
       ],
     }).compile();
 

@@ -6,6 +6,7 @@ import { TicketAssignment } from '../domain/ticket-assignment.entity';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
 import { AuditService } from '../../audit/audit.service';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 
 @Injectable()
 export class TicketAssignmentService {
@@ -15,12 +16,14 @@ export class TicketAssignmentService {
     private readonly agentAssignmentService: AgentAssignmentService,
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
+    private readonly realtime: InboxRealtimeService,
   ) {}
 
   private async persist(ticket: Ticket, tenantId: string): Promise<void> {
     await this.ticketRepo.save(ticket, tenantId);
     await this.eventPublisher.publishAll(ticket.domainEvents);
     ticket.clearEvents();
+    await this.realtime.emitTicketUpdate(tenantId, ticket.toJSON());
   }
 
   private async getOrThrow(tenantId: string, id: string): Promise<Ticket> {

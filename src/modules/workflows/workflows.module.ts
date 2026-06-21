@@ -49,6 +49,7 @@ import { TicketsModule } from '../tickets/tickets.module';
 import { MessagesModule } from '../messages/messages.module';
 import { ConnectorsModule } from '../connectors/connectors.module';
 import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
+import { InboxModule } from '../inbox/inbox.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
     forwardRef(() => MessagesModule),
     forwardRef(() => ConnectorsModule),
     forwardRef(() => AiIntegrationModule),
+    InboxModule,
   ],
   controllers: [
     WorkflowTemplateController,

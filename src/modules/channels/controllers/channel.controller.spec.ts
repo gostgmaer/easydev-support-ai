@@ -247,11 +247,13 @@ describe('Channel Module Controllers', () => {
     });
 
     it('should receive webhook triggers', async () => {
+      const rawBody = Buffer.from('{"text":"hi"}');
       const res = await webhookController.receive(
         tenantId,
         channelId,
         { text: 'hi' },
         { signature: 'sig' },
+        { rawBody },
       );
       expect(res).toEqual({ status: 'queued' });
       expect(webhookService.handleIncomingWebhook).toHaveBeenCalledWith(
@@ -259,6 +261,7 @@ describe('Channel Module Controllers', () => {
         channelId,
         { text: 'hi' },
         { signature: 'sig' },
+        rawBody,
       );
     });
   });

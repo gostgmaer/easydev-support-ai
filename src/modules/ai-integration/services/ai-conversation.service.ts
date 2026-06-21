@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import type { IAiRepository } from '../repositories/ai-repository.interface';
 import { AiConversationSession } from '../domain/entities';
 import { AIPlatformClient } from './ai-platform.client';
+import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AiConversationService {
     @Inject('IAiRepository')
     private readonly repository: IAiRepository,
     private readonly aiClient: AIPlatformClient,
+    private readonly realtime: InboxRealtimeService,
   ) {}
 
   public async getOrCreateSession(
@@ -49,7 +51,9 @@ export class AiConversationService {
       throw new Error(`Session for conversation ${conversationId} not found`);
     }
     session.updateState(state);
-    return this.repository.saveSession(session, tenantId);
+    const saved = await this.repository.saveSession(session, tenantId);
+    await this.realtime.emitAiSessionUpdate(tenantId, saved.toJSON());
+    return saved;
   }
 
   public async associateWorkflow(
