@@ -726,4 +726,13 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
       version: row.version,
     });
   }
+
+  async hasAnyInstallation(tenantId: string): Promise<boolean> {
+    const [row] = await db
+      .select({ id: schema.widgetInstallations.id })
+      .from(schema.widgetInstallations)
+      .where(eq(schema.widgetInstallations.tenantId, tenantId))
+      .limit(1);
+    return !!row;
+  }
 }

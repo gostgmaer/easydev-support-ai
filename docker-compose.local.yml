@@ -11,6 +11,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
@@ -37,6 +38,7 @@ services:
     environment:
       - NODE_ENV=development
       - RUN_WORKERS=true
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
@@ -61,6 +63,7 @@ services:
     environment:
       - NODE_ENV=development
       - RUN_WEBHOOKS=true
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres

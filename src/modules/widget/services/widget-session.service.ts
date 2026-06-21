@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   UnauthorizedException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
@@ -39,6 +40,8 @@ export class WidgetSessionService {
     tenantId: string,
     dto: StartWidgetSessionDto,
   ): Promise<{ session: WidgetSession; token: string }> {
+    await this.assertOriginAllowed(tenantId, dto.referrer);
+
     // 1. Resolve or create visitor
     const visitor = await this.visitorService.getOrCreateAnonymousVisitor(
       tenantId,
@@ -97,6 +100,46 @@ export class WidgetSessionService {
     );
 
     return { session, token: sessionToken };
+  }
+
+  /** Enforces the tenant's domain allowlist (WidgetInstallation) once they've configured one.
+   * `referrer` is the embedding page's document.referrer, captured client-side - it's the
+   * only signal available for "which site loaded this iframe", since the HTTP Referer header
+   * on the session-start request itself always reflects the widget's own origin. This is a
+   * deterrent, not a hard guarantee: a page can strip its own referrer via Referrer-Policy or
+   * a non-browser client can omit it. Tenants with zero installations registered yet (still
+   * testing/onboarding) are left open rather than locked out before they've set anything up. */
+  private async assertOriginAllowed(
+    tenantId: string,
+    referrer?: string,
+  ): Promise<void> {
+    const hasInstallations = await this.widgetRepo.hasAnyInstallation(tenantId);
+    if (!hasInstallations) {
+      return;
+    }
+
+    if (!referrer) {
+      throw new ForbiddenException(
+        'A verifiable referrer is required to start a widget session for this tenant',
+      );
+    }
+
+    let hostname: string;
+    try {
+      hostname = new URL(referrer).hostname;
+    } catch {
+      throw new ForbiddenException('Invalid referrer');
+    }
+
+    const installation = await this.widgetRepo.getInstallationByDomain(
+      tenantId,
+      hostname,
+    );
+    if (!installation || installation.status !== 'ACTIVE') {
+      throw new ForbiddenException(
+        `Domain ${hostname} is not authorized to embed this widget`,
+      );
+    }
   }
 
   async endSession(tenantId: string, sessionId: string): Promise<void> {

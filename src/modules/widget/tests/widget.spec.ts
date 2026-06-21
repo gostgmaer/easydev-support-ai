@@ -163,6 +163,7 @@ describe('Widget Module Unit Tests', () => {
     saveInstallation: jest.fn(),
     getInstallationById: jest.fn(),
     getInstallationByDomain: jest.fn(),
+    hasAnyInstallation: jest.fn().mockResolvedValue(false),
   };
 
   const mockQueueService = {

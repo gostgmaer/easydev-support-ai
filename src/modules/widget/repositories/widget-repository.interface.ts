@@ -48,4 +48,5 @@ export interface IWidgetRepository {
   saveInstallation(installation: WidgetInstallation): Promise<void>;
   getInstallationById(tenantId: string, id: string): Promise<WidgetInstallation | null>;
   getInstallationByDomain(tenantId: string, domain: string): Promise<WidgetInstallation | null>;
+  hasAnyInstallation(tenantId: string): Promise<boolean>;
 }
