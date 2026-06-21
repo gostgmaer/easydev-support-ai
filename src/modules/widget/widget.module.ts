@@ -22,6 +22,9 @@ import { WidgetRealtimeService } from './services/widget-realtime.service';
 import { WidgetRealtimeGateway } from './services/widget-realtime.gateway';
 import { WidgetEventPublisher } from './services/widget-event.publisher';
 
+// Guards
+import { WidgetSessionGuard } from './guards/widget-session.guard';
+
 // Repository
 import { DrizzleWidgetRepository } from './repositories/drizzle-widget-repository';
 
@@ -59,6 +62,7 @@ import { WidgetQueueProcessor } from './jobs/widget-queue.processor';
     WidgetRealtimeGateway,
     WidgetEventPublisher,
     WidgetQueueProcessor,
+    WidgetSessionGuard,
   ],
   exports: [
     WidgetConfigService,
@@ -69,6 +73,7 @@ import { WidgetQueueProcessor } from './jobs/widget-queue.processor';
     WidgetEventService,
     WidgetInstallationService,
     WidgetRealtimeService,
+    WidgetSessionGuard,
     'IWidgetRepository',
   ],
 })

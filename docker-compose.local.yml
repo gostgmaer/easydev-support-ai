@@ -13,6 +13,9 @@ services:
       - PORT=3000
       - DB_HOST=postgres
       - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ENABLE_OTEL=false
@@ -35,7 +38,12 @@ services:
       - NODE_ENV=development
       - RUN_WORKERS=true
       - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
       - REDIS_HOST=redis
+      - REDIS_PORT=6379
     networks:
       - backend-network
       - database-network
@@ -54,7 +62,12 @@ services:
       - NODE_ENV=development
       - RUN_WEBHOOKS=true
       - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
       - REDIS_HOST=redis
+      - REDIS_PORT=6379
     networks:
       - backend-network
       - database-network

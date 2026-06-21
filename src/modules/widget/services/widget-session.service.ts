@@ -1,8 +1,21 @@
-import { Injectable, Inject, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
-import { WidgetSession, WidgetVisitor, WidgetAuthToken } from '../domain/entities';
+import {
+  WidgetSession,
+  WidgetVisitor,
+  WidgetAuthToken,
+  WidgetConversation,
+} from '../domain/entities';
 import { WidgetEventPublisher } from './widget-event.publisher';
-import { WidgetSessionStartedEvent, WidgetSessionEndedEvent } from '@easydev/shared-events';
+import {
+  WidgetSessionStartedEvent,
+  WidgetSessionEndedEvent,
+} from '@easydev/shared-events';
 import { StartWidgetSessionDto } from '../dtos/widget.dto';
 import { WidgetVisitorService } from './widget-visitor.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +24,9 @@ import * as crypto from 'crypto';
 @Injectable()
 export class WidgetSessionService {
   private readonly logger = new Logger(WidgetSessionService.name);
-  private readonly tokenSecret = process.env.WIDGET_JWT_SECRET || 'easydev-widget-fallback-secret-key-123456';
+  private readonly tokenSecret =
+    process.env.WIDGET_JWT_SECRET ||
+    'easydev-widget-fallback-secret-key-123456';
 
   constructor(
     @Inject('IWidgetRepository')
@@ -20,22 +35,37 @@ export class WidgetSessionService {
     private readonly eventPublisher: WidgetEventPublisher,
   ) {}
 
-  async startSession(tenantId: string, dto: StartWidgetSessionDto): Promise<{ session: WidgetSession; token: string }> {
+  async startSession(
+    tenantId: string,
+    dto: StartWidgetSessionDto,
+  ): Promise<{ session: WidgetSession; token: string }> {
     // 1. Resolve or create visitor
-    const visitor = await this.visitorService.getOrCreateAnonymousVisitor(tenantId, dto.anonymousId);
+    const visitor = await this.visitorService.getOrCreateAnonymousVisitor(
+      tenantId,
+      dto.anonymousId,
+    );
 
     // 2. Generate signed token
     const sessionId = uuidv4();
     const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
-    const payload = JSON.stringify({ tenantId, visitorId: visitor.id, sessionId, expiresAt });
+    const payload = JSON.stringify({
+      tenantId,
+      visitorId: visitor.id,
+      sessionId,
+      expiresAt,
+    });
     const signature = crypto
       .createHmac('sha256', this.tokenSecret)
       .update(payload)
       .digest('hex');
-    const sessionToken = Buffer.from(payload).toString('base64url') + '.' + signature;
+    const sessionToken =
+      Buffer.from(payload).toString('base64url') + '.' + signature;
 
     // Hash token for database storage
-    const tokenHash = crypto.createHash('sha256').update(sessionToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(sessionToken)
+      .digest('hex');
 
     // 3. Save session
     const session = new WidgetSession(sessionId, {
@@ -62,7 +92,9 @@ export class WidgetSessionService {
     });
     await this.widgetRepo.saveAuthToken(authToken);
 
-    await this.eventPublisher.publish(new WidgetSessionStartedEvent(tenantId, session.id, visitor.id));
+    await this.eventPublisher.publish(
+      new WidgetSessionStartedEvent(tenantId, session.id, visitor.id),
+    );
 
     return { session, token: sessionToken };
   }
@@ -77,13 +109,21 @@ export class WidgetSessionService {
     await this.widgetRepo.saveSession(session);
 
     // Revoke token hash
-    const tokenHash = crypto.createHash('sha256').update(session.sessionToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(session.sessionToken)
+      .digest('hex');
     await this.widgetRepo.deleteAuthToken(tenantId, tokenHash);
 
-    await this.eventPublisher.publish(new WidgetSessionEndedEvent(tenantId, sessionId));
+    await this.eventPublisher.publish(
+      new WidgetSessionEndedEvent(tenantId, sessionId),
+    );
   }
 
-  async validateSessionToken(tenantId: string, token: string): Promise<{ visitorId: string; sessionId: string }> {
+  async validateSessionToken(
+    tenantId: string,
+    token: string,
+  ): Promise<{ visitorId: string; sessionId: string }> {
     try {
       const parts = token.split('.');
       if (parts.length !== 2) {
@@ -128,8 +168,39 @@ export class WidgetSessionService {
     }
   }
 
-  async findSessionIdsByConversation(tenantId: string, conversationId: string): Promise<string[]> {
-    const links = await this.widgetRepo.getConversationLinksByConversationId(tenantId, conversationId);
+  async findSessionIdsByConversation(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<string[]> {
+    const links = await this.widgetRepo.getConversationLinksByConversationId(
+      tenantId,
+      conversationId,
+    );
     return links.map((link) => link.widgetSessionId);
+  }
+
+  async findConversationIdsBySession(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<string[]> {
+    const links = await this.widgetRepo.getConversationsBySession(
+      tenantId,
+      sessionId,
+    );
+    return links.map((link) => link.conversationId);
+  }
+
+  async linkConversation(
+    tenantId: string,
+    sessionId: string,
+    conversationId: string,
+  ): Promise<void> {
+    await this.widgetRepo.saveConversation(
+      new WidgetConversation(uuidv4(), {
+        tenantId,
+        widgetSessionId: sessionId,
+        conversationId,
+      }),
+    );
   }
 }

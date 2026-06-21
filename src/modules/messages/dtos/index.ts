@@ -9,6 +9,7 @@ import {
   IsArray,
   IsBoolean,
   IsNumber,
+  IsEmail,
   Min,
   Max,
   ArrayMaxSize,
@@ -343,6 +344,32 @@ export class SaveDraftDto {
   @IsDateString()
   @IsOptional()
   expiresAt?: string;
+}
+
+export class StartWidgetConversationDto {
+  @ApiPropertyOptional({
+    description:
+      'Visitor email - required only when starting a new conversation (omit to resume an existing one)',
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  subject?: string;
+}
+
+export class SendWidgetMessageDto {
+  @ApiProperty()
+  @IsString()
+  content!: string;
 }
 
 export class InboundMessageDto {

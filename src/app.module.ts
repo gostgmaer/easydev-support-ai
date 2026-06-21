@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
+import { TenantInterceptor } from '@easydev/shared-kernel';
+import { TenantModule } from './common/tenant/tenant.module';
 import databaseConfig from './config/database.config';
 
 import { AppController } from './app.controller';
@@ -169,6 +171,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     WidgetModule,
     ScheduleModule.forRoot(),
     HardeningModule,
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [
@@ -176,6 +179,10 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     {
       provide: APP_GUARD,
       useClass: TenantThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantInterceptor,
     },
   ],
 })

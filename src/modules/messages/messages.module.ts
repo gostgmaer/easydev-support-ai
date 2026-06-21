@@ -10,6 +10,7 @@ import { AttachmentController } from './controllers/attachment.controller';
 import { TemplateController } from './controllers/template.controller';
 import { DraftController } from './controllers/draft.controller';
 import { InboundController } from './controllers/inbound.controller';
+import { WidgetChatController } from './controllers/widget-chat.controller';
 
 import {
   MessageService,
@@ -36,6 +37,7 @@ import { MessageQueueProcessor } from './jobs/message-queue.processor';
     TemplateController,
     DraftController,
     InboundController,
+    WidgetChatController,
   ],
   providers: [
     MessageService,

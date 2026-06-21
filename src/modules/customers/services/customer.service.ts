@@ -243,6 +243,10 @@ export class CustomerService {
     return customer;
   }
 
+  async findByEmail(tenantId: string, email: string): Promise<Customer | null> {
+    return this.customerRepo.findByEmail(email, tenantId);
+  }
+
   async findPaginated(tenantId: string, query: CustomerQueryDto) {
     return this.customerRepo.findPaginated(tenantId, query);
   }

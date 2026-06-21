@@ -54,7 +54,11 @@ export class MessageService {
 
     // Push outbound (agent/system/ai) messages to any widget session linked to this
     // conversation, so a customer browsing the widget sees the reply in realtime.
-    if (message.direction.value === MessageDirectionEnum.OUTBOUND) {
+    // Internal notes are agent-only and must never reach the widget visitor.
+    if (
+      message.direction.value === MessageDirectionEnum.OUTBOUND &&
+      message.messageType.value !== MessageTypeEnum.INTERNAL_NOTE
+    ) {
       const sessionIds = await this.widgetSessionService.findSessionIdsByConversation(
         tenantId,
         message.conversationId,
