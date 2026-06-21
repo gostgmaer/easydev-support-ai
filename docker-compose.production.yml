@@ -181,7 +181,7 @@ services:
 
   # 5. Redis 8 Cache / Queue Store
   redis:
-    image: redis:8-alpine
+    image: redis:7-alpine
     command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
     volumes:
       - redis-data:/data

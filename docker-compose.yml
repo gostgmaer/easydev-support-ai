@@ -50,20 +50,23 @@ services:
       - easydev-net
       
   # 3. Next.js Frontend Operations Center
-  frontend:
-    build:
-      context: ../../UI/easydev-support-ai-web
-      dockerfile: Dockerfile
-    ports:
-      - "3005:3005"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3000
-    networks:
-      - easydev-net
+  # Disabled: UI repo (../../UI/easydev-support-ai-web) is a pnpm monorepo without a Dockerfile.
+  # Run on host instead: `pnpm dev:agent-workspace` (port 3000) or `pnpm dev:help-center` (port 3001)
+  # from C:\Users\kisho\WorkSpace\UI\easydev-support-ai-web.
+  # frontend:
+  #   build:
+  #     context: ../../UI/easydev-support-ai-web
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3005:3005"
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3000
+  #   networks:
+  #     - easydev-net
 
   # 4. PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     ports:
       - "5434:5432" # Mapped to 5434 to avoid conflicts with other EasyDev DBs
     environment:

@@ -1,0 +1,15 @@
+services:
+  # Override the broken root Dockerfile (uses npm in a pnpm monorepo) with
+  # the working pnpm-based Dockerfile.api for both api and worker.
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: ["node", "dist/main.js"]
+    # No source mount — production-built image, dist/ baked in.
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: ["node", "dist/main.js"]
