@@ -18,6 +18,7 @@ import {
   AdminIncidentController,
   AdminAuditController,
   AdminOverrideController,
+  AdminTenantController,
 } from './controllers';
 
 import {
@@ -30,6 +31,7 @@ import {
   AdminHealthService,
   AdminOverrideService,
   AdminAuditService,
+  TenantProvisioningService,
 } from './services';
 
 import { DrizzleAdminRepository } from './repositories/drizzle-admin.repository';
@@ -55,6 +57,7 @@ import { AdminQueueProcessor, AdminHealthScheduler, AdminCleanupScheduler } from
     AdminIncidentController,
     AdminAuditController,
     AdminOverrideController,
+    AdminTenantController,
   ],
   providers: [
     AdminEventPublisher,
@@ -66,6 +69,7 @@ import { AdminQueueProcessor, AdminHealthScheduler, AdminCleanupScheduler } from
     AdminHealthService,
     AdminOverrideService,
     AdminAuditService,
+    TenantProvisioningService,
     AdminQueueProcessor,
     AdminHealthScheduler,
     AdminCleanupScheduler,
@@ -83,6 +87,7 @@ import { AdminQueueProcessor, AdminHealthScheduler, AdminCleanupScheduler } from
     AdminHealthService,
     AdminOverrideService,
     AdminAuditService,
+    TenantProvisioningService,
     'IAdminRepository',
   ],
 })

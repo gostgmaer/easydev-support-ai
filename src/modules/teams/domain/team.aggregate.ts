@@ -143,6 +143,17 @@ export class Team extends AggregateRoot<string> {
     }
   }
 
+  public updateMemberRole(agentProfileId: string, role: string): boolean {
+    const member = this.members.find(
+      (m) => m.agentProfileId === agentProfileId,
+    );
+    if (!member) return false;
+
+    member.update({ role });
+    this.props.updatedAt = new Date();
+    return true;
+  }
+
   public removeMember(agentProfileId: string): void {
     const index = this.members.findIndex(
       (m) => m.agentProfileId === agentProfileId,

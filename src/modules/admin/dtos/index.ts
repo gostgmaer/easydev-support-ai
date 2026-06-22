@@ -179,6 +179,47 @@ export class CreateApiKeyDto {
   expiresAt?: string;
 }
 
+export class ProvisionTenantDto {
+  @ApiProperty({ description: 'Display name of the tenant organization' })
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @ApiProperty({ enum: ['STARTER', 'GROWTH', 'ENTERPRISE'] })
+  @IsEnum(['STARTER', 'GROWTH', 'ENTERPRISE'])
+  plan!: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
+
+  @ApiProperty({ description: 'Email of the tenant admin to notify' })
+  @IsString()
+  @IsNotEmpty()
+  adminEmail!: string;
+
+  @ApiProperty({ description: 'Name of the tenant admin to notify' })
+  @IsString()
+  @IsNotEmpty()
+  adminName!: string;
+
+  @ApiPropertyOptional()
+  @IsUrl()
+  @IsOptional()
+  logoUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  primaryColor?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  timezone?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  locale?: string;
+}
+
 export class ValidateApiKeyDto {
   @ApiProperty()
   @IsString()

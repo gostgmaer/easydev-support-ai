@@ -1,6 +1,4 @@
-// @ts-nocheck
-import { Injectable, Logger, ConflictException } from '@nestjs/common';
-import * as crypto from 'crypto';
+import { Injectable, Logger } from '@nestjs/common';
 import { AdminApiKeyService } from './admin-api-key.service';
 import { AdminEventPublisher } from './admin-event.publisher';
 import { TenantSettingsService } from '../../settings/services/tenant-settings.service';
@@ -17,14 +15,12 @@ import {
 } from '@easydev/shared-events';
 
 export interface ProvisionTenantDto {
-  tenantId: string;
   name: string;
   plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
   adminEmail: string;
   adminName: string;
   logoUrl?: string;
   primaryColor?: string;
-  customDomain?: string;
   timezone?: string;
   locale?: string;
 }
@@ -40,9 +36,15 @@ export interface ProvisionResult {
  * TenantProvisioningService  (FLOW 12 – Multi-Tenant Lifecycle)
  *
  * Handles the full lifecycle of a tenant:
- *   Tenant Sign-Up → Database Isolation → Default Settings
- *   → Branding Configuration → API Key → Welcome Notification
- *   → Billing Events → Suspension / Reactivation
+ *   Tenant Sign-Up → Default Settings → Branding Configuration
+ *   → API Key → Welcome Notification → Billing Events → Suspension / Reactivation
+ *
+ * The tenant itself (its id, and the calling admin's JWT for it) is created
+ * upstream in the EasyDev IAM service - TenantGuard requires a valid
+ * tenant-scoped JWT on every request, so this service can't be the thing that
+ * creates a tenant from nothing. What it does instead is provision this
+ * product's own per-tenant resources (settings, branding, feature flags, the
+ * first API key) for a tenant that IAM already knows about.
  */
 @Injectable()
 export class TenantProvisioningService {
@@ -60,19 +62,23 @@ export class TenantProvisioningService {
 
   /**
    * Provision a brand-new tenant:
-   *  1. Initialise default tenant settings.
+   *  1. Initialise tenant settings (name, timezone, locale).
    *  2. Set up branding (if provided).
    *  3. Enable plan-specific feature flags.
    *  4. Generate the first API key for the tenant.
    *  5. Publish TenantCreatedEvent.
    *  6. Queue the welcome email notification.
    */
-  async provision(dto: ProvisionTenantDto): Promise<ProvisionResult> {
-    this.logger.log(`Provisioning new tenant: ${dto.tenantId} (plan=${dto.plan})`);
+  async provision(
+    tenantId: string,
+    dto: ProvisionTenantDto,
+  ): Promise<ProvisionResult> {
+    this.logger.log(`Provisioning new tenant: ${tenantId} (plan=${dto.plan})`);
 
     // ─── 1. Initialise tenant settings ───────────────────────────────────
     try {
-      await this.tenantSettingsService.initializeTenantDefaults(dto.tenantId, {
+      await this.tenantSettingsService.updateSettings(tenantId, {
+        tenantName: dto.name,
         timezone: dto.timezone || 'UTC',
         locale: dto.locale || 'en',
       });
@@ -81,20 +87,18 @@ export class TenantProvisioningService {
     }
 
     // ─── 2. Set up branding ───────────────────────────────────────────────
-    if (dto.logoUrl || dto.primaryColor || dto.customDomain) {
+    if (dto.logoUrl || dto.primaryColor) {
       try {
-        await this.brandingService.saveBranding(dto.tenantId, {
+        await this.brandingService.updateBranding(tenantId, {
           logoUrl: dto.logoUrl,
           primaryColor: dto.primaryColor || '#6366f1',
-          customDomain: dto.customDomain,
         });
 
         await this.eventPublisher.publish(
           new TenantBrandingUpdatedEvent(
-            dto.tenantId,
+            tenantId,
             dto.logoUrl,
             dto.primaryColor,
-            dto.customDomain,
           ),
         );
       } catch (err: any) {
@@ -104,12 +108,13 @@ export class TenantProvisioningService {
 
     // ─── 3. Enable plan-specific feature flags ────────────────────────────
     const planFlags = this.getPlanFlags(dto.plan);
-    for (const [flagKey, isEnabled] of Object.entries(planFlags)) {
+    for (const [flagKey, enabled] of Object.entries(planFlags)) {
       try {
-        await this.featureFlagService.saveFeatureFlag(dto.tenantId, {
+        await this.featureFlagService.saveFeatureFlag(tenantId, {
           featureKey: flagKey,
-          isEnabled,
-          metadata: { provisioned: true, plan: dto.plan },
+          enabled,
+          rolloutPercentage: 100,
+          configuration: { provisioned: true, plan: dto.plan },
         });
       } catch (err: any) {
         this.logger.warn(`Feature flag [${flagKey}] failed: ${err.message}`);
@@ -117,27 +122,22 @@ export class TenantProvisioningService {
     }
 
     // ─── 4. Generate initial API key ──────────────────────────────────────
-    let apiKeyValue = '';
-    try {
-      const apiKey = await this.apiKeyService.createApiKey(dto.tenantId, {
-        name: 'Default API Key',
-        scopes: ['conversations:read', 'conversations:write', 'messages:write'],
-        expiresInDays: 365,
-      });
-      apiKeyValue = apiKey.keyValue || apiKey.id;
-    } catch (err: any) {
-      this.logger.warn(`API key creation failed: ${err.message}`);
-      apiKeyValue = `sk_${crypto.randomBytes(32).toString('hex')}`;
-    }
+    const { rawKey } = await this.apiKeyService.createApiKey(tenantId, {
+      name: 'Default API Key',
+      scopes: ['conversations:read', 'conversations:write', 'messages:write'],
+      expiresAt: new Date(
+        Date.now() + 365 * 24 * 60 * 60 * 1000,
+      ).toISOString(),
+    });
 
     // ─── 5. Publish domain event ──────────────────────────────────────────
     await this.eventPublisher.publish(
-      new TenantCreatedEvent(dto.tenantId, dto.name, dto.plan, dto.adminEmail),
+      new TenantCreatedEvent(tenantId, dto.name, dto.plan, dto.adminEmail),
     );
 
     // ─── 6. Queue welcome notification ────────────────────────────────────
     await this.queueService.addJob(QUEUES.NOTIFICATION, 'tenant-provisioned', {
-      tenantId: dto.tenantId,
+      tenantId,
       adminEmail: dto.adminEmail,
       adminName: dto.adminName,
       tenantName: dto.name,
@@ -146,24 +146,24 @@ export class TenantProvisioningService {
 
     // ─── 7. Emit analytics ────────────────────────────────────────────────
     await this.queueService.addJob(QUEUES.ANALYTICS, 'tenant-created', {
-      tenantId: dto.tenantId,
+      tenantId,
       plan: dto.plan,
       createdAt: new Date().toISOString(),
     });
 
     // ─── 8. Audit ─────────────────────────────────────────────────────────
     await this.auditService.log({
-      tenantId: dto.tenantId,
+      tenantId,
       userId: dto.adminEmail,
       action: 'TENANT_PROVISIONED',
-      details: `New tenant ${dto.tenantId} provisioned (plan=${dto.plan})`,
+      details: `Tenant ${tenantId} provisioned (plan=${dto.plan})`,
     });
 
-    this.logger.log(`Tenant ${dto.tenantId} provisioned successfully`);
+    this.logger.log(`Tenant ${tenantId} provisioned successfully`);
 
     return {
-      tenantId: dto.tenantId,
-      apiKey: apiKeyValue,
+      tenantId,
+      apiKey: rawKey,
       plan: dto.plan,
       provisionedAt: new Date(),
     };
@@ -182,12 +182,13 @@ export class TenantProvisioningService {
 
     // Update feature flags for new plan
     const planFlags = this.getPlanFlags(newPlan);
-    for (const [flagKey, isEnabled] of Object.entries(planFlags)) {
+    for (const [flagKey, enabled] of Object.entries(planFlags)) {
       try {
         await this.featureFlagService.saveFeatureFlag(tenantId, {
           featureKey: flagKey,
-          isEnabled,
-          metadata: { planChange: true, plan: newPlan },
+          enabled,
+          rolloutPercentage: 100,
+          configuration: { planChange: true, plan: newPlan },
         });
       } catch (err: any) {
         this.logger.warn(`Feature flag update failed for ${flagKey}: ${err.message}`);

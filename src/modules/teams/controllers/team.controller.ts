@@ -27,6 +27,7 @@ import {
   UpdateTeamDto,
   TeamQueryDto,
   AssignAgentDto,
+  UpdateMemberRoleDto,
 } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
@@ -125,6 +126,26 @@ export class TeamController {
       tenantId,
       id,
       dto.agentProfileId,
+      dto.role,
+      req.user?.id,
+    );
+    return { success: true };
+  }
+
+  @Put(':id/agents/:agentProfileId/role')
+  @Roles('tenant_admin')
+  @ApiOperation({ summary: "Update a team member's role" })
+  async updateAgentRole(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Param('agentProfileId') agentProfileId: string,
+    @Body() dto: UpdateMemberRoleDto,
+    @Req() req: any,
+  ) {
+    await this.teamService.updateAgentRole(
+      tenantId,
+      id,
+      agentProfileId,
       dto.role,
       req.user?.id,
     );

@@ -166,6 +166,35 @@ export class TeamService {
     });
   }
 
+  async updateAgentRole(
+    tenantId: string,
+    teamId: string,
+    agentProfileId: string,
+    role: string,
+    userId?: string,
+  ): Promise<void> {
+    const team = await this.teamRepo.findById(teamId, tenantId);
+    if (!team) throw new NotFoundException(`Team ${teamId} not found`);
+
+    const updated = team.updateMemberRole(agentProfileId, role);
+    if (!updated) {
+      throw new NotFoundException(
+        `Agent ${agentProfileId} is not a member of team ${teamId}`,
+      );
+    }
+
+    await this.teamRepo.save(team, tenantId);
+    await this.eventPublisher.publishAll(team.domainEvents);
+    team.clearEvents();
+
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TEAM_MEMBER_ROLE_UPDATE',
+      details: `Updated agent ${agentProfileId} role to ${role} in team ${teamId}`,
+    });
+  }
+
   async moveAgent(
     tenantId: string,
     fromTeamId: string,

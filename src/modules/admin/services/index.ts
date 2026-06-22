@@ -7,3 +7,4 @@ export * from './admin-incident.service';
 export * from './admin-health.service';
 export * from './admin-override.service';
 export * from './admin-audit.service';
+export * from './tenant-provisioning.service';
