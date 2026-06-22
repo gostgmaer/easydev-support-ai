@@ -29,6 +29,14 @@ export class RbacGuard implements CanActivate {
       throw new ForbiddenException('No roles found in user session');
     }
 
+    // super_admin holds every system permission upstream (see auth.service.ts's
+    // getUserPermissions) and is treated as a blanket bypass on this side too -
+    // it would otherwise fail every literal @Roles(...) check that doesn't
+    // spell out "super_admin" explicitly.
+    if (user.roles.includes('super_admin')) {
+      return true;
+    }
+
     // Check if the user has at least one of the required roles (IAM cross-service alignment)
     const hasRole = requiredRoles.some((role) => user.roles.includes(role));
     if (!hasRole) {

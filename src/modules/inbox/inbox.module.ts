@@ -38,12 +38,12 @@ import { InboxCleanupScheduler } from './jobs/inbox-cleanup.scheduler';
     TeamsModule,
   ],
   controllers: [
-    InboxController,
+    InboxBookmarkController,
     InboxAssignmentController,
     InboxSearchController,
-    InboxBookmarkController,
     InboxPresenceController,
     InboxRealtimeController,
+    InboxController,
   ],
   providers: [
     InboxService,

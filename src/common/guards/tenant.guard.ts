@@ -20,9 +20,8 @@ export class TenantGuard implements CanActivate {
     }
 
     try {
-      // Consume EasyDev IAM API to validate the JWT and ensure the user belongs to the Tenant
-      // Example: POST http://easydev-iam-service/v1/validate
-      const iamResponse = await this.validateWithIam(authHeader, tenantId);
+      // Validate the JWT against the real IAM service and fetch the caller's identity.
+      const iamResponse = await this.validateWithIam(authHeader);
       if (!iamResponse.isValid)
         throw new UnauthorizedException('IAM validation failed');
 
@@ -40,12 +39,15 @@ export class TenantGuard implements CanActivate {
     }
   }
 
-  private async validateWithIam(token: string, tenantId: string): Promise<any> {
-    const iamUrl = process.env.EASYDEV_IAM_URL;
+  private async validateWithIam(authHeader: string): Promise<any> {
+    const iamUrl =
+      process.env.EASYDEV_IAM_URL ||
+      process.env.IAM_SERVICE_INTERNAL_URL ||
+      process.env.IAM_SERVICE_URL;
 
     if (!iamUrl) {
       if (process.env.NODE_ENV === 'production') {
-        throw new Error('EASYDEV_IAM_URL is not configured');
+        throw new Error('IAM service URL is not configured');
       }
       // Local dev fallback only: no IAM service configured.
       return {
@@ -55,11 +57,14 @@ export class TenantGuard implements CanActivate {
       };
     }
 
-    const res = await axios.post(
-      `${iamUrl}/v1/validate`,
-      { token, tenantId },
-      { timeout: 3000 },
-    );
-    return res.data;
+    // Same upstream /auth/me endpoint IamGatewayService uses — validated by the
+    // real IAM service's own AuthGuard (signature, expiry, revocation), rather
+    // than a /v1/validate contract that was never implemented anywhere.
+    const res = await axios.get(`${iamUrl}/api/v1/iam/auth/me`, {
+      headers: { authorization: authHeader },
+      timeout: 3000,
+    });
+    const me = res.data?.data ?? res.data;
+    return { isValid: true, userId: me.id, roles: me.roles };
   }
 }
