@@ -9,6 +9,23 @@ async function bootstrap() {
     rawBody: true,
   });
 
+  const allowedOrigins = (
+    process.env.CORS_ALLOWED_ORIGINS ??
+    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3005'
+  ).split(',');
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Tenant-Id',
+      'X-Request-Id',
+      'X-Trace-Id',
+      'X-CSRF-Token',
+    ],
+  });
+
   // Serves files saved locally by surfaces with no External File Upload
   // Service integration of their own (e.g. widget attachments).
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
