@@ -10,24 +10,28 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
+import { TenantOnlyGuard } from '../../../common/guards/tenant-only.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { FeatureFlagService } from '../services/feature-flag.service';
 import { SaveFeatureFlagDto } from '../dtos/settings.dto';
 
 @Controller('v1/settings/feature-flags')
-@UseGuards(TenantGuard, RbacGuard)
 export class FeatureFlagController {
   constructor(private readonly featureFlagService: FeatureFlagService) {}
 
+  // Reads are tenant-scoped, not user-scoped, and must be reachable by callers
+  // with no IAM session at all (the Customer Widget, Help Center, any pre-login
+  // page) - see TenantOnlyGuard's doc comment.
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @UseGuards(TenantOnlyGuard)
   public async getFeatureFlags(@Headers('x-tenant-id') tenantId: string) {
     const list = await this.featureFlagService.getFeatureFlags(tenantId);
     return list.map((f) => f.toJSON());
   }
 
   @Post()
+  @UseGuards(TenantGuard, RbacGuard)
   @Roles('tenant_admin')
   public async saveFeatureFlag(
     @Headers('x-tenant-id') tenantId: string,
@@ -38,6 +42,7 @@ export class FeatureFlagController {
   }
 
   @Delete(':id')
+  @UseGuards(TenantGuard, RbacGuard)
   @Roles('tenant_admin')
   public async deleteFeatureFlag(
     @Headers('x-tenant-id') tenantId: string,
@@ -48,7 +53,7 @@ export class FeatureFlagController {
   }
 
   @Get('resolve/:key')
-  @Roles('tenant_admin', 'agent')
+  @UseGuards(TenantOnlyGuard)
   public async resolveFlag(
     @Headers('x-tenant-id') tenantId: string,
     @Param('key') key: string,

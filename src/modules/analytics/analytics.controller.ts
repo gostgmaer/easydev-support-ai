@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Headers, Post, Req, UseGuards } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { TenantOnlyGuard } from '../../common/guards/tenant-only.guard';
 import { RbacGuard } from '../../common/guards/rbac.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AnalyticsService } from './analytics.service';
@@ -20,7 +21,6 @@ interface ClientTelemetryEvent {
 const TELEMETRY_AGGREGATE_TYPE = 'frontend_telemetry';
 
 @Controller('v1/analytics')
-@UseGuards(TenantGuard, RbacGuard)
 export class AnalyticsController {
   constructor(
     private readonly analyticsService: AnalyticsService,
@@ -28,12 +28,18 @@ export class AnalyticsController {
   ) {}
 
   @Get('overview')
+  @UseGuards(TenantGuard, RbacGuard)
   @Roles('tenant_admin', 'manager')
   async getOverview(@Headers('x-tenant-id') tenantId: string) {
     return this.analyticsService.getExecutiveOverview(tenantId);
   }
 
+  // Client telemetry fires from every app, authenticated or not (the Customer
+  // Widget and Help Center never hold an IAM session at all) - see
+  // TenantOnlyGuard's doc comment. req.user is simply absent for anonymous
+  // callers, so the event is recorded with no userId, which trackEvent allows.
   @Post('events')
+  @UseGuards(TenantOnlyGuard)
   async ingestEvents(
     @Headers('x-tenant-id') tenantId: string,
     @Body() body: { events?: ClientTelemetryEvent[] },
