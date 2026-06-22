@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Controller,
   Post,
@@ -10,14 +9,16 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
+import { KnowledgeDocumentService } from '../../knowledge-base/services/knowledge-document.service';
 import { AIPlatformClient } from '../../ai-integration/services/ai-platform.client';
 import { CustomerService } from '../../customers/services/customer.service';
 import { TicketService } from '../../tickets/services/ticket.service';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { DocumentStatusEnum } from '../../knowledge-base/domain/value-objects';
+import { TicketPriorityEnum, TicketSourceEnum } from '../../tickets/domain/value-objects';
 import {
   HelpCenterAiAssistRequestedEvent,
   HelpCenterAiAssistCompletedEvent,
@@ -64,6 +65,11 @@ export class PublicDeflectionFeedbackDto {
   email?: string;
 }
 
+interface KnowledgeSearchResult {
+  document: { id: string; title: string; slug: string };
+  score: number;
+}
+
 /**
  * PublicHelpAiAssistController  (FLOW 5)
  *
@@ -80,6 +86,7 @@ export class PublicDeflectionFeedbackDto {
 export class PublicHelpAiAssistController {
   constructor(
     private readonly searchService: KnowledgeSearchService,
+    private readonly documentService: KnowledgeDocumentService,
     private readonly aiClient: AIPlatformClient,
     private readonly customerService: CustomerService,
     private readonly ticketService: TicketService,
@@ -121,26 +128,27 @@ export class PublicHelpAiAssistController {
     });
 
     // ─── Step 1: Search Knowledge Base ────────────────────────────────────
-    const searchResult = await this.searchService.search(tenantId, {
+    // search() returns a bare array of { document, score }, not a wrapper object.
+    const searchResults = await this.searchService.search(tenantId, {
       query: dto.query,
       categoryId: dto.categoryId,
       status: DocumentStatusEnum.ACTIVE,
     });
+    const docs: KnowledgeSearchResult[] = Array.isArray(searchResults) ? searchResults : [];
+    const topResult = docs[0];
 
-    const docs = (searchResult as any)?.documents || (searchResult as any)?.data || [];
-    const topDoc = docs[0];
-
-    // High-confidence KB match — return article(s) directly
-    if (topDoc && (topDoc.score || 0) >= 0.75) {
+    // High-confidence KB match — return the article directly
+    if (topResult && (topResult.score || 0) >= 0.75) {
+      const content = await this.documentService.getDocumentContent(tenantId, topResult.document.id);
       const result = {
         sessionId,
-        answer: topDoc.excerpt || topDoc.content?.slice(0, 500),
-        confidence: 'HIGH',
-        sources: docs.slice(0, 3).map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          slug: d.slug,
-          score: d.score,
+        answer: content.slice(0, 500),
+        confidence: 'HIGH' as const,
+        sources: docs.slice(0, 3).map((r) => ({
+          id: r.document.id,
+          title: r.document.title,
+          slug: r.document.slug,
+          score: r.score,
         })),
         suggestEscalation: false,
       };
@@ -161,23 +169,23 @@ export class PublicHelpAiAssistController {
     let confidence: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
 
     try {
-      const context = docs.slice(0, 5).map((d: any) => ({
-        title: d.title,
-        content: d.excerpt || d.content?.slice(0, 800),
-      }));
-
-      const aiResponse = await (this.aiClient as any).generateHelpAnswer(
-        tenantId,
-        dto.query,
-        context,
+      const contextDocs = await Promise.all(
+        docs.slice(0, 5).map(async (r) => ({
+          title: r.document.title,
+          content: (await this.documentService.getDocumentContent(tenantId, r.document.id)).slice(0, 800),
+        })),
       );
 
-      aiAnswer = aiResponse?.answer || aiResponse?.text || '';
-      confidence =
-        (aiResponse?.confidence || 0) >= 0.6
-          ? 'MEDIUM'
-          : 'LOW';
-    } catch (aiError: any) {
+      const baseSystemPrompt = 'You are a helpful customer support assistant for the help center.';
+      const systemPrompt = contextDocs.length
+        ? `${baseSystemPrompt}\n\nUse the following knowledge base articles to answer the customer's question if relevant. Ignore them if they don't apply:\n\n${contextDocs.map((d) => `${d.title}\n${d.content}`).join('\n\n')}`
+        : baseSystemPrompt;
+
+      const generateResult = await this.aiClient.generate(tenantId, dto.query, systemPrompt);
+
+      aiAnswer = generateResult.text || '';
+      confidence = (generateResult.confidence || 0) >= 0.6 ? 'MEDIUM' : 'LOW';
+    } catch {
       // Non-fatal: fall through to escalation prompt
       aiAnswer = '';
       confidence = 'LOW';
@@ -197,11 +205,11 @@ export class PublicHelpAiAssistController {
       sessionId,
       answer: aiAnswer || null,
       confidence,
-      sources: docs.slice(0, 3).map((d: any) => ({
-        id: d.id,
-        title: d.title,
-        slug: d.slug,
-        score: d.score,
+      sources: docs.slice(0, 3).map((r) => ({
+        id: r.document.id,
+        title: r.document.title,
+        slug: r.document.slug,
+        score: r.score,
       })),
       suggestEscalation,
       escalationPrompt: suggestEscalation
@@ -261,9 +269,9 @@ export class PublicHelpAiAssistController {
         subject: 'Help Center: Question could not be answered by AI',
         description: `Session: ${dto.sessionId}`,
         customerId: customer.id,
-        priority: 'MEDIUM',
-        source: 'HELP_CENTER',
-      } as any);
+        priority: TicketPriorityEnum.MEDIUM,
+        source: TicketSourceEnum.API,
+      });
 
       return {
         deflected: false,
@@ -280,7 +288,7 @@ export class PublicHelpAiAssistController {
     };
   }
 
-  private async tryPublishEvent(tenantId: string, payload: any): Promise<void> {
+  private async tryPublishEvent(tenantId: string, payload: Record<string, unknown>): Promise<void> {
     try {
       await this.queueService.addJob(QUEUES.ANALYTICS, 'helpcenter-event', {
         tenantId,

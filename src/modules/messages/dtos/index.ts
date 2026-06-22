@@ -372,6 +372,22 @@ export class SendWidgetMessageDto {
   content!: string;
 }
 
+export class CreateWidgetTicketDto {
+  @ApiProperty()
+  @IsString()
+  subject!: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiPropertyOptional({ enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'] })
+  @IsEnum(['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'])
+  @IsOptional()
+  priority?: string;
+}
+
 export class InboundMessageDto {
   @ApiProperty({ format: 'uuid' })
   @IsUUID()

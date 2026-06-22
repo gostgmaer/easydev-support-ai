@@ -19,7 +19,9 @@ import { ChannelTypeEnum } from '../../channels/domain/value-objects';
 import { WidgetSessionService } from '../../widget/services/widget-session.service';
 import { WidgetSessionGuard, WidgetSessionContext } from '../../widget/guards/widget-session.guard';
 import { MessageDirectionEnum, MessageTypeEnum } from '../domain/value-objects';
-import { StartWidgetConversationDto, SendWidgetMessageDto, MessageQueryDto } from '../dtos';
+import { StartWidgetConversationDto, SendWidgetMessageDto, CreateWidgetTicketDto, MessageQueryDto } from '../dtos';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
+import { TicketSourceEnum } from '../../tickets/domain/value-objects';
 
 /**
  * Widget-facing messaging surface, authenticated by widget session token
@@ -38,6 +40,7 @@ export class WidgetChatController {
     private readonly customerService: CustomerService,
     private readonly channelService: ChannelService,
     private readonly widgetSessionService: WidgetSessionService,
+    private readonly queueService: QueueService,
   ) {}
 
   private async assertOwnership(
@@ -144,5 +147,33 @@ export class WidgetChatController {
       content: dto.content,
     });
     return message.toJSON();
+  }
+
+  @ApiOperation({ summary: 'Create a support ticket from this widget conversation' })
+  @Post(':conversationId/ticket')
+  async createTicket(
+    @Req() req: any,
+    @Param('conversationId') conversationId: string,
+    @Body() dto: CreateWidgetTicketDto,
+  ) {
+    const widgetSession: WidgetSessionContext = req.widgetSession;
+    await this.assertOwnership(widgetSession, conversationId);
+
+    const conversation = await this.conversationService.findById(
+      widgetSession.tenantId,
+      conversationId,
+    );
+
+    await this.queueService.addJob(QUEUES.TICKET, 'ticket-create-from-conversation', {
+      tenantId: widgetSession.tenantId,
+      conversationId,
+      customerId: conversation.customerId,
+      subject: dto.subject,
+      description: dto.description || '',
+      priority: dto.priority || 'MEDIUM',
+      source: TicketSourceEnum.WEBCHAT,
+    });
+
+    return { status: 'ticket_creation_queued', conversationId };
   }
 }
