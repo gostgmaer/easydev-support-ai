@@ -5,11 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    command: ["node", "dist/main.js"]
+    command: ["node", "dist/src/main.js"]
     # No source mount — production-built image, dist/ baked in.
 
   worker:
     build:
       context: .
       dockerfile: Dockerfile.api
-    command: ["node", "dist/main.js"]
+    command: ["node", "dist/src/main.js"]

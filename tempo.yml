@@ -15,7 +15,7 @@ ingester:
 
 compactor:
   compaction:
-    block_size_bytes: 524288000
+    max_block_bytes: 524288000
     compacted_block_retention: 24h
 
 storage:

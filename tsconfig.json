@@ -21,13 +21,13 @@
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@easydev/shared-kernel": ["packages/shared-kernel/src/index.ts"],
-      "@easydev/database": ["packages/database/src/index.ts"],
-      "@easydev/shared-events": ["packages/shared-events/src/index.ts"],
-      "@easydev/shared-contracts": ["packages/shared-contracts/src/index.ts"],
-      "@easydev/shared-clients": ["packages/shared-clients/src/index.ts"],
-      "@easydev/shared-queues": ["packages/shared-queues/src/index.ts"],
-      "@easydev/shared-testing": ["packages/shared-testing/src/index.ts"]
+      "@easydev/shared-kernel": ["./packages/shared-kernel/src/index.ts"],
+      "@easydev/database": ["./packages/database/src/index.ts"],
+      "@easydev/shared-events": ["./packages/shared-events/src/index.ts"],
+      "@easydev/shared-contracts": ["./packages/shared-contracts/src/index.ts"],
+      "@easydev/shared-clients": ["./packages/shared-clients/src/index.ts"],
+      "@easydev/shared-queues": ["./packages/shared-queues/src/index.ts"],
+      "@easydev/shared-testing": ["./packages/shared-testing/src/index.ts"]
     }
   }
 }

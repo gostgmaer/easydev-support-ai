@@ -31,7 +31,7 @@ import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    CustomersModule,
+    forwardRef(() => CustomersModule),
     TeamsModule,
     InboxModule,
     forwardRef(() => WorkflowsModule),
