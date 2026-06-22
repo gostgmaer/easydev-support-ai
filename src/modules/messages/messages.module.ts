@@ -33,12 +33,12 @@ import { MessageQueueProcessor } from './jobs/message-queue.processor';
 
 @Module({
   imports: [
-    ConversationsModule,
-    ChannelsModule,
-    CustomersModule,
-    WidgetModule,
+    forwardRef(() => ConversationsModule),
+    forwardRef(() => ChannelsModule),
+    forwardRef(() => CustomersModule),
+    forwardRef(() => WidgetModule),
     forwardRef(() => WorkflowsModule),
-    AnalyticsModule,
+    forwardRef(() => AnalyticsModule),
   ],
   controllers: [
     MessageController,

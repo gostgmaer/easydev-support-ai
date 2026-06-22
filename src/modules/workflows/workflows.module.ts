@@ -73,7 +73,7 @@ import { CustomersModule } from '../customers/customers.module';
     forwardRef(() => MessagesModule),
     forwardRef(() => ConnectorsModule),
     forwardRef(() => AiIntegrationModule),
-    InboxModule,
+    forwardRef(() => InboxModule),
     forwardRef(() => CustomersModule),
   ],
   controllers: [

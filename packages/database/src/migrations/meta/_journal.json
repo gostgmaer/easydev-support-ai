@@ -64,6 +64,13 @@
       "when": 1781957270317,
       "tag": "0008_connectors",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782019200000,
+      "tag": "0015_analytics_reports",
+      "breakpoints": true
     }
   ]
 }

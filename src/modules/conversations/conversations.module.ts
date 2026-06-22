@@ -43,7 +43,7 @@ import { Attachment } from './entities/attachment.entity';
       ConversationNote,
       Attachment,
     ]),
-    CustomersModule,
+    forwardRef(() => CustomersModule),
     TeamsModule,
     forwardRef(() => AiIntegrationModule),
   ],
