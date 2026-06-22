@@ -57,14 +57,18 @@ export class AdminWidgetService {
     const widget = await this.getWidget(tenantId, widgetId);
     if (dto.position) widget.reposition(dto.position);
     if (dto.configuration) widget.configure(dto.configuration);
-    if (dto.refreshIntervalSeconds) widget.setRefreshInterval(dto.refreshIntervalSeconds);
+    if (dto.refreshIntervalSeconds)
+      widget.setRefreshInterval(dto.refreshIntervalSeconds);
     if (dto.isEnabled === true) widget.enable();
     if (dto.isEnabled === false) widget.disable();
     await this.repository.saveWidget(widget, tenantId);
     return widget;
   }
 
-  public async getWidget(tenantId: string, widgetId: string): Promise<AdminWidget> {
+  public async getWidget(
+    tenantId: string,
+    widgetId: string,
+  ): Promise<AdminWidget> {
     const widget = await this.repository.getWidget(tenantId, widgetId);
     if (!widget) {
       throw new NotFoundException(`Widget with ID ${widgetId} not found`);
@@ -72,11 +76,17 @@ export class AdminWidgetService {
     return widget;
   }
 
-  public async listWidgets(tenantId: string, dashboardId: string): Promise<AdminWidget[]> {
+  public async listWidgets(
+    tenantId: string,
+    dashboardId: string,
+  ): Promise<AdminWidget[]> {
     return this.repository.listWidgets(tenantId, dashboardId);
   }
 
-  public async deleteWidget(tenantId: string, widgetId: string): Promise<boolean> {
+  public async deleteWidget(
+    tenantId: string,
+    widgetId: string,
+  ): Promise<boolean> {
     return this.repository.deleteWidget(tenantId, widgetId);
   }
 
@@ -138,10 +148,11 @@ export class AdminWidgetService {
       }
 
       case AdminWidgetTypeEnum.AI_METRICS: {
-        const dashboardMetrics = await this.analyticsDashboardService.getAiDashboardMetrics(
-          tenantId,
-          timeRange,
-        );
+        const dashboardMetrics =
+          await this.analyticsDashboardService.getAiDashboardMetrics(
+            tenantId,
+            timeRange,
+          );
         const today = new Date().toISOString().slice(0, 10);
         const usageToday = await this.aiUsageService.getUsageMetrics(
           tenantId,
@@ -151,7 +162,10 @@ export class AdminWidgetService {
         );
         return {
           ...dashboardMetrics,
-          costToday: usageToday.reduce((sum, u) => sum + Number(u.cost || 0), 0),
+          costToday: usageToday.reduce(
+            (sum, u) => sum + Number(u.cost || 0),
+            0,
+          ),
         };
       }
 
@@ -170,7 +184,12 @@ export class AdminWidgetService {
             acc.averageDuration += Number(r.averageDuration || 0);
             return acc;
           },
-          { executionCount: 0, successCount: 0, failureCount: 0, averageDuration: 0 },
+          {
+            executionCount: 0,
+            successCount: 0,
+            failureCount: 0,
+            averageDuration: 0,
+          },
         );
         if (rows.length > 0) summary.averageDuration /= rows.length;
         return summary;
@@ -199,13 +218,16 @@ export class AdminWidgetService {
         const customers = await this.customerService.findPaginated(tenantId, {
           page: 1,
           limit: 1,
-        } as any);
+        });
         return { totalCustomers: (customers as any).total ?? 0 };
       }
 
       case AdminWidgetTypeEnum.AGENT_METRICS: {
         const [summary, online] = await Promise.all([
-          this.analyticsDashboardService.getAgentSummaryMetrics(tenantId, timeRange),
+          this.analyticsDashboardService.getAgentSummaryMetrics(
+            tenantId,
+            timeRange,
+          ),
           this.inboxPresenceService.listOnline(tenantId),
         ]);
         return {
@@ -228,7 +250,10 @@ export class AdminWidgetService {
     }
   }
 
-  private resolveTimeRange(timeRange: string): { startDate: Date; endDate: Date } {
+  private resolveTimeRange(timeRange: string): {
+    startDate: Date;
+    endDate: Date;
+  } {
     const endDate = new Date();
     const startDate = new Date();
     switch (timeRange) {

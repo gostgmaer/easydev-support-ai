@@ -19,10 +19,18 @@ import Redis from 'ioredis';
 import * as crypto from 'crypto';
 import { sql } from 'drizzle-orm';
 import { db } from '@easydev/database';
-import { QUEUES, QueueName, DeadLetterPayload, QueueService } from '@easydev/shared-queues';
+import {
+  QUEUES,
+  QueueName,
+  DeadLetterPayload,
+  QueueService,
+} from '@easydev/shared-queues';
 import type { IAdminRepository } from '../repositories/admin-repository.interface';
 import { SystemHealth } from '../domain/system-health.entity';
-import { SystemHealthStatusEnum, IncidentSeverityEnum } from '../domain/value-objects';
+import {
+  SystemHealthStatusEnum,
+  IncidentSeverityEnum,
+} from '../domain/value-objects';
 import { AdminEventPublisher } from './admin-event.publisher';
 import { SystemHealthChangedEvent } from '@easydev/shared-events';
 import { ConnectorHealthService } from '../../connectors/services/connector-health.service';
@@ -46,7 +54,12 @@ export interface QueueStats {
   paused: boolean;
 }
 
-const MONITORED_SERVICES = ['database', 'redis', 'connector-engine', 'workflow-engine'];
+const MONITORED_SERVICES = [
+  'database',
+  'redis',
+  'connector-engine',
+  'workflow-engine',
+];
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -54,7 +67,11 @@ const MONITORED_SERVICES = ['database', 'redis', 'connector-engine', 'workflow-e
 })
 @Injectable()
 export class AdminHealthService
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy
+  implements
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnModuleInit,
+    OnModuleDestroy
 {
   @WebSocketServer()
   server: Server;
@@ -85,7 +102,9 @@ export class AdminHealthService
       };
       this.pubClient = new Redis(redisOptions);
       this.subClient = new Redis(redisOptions);
-      this.subClient.on('message', (_channel, message) => this.onRedisMessage(message));
+      this.subClient.on('message', (_channel, message) =>
+        this.onRedisMessage(message),
+      );
       await this.subClient.subscribe(this.channel);
       this.isRedisConnected = true;
       this.logger.log('Admin health realtime Redis pub/sub connected');
@@ -105,13 +124,17 @@ export class AdminHealthService
   async handleConnection(client: Socket): Promise<void> {
     try {
       const token =
-        client.handshake.auth?.token || client.handshake.headers['authorization'];
+        client.handshake.auth?.token ||
+        client.handshake.headers['authorization'];
       if (!token) throw new Error('Unauthorized');
-      const { tenantId, userId } = await this.iamService.validateTokenAndGetTenant(token);
+      const { tenantId, userId } =
+        await this.iamService.validateTokenAndGetTenant(token);
       client.data.tenantId = tenantId;
       client.data.userId = userId;
       client.join(`tenant_${tenantId}`);
-      this.logger.log(`Admin ${userId} (tenant ${tenantId}) joined health channel`);
+      this.logger.log(
+        `Admin ${userId} (tenant ${tenantId}) joined health channel`,
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.warn(`Admin health realtime connection rejected: ${message}`);
@@ -123,7 +146,11 @@ export class AdminHealthService
     this.logger.log(`Admin health client disconnected: ${client.id}`);
   }
 
-  async broadcast(tenantId: string, event: string, payload: any): Promise<void> {
+  async broadcast(
+    tenantId: string,
+    event: string,
+    payload: any,
+  ): Promise<void> {
     const envelope: RealtimeEnvelope = { tenantId, event, payload };
     if (this.isRedisConnected && this.pubClient) {
       await this.pubClient.publish(this.channel, JSON.stringify(envelope));
@@ -152,37 +179,71 @@ export class AdminHealthService
 
   // ---- System health probes ----
 
-  private async checkDatabase(): Promise<{ status: SystemHealthStatusEnum; latencyMs: number; errorRate: number }> {
+  private async checkDatabase(): Promise<{
+    status: SystemHealthStatusEnum;
+    latencyMs: number;
+    errorRate: number;
+  }> {
     const start = Date.now();
     try {
       await db.execute(sql`select 1`);
-      return { status: SystemHealthStatusEnum.HEALTHY, latencyMs: Date.now() - start, errorRate: 0 };
+      return {
+        status: SystemHealthStatusEnum.HEALTHY,
+        latencyMs: Date.now() - start,
+        errorRate: 0,
+      };
     } catch {
-      return { status: SystemHealthStatusEnum.DOWN, latencyMs: Date.now() - start, errorRate: 1 };
+      return {
+        status: SystemHealthStatusEnum.DOWN,
+        latencyMs: Date.now() - start,
+        errorRate: 1,
+      };
     }
   }
 
-  private async checkRedis(): Promise<{ status: SystemHealthStatusEnum; latencyMs: number; errorRate: number }> {
+  private async checkRedis(): Promise<{
+    status: SystemHealthStatusEnum;
+    latencyMs: number;
+    errorRate: number;
+  }> {
     const start = Date.now();
     try {
       if (!this.pubClient) throw new Error('Redis client not initialized');
       await this.pubClient.ping();
-      return { status: SystemHealthStatusEnum.HEALTHY, latencyMs: Date.now() - start, errorRate: 0 };
+      return {
+        status: SystemHealthStatusEnum.HEALTHY,
+        latencyMs: Date.now() - start,
+        errorRate: 0,
+      };
     } catch {
-      return { status: SystemHealthStatusEnum.DOWN, latencyMs: Date.now() - start, errorRate: 1 };
+      return {
+        status: SystemHealthStatusEnum.DOWN,
+        latencyMs: Date.now() - start,
+        errorRate: 1,
+      };
     }
   }
 
-  private async checkConnectorEngine(
-    tenantId: string,
-  ): Promise<{ status: SystemHealthStatusEnum; latencyMs: number; errorRate: number }> {
+  private async checkConnectorEngine(tenantId: string): Promise<{
+    status: SystemHealthStatusEnum;
+    latencyMs: number;
+    errorRate: number;
+  }> {
     const start = Date.now();
     const [total, unhealthy] = await Promise.all([
       this.connectorService.getConnectors(tenantId, { limit: 1 }),
-      this.connectorService.getConnectors(tenantId, { limit: 1, healthStatus: 'UNHEALTHY' }),
+      this.connectorService.getConnectors(tenantId, {
+        limit: 1,
+        healthStatus: 'UNHEALTHY',
+      }),
     ]);
     const latencyMs = Date.now() - start;
-    if (total.total === 0) return { status: SystemHealthStatusEnum.HEALTHY, latencyMs, errorRate: 0 };
+    if (total.total === 0)
+      return {
+        status: SystemHealthStatusEnum.HEALTHY,
+        latencyMs,
+        errorRate: 0,
+      };
     const errorRate = unhealthy.total / total.total;
     const status =
       errorRate === 0
@@ -193,17 +254,28 @@ export class AdminHealthService
     return { status, latencyMs, errorRate };
   }
 
-  private async checkWorkflowEngine(
-    tenantId: string,
-  ): Promise<{ status: SystemHealthStatusEnum; latencyMs: number; errorRate: number }> {
+  private async checkWorkflowEngine(tenantId: string): Promise<{
+    status: SystemHealthStatusEnum;
+    latencyMs: number;
+    errorRate: number;
+  }> {
     const start = Date.now();
     const [failed, active] = await Promise.all([
-      this.workflowExecutionService.findExecutions(tenantId, { status: 'FAILED' }),
-      this.workflowExecutionService.findExecutions(tenantId, { status: 'ACTIVE' }),
+      this.workflowExecutionService.findExecutions(tenantId, {
+        status: 'FAILED',
+      }),
+      this.workflowExecutionService.findExecutions(tenantId, {
+        status: 'ACTIVE',
+      }),
     ]);
     const latencyMs = Date.now() - start;
     const totalRecent = failed.length + active.length;
-    if (totalRecent === 0) return { status: SystemHealthStatusEnum.HEALTHY, latencyMs, errorRate: 0 };
+    if (totalRecent === 0)
+      return {
+        status: SystemHealthStatusEnum.HEALTHY,
+        latencyMs,
+        errorRate: 0,
+      };
     const errorRate = failed.length / totalRecent;
     const status =
       errorRate === 0
@@ -215,7 +287,14 @@ export class AdminHealthService
   }
 
   public async runHealthSweep(tenantId: string): Promise<SystemHealth[]> {
-    const checks: Record<string, () => Promise<{ status: SystemHealthStatusEnum; latencyMs: number; errorRate: number }>> = {
+    const checks: Record<
+      string,
+      () => Promise<{
+        status: SystemHealthStatusEnum;
+        latencyMs: number;
+        errorRate: number;
+      }>
+    > = {
       database: () => this.checkDatabase(),
       redis: () => this.checkRedis(),
       'connector-engine': () => this.checkConnectorEngine(tenantId),
@@ -225,7 +304,10 @@ export class AdminHealthService
     const results: SystemHealth[] = [];
     for (const serviceName of MONITORED_SERVICES) {
       const result = await checks[serviceName]();
-      const existing = await this.repository.getSystemHealth(tenantId, serviceName);
+      const existing = await this.repository.getSystemHealth(
+        tenantId,
+        serviceName,
+      );
       const previousStatus = existing?.status.value;
 
       const health =
@@ -243,7 +325,11 @@ export class AdminHealthService
         await this.eventPublisher.publish(
           new SystemHealthChangedEvent(tenantId, serviceName, result.status),
         );
-        await this.broadcast(tenantId, 'system.health.changed', health.toJSON());
+        await this.broadcast(
+          tenantId,
+          'system.health.changed',
+          health.toJSON(),
+        );
 
         if (result.status === SystemHealthStatusEnum.DOWN) {
           await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
@@ -287,7 +373,9 @@ export class AdminHealthService
   // ---- Operations Center: queue / worker / DLQ monitoring ----
 
   private resolveQueue(queueName: QueueName): Queue {
-    return this.moduleRef.get<Queue>(getQueueToken(queueName), { strict: false });
+    return this.moduleRef.get<Queue>(getQueueToken(queueName), {
+      strict: false,
+    });
   }
 
   public listQueueNames(): QueueName[] {
@@ -296,7 +384,13 @@ export class AdminHealthService
 
   public async getQueueStats(queueName: QueueName): Promise<QueueStats> {
     const queue = this.resolveQueue(queueName);
-    const counts = await queue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed');
+    const counts = await queue.getJobCounts(
+      'waiting',
+      'active',
+      'completed',
+      'failed',
+      'delayed',
+    );
     const isPaused = await queue.isPaused();
     return {
       name: queueName,
@@ -310,7 +404,9 @@ export class AdminHealthService
   }
 
   public async getAllQueueStats(): Promise<QueueStats[]> {
-    return Promise.all(this.listQueueNames().map((name) => this.getQueueStats(name)));
+    return Promise.all(
+      this.listQueueNames().map((name) => this.getQueueStats(name)),
+    );
   }
 
   public async getWorkers(queueName: QueueName): Promise<any[]> {
@@ -322,7 +418,15 @@ export class AdminHealthService
     queueName: QueueName,
     start = 0,
     end = 25,
-  ): Promise<Array<{ id: string | undefined; name: string; failedReason: string; attemptsMade: number; timestamp: number }>> {
+  ): Promise<
+    Array<{
+      id: string | undefined;
+      name: string;
+      failedReason: string;
+      attemptsMade: number;
+      timestamp: number;
+    }>
+  > {
     const queue = this.resolveQueue(queueName);
     const jobs = await queue.getFailed(start, end);
     return jobs.map((job) => ({
@@ -347,8 +451,15 @@ export class AdminHealthService
     end = 25,
   ): Promise<Array<{ id: string | undefined; data: DeadLetterPayload }>> {
     const queue = this.resolveQueue(QUEUES.DEAD_LETTER);
-    const jobs = await queue.getJobs(['waiting', 'completed', 'failed'], start, end);
-    return jobs.map((job) => ({ id: job.id, data: job.data as DeadLetterPayload }));
+    const jobs = await queue.getJobs(
+      ['waiting', 'completed', 'failed'],
+      start,
+      end,
+    );
+    return jobs.map((job) => ({
+      id: job.id,
+      data: job.data as DeadLetterPayload,
+    }));
   }
 
   public async replayDeadLetterJob(jobId: string): Promise<boolean> {
@@ -356,16 +467,32 @@ export class AdminHealthService
     const job = await queue.getJob(jobId);
     if (!job) return false;
     const payload = job.data as DeadLetterPayload;
-    await this.queueService.addJob(payload.sourceQueue as QueueName, payload.jobName, payload.data);
+    await this.queueService.addJob(
+      payload.sourceQueue as QueueName,
+      payload.jobName,
+      payload.data,
+    );
     await job.remove();
     return true;
   }
 
-  public async getWorkflowMonitoring(tenantId: string): Promise<Record<string, number>> {
-    const statuses = ['DRAFT', 'ACTIVE', 'PAUSED', 'COMPLETED', 'FAILED', 'ARCHIVED'];
+  public async getWorkflowMonitoring(
+    tenantId: string,
+  ): Promise<Record<string, number>> {
+    const statuses = [
+      'DRAFT',
+      'ACTIVE',
+      'PAUSED',
+      'COMPLETED',
+      'FAILED',
+      'ARCHIVED',
+    ];
     const counts: Record<string, number> = {};
     for (const status of statuses) {
-      const executions = await this.workflowExecutionService.findExecutions(tenantId, { status });
+      const executions = await this.workflowExecutionService.findExecutions(
+        tenantId,
+        { status },
+      );
       counts[status] = executions.length;
     }
     return counts;

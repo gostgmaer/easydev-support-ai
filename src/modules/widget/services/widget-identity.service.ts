@@ -1,4 +1,9 @@
-import { Injectable, Inject, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
 import { WidgetIdentity, WidgetVisitor } from '../domain/entities';
 import { WidgetConfigService } from './widget-config.service';
@@ -24,14 +29,18 @@ export class WidgetIdentityService {
       return null;
     }
 
-    // Load widget config containing verification settings
+    // Load widget config containing the real, randomly-generated verification
+    // secret (never exposed via the public config endpoint - the tenant's own
+    // backend retrieves it once via the admin config endpoint and uses it to
+    // sign identified-visitor requests server-side, the same pattern Intercom/
+    // Zendesk use for "secure mode" identity verification).
     const config = await this.configService.getOrCreateConfig(tenantId);
-    
-    // Use the primaryColor + secondaryColor + id as a deterministic secret seed if no explicit verification secret
-    const verificationSecret = crypto
-      .createHash('sha256')
-      .update(config.id + tenantId + config.primaryColor)
-      .digest('hex');
+    const verificationSecret = config.identityVerificationSecret;
+    if (!verificationSecret) {
+      throw new UnauthorizedException(
+        'Identity verification is not configured for this tenant',
+      );
+    }
 
     // Expected signature: HMAC SHA256 of externalUserId (+ optional email)
     const expectedSignature = crypto
@@ -40,17 +49,25 @@ export class WidgetIdentityService {
       .digest('hex');
 
     if (dto.signature !== expectedSignature) {
-      this.logger.warn(`Verification signature mismatch for external user: ${dto.externalUserId}`);
+      this.logger.warn(
+        `Verification signature mismatch for external user: ${dto.externalUserId}`,
+      );
       throw new UnauthorizedException('Invalid verification signature');
     }
 
     // Resolve or create visitor matching external user identity
-    const visitor = await this.widgetRepo.getVisitorByAnonymousId(tenantId, dto.anonymousId);
+    const visitor = await this.widgetRepo.getVisitorByAnonymousId(
+      tenantId,
+      dto.anonymousId,
+    );
     if (!visitor) {
       throw new UnauthorizedException('Visitor session not started');
     }
 
-    let identity = await this.widgetRepo.getIdentityByVisitor(tenantId, visitor.id);
+    let identity = await this.widgetRepo.getIdentityByVisitor(
+      tenantId,
+      visitor.id,
+    );
     if (!identity) {
       identity = new WidgetIdentity(uuidv4(), {
         tenantId,

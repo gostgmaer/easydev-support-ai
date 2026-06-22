@@ -87,11 +87,14 @@ export class SystemHealth extends Entity<string> {
     this.props.latencyMs = latencyMs;
     this.props.errorRate = errorRate;
     this.props.lastCheckAt = new Date();
-    if (metadata) this.props.metadata = { ...(this.props.metadata || {}), ...metadata };
+    if (metadata)
+      this.props.metadata = { ...(this.props.metadata || {}), ...metadata };
     this.props.updatedAt = new Date();
   }
 
-  public hasChangedStatusSince(previousStatus?: SystemHealthStatusEnum): boolean {
+  public hasChangedStatusSince(
+    previousStatus?: SystemHealthStatusEnum,
+  ): boolean {
     return previousStatus !== undefined && previousStatus !== this.status.value;
   }
 

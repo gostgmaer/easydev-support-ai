@@ -44,7 +44,9 @@ export class WidgetQueueProcessor extends BaseWorker {
 
     switch (job.name) {
       case 'widget-session-job':
-        this.logger.log(`Processing widget-session-job ${job.id} for Tenant: ${tenantId}`);
+        this.logger.log(
+          `Processing widget-session-job ${job.id} for Tenant: ${tenantId}`,
+        );
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.session.started',
@@ -54,7 +56,9 @@ export class WidgetQueueProcessor extends BaseWorker {
         return { success: true };
 
       case 'widget-lead-job':
-        this.logger.log(`Processing widget-lead-job ${job.id} for Tenant: ${tenantId}`);
+        this.logger.log(
+          `Processing widget-lead-job ${job.id} for Tenant: ${tenantId}`,
+        );
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.lead.created',
@@ -64,7 +68,9 @@ export class WidgetQueueProcessor extends BaseWorker {
         return { success: true };
 
       case 'widget-analytics-job':
-        this.logger.log(`Processing widget-analytics-job ${job.id} for Tenant: ${tenantId}`);
+        this.logger.log(
+          `Processing widget-analytics-job ${job.id} for Tenant: ${tenantId}`,
+        );
         if (this.isRedisConnected && this.redisClient) {
           const key = `widget:analytics:${tenantId}:daily_events`;
           await this.redisClient.incr(key);
@@ -82,7 +88,9 @@ export class WidgetQueueProcessor extends BaseWorker {
         return { success: true };
 
       case 'widget-installation-job':
-        this.logger.log(`Processing widget-installation-job ${job.id} for Tenant: ${tenantId}`);
+        this.logger.log(
+          `Processing widget-installation-job ${job.id} for Tenant: ${tenantId}`,
+        );
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.installed',

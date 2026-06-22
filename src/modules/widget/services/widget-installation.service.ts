@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
 import { WidgetInstallation } from '../domain/entities';
 import { WidgetEventPublisher } from './widget-event.publisher';
@@ -18,8 +24,14 @@ export class WidgetInstallationService {
     private readonly eventPublisher: WidgetEventPublisher,
   ) {}
 
-  async createInstallation(tenantId: string, dto: CreateInstallationDto): Promise<WidgetInstallation> {
-    let installation = await this.widgetRepo.getInstallationByDomain(tenantId, dto.domain);
+  async createInstallation(
+    tenantId: string,
+    dto: CreateInstallationDto,
+  ): Promise<WidgetInstallation> {
+    let installation = await this.widgetRepo.getInstallationByDomain(
+      tenantId,
+      dto.domain,
+    );
     if (!installation) {
       installation = new WidgetInstallation(uuidv4(), {
         tenantId,
@@ -32,10 +44,18 @@ export class WidgetInstallationService {
     return installation;
   }
 
-  async verifyInstallation(tenantId: string, domain: string): Promise<WidgetInstallation> {
-    const installation = await this.widgetRepo.getInstallationByDomain(tenantId, domain);
+  async verifyInstallation(
+    tenantId: string,
+    domain: string,
+  ): Promise<WidgetInstallation> {
+    const installation = await this.widgetRepo.getInstallationByDomain(
+      tenantId,
+      domain,
+    );
     if (!installation) {
-      throw new NotFoundException(`Installation for domain ${domain} not found`);
+      throw new NotFoundException(
+        `Installation for domain ${domain} not found`,
+      );
     }
 
     if (installation.status === 'ACTIVE') {
@@ -51,11 +71,15 @@ export class WidgetInstallationService {
       if (response.data?.trim() === installation.verificationToken) {
         installation.verify();
         await this.widgetRepo.saveInstallation(installation);
-        await this.eventPublisher.publish(new WidgetInstalledEvent(tenantId, installation.id, domain));
+        await this.eventPublisher.publish(
+          new WidgetInstalledEvent(tenantId, installation.id, domain),
+        );
         return installation;
       }
     } catch (e: any) {
-      this.logger.warn(`Verification via HTTPS failed for domain ${domain}: ${e.message}. Retrying HTTP fallback.`);
+      this.logger.warn(
+        `Verification via HTTPS failed for domain ${domain}: ${e.message}. Retrying HTTP fallback.`,
+      );
     }
 
     try {
@@ -64,14 +88,20 @@ export class WidgetInstallationService {
       if (response.data?.trim() === installation.verificationToken) {
         installation.verify();
         await this.widgetRepo.saveInstallation(installation);
-        await this.eventPublisher.publish(new WidgetInstalledEvent(tenantId, installation.id, domain));
+        await this.eventPublisher.publish(
+          new WidgetInstalledEvent(tenantId, installation.id, domain),
+        );
         return installation;
       }
     } catch (e: any) {
-      this.logger.warn(`Verification via HTTP failed for domain ${domain}: ${e.message}`);
+      this.logger.warn(
+        `Verification via HTTP failed for domain ${domain}: ${e.message}`,
+      );
     }
 
-    throw new BadRequestException('Verification token not found on the client domain. Make sure the verify file exists.');
+    throw new BadRequestException(
+      'Verification token not found on the client domain. Make sure the verify file exists.',
+    );
   }
 
   generateInstallationScript(tenantId: string, domain: string): string {

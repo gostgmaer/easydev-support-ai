@@ -8,7 +8,9 @@ export class EncryptionService {
   private readonly key: Buffer;
 
   constructor() {
-    const rawKey = process.env.ENCRYPTION_KEY || 'easydev-fallback-encryption-key-must-be-32bytes-long!';
+    const rawKey =
+      process.env.ENCRYPTION_KEY ||
+      'easydev-fallback-encryption-key-must-be-32bytes-long!';
     this.key = Buffer.alloc(32);
     Buffer.from(rawKey, 'utf-8').copy(this.key);
   }
@@ -16,10 +18,10 @@ export class EncryptionService {
   public encrypt(text: string): string {
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
-    
+
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const authTag = cipher.getAuthTag().toString('hex');
     return `${iv.toString('hex')}:${authTag}:${encrypted}`;
   }
@@ -39,13 +41,16 @@ export class EncryptionService {
 
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 
-  public maskPII(text: string, type: 'email' | 'phone' | 'ip' | 'generic'): string {
+  public maskPII(
+    text: string,
+    type: 'email' | 'phone' | 'ip' | 'generic',
+  ): string {
     if (!text) return '';
-    
+
     switch (type) {
       case 'email':
         const parts = text.split('@');
@@ -54,11 +59,11 @@ export class EncryptionService {
         const domain = parts[1];
         if (name.length <= 2) return `*@${domain}`;
         return `${name[0]}***${name[name.length - 1]}@${domain}`;
-        
+
       case 'phone':
         if (text.length < 5) return '***';
         return `${text.substring(0, 3)}***${text.substring(text.length - 2)}`;
-        
+
       case 'ip':
         // Mask IPv4/IPv6
         if (text.includes('.')) {
@@ -74,12 +79,17 @@ export class EncryptionService {
     }
   }
 
-  public redactSensitiveData(data: Record<string, any>, sensitiveKeys: string[] = ['password', 'secret', 'token', 'apiKey', 'auth']): Record<string, any> {
+  public redactSensitiveData(
+    data: Record<string, any>,
+    sensitiveKeys: string[] = ['password', 'secret', 'token', 'apiKey', 'auth'],
+  ): Record<string, any> {
     const redacted = { ...data };
     for (const key of Object.keys(redacted)) {
       if (typeof redacted[key] === 'object' && redacted[key] !== null) {
         redacted[key] = this.redactSensitiveData(redacted[key], sensitiveKeys);
-      } else if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk.toLowerCase()))) {
+      } else if (
+        sensitiveKeys.some((sk) => key.toLowerCase().includes(sk.toLowerCase()))
+      ) {
         redacted[key] = '[REDACTED]';
       }
     }

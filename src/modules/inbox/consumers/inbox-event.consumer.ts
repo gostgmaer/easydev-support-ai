@@ -49,7 +49,9 @@ export class InboxEventConsumer {
         await this.activity.record(
           tenantId,
           conversationId,
-          eventName === 'conversation.created' ? 'CONVERSATION_OPENED' : 'STATUS',
+          eventName === 'conversation.created'
+            ? 'CONVERSATION_OPENED'
+            : 'STATUS',
           envelope.actorId,
           payload,
         );
@@ -93,7 +95,11 @@ export class InboxEventConsumer {
 
       case 'ticket.created':
         if (!conversationId) return;
-        await this.projection.adjustOpenTicketCount(tenantId, conversationId, 1);
+        await this.projection.adjustOpenTicketCount(
+          tenantId,
+          conversationId,
+          1,
+        );
         await this.activity.record(
           tenantId,
           conversationId,

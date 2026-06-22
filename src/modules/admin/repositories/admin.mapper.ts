@@ -125,7 +125,9 @@ export class AdminMapper {
       secretEncrypted: raw.secretEncrypted,
       events: (raw.events as string[]) || [],
       status: WebhookStatus.create(raw.status as WebhookStatusEnum),
-      retryPolicy: (raw.retryPolicy as { maxAttempts: number; backoffMs: number }) || undefined,
+      retryPolicy:
+        (raw.retryPolicy as { maxAttempts: number; backoffMs: number }) ||
+        undefined,
       lastDeliveryAt: raw.lastDeliveryAt || undefined,
       lastDeliveryStatus: raw.lastDeliveryStatus || undefined,
       consecutiveFailures: raw.consecutiveFailures ?? 0,

@@ -6,7 +6,10 @@ import type {
   PaginatedResult,
 } from '../repositories/admin-repository.interface';
 import { OperationalIncident } from '../domain/operational-incident.entity';
-import { IncidentStatusEnum, IncidentSeverityEnum } from '../domain/value-objects';
+import {
+  IncidentStatusEnum,
+  IncidentSeverityEnum,
+} from '../domain/value-objects';
 import { AdminEventPublisher } from './admin-event.publisher';
 import {
   AdminIncidentCreatedEvent,
@@ -69,7 +72,10 @@ export class AdminIncidentService {
     });
   }
 
-  public async getIncident(tenantId: string, id: string): Promise<OperationalIncident> {
+  public async getIncident(
+    tenantId: string,
+    id: string,
+  ): Promise<OperationalIncident> {
     const incident = await this.repository.getIncident(tenantId, id);
     if (!incident) {
       throw new NotFoundException(`Incident with ID ${id} not found`);
@@ -100,8 +106,13 @@ export class AdminIncidentService {
     return incident;
   }
 
-  public async resolveIncident(tenantId: string, id: string): Promise<OperationalIncident> {
-    return this.updateStatus(tenantId, id, { status: IncidentStatusEnum.RESOLVED });
+  public async resolveIncident(
+    tenantId: string,
+    id: string,
+  ): Promise<OperationalIncident> {
+    return this.updateStatus(tenantId, id, {
+      status: IncidentStatusEnum.RESOLVED,
+    });
   }
 
   public async resolveByService(

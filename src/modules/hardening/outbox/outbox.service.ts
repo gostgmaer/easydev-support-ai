@@ -10,7 +10,12 @@ export class OutboxService {
 
   constructor(private readonly queueService: QueueService) {}
 
-  async storeEvent(tenantId: string, eventName: string, payload: any, tx?: any): Promise<string> {
+  async storeEvent(
+    tenantId: string,
+    eventName: string,
+    payload: any,
+    tx?: any,
+  ): Promise<string> {
     const eventId = uuidv4();
     const client = tx || db;
 
@@ -34,8 +39,8 @@ export class OutboxService {
       .where(
         and(
           sql`${schema.outboxEvents.status} IN ('PENDING', 'FAILED')`,
-          lt(schema.outboxEvents.attempts, 5)
-        )
+          lt(schema.outboxEvents.attempts, 5),
+        ),
       )
       .limit(100);
 
@@ -75,7 +80,9 @@ export class OutboxService {
 
         processedCount++;
       } catch (err: any) {
-        this.logger.error(`Failed to publish outbox event ${event.id}: ${err.message}`);
+        this.logger.error(
+          `Failed to publish outbox event ${event.id}: ${err.message}`,
+        );
         await db
           .update(schema.outboxEvents)
           .set({
@@ -96,8 +103,8 @@ export class OutboxService {
       .where(
         and(
           eq(schema.outboxEvents.tenantId, tenantId),
-          eq(schema.outboxEvents.status, 'FAILED')
-        )
+          eq(schema.outboxEvents.status, 'FAILED'),
+        ),
       );
 
     for (const event of failedEvents) {
@@ -123,8 +130,8 @@ export class OutboxService {
       .where(
         and(
           eq(schema.outboxEvents.status, 'PROCESSED'),
-          lt(schema.outboxEvents.processedAt, cutoff)
-        )
+          lt(schema.outboxEvents.processedAt, cutoff),
+        ),
       );
 
     return result ? 1 : 0;

@@ -13,8 +13,14 @@ export class WidgetEventService {
     private readonly widgetRepo: IWidgetRepository,
   ) {}
 
-  async trackEvent(tenantId: string, dto: TrackWidgetEventDto): Promise<WidgetEvent> {
-    const session = await this.widgetRepo.getSessionById(tenantId, dto.sessionId);
+  async trackEvent(
+    tenantId: string,
+    dto: TrackWidgetEventDto,
+  ): Promise<WidgetEvent> {
+    const session = await this.widgetRepo.getSessionById(
+      tenantId,
+      dto.sessionId,
+    );
     if (!session) {
       throw new NotFoundException(`Session with ID ${dto.sessionId} not found`);
     }
@@ -30,8 +36,14 @@ export class WidgetEventService {
     return event;
   }
 
-  async trackPageView(tenantId: string, dto: TrackPageViewDto): Promise<WidgetPageView> {
-    const session = await this.widgetRepo.getSessionById(tenantId, dto.sessionId);
+  async trackPageView(
+    tenantId: string,
+    dto: TrackPageViewDto,
+  ): Promise<WidgetPageView> {
+    const session = await this.widgetRepo.getSessionById(
+      tenantId,
+      dto.sessionId,
+    );
     if (!session) {
       throw new NotFoundException(`Session with ID ${dto.sessionId} not found`);
     }
@@ -48,11 +60,17 @@ export class WidgetEventService {
     return pageView;
   }
 
-  async getSessionEvents(tenantId: string, sessionId: string): Promise<WidgetEvent[]> {
+  async getSessionEvents(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<WidgetEvent[]> {
     return this.widgetRepo.getEventsBySession(tenantId, sessionId);
   }
 
-  async getSessionPageViews(tenantId: string, sessionId: string): Promise<WidgetPageView[]> {
+  async getSessionPageViews(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<WidgetPageView[]> {
     return this.widgetRepo.getPageViewsBySession(tenantId, sessionId);
   }
 }

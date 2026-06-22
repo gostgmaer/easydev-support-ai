@@ -3,10 +3,7 @@ import { randomUUID } from 'crypto';
 import { InboxPresenceUpdatedEvent } from '@easydev/shared-events';
 import type { IInboxRepository } from '../repositories/inbox-repository.interface';
 import { InboxPresence } from '../domain/inbox-presence.entity';
-import {
-  PresenceStatus,
-  PresenceStatusEnum,
-} from '../domain/value-objects';
+import { PresenceStatus, PresenceStatusEnum } from '../domain/value-objects';
 import { InboxEventPublisher } from './inbox-event.publisher';
 import { InboxRealtimeService } from './inbox-realtime.service';
 

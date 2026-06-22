@@ -50,7 +50,7 @@ export class TicketQueueProcessor extends BaseWorker {
           conversationId: job.data.conversationId,
           priority: job.data.priority,
           source: job.data.source,
-        } as CreateTicketDto);
+        });
         return { ticketId: ticket.id };
       }
 

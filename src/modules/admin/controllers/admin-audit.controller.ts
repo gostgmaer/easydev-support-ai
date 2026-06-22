@@ -21,7 +21,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AdminAuditService } from '../services/admin-audit.service';
-import { CreateAuditViewDto, AuditLogQueryDto, ConnectorLogQueryDto } from '../dtos';
+import {
+  CreateAuditViewDto,
+  AuditLogQueryDto,
+  ConnectorLogQueryDto,
+} from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -29,7 +33,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Admin Audit Center')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/admin/audit')
@@ -38,7 +46,8 @@ export class AdminAuditController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 
@@ -59,7 +68,10 @@ export class AdminAuditController {
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: AuditLogQueryDto,
   ) {
-    return this.auditService.listSettingsChanges(tenantId, this.toOptions(query));
+    return this.auditService.listSettingsChanges(
+      tenantId,
+      this.toOptions(query),
+    );
   }
 
   @Get('workflows')
@@ -70,7 +82,11 @@ export class AdminAuditController {
     @Query('workflowId') workflowId?: string,
     @Query('executionId') executionId?: string,
   ) {
-    return this.auditService.listWorkflowChanges(tenantId, workflowId, executionId);
+    return this.auditService.listWorkflowChanges(
+      tenantId,
+      workflowId,
+      executionId,
+    );
   }
 
   @Get('connectors/:connectorId')
@@ -91,7 +107,10 @@ export class AdminAuditController {
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: AuditLogQueryDto,
   ) {
-    return this.auditService.listAiConfigurationChanges(tenantId, this.toOptions(query));
+    return this.auditService.listAiConfigurationChanges(
+      tenantId,
+      this.toOptions(query),
+    );
   }
 
   @Get('api-keys')
@@ -111,14 +130,20 @@ export class AdminAuditController {
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: AuditLogQueryDto,
   ) {
-    return this.auditService.listSecurityEvents(tenantId, this.toOptions(query));
+    return this.auditService.listSecurityEvents(
+      tenantId,
+      this.toOptions(query),
+    );
   }
 
   @Get('views')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'List saved audit views for the current user' })
   async listViews(@Headers('x-tenant-id') tenantId: string, @Req() req: any) {
-    const views = await this.auditService.listAuditViews(tenantId, this.userOf(req));
+    const views = await this.auditService.listAuditViews(
+      tenantId,
+      this.userOf(req),
+    );
     return views.map((v) => v.toJSON());
   }
 
@@ -131,14 +156,21 @@ export class AdminAuditController {
     @Body() dto: CreateAuditViewDto,
     @Req() req: any,
   ) {
-    const view = await this.auditService.createAuditView(tenantId, this.userOf(req), dto);
+    const view = await this.auditService.createAuditView(
+      tenantId,
+      this.userOf(req),
+      dto,
+    );
     return view.toJSON();
   }
 
   @Delete('views/:id')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Delete a saved audit view' })
-  async deleteView(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async deleteView(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.auditService.deleteAuditView(tenantId, id);
   }
 

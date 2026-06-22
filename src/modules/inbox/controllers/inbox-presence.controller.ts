@@ -37,7 +37,8 @@ export class InboxPresenceController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 
@@ -61,10 +62,7 @@ export class InboxPresenceController {
   @Post('heartbeat')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Send a presence heartbeat' })
-  async heartbeat(
-    @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
-  ) {
+  async heartbeat(@Headers('x-tenant-id') tenantId: string, @Req() req: any) {
     await this.presenceService.heartbeat(tenantId, this.userOf(req));
     return { ok: true };
   }

@@ -256,7 +256,10 @@ describe('InboxService filters & saved views', () => {
       providers: [
         InboxService,
         { provide: 'IInboxRepository', useValue: repo },
-        { provide: InboxEventPublisher, useValue: { publish: jest.fn(), publishAll: jest.fn() } },
+        {
+          provide: InboxEventPublisher,
+          useValue: { publish: jest.fn(), publishAll: jest.fn() },
+        },
         { provide: InboxActivityService, useValue: { record: jest.fn() } },
         { provide: InboxRealtimeService, useValue: realtimeMock },
         { provide: QueueService, useValue: { addJob: jest.fn() } },

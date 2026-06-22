@@ -25,7 +25,11 @@ import { QUEUES, QueueName } from '@easydev/shared-queues';
 
 @ApiTags('Admin Health & Operations')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/admin/health')
@@ -94,15 +98,24 @@ export class AdminHealthController {
   @Post('queues/:queueName/jobs/:jobId/retry')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Operations Center: retry a failed job' })
-  async retryJob(@Param('queueName') queueName: string, @Param('jobId') jobId: string) {
-    const retried = await this.healthService.retryJob(this.resolveQueueName(queueName), jobId);
+  async retryJob(
+    @Param('queueName') queueName: string,
+    @Param('jobId') jobId: string,
+  ) {
+    const retried = await this.healthService.retryJob(
+      this.resolveQueueName(queueName),
+      jobId,
+    );
     return { retried };
   }
 
   @Get('dead-letter')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Operations Center: dead-letter queue contents' })
-  async getDeadLetter(@Query('start') start?: string, @Query('end') end?: string) {
+  async getDeadLetter(
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+  ) {
     return this.healthService.getDeadLetterJobs(
       start ? parseInt(start, 10) : undefined,
       end ? parseInt(end, 10) : undefined,
@@ -111,7 +124,10 @@ export class AdminHealthController {
 
   @Post('dead-letter/:jobId/replay')
   @Roles('tenant_admin')
-  @ApiOperation({ summary: 'Operations Center: replay a dead-letter job onto its source queue' })
+  @ApiOperation({
+    summary:
+      'Operations Center: replay a dead-letter job onto its source queue',
+  })
   async replayDeadLetter(@Param('jobId') jobId: string) {
     const replayed = await this.healthService.replayDeadLetterJob(jobId);
     return { replayed };
@@ -119,7 +135,9 @@ export class AdminHealthController {
 
   @Get('workflows')
   @Roles('tenant_admin')
-  @ApiOperation({ summary: 'Operations Center: workflow execution status breakdown' })
+  @ApiOperation({
+    summary: 'Operations Center: workflow execution status breakdown',
+  })
   async getWorkflowMonitoring(@Headers('x-tenant-id') tenantId: string) {
     return this.healthService.getWorkflowMonitoring(tenantId);
   }

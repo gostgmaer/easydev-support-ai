@@ -149,7 +149,8 @@ export class InboxView extends AggregateRoot<string> {
   }): void {
     if (props.status) this.props.status = InboxStatus.create(props.status);
     if (props.priority) this.props.priority = props.priority;
-    if (props.customerId !== undefined) this.props.customerId = props.customerId;
+    if (props.customerId !== undefined)
+      this.props.customerId = props.customerId;
     if (props.channelId !== undefined) this.props.channelId = props.channelId;
     if (props.assignedAgentId !== undefined)
       this.props.assignedAgentId = props.assignedAgentId;

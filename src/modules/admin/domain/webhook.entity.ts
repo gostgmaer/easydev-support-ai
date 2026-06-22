@@ -110,7 +110,8 @@ export class Webhook extends Entity<string> {
     if (props.name !== undefined) this.props.name = props.name;
     if (props.url !== undefined) this.props.url = props.url;
     if (props.events !== undefined) this.props.events = props.events;
-    if (props.retryPolicy !== undefined) this.props.retryPolicy = props.retryPolicy;
+    if (props.retryPolicy !== undefined)
+      this.props.retryPolicy = props.retryPolicy;
     this.props.updatedAt = new Date();
   }
 

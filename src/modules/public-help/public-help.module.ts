@@ -19,7 +19,11 @@ import { AIPlatformClient } from '../ai-integration/services/ai-platform.client'
  * pulls in a web of forwardRef'd modules that aren't needed for this. */
 @Module({
   imports: [KnowledgeBaseModule, TicketsModule, CustomersModule],
-  controllers: [PublicKnowledgeController, PublicTicketController, PublicHelpAiAssistController],
+  controllers: [
+    PublicKnowledgeController,
+    PublicTicketController,
+    PublicHelpAiAssistController,
+  ],
   providers: [AIPlatformClient],
 })
 export class PublicHelpModule {}

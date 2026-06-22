@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Body, Headers, Query, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Headers,
+  Query,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { WidgetInstallationService } from '../services/widget-installation.service';
 import { CreateInstallationDto } from '../dtos/widget.dto';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -10,7 +19,9 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 @UseGuards(TenantGuard, RbacGuard)
 @Controller('v1/widget/installations')
 export class WidgetInstallationController {
-  constructor(private readonly installationService: WidgetInstallationService) {}
+  constructor(
+    private readonly installationService: WidgetInstallationService,
+  ) {}
 
   @ApiOperation({ summary: 'Create domain installation' })
   @Roles('tenant_admin')
@@ -22,7 +33,10 @@ export class WidgetInstallationController {
     if (!tenantId) {
       throw new BadRequestException('Missing Tenant ID');
     }
-    const install = await this.installationService.createInstallation(tenantId, dto);
+    const install = await this.installationService.createInstallation(
+      tenantId,
+      dto,
+    );
     return install.toJSON();
   }
 
@@ -39,7 +53,10 @@ export class WidgetInstallationController {
     if (!body.domain) {
       throw new BadRequestException('Missing domain name');
     }
-    const install = await this.installationService.verifyInstallation(tenantId, body.domain);
+    const install = await this.installationService.verifyInstallation(
+      tenantId,
+      body.domain,
+    );
     return install.toJSON();
   }
 
@@ -56,7 +73,10 @@ export class WidgetInstallationController {
     if (!domain) {
       throw new BadRequestException('Missing domain name');
     }
-    const script = this.installationService.generateInstallationScript(tenantId, domain);
+    const script = this.installationService.generateInstallationScript(
+      tenantId,
+      domain,
+    );
     return { script };
   }
 }

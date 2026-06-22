@@ -1,7 +1,10 @@
 import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import axios from 'axios';
-import type { IAdminRepository, PaginatedResult } from '../repositories/admin-repository.interface';
+import type {
+  IAdminRepository,
+  PaginatedResult,
+} from '../repositories/admin-repository.interface';
 import { Webhook, WebhookRetryPolicy } from '../domain/webhook.entity';
 import { AdminEventPublisher } from './admin-event.publisher';
 import {
@@ -10,7 +13,10 @@ import {
 } from '@easydev/shared-events';
 import { RegisterWebhookDto, UpdateWebhookDto } from '../dtos';
 
-const DEFAULT_RETRY_POLICY: WebhookRetryPolicy = { maxAttempts: 5, backoffMs: 5000 };
+const DEFAULT_RETRY_POLICY: WebhookRetryPolicy = {
+  maxAttempts: 5,
+  backoffMs: 5000,
+};
 
 @Injectable()
 export class AdminWebhookService {
@@ -40,7 +46,11 @@ export class AdminWebhookService {
   private decryptSecret(encrypted: string): string {
     const [ivHex, dataHex] = encrypted.split(':');
     const iv = Buffer.from(ivHex, 'hex');
-    const decipher = crypto.createDecipheriv(this.algorithm, this.secretKey, iv);
+    const decipher = crypto.createDecipheriv(
+      this.algorithm,
+      this.secretKey,
+      iv,
+    );
     let decrypted = decipher.update(dataHex, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
@@ -50,7 +60,11 @@ export class AdminWebhookService {
     return crypto.createHmac('sha256', secret).update(body).digest('hex');
   }
 
-  public verifySignature(secret: string, body: string, signature: string): boolean {
+  public verifySignature(
+    secret: string,
+    body: string,
+    signature: string,
+  ): boolean {
     const expected = this.sign(secret, body);
     const a = Buffer.from(expected);
     const b = Buffer.from(signature);
@@ -132,7 +146,10 @@ export class AdminWebhookService {
     eventName: string,
     payload: unknown,
   ): Promise<void> {
-    const webhooks = await this.repository.findWebhooksForEvent(tenantId, eventName);
+    const webhooks = await this.repository.findWebhooksForEvent(
+      tenantId,
+      eventName,
+    );
     for (const webhook of webhooks) {
       await this.deliver(webhook, tenantId, eventName, payload);
     }
@@ -178,7 +195,9 @@ export class AdminWebhookService {
           `Webhook delivery attempt ${attempt}/${policy.maxAttempts} failed for ${webhook.id}: ${err.message}`,
         );
         if (attempt < policy.maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, policy.backoffMs * attempt));
+          await new Promise((resolve) =>
+            setTimeout(resolve, policy.backoffMs * attempt),
+          );
         }
       }
     }

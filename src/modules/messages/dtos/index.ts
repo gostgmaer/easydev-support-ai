@@ -382,10 +382,25 @@ export class CreateWidgetTicketDto {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'] })
+  @ApiPropertyOptional({
+    enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'],
+  })
   @IsEnum(['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'])
   @IsOptional()
   priority?: string;
+}
+
+export class SubmitWidgetFeedbackDto {
+  @ApiProperty({ minimum: 1, maximum: 5 })
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  rating!: number;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  feedback?: string;
 }
 
 export class InboundMessageDto {

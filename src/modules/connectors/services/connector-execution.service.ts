@@ -11,7 +11,10 @@ import type {
   ExecutionQueryOptions,
 } from '../repositories/connector-repository.interface';
 import { ExecutionEngine } from '../engine/execution-engine';
-import { CapabilityTypeEnum, ExecutionStatusEnum } from '../domain/value-objects';
+import {
+  CapabilityTypeEnum,
+  ExecutionStatusEnum,
+} from '../domain/value-objects';
 import { ConnectorExecution } from '../domain/connector-execution.entity';
 import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import { TriggerTypeEnum } from '../../workflows/domain/value-objects';

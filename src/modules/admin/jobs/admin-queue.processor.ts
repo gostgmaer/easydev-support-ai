@@ -51,7 +51,11 @@ export class AdminQueueProcessor extends BaseWorker {
 
       case 'admin-webhook-job': {
         this.logger.log(`Processing admin-webhook-job ${job.id}`);
-        await this.webhookService.dispatchEvent(tenantId, job.data.eventName, job.data.payload);
+        await this.webhookService.dispatchEvent(
+          tenantId,
+          job.data.eventName,
+          job.data.payload,
+        );
         return { dispatched: true };
       }
 
@@ -68,7 +72,8 @@ export class AdminQueueProcessor extends BaseWorker {
           tenantId,
           job.data.affectedService,
           job.data.title,
-          (job.data.severity as IncidentSeverityEnum) || IncidentSeverityEnum.MEDIUM,
+          (job.data.severity as IncidentSeverityEnum) ||
+            IncidentSeverityEnum.MEDIUM,
           job.data.description,
         );
         return { incidentId: incident.id };

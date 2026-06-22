@@ -9,7 +9,7 @@ export class HardeningSchedulerService {
 
   constructor(
     private readonly outboxService: OutboxService,
-    private readonly partitionManager: PartitionManagerService
+    private readonly partitionManager: PartitionManagerService,
   ) {}
 
   // Run outbox events processor every 5 seconds
@@ -18,7 +18,9 @@ export class HardeningSchedulerService {
     try {
       const processed = await this.outboxService.processPendingEvents();
       if (processed > 0) {
-        this.logger.log(`[Outbox] Processed ${processed} pending events from outbox.`);
+        this.logger.log(
+          `[Outbox] Processed ${processed} pending events from outbox.`,
+        );
       }
     } catch (err: any) {
       this.logger.error(`Error processing outbox events: ${err.message}`);
@@ -38,11 +40,15 @@ export class HardeningSchedulerService {
   // Drop partitions older than 12 months & clean old outbox weekly on Sundays at midnight
   @Cron('0 0 * * 0')
   async performWeeklyMaintenance() {
-    this.logger.log('Starting weekly database maintenance and partition cleanups.');
+    this.logger.log(
+      'Starting weekly database maintenance and partition cleanups.',
+    );
     try {
       await this.partitionManager.cleanupExpiredPartitions(12);
       const cleaned = await this.outboxService.cleanupProcessedEvents(7); // retain 7 days
-      this.logger.log(`[Outbox] Cleaned up old processed events. Code: ${cleaned}`);
+      this.logger.log(
+        `[Outbox] Cleaned up old processed events. Code: ${cleaned}`,
+      );
     } catch (err: any) {
       this.logger.error(`Error during weekly maintenance: ${err.message}`);
     }

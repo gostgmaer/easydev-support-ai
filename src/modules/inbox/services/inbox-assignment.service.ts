@@ -1,18 +1,10 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { InboxAssignmentChangedEvent } from '@easydev/shared-events';
 import type { IInboxRepository } from '../repositories/inbox-repository.interface';
 import { InboxView } from '../domain/inbox-view.aggregate';
 import { InboxAssignment } from '../domain/inbox-assignment.entity';
-import {
-  AssignmentType,
-  AssignmentTypeEnum,
-} from '../domain/value-objects';
+import { AssignmentType, AssignmentTypeEnum } from '../domain/value-objects';
 import { InboxEventPublisher } from './inbox-event.publisher';
 import { InboxRealtimeService } from './inbox-realtime.service';
 import { InboxActivityService } from './inbox-activity.service';

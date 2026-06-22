@@ -120,18 +120,24 @@ export class ConversationResolutionService {
         tenantId,
         conversation.customerId,
       );
-      customerEmail = customer?.email || "";
+      customerEmail = customer?.email || '';
     } catch (err: any) {
-      this.logger.warn(`Could not load customer for notification: ${err.message}`);
+      this.logger.warn(
+        `Could not load customer for notification: ${err.message}`,
+      );
     }
 
     // ─── 7. Notify customer of resolution via notification queue ─────────
-    await this.queueService.addJob(QUEUES.NOTIFICATION, 'conversation-resolved', {
-      tenantId,
-      conversationId,
-      customerEmail,
-      summary: options.summary,
-    });
+    await this.queueService.addJob(
+      QUEUES.NOTIFICATION,
+      'conversation-resolved',
+      {
+        tenantId,
+        conversationId,
+        customerEmail,
+        summary: options.summary,
+      },
+    );
 
     if (customerEmail) {
       await this.eventPublisher.publish(

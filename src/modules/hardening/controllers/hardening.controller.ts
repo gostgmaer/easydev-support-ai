@@ -1,4 +1,11 @@
-import { Controller, Get, Post, Headers, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Headers,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -15,7 +22,7 @@ export class HardeningController {
     private readonly costTracker: CostTrackerService,
     private readonly outboxService: OutboxService,
     private readonly cacheManager: CacheManagerService,
-    private readonly partitionManager: PartitionManagerService
+    private readonly partitionManager: PartitionManagerService,
   ) {}
 
   @ApiOperation({ summary: 'Get tenant cost and usage metrics' })

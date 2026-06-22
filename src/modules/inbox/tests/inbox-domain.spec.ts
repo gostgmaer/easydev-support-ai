@@ -96,18 +96,18 @@ describe('inbox value objects', () => {
   });
 
   it('reports availability for ONLINE presence', () => {
-    expect(
-      PresenceStatus.create(PresenceStatusEnum.ONLINE).isAvailable(),
-    ).toBe(true);
-    expect(
-      PresenceStatus.create(PresenceStatusEnum.AWAY).isAvailable(),
-    ).toBe(false);
+    expect(PresenceStatus.create(PresenceStatusEnum.ONLINE).isAvailable()).toBe(
+      true,
+    );
+    expect(PresenceStatus.create(PresenceStatusEnum.AWAY).isAvailable()).toBe(
+      false,
+    );
   });
 
   it('validates assignment types', () => {
-    expect(
-      AssignmentType.create(AssignmentTypeEnum.ROUND_ROBIN).value,
-    ).toBe('ROUND_ROBIN');
+    expect(AssignmentType.create(AssignmentTypeEnum.ROUND_ROBIN).value).toBe(
+      'ROUND_ROBIN',
+    );
     expect(() =>
       AssignmentType.create('BOGUS' as AssignmentTypeEnum),
     ).toThrow();

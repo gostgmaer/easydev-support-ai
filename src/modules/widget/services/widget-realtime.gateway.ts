@@ -18,7 +18,9 @@ import { and, eq } from 'drizzle-orm';
   cors: { origin: '*' },
   namespace: '/v1/widget-chat',
 })
-export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class WidgetRealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -32,15 +34,18 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth.token || client.handshake.query.token as string;
-      const tenantId = (client.handshake.headers['x-tenant-id'] || client.handshake.query.tenantId) as string;
+      const token =
+        client.handshake.auth.token || (client.handshake.query.token as string);
+      const tenantId = (client.handshake.headers['x-tenant-id'] ||
+        client.handshake.query.tenantId) as string;
 
       if (!token || !tenantId) {
         throw new Error('Missing token or tenantId');
       }
 
       // Validate session token
-      const { visitorId, sessionId } = await this.sessionService.validateSessionToken(tenantId, token);
+      const { visitorId, sessionId } =
+        await this.sessionService.validateSessionToken(tenantId, token);
 
       // Join tenant, visitor and session rooms
       client.join(`tenant_${tenantId}`);
@@ -51,11 +56,14 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
       client.data = { tenantId, visitorId, sessionId };
 
       // Update visitor presence (last seen status)
-      await db.update(schema.widgetVisitors)
+      await db
+        .update(schema.widgetVisitors)
         .set({ lastSeenAt: new Date() })
         .where(eq(schema.widgetVisitors.id, visitorId));
 
-      this.logger.log(`Widget client session ${sessionId} connected for tenant ${tenantId}`);
+      this.logger.log(
+        `Widget client session ${sessionId} connected for tenant ${tenantId}`,
+      );
 
       // Track connection event
       await this.eventService.trackEvent(tenantId, {
@@ -110,12 +118,15 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
     if (!tenantId || !sessionId) return;
 
     // Mark message as read in operational db if applicable
-    await db.update(schema.messages)
+    await db
+      .update(schema.messages)
       .set({ readAt: new Date() })
-      .where(and(
-        eq(schema.messages.id, body.messageId),
-        eq(schema.messages.tenantId, tenantId)
-      ));
+      .where(
+        and(
+          eq(schema.messages.id, body.messageId),
+          eq(schema.messages.tenantId, tenantId),
+        ),
+      );
 
     // Notify agents
     this.server.to(`tenant_${tenantId}`).emit('widget.message.read', {
@@ -127,7 +138,10 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
     await this.eventService.trackEvent(tenantId, {
       sessionId,
       eventName: 'READ_RECEIPT',
-      eventData: { messageId: body.messageId, conversationId: body.conversationId },
+      eventData: {
+        messageId: body.messageId,
+        conversationId: body.conversationId,
+      },
     });
   }
 
@@ -136,7 +150,8 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
     const { tenantId, visitorId } = client.data || {};
     if (!tenantId || !visitorId) return;
 
-    await db.update(schema.widgetVisitors)
+    await db
+      .update(schema.widgetVisitors)
       .set({ lastSeenAt: new Date() })
       .where(eq(schema.widgetVisitors.id, visitorId));
 
@@ -155,19 +170,21 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
     const linkedConvs = await db
       .select()
       .from(schema.widgetConversations)
-      .where(and(
-        eq(schema.widgetConversations.tenantId, tenantId),
-        eq(schema.widgetConversations.widgetSessionId, sessionId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetConversations.tenantId, tenantId),
+          eq(schema.widgetConversations.widgetSessionId, sessionId),
+        ),
+      );
 
-    const conversationIds = linkedConvs.map(c => c.conversationId);
+    const conversationIds = linkedConvs.map((c) => c.conversationId);
     if (conversationIds.length === 0) {
       client.emit('message_sync_response', { messages: [] });
       return;
     }
 
     // Fetch messages since last sync timestamp or last 50 messages
-    let query = db
+    const query = db
       .select()
       .from(schema.messages)
       .where(eq(schema.messages.conversationId, conversationIds[0])); // Fetch from first active conversation
@@ -177,7 +194,12 @@ export class WidgetRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
   }
 
   // Helper function to send messages to widget client directly from service layer
-  emitToSession(tenantId: string, sessionId: string, eventName: string, payload: any) {
+  emitToSession(
+    tenantId: string,
+    sessionId: string,
+    eventName: string,
+    payload: any,
+  ) {
     if (this.server) {
       this.server.to(`session_${sessionId}`).emit(eventName, payload);
     }

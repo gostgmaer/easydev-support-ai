@@ -94,7 +94,9 @@ describe('AdminDashboardService', () => {
   it('creates a dashboard and rejects a duplicate name', async () => {
     repo.getDashboardByName.mockResolvedValueOnce(null);
     const tenantId = randomUUID();
-    const dashboard = await service.createDashboard(tenantId, { dashboardName: 'Ops' });
+    const dashboard = await service.createDashboard(tenantId, {
+      dashboardName: 'Ops',
+    });
     expect(dashboard.dashboardName).toBe('Ops');
     expect(repo.saveDashboard).toHaveBeenCalled();
 
@@ -107,7 +109,10 @@ describe('AdminDashboardService', () => {
   it('clears other defaults when a new dashboard is set as default', async () => {
     repo.getDashboardByName.mockResolvedValue(null);
     const tenantId = randomUUID();
-    await service.createDashboard(tenantId, { dashboardName: 'Default', defaultView: true });
+    await service.createDashboard(tenantId, {
+      dashboardName: 'Default',
+      defaultView: true,
+    });
     expect(repo.clearDefaultDashboards).toHaveBeenCalledWith(tenantId);
   });
 
@@ -120,7 +125,10 @@ describe('AdminDashboardService', () => {
     expect(repo.saveAnnouncement).toHaveBeenCalled();
 
     repo.getAnnouncement.mockResolvedValue(announcement);
-    const deactivated = await service.deactivateAnnouncement(tenantId, announcement.id);
+    const deactivated = await service.deactivateAnnouncement(
+      tenantId,
+      announcement.id,
+    );
     expect(deactivated.isActive).toBe(false);
   });
 });
@@ -178,7 +186,9 @@ describe('AdminApiKeyService', () => {
       scopes: ['dashboards:read'],
     });
     repo.getApiKeyByHash.mockResolvedValue({ apiKey: stored, tenantId });
-    await expect(service.validateApiKey(rawKey, 'webhooks:write')).rejects.toThrow();
+    await expect(
+      service.validateApiKey(rawKey, 'webhooks:write'),
+    ).rejects.toThrow();
   });
 
   it('revokes an API key', async () => {
@@ -189,7 +199,12 @@ describe('AdminApiKeyService', () => {
       scopes: ['*'],
     });
     repo.getApiKey.mockResolvedValue(apiKey);
-    const revoked = await service.revokeApiKey(tenantId, apiKey.id, 'admin-1', 'no longer needed');
+    const revoked = await service.revokeApiKey(
+      tenantId,
+      apiKey.id,
+      'admin-1',
+      'no longer needed',
+    );
     expect(revoked.status.value).toBe('REVOKED');
   });
 });
@@ -339,9 +354,22 @@ describe('AdminOverrideService', () => {
         { provide: AdminEventPublisher, useValue: publisherMock },
         { provide: QueueService, useValue: { addJob: jest.fn() } },
         { provide: aiSettingsServiceToken(), useValue: aiSettingsService },
-        { provide: aiAgentServiceToken(), useValue: { findAgents: jest.fn(), updateAgent: jest.fn(), setAgentModelConfig: jest.fn() } },
-        { provide: aiUsageServiceToken(), useValue: { getUsageMetrics: jest.fn().mockResolvedValue([]) } },
-        { provide: connectorExecutionServiceToken(), useValue: connectorExecutionService },
+        {
+          provide: aiAgentServiceToken(),
+          useValue: {
+            findAgents: jest.fn(),
+            updateAgent: jest.fn(),
+            setAgentModelConfig: jest.fn(),
+          },
+        },
+        {
+          provide: aiUsageServiceToken(),
+          useValue: { getUsageMetrics: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: connectorExecutionServiceToken(),
+          useValue: connectorExecutionService,
+        },
       ],
     }).compile();
     service = module.get(AdminOverrideService);
@@ -349,16 +377,20 @@ describe('AdminOverrideService', () => {
   });
 
   function aiSettingsServiceToken() {
-    return require('../../settings/services/ai-settings.service').AiSettingsService;
+    return require('../../settings/services/ai-settings.service')
+      .AiSettingsService;
   }
   function aiAgentServiceToken() {
-    return require('../../ai-integration/services/ai-agent.service').AiAgentService;
+    return require('../../ai-integration/services/ai-agent.service')
+      .AiAgentService;
   }
   function aiUsageServiceToken() {
-    return require('../../ai-integration/services/ai-usage.service').AiUsageService;
+    return require('../../ai-integration/services/ai-usage.service')
+      .AiUsageService;
   }
   function connectorExecutionServiceToken() {
-    return require('../../connectors/services/connector-execution.service').ConnectorExecutionService;
+    return require('../../connectors/services/connector-execution.service')
+      .ConnectorExecutionService;
   }
 
   it('creates a tenant override', async () => {
@@ -391,7 +423,9 @@ describe('AdminOverrideService', () => {
 
   it('treats a feature as enabled by default when no access record exists', async () => {
     repo.getFeatureAccess.mockResolvedValue(null);
-    await expect(service.isFeatureEnabled(randomUUID(), 'unknown.feature')).resolves.toBe(true);
+    await expect(
+      service.isFeatureEnabled(randomUUID(), 'unknown.feature'),
+    ).resolves.toBe(true);
   });
 
   it('surfaces connector governance: rate limit and execution failure counts', async () => {
@@ -406,10 +440,16 @@ describe('AdminOverrideService', () => {
         if (options.status === 'FAILED') {
           return Promise.resolve({ data: [], total: 2 });
         }
-        return Promise.resolve({ data: [{ attempt: 1 }, { attempt: 3 }], total: 10 });
+        return Promise.resolve({
+          data: [{ attempt: 1 }, { attempt: 3 }],
+          total: 10,
+        });
       },
     );
-    const result = await service.getConnectorGovernance(randomUUID(), randomUUID());
+    const result = await service.getConnectorGovernance(
+      randomUUID(),
+      randomUUID(),
+    );
     expect(result.totalExecutions).toBe(10);
     expect(result.failedExecutions).toBe(2);
     expect(result.retriedExecutions).toBe(1);
@@ -446,7 +486,10 @@ describe('AdminAuditService', () => {
     auditRepository.findPaginated.mockResolvedValue({ data: [], total: 0 });
     const tenantId = randomUUID();
     await service.listEntityChanges(tenantId, { page: 1, limit: 10 });
-    expect(auditRepository.findPaginated).toHaveBeenCalledWith(tenantId, { page: 1, limit: 10 });
+    expect(auditRepository.findPaginated).toHaveBeenCalledWith(tenantId, {
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('filters API key changes by action prefix', async () => {
@@ -460,15 +503,23 @@ describe('AdminAuditService', () => {
     });
     const result = await service.listApiKeyChanges(randomUUID(), {});
     expect(result.total).toBe(2);
-    expect(result.data.every((r: any) => r.action.startsWith('API_KEY'))).toBe(true);
+    expect(result.data.every((r: any) => r.action.startsWith('API_KEY'))).toBe(
+      true,
+    );
   });
 
   it('delegates workflow changes to the workflow audit service', async () => {
-    workflowAuditService.getAuditLogs.mockResolvedValue([{ action: 'workflow.created' }]);
+    workflowAuditService.getAuditLogs.mockResolvedValue([
+      { action: 'workflow.created' },
+    ]);
     const tenantId = randomUUID();
     const workflowId = randomUUID();
     const result = await service.listWorkflowChanges(tenantId, workflowId);
-    expect(workflowAuditService.getAuditLogs).toHaveBeenCalledWith(tenantId, workflowId, undefined);
+    expect(workflowAuditService.getAuditLogs).toHaveBeenCalledWith(
+      tenantId,
+      workflowId,
+      undefined,
+    );
     expect(result).toHaveLength(1);
   });
 
@@ -500,12 +551,36 @@ describe('AdminWidgetService', () => {
       providers: [
         AdminWidgetService,
         { provide: 'IAdminRepository', useValue: repo },
-        { provide: 'IAnalyticsRepository', useValue: { getWorkflowMetricsSummary: jest.fn() } },
-        { provide: require('../../analytics/services/analytics-dashboard.service').AnalyticsDashboardService, useValue: analyticsDashboardService },
-        { provide: require('../../ai-integration/services/ai-usage.service').AiUsageService, useValue: { getUsageMetrics: jest.fn().mockResolvedValue([]) } },
-        { provide: require('../../connectors/services/connector.service').ConnectorService, useValue: { getConnectors: jest.fn() } },
-        { provide: require('../../customers/services/customer.service').CustomerService, useValue: { findPaginated: jest.fn() } },
-        { provide: require('../../inbox/services/inbox-presence.service').InboxPresenceService, useValue: { listOnline: jest.fn() } },
+        {
+          provide: 'IAnalyticsRepository',
+          useValue: { getWorkflowMetricsSummary: jest.fn() },
+        },
+        {
+          provide:
+            require('../../analytics/services/analytics-dashboard.service')
+              .AnalyticsDashboardService,
+          useValue: analyticsDashboardService,
+        },
+        {
+          provide: require('../../ai-integration/services/ai-usage.service')
+            .AiUsageService,
+          useValue: { getUsageMetrics: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: require('../../connectors/services/connector.service')
+            .ConnectorService,
+          useValue: { getConnectors: jest.fn() },
+        },
+        {
+          provide: require('../../customers/services/customer.service')
+            .CustomerService,
+          useValue: { findPaginated: jest.fn() },
+        },
+        {
+          provide: require('../../inbox/services/inbox-presence.service')
+            .InboxPresenceService,
+          useValue: { listOnline: jest.fn() },
+        },
       ],
     }).compile();
     service = module.get(AdminWidgetService);
@@ -514,10 +589,19 @@ describe('AdminWidgetService', () => {
 
   it('computes SYSTEM_HEALTH widget data from the admin repository', async () => {
     repo.listSystemHealth.mockResolvedValue([
-      { toJSON: () => ({ serviceName: 'database' }), status: { isOperational: () => true } },
-      { toJSON: () => ({ serviceName: 'redis' }), status: { isOperational: () => false } },
+      {
+        toJSON: () => ({ serviceName: 'database' }),
+        status: { isOperational: () => true },
+      },
+      {
+        toJSON: () => ({ serviceName: 'redis' }),
+        status: { isOperational: () => false },
+      },
     ]);
-    const data = await service.computeWidgetData(randomUUID(), AdminWidgetTypeEnum.SYSTEM_HEALTH);
+    const data = await service.computeWidgetData(
+      randomUUID(),
+      AdminWidgetTypeEnum.SYSTEM_HEALTH,
+    );
     expect(data.totalCount).toBe(2);
     expect(data.healthyCount).toBe(1);
   });
@@ -567,10 +651,27 @@ describe('AdminHealthService', () => {
         { provide: AdminEventPublisher, useValue: publisherMock },
         { provide: require('@nestjs/core').ModuleRef, useValue: moduleRef },
         { provide: QueueService, useValue: { addJob: jest.fn() } },
-        { provide: require('../../connectors/services/connector-health.service').ConnectorHealthService, useValue: { runHealthSweep: jest.fn() } },
-        { provide: require('../../connectors/services/connector.service').ConnectorService, useValue: { getConnectors: jest.fn() } },
-        { provide: require('../../workflows/services/workflow-execution.service').WorkflowExecutionService, useValue: { findExecutions: jest.fn().mockResolvedValue([]) } },
-        { provide: require('../../../integration/iam/iam.service').IamIntegrationService, useValue: {} },
+        {
+          provide: require('../../connectors/services/connector-health.service')
+            .ConnectorHealthService,
+          useValue: { runHealthSweep: jest.fn() },
+        },
+        {
+          provide: require('../../connectors/services/connector.service')
+            .ConnectorService,
+          useValue: { getConnectors: jest.fn() },
+        },
+        {
+          provide:
+            require('../../workflows/services/workflow-execution.service')
+              .WorkflowExecutionService,
+          useValue: { findExecutions: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: require('../../../integration/iam/iam.service')
+            .IamIntegrationService,
+          useValue: {},
+        },
       ],
     }).compile();
     service = module.get(AdminHealthService);
@@ -585,7 +686,7 @@ describe('AdminHealthService', () => {
       failed: 4,
       delayed: 0,
     });
-    const stats = await service.getQueueStats('admin-queue' as any);
+    const stats = await service.getQueueStats('admin-queue');
     expect(stats.waiting).toBe(1);
     expect(stats.failed).toBe(4);
   });
@@ -603,7 +704,11 @@ describe('AdminHealthService', () => {
 
   it('replays a dead-letter job back onto its source queue', async () => {
     fakeQueue.getJob.mockResolvedValue({
-      data: { sourceQueue: 'connector-queue', jobName: 'connector-retry-job', data: { foo: 'bar' } },
+      data: {
+        sourceQueue: 'connector-queue',
+        jobName: 'connector-retry-job',
+        data: { foo: 'bar' },
+      },
       remove: jest.fn(),
     });
     const replayed = await service.replayDeadLetterJob('job-1');
@@ -612,16 +717,22 @@ describe('AdminHealthService', () => {
 
   it('returns false when retrying a job that no longer exists', async () => {
     fakeQueue.getJob.mockResolvedValue(null);
-    const retried = await service.retryJob('connector-queue' as any, 'missing-job');
+    const retried = await service.retryJob('connector-queue', 'missing-job');
     expect(retried).toBe(false);
   });
 });
 
 describe('AdminQueueProcessor', () => {
   let processor: AdminQueueProcessor;
-  const healthService = { runHealthSweep: jest.fn(), refreshConnectorHealth: jest.fn() };
+  const healthService = {
+    runHealthSweep: jest.fn(),
+    refreshConnectorHealth: jest.fn(),
+  };
   const webhookService = { dispatchEvent: jest.fn() };
-  const incidentService = { openOrEscalate: jest.fn(), resolveByService: jest.fn() };
+  const incidentService = {
+    openOrEscalate: jest.fn(),
+    resolveByService: jest.fn(),
+  };
   const overrideService = { processExpiredOverrides: jest.fn() };
   const auditService = { log: jest.fn() };
 
@@ -667,7 +778,11 @@ describe('AdminQueueProcessor', () => {
     const result = await processor.handleJob({
       name: 'admin-incident-job',
       id: 'j3',
-      data: { _tenantContext: { tenantId: randomUUID() }, affectedService: 'database', resolve: true },
+      data: {
+        _tenantContext: { tenantId: randomUUID() },
+        affectedService: 'database',
+        resolve: true,
+      },
     } as any);
     expect(incidentService.resolveByService).toHaveBeenCalled();
     expect(result.resolvedIncidentId).toBe('incident-1');
@@ -675,7 +790,11 @@ describe('AdminQueueProcessor', () => {
 
   it('routes admin-cleanup-job to processExpiredOverrides', async () => {
     overrideService.processExpiredOverrides.mockResolvedValue(3);
-    const result = await processor.handleJob({ name: 'admin-cleanup-job', id: 'j4', data: {} } as any);
+    const result = await processor.handleJob({
+      name: 'admin-cleanup-job',
+      id: 'j4',
+      data: {},
+    } as any);
     expect(result.removedOverrides).toBe(3);
   });
 

@@ -1,4 +1,10 @@
-import { Controller, Post, Body, Headers, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  BadRequestException,
+} from '@nestjs/common';
 import { WidgetSessionService } from '../services/widget-session.service';
 import { StartWidgetSessionDto } from '../dtos/widget.dto';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
@@ -18,7 +24,10 @@ export class WidgetSessionController {
     if (!tenantId) {
       throw new BadRequestException('Missing Tenant ID');
     }
-    const { session, token } = await this.sessionService.startSession(tenantId, dto);
+    const { session, token } = await this.sessionService.startSession(
+      tenantId,
+      dto,
+    );
     return {
       session: session.toJSON(),
       token,

@@ -1,4 +1,10 @@
-import { Controller, Post, Body, Headers, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  BadRequestException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { CustomerService } from '../../customers/services/customer.service';
@@ -43,6 +49,7 @@ export class PublicTicketController {
       description: dto.description,
       customerId: customer.id,
       priority: dto.priority,
+      metadata: dto.category ? { category: dto.category } : undefined,
     });
 
     return ticket.toJSON();

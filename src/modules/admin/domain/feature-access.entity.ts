@@ -64,7 +64,10 @@ export class FeatureAccess extends Entity<string> {
       notes?: string;
     },
   ): FeatureAccess {
-    return new FeatureAccess(id, { ...props, isEnabled: props.isEnabled ?? true });
+    return new FeatureAccess(id, {
+      ...props,
+      isEnabled: props.isEnabled ?? true,
+    });
   }
 
   public grant(grantedBy?: string, notes?: string): void {

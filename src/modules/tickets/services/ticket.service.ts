@@ -141,17 +141,21 @@ export class TicketService {
       details: `Created ticket ${ticket.ticketNumber.value} (${ticketId})`,
     });
 
-    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.TICKET_CREATED, {
-      id: ticket.id,
-      ticketId: ticket.id,
-      ticketNumber: ticket.ticketNumber.value,
-      status: ticket.status.value,
-      priority: ticket.priority.value,
-      customerId: ticket.customerId,
-      conversationId: ticket.conversationId,
-      categoryId: ticket.categoryId,
-      source: ticket.source.value,
-    });
+    await this.evaluateWorkflowTriggers(
+      tenantId,
+      TriggerTypeEnum.TICKET_CREATED,
+      {
+        id: ticket.id,
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticketNumber.value,
+        status: ticket.status.value,
+        priority: ticket.priority.value,
+        customerId: ticket.customerId,
+        conversationId: ticket.conversationId,
+        categoryId: ticket.categoryId,
+        source: ticket.source.value,
+      },
+    );
 
     return ticket;
   }
@@ -195,16 +199,20 @@ export class TicketService {
       details: `Updated ticket ${id}`,
     });
 
-    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.TICKET_UPDATED, {
-      id: ticket.id,
-      ticketId: ticket.id,
-      ticketNumber: ticket.ticketNumber.value,
-      status: ticket.status.value,
-      priority: ticket.priority.value,
-      customerId: ticket.customerId,
-      conversationId: ticket.conversationId,
-      categoryId: ticket.categoryId,
-    });
+    await this.evaluateWorkflowTriggers(
+      tenantId,
+      TriggerTypeEnum.TICKET_UPDATED,
+      {
+        id: ticket.id,
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticketNumber.value,
+        status: ticket.status.value,
+        priority: ticket.priority.value,
+        customerId: ticket.customerId,
+        conversationId: ticket.conversationId,
+        categoryId: ticket.categoryId,
+      },
+    );
 
     return ticket;
   }

@@ -18,7 +18,10 @@ import { CustomerService } from '../../customers/services/customer.service';
 import { TicketService } from '../../tickets/services/ticket.service';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { DocumentStatusEnum } from '../../knowledge-base/domain/value-objects';
-import { TicketPriorityEnum, TicketSourceEnum } from '../../tickets/domain/value-objects';
+import {
+  TicketPriorityEnum,
+  TicketSourceEnum,
+} from '../../tickets/domain/value-objects';
 import {
   HelpCenterAiAssistRequestedEvent,
   HelpCenterAiAssistCompletedEvent,
@@ -34,7 +37,9 @@ export class PublicAiAssistDto {
   @IsNotEmpty()
   query: string;
 
-  @ApiPropertyOptional({ description: 'Previous session ID for conversation continuity' })
+  @ApiPropertyOptional({
+    description: 'Previous session ID for conversation continuity',
+  })
   @IsString()
   @IsOptional()
   sessionId?: string;
@@ -51,7 +56,9 @@ export class PublicDeflectionFeedbackDto {
   @IsNotEmpty()
   sessionId: string;
 
-  @ApiProperty({ description: 'Whether the article resolved the issue (true = deflected)' })
+  @ApiProperty({
+    description: 'Whether the article resolved the issue (true = deflected)',
+  })
   resolved: boolean;
 
   @ApiPropertyOptional({ description: 'Document ID that resolved the issue' })
@@ -134,12 +141,17 @@ export class PublicHelpAiAssistController {
       categoryId: dto.categoryId,
       status: DocumentStatusEnum.ACTIVE,
     });
-    const docs: KnowledgeSearchResult[] = Array.isArray(searchResults) ? searchResults : [];
+    const docs: KnowledgeSearchResult[] = Array.isArray(searchResults)
+      ? searchResults
+      : [];
     const topResult = docs[0];
 
     // High-confidence KB match — return the article directly
     if (topResult && (topResult.score || 0) >= 0.75) {
-      const content = await this.documentService.getDocumentContent(tenantId, topResult.document.id);
+      const content = await this.documentService.getDocumentContent(
+        tenantId,
+        topResult.document.id,
+      );
       const result = {
         sessionId,
         answer: content.slice(0, 500),
@@ -172,16 +184,26 @@ export class PublicHelpAiAssistController {
       const contextDocs = await Promise.all(
         docs.slice(0, 5).map(async (r) => ({
           title: r.document.title,
-          content: (await this.documentService.getDocumentContent(tenantId, r.document.id)).slice(0, 800),
+          content: (
+            await this.documentService.getDocumentContent(
+              tenantId,
+              r.document.id,
+            )
+          ).slice(0, 800),
         })),
       );
 
-      const baseSystemPrompt = 'You are a helpful customer support assistant for the help center.';
+      const baseSystemPrompt =
+        'You are a helpful customer support assistant for the help center.';
       const systemPrompt = contextDocs.length
         ? `${baseSystemPrompt}\n\nUse the following knowledge base articles to answer the customer's question if relevant. Ignore them if they don't apply:\n\n${contextDocs.map((d) => `${d.title}\n${d.content}`).join('\n\n')}`
         : baseSystemPrompt;
 
-      const generateResult = await this.aiClient.generate(tenantId, dto.query, systemPrompt);
+      const generateResult = await this.aiClient.generate(
+        tenantId,
+        dto.query,
+        systemPrompt,
+      );
 
       aiAnswer = generateResult.text || '';
       confidence = (generateResult.confidence || 0) >= 0.6 ? 'MEDIUM' : 'LOW';
@@ -213,7 +235,7 @@ export class PublicHelpAiAssistController {
       })),
       suggestEscalation,
       escalationPrompt: suggestEscalation
-        ? 'We couldn\'t find a definitive answer. Would you like to contact our support team?'
+        ? "We couldn't find a definitive answer. Would you like to contact our support team?"
         : null,
     };
   }
@@ -288,7 +310,10 @@ export class PublicHelpAiAssistController {
     };
   }
 
-  private async tryPublishEvent(tenantId: string, payload: Record<string, unknown>): Promise<void> {
+  private async tryPublishEvent(
+    tenantId: string,
+    payload: Record<string, unknown>,
+  ): Promise<void> {
     try {
       await this.queueService.addJob(QUEUES.ANALYTICS, 'helpcenter-event', {
         tenantId,

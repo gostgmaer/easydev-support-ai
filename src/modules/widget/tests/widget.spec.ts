@@ -227,17 +227,27 @@ describe('Widget Module Unit Tests', () => {
     leadService = module.get<WidgetLeadService>(WidgetLeadService);
     identityService = module.get<WidgetIdentityService>(WidgetIdentityService);
     eventService = module.get<WidgetEventService>(WidgetEventService);
-    installationService = module.get<WidgetInstallationService>(WidgetInstallationService);
+    installationService = module.get<WidgetInstallationService>(
+      WidgetInstallationService,
+    );
     realtimeService = module.get<WidgetRealtimeService>(WidgetRealtimeService);
     gateway = module.get<WidgetRealtimeGateway>(WidgetRealtimeGateway);
     publisher = module.get<WidgetEventPublisher>(WidgetEventPublisher);
     processor = module.get<WidgetQueueProcessor>(WidgetQueueProcessor);
 
-    configController = module.get<WidgetConfigController>(WidgetConfigController);
-    sessionController = module.get<WidgetSessionController>(WidgetSessionController);
-    visitorController = module.get<WidgetVisitorController>(WidgetVisitorController);
+    configController = module.get<WidgetConfigController>(
+      WidgetConfigController,
+    );
+    sessionController = module.get<WidgetSessionController>(
+      WidgetSessionController,
+    );
+    visitorController = module.get<WidgetVisitorController>(
+      WidgetVisitorController,
+    );
     leadController = module.get<WidgetLeadController>(WidgetLeadController);
-    installationController = module.get<WidgetInstallationController>(WidgetInstallationController);
+    installationController = module.get<WidgetInstallationController>(
+      WidgetInstallationController,
+    );
     eventController = module.get<WidgetEventController>(WidgetEventController);
     authController = module.get<WidgetAuthController>(WidgetAuthController);
   });
@@ -386,17 +396,28 @@ describe('Widget Module Unit Tests', () => {
       });
       mockWidgetRepo.getWidgetConfig.mockResolvedValue(mockConfig);
 
-      expect(await configService.validateDomain(tenantId, 'https://google.com')).toBe(true);
-      expect(await configService.validateDomain(tenantId, 'https://sub.example.com')).toBe(true);
-      expect(await configService.validateDomain(tenantId, 'https://attacker.com')).toBe(false);
-      expect(await configService.validateDomain(tenantId, 'http://localhost')).toBe(true);
+      expect(
+        await configService.validateDomain(tenantId, 'https://google.com'),
+      ).toBe(true);
+      expect(
+        await configService.validateDomain(tenantId, 'https://sub.example.com'),
+      ).toBe(true);
+      expect(
+        await configService.validateDomain(tenantId, 'https://attacker.com'),
+      ).toBe(false);
+      expect(
+        await configService.validateDomain(tenantId, 'http://localhost'),
+      ).toBe(true);
     });
   });
 
   describe('WidgetVisitorService', () => {
     it('should get or create anonymous visitor', async () => {
       mockWidgetRepo.getVisitorByAnonymousId.mockResolvedValue(null);
-      const visitor = await visitorService.getOrCreateAnonymousVisitor(tenantId, 'anon-id-99');
+      const visitor = await visitorService.getOrCreateAnonymousVisitor(
+        tenantId,
+        'anon-id-99',
+      );
       expect(visitor.anonymousId).toBe('anon-id-99');
       expect(mockWidgetRepo.saveVisitor).toHaveBeenCalled();
     });
@@ -452,12 +473,18 @@ describe('Widget Module Unit Tests', () => {
       const visitorId = 'vis-jwt';
       const sessionId = 'sess-jwt';
       const expiresAt = Date.now() + 100000;
-      const payload = JSON.stringify({ tenantId, visitorId, sessionId, expiresAt });
+      const payload = JSON.stringify({
+        tenantId,
+        visitorId,
+        sessionId,
+        expiresAt,
+      });
       const signature = crypto
         .createHmac('sha256', 'easydev-widget-fallback-secret-key-123456')
         .update(payload)
         .digest('hex');
-      const token = Buffer.from(payload).toString('base64url') + '.' + signature;
+      const token =
+        Buffer.from(payload).toString('base64url') + '.' + signature;
 
       const mockDbToken = new WidgetAuthToken('token-id', {
         tenantId,
@@ -468,7 +495,10 @@ describe('Widget Module Unit Tests', () => {
 
       mockWidgetRepo.getAuthToken.mockResolvedValue(mockDbToken);
 
-      const resolved = await sessionService.validateSessionToken(tenantId, token);
+      const resolved = await sessionService.validateSessionToken(
+        tenantId,
+        token,
+      );
       expect(resolved.visitorId).toBe(visitorId);
       expect(resolved.sessionId).toBe(sessionId);
       expect(mockWidgetRepo.saveAuthToken).toHaveBeenCalled();
@@ -476,7 +506,9 @@ describe('Widget Module Unit Tests', () => {
 
     it('should reject invalid token signature', async () => {
       const token = 'fakeTokenStr.badSignature';
-      await expect(sessionService.validateSessionToken(tenantId, token)).rejects.toThrow();
+      await expect(
+        sessionService.validateSessionToken(tenantId, token),
+      ).rejects.toThrow();
     });
   });
 
@@ -515,7 +547,10 @@ describe('Widget Module Unit Tests', () => {
       });
       mockWidgetRepo.getInstallationByDomain.mockResolvedValue(mockInstall);
 
-      const verified = await installationService.verifyInstallation(tenantId, 'good-domain.com');
+      const verified = await installationService.verifyInstallation(
+        tenantId,
+        'good-domain.com',
+      );
       expect(verified.status).toBe('ACTIVE');
       expect(verified.verifiedAt).toBeInstanceOf(Date);
       expect(mockWidgetRepo.saveInstallation).toHaveBeenCalled();
@@ -581,8 +616,12 @@ describe('Widget Module Unit Tests', () => {
         emitToSession: jest.fn(),
       };
 
-      const customRealtimeService = new WidgetRealtimeService(mockRealtimeGateway);
-      await customRealtimeService.sendNewMessage(tenantId, 'sess-123', { text: 'Hello' });
+      const customRealtimeService = new WidgetRealtimeService(
+        mockRealtimeGateway,
+      );
+      await customRealtimeService.sendNewMessage(tenantId, 'sess-123', {
+        text: 'Hello',
+      });
       expect(mockRealtimeGateway.emitToSession).toHaveBeenCalledWith(
         tenantId,
         'sess-123',
@@ -698,14 +737,22 @@ describe('Widget Module Unit Tests', () => {
         status: 'ACTIVE',
         verificationToken: 'token-123',
       });
-      jest.spyOn(installationService, 'verifyInstallation').mockResolvedValue(mockInstall);
+      jest
+        .spyOn(installationService, 'verifyInstallation')
+        .mockResolvedValue(mockInstall);
 
-      const resVerify = await installationController.verifyInstallation(tenantId, {
-        domain: 'easydev.ai',
-      });
+      const resVerify = await installationController.verifyInstallation(
+        tenantId,
+        {
+          domain: 'easydev.ai',
+        },
+      );
       expect(resVerify.status).toBe('ACTIVE');
 
-      const resScript = installationController.getScript(tenantId, 'easydev.ai');
+      const resScript = installationController.getScript(
+        tenantId,
+        'easydev.ai',
+      );
       expect(resScript.script).toContain('easydev.ai');
       expect(resScript.script).toContain(tenantId);
     });
@@ -732,7 +779,9 @@ describe('Widget Module Unit Tests', () => {
         externalUserId: 'user-123',
         verificationMethod: 'HMAC_SHA256',
       });
-      jest.spyOn(identityService, 'verifyAndResolveIdentity').mockResolvedValue(mockIdentity);
+      jest
+        .spyOn(identityService, 'verifyAndResolveIdentity')
+        .mockResolvedValue(mockIdentity);
 
       const res = await authController.verifyIdentity(tenantId, {
         anonymousId: 'anon-123',

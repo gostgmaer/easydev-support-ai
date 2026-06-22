@@ -3310,6 +3310,9 @@ export const widgetConfigs = supportAgentSchema.table(
     customCss: text('custom_css'),
     customJs: text('custom_js'),
     allowedDomains: jsonb('allowed_domains').default('[]').notNull(),
+    // Per-tenant secret used to verify HMAC-signed identified-visitor requests
+    // (POST /v1/widget/auth/verify) - never exposed via the public config endpoint.
+    identityVerificationSecret: text('identity_verification_secret'),
   },
   (table) => ({
     tenantIdx: index('idx_widget_configs_tenant').on(table.tenantId),

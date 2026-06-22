@@ -94,7 +94,9 @@ export class ApiKey extends Entity<string> {
   }
 
   public isExpired(at: Date = new Date()): boolean {
-    return !!this.props.expiresAt && this.props.expiresAt.getTime() <= at.getTime();
+    return (
+      !!this.props.expiresAt && this.props.expiresAt.getTime() <= at.getTime()
+    );
   }
 
   public isUsable(at: Date = new Date()): boolean {

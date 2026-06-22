@@ -5,7 +5,6 @@ import { Injectable, Optional, Logger } from '@nestjs/common';
 import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
 import { NotificationService } from './notification.service';
 
-
 /**
  * Notification Queue Processor
  *

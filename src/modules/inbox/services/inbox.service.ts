@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { InboxViewCreatedEvent } from '@easydev/shared-events';
@@ -18,11 +13,7 @@ import { InboxEventPublisher } from './inbox-event.publisher';
 import { InboxActivityService } from './inbox-activity.service';
 import { InboxRealtimeService } from './inbox-realtime.service';
 import { AuditService } from '../../audit/audit.service';
-import {
-  CreateFilterDto,
-  CreateSavedViewDto,
-  InboxQueryDto,
-} from '../dtos';
+import { CreateFilterDto, CreateSavedViewDto, InboxQueryDto } from '../dtos';
 
 @Injectable()
 export class InboxService {
@@ -55,10 +46,7 @@ export class InboxService {
   }
 
   async list(tenantId: string, query: InboxQueryDto) {
-    const result = await this.inboxRepo.listViews(
-      tenantId,
-      query as InboxQueryOptions,
-    );
+    const result = await this.inboxRepo.listViews(tenantId, query);
     return {
       data: result.data.map((v) => v.toJSON()),
       total: result.total,
@@ -104,12 +92,7 @@ export class InboxService {
       conversationId,
       unreadCount: 0,
     });
-    await this.activityService.record(
-      tenantId,
-      conversationId,
-      'READ',
-      userId,
-    );
+    await this.activityService.record(tenantId, conversationId, 'READ', userId);
   }
 
   async resolve(
@@ -330,10 +313,7 @@ export class InboxService {
     return savedView;
   }
 
-  async listSavedViews(
-    tenantId: string,
-    userId: string,
-  ): Promise<SavedView[]> {
+  async listSavedViews(tenantId: string, userId: string): Promise<SavedView[]> {
     return this.inboxRepo.listSavedViews(tenantId, userId);
   }
 

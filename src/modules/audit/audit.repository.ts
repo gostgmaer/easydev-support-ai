@@ -58,9 +58,12 @@ export class AuditRepository {
     const conditions = [eq(auditLogs.tenantId, tenantId)];
     if (options.action) conditions.push(eq(auditLogs.action, options.action));
     if (options.userId) conditions.push(eq(auditLogs.userId, options.userId));
-    if (options.startDate) conditions.push(gte(auditLogs.createdAt, options.startDate));
-    if (options.endDate) conditions.push(lte(auditLogs.createdAt, options.endDate));
-    if (options.search) conditions.push(ilike(auditLogs.details, `%${options.search}%`));
+    if (options.startDate)
+      conditions.push(gte(auditLogs.createdAt, options.startDate));
+    if (options.endDate)
+      conditions.push(lte(auditLogs.createdAt, options.endDate));
+    if (options.search)
+      conditions.push(ilike(auditLogs.details, `%${options.search}%`));
 
     const rows = await db
       .select()

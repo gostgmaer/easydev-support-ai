@@ -35,11 +35,18 @@ export class AdminTenantController {
 
   @Post('provision')
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
-  @ApiOperation({ summary: 'Provision default settings, branding, feature flags, and an initial API key for this tenant' })
+  @ApiOperation({
+    summary:
+      'Provision default settings, branding, feature flags, and an initial API key for this tenant',
+  })
   async provision(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: ProvisionTenantDto,

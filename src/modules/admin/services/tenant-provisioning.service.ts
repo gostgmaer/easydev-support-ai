@@ -125,9 +125,7 @@ export class TenantProvisioningService {
     const { rawKey } = await this.apiKeyService.createApiKey(tenantId, {
       name: 'Default API Key',
       scopes: ['conversations:read', 'conversations:write', 'messages:write'],
-      expiresAt: new Date(
-        Date.now() + 365 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
     // ─── 5. Publish domain event ──────────────────────────────────────────
@@ -178,7 +176,9 @@ export class TenantProvisioningService {
     previousPlan: string,
     effectiveAt: Date = new Date(),
   ): Promise<void> {
-    this.logger.log(`Tenant ${tenantId}: plan change ${previousPlan} → ${newPlan}`);
+    this.logger.log(
+      `Tenant ${tenantId}: plan change ${previousPlan} → ${newPlan}`,
+    );
 
     // Update feature flags for new plan
     const planFlags = this.getPlanFlags(newPlan);
@@ -191,7 +191,9 @@ export class TenantProvisioningService {
           configuration: { planChange: true, plan: newPlan },
         });
       } catch (err: any) {
-        this.logger.warn(`Feature flag update failed for ${flagKey}: ${err.message}`);
+        this.logger.warn(
+          `Feature flag update failed for ${flagKey}: ${err.message}`,
+        );
       }
     }
 

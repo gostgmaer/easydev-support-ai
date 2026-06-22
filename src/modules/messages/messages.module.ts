@@ -5,6 +5,7 @@ import { ChannelsModule } from '../channels/channels.module';
 import { CustomersModule } from '../customers/customers.module';
 import { WidgetModule } from '../widget/widget.module';
 import { WorkflowsModule } from '../workflows/workflows.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 
 import { MessageController } from './controllers/message.controller';
 import { AttachmentController } from './controllers/attachment.controller';
@@ -37,6 +38,7 @@ import { MessageQueueProcessor } from './jobs/message-queue.processor';
     CustomersModule,
     WidgetModule,
     forwardRef(() => WorkflowsModule),
+    AnalyticsModule,
   ],
   controllers: [
     MessageController,

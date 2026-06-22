@@ -32,7 +32,8 @@ describe('AdminDashboard aggregate', () => {
     });
     expect(dashboard.domainEvents).toHaveLength(1);
     expect(
-      (dashboard.domainEvents[0].constructor as { eventName?: string }).eventName,
+      (dashboard.domainEvents[0].constructor as { eventName?: string })
+        .eventName,
     ).toBe('admin.dashboard.updated');
   });
 
@@ -224,8 +225,12 @@ describe('OperationalIncident entity', () => {
   });
 
   it('reports terminal status only once resolved', () => {
-    expect(IncidentStatus.create(IncidentStatusEnum.OPEN).isTerminal()).toBe(false);
-    expect(IncidentStatus.create(IncidentStatusEnum.RESOLVED).isTerminal()).toBe(true);
+    expect(IncidentStatus.create(IncidentStatusEnum.OPEN).isTerminal()).toBe(
+      false,
+    );
+    expect(
+      IncidentStatus.create(IncidentStatusEnum.RESOLVED).isTerminal(),
+    ).toBe(true);
   });
 });
 
@@ -236,8 +241,12 @@ describe('SystemHealth entity', () => {
       serviceName: 'database',
       status: SystemHealthStatusEnum.HEALTHY,
     });
-    expect(health.hasChangedStatusSince(SystemHealthStatusEnum.DOWN)).toBe(true);
-    expect(health.hasChangedStatusSince(SystemHealthStatusEnum.HEALTHY)).toBe(false);
+    expect(health.hasChangedStatusSince(SystemHealthStatusEnum.DOWN)).toBe(
+      true,
+    );
+    expect(health.hasChangedStatusSince(SystemHealthStatusEnum.HEALTHY)).toBe(
+      false,
+    );
 
     health.recordCheck(SystemHealthStatusEnum.DOWN, 5000, 1);
     expect(health.status.value).toBe(SystemHealthStatusEnum.DOWN);
@@ -245,8 +254,14 @@ describe('SystemHealth entity', () => {
   });
 
   it('reports operational only when not DOWN', () => {
-    expect(SystemHealthStatus.create(SystemHealthStatusEnum.DEGRADED).isOperational()).toBe(true);
-    expect(SystemHealthStatus.create(SystemHealthStatusEnum.DOWN).isOperational()).toBe(false);
+    expect(
+      SystemHealthStatus.create(
+        SystemHealthStatusEnum.DEGRADED,
+      ).isOperational(),
+    ).toBe(true);
+    expect(
+      SystemHealthStatus.create(SystemHealthStatusEnum.DOWN).isOperational(),
+    ).toBe(false);
   });
 });
 

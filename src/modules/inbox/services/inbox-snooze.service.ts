@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { InboxSnoozedEvent } from '@easydev/shared-events';
 import type { IInboxRepository } from '../repositories/inbox-repository.interface';
@@ -91,10 +86,7 @@ export class InboxSnoozeService {
     conversationId: string,
     userId?: string,
   ): Promise<{ unsnoozed: boolean }> {
-    const removed = await this.inboxRepo.deleteSnooze(
-      tenantId,
-      conversationId,
-    );
+    const removed = await this.inboxRepo.deleteSnooze(tenantId, conversationId);
     const view = await this.inboxRepo.findViewByConversation(
       tenantId,
       conversationId,

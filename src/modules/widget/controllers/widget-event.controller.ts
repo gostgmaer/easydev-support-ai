@@ -1,4 +1,10 @@
-import { Controller, Post, Body, Headers, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  BadRequestException,
+} from '@nestjs/common';
 import { WidgetEventService } from '../services/widget-event.service';
 import { TrackWidgetEventDto, TrackPageViewDto } from '../dtos/widget.dto';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';

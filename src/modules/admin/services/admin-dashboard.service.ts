@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import type { IAdminRepository } from '../repositories/admin-repository.interface';
 import { AdminDashboard } from '../domain/admin-dashboard.aggregate';
@@ -57,7 +62,10 @@ export class AdminDashboardService {
     return dashboard;
   }
 
-  public async getDashboard(tenantId: string, id: string): Promise<AdminDashboard> {
+  public async getDashboard(
+    tenantId: string,
+    id: string,
+  ): Promise<AdminDashboard> {
     const dashboard = await this.repository.getDashboard(tenantId, id);
     if (!dashboard) {
       throw new NotFoundException(`Dashboard with ID ${id} not found`);
@@ -69,7 +77,9 @@ export class AdminDashboardService {
     return this.repository.listDashboards(tenantId);
   }
 
-  public async getDefaultDashboard(tenantId: string): Promise<AdminDashboard | null> {
+  public async getDefaultDashboard(
+    tenantId: string,
+  ): Promise<AdminDashboard | null> {
     return this.repository.getDefaultDashboard(tenantId);
   }
 
@@ -120,7 +130,9 @@ export class AdminDashboardService {
     return announcement;
   }
 
-  public async listActiveAnnouncements(tenantId: string): Promise<Announcement[]> {
+  public async listActiveAnnouncements(
+    tenantId: string,
+  ): Promise<Announcement[]> {
     return this.repository.listActiveAnnouncements(tenantId, new Date());
   }
 
@@ -128,7 +140,10 @@ export class AdminDashboardService {
     return this.repository.listAnnouncements(tenantId);
   }
 
-  public async deactivateAnnouncement(tenantId: string, id: string): Promise<Announcement> {
+  public async deactivateAnnouncement(
+    tenantId: string,
+    id: string,
+  ): Promise<Announcement> {
     const announcement = await this.repository.getAnnouncement(tenantId, id);
     if (!announcement) {
       throw new NotFoundException(`Announcement with ID ${id} not found`);
@@ -138,7 +153,10 @@ export class AdminDashboardService {
     return announcement;
   }
 
-  public async deleteAnnouncement(tenantId: string, id: string): Promise<boolean> {
+  public async deleteAnnouncement(
+    tenantId: string,
+    id: string,
+  ): Promise<boolean> {
     return this.repository.deleteAnnouncement(tenantId, id);
   }
 }

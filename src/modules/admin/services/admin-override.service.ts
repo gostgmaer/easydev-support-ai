@@ -12,7 +12,10 @@ import { AiAgentService } from '../../ai-integration/services/ai-agent.service';
 import { AiUsageService } from '../../ai-integration/services/ai-usage.service';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { UpdateAiSettingsDto } from '../../settings/dtos/settings.dto';
-import { UpdateAgentDto, ModelConfigDto } from '../../ai-integration/dtos/ai.dto';
+import {
+  UpdateAgentDto,
+  ModelConfigDto,
+} from '../../ai-integration/dtos/ai.dto';
 import { CreateOverrideDto, SetFeatureAccessDto } from '../dtos';
 
 @Injectable()
@@ -62,7 +65,11 @@ export class AdminOverrideService {
     });
     await this.repository.saveOverride(override, tenantId);
     await this.eventPublisher.publish(
-      new TenantOverrideCreatedEvent(tenantId, override.id, override.featureKey),
+      new TenantOverrideCreatedEvent(
+        tenantId,
+        override.id,
+        override.featureKey,
+      ),
     );
     await this.enqueueAudit(
       tenantId,
@@ -73,10 +80,15 @@ export class AdminOverrideService {
     return override;
   }
 
-  public async getOverride(tenantId: string, featureKey: string): Promise<TenantOverride> {
+  public async getOverride(
+    tenantId: string,
+    featureKey: string,
+  ): Promise<TenantOverride> {
     const override = await this.repository.getOverride(tenantId, featureKey);
     if (!override) {
-      throw new NotFoundException(`No override found for feature "${featureKey}"`);
+      throw new NotFoundException(
+        `No override found for feature "${featureKey}"`,
+      );
     }
     return override;
   }
@@ -103,9 +115,15 @@ export class AdminOverrideService {
   }
 
   public async processExpiredOverrides(limit = 500): Promise<number> {
-    const expired = await this.repository.findExpiredOverrides(new Date(), limit);
+    const expired = await this.repository.findExpiredOverrides(
+      new Date(),
+      limit,
+    );
     for (const override of expired) {
-      await this.repository.deleteOverride(override.tenantId, override.featureKey);
+      await this.repository.deleteOverride(
+        override.tenantId,
+        override.featureKey,
+      );
     }
     return expired.length;
   }
@@ -117,7 +135,10 @@ export class AdminOverrideService {
     dto: SetFeatureAccessDto,
     grantedBy?: string,
   ): Promise<FeatureAccess> {
-    const existing = await this.repository.getFeatureAccess(tenantId, dto.featureKey);
+    const existing = await this.repository.getFeatureAccess(
+      tenantId,
+      dto.featureKey,
+    );
     const access =
       existing ||
       FeatureAccess.create(crypto.randomUUID(), {
@@ -146,7 +167,10 @@ export class AdminOverrideService {
     return this.repository.listFeatureAccess(tenantId);
   }
 
-  public async isFeatureEnabled(tenantId: string, featureKey: string): Promise<boolean> {
+  public async isFeatureEnabled(
+    tenantId: string,
+    featureKey: string,
+  ): Promise<boolean> {
     const access = await this.repository.getFeatureAccess(tenantId, featureKey);
     return access ? access.isEnabled : true;
   }
@@ -167,7 +191,10 @@ export class AdminOverrideService {
     dto: UpdateAiSettingsDto,
     updatedBy?: string,
   ) {
-    const settings = await this.aiSettingsService.updateAiSettings(tenantId, dto);
+    const settings = await this.aiSettingsService.updateAiSettings(
+      tenantId,
+      dto,
+    );
     await this.enqueueAudit(
       tenantId,
       'AI_CONFIG_GOVERNANCE_UPDATED',
@@ -204,7 +231,11 @@ export class AdminOverrideService {
     dto: ModelConfigDto,
     updatedBy?: string,
   ) {
-    const agent = await this.aiAgentService.setAgentModelConfig(tenantId, agentId, dto);
+    const agent = await this.aiAgentService.setAgentModelConfig(
+      tenantId,
+      agentId,
+      dto,
+    );
     await this.enqueueAudit(
       tenantId,
       'AI_CONFIG_MODEL_UPDATED',

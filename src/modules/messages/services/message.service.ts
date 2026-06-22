@@ -67,13 +67,18 @@ export class MessageService {
       message.direction.value === MessageDirectionEnum.OUTBOUND &&
       message.messageType.value !== MessageTypeEnum.INTERNAL_NOTE
     ) {
-      const sessionIds = await this.widgetSessionService.findSessionIdsByConversation(
-        tenantId,
-        message.conversationId,
-      );
+      const sessionIds =
+        await this.widgetSessionService.findSessionIdsByConversation(
+          tenantId,
+          message.conversationId,
+        );
       await Promise.all(
         sessionIds.map((sessionId) =>
-          this.widgetRealtimeService.sendNewMessage(tenantId, sessionId, message.toJSON()),
+          this.widgetRealtimeService.sendNewMessage(
+            tenantId,
+            sessionId,
+            message.toJSON(),
+          ),
         ),
       );
     }

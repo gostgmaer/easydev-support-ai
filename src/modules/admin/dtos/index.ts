@@ -167,7 +167,10 @@ export class CreateApiKeyDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ type: [String], example: ['dashboards:read', 'incidents:write'] })
+  @ApiProperty({
+    type: [String],
+    example: ['dashboards:read', 'incidents:write'],
+  })
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)

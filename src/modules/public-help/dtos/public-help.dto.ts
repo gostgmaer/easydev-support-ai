@@ -46,4 +46,9 @@ export class CreatePublicTicketDto {
   @IsEnum(TicketPriorityEnum)
   @IsOptional()
   priority?: TicketPriorityEnum;
+
+  @ApiPropertyOptional({ description: 'Free-text category label chosen by the visitor' })
+  @IsString()
+  @IsOptional()
+  category?: string;
 }

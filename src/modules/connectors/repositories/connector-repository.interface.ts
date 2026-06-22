@@ -143,14 +143,16 @@ export interface IConnectorRepository extends ITenantRepository<
     tenantId: string,
     connectorId: string,
     options?: { level?: string; page?: number; limit?: number },
-  ): Promise<PaginatedResult<{
-    id: string;
-    connectorId: string;
-    instanceId: string | null;
-    executionId: string | null;
-    level: string;
-    message: string;
-    context: unknown;
-    createdAt: Date;
-  }>>;
+  ): Promise<
+    PaginatedResult<{
+      id: string;
+      connectorId: string;
+      instanceId: string | null;
+      executionId: string | null;
+      level: string;
+      message: string;
+      context: unknown;
+      createdAt: Date;
+    }>
+  >;
 }

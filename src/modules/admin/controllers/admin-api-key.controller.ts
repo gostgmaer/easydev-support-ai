@@ -34,7 +34,8 @@ export class AdminApiKeyController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 
@@ -53,23 +54,37 @@ export class AdminApiKeyController {
 
   @Get()
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'List API keys' })
-  async list(@Headers('x-tenant-id') tenantId: string, @Query() query: ApiKeyQueryDto) {
+  async list(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: ApiKeyQueryDto,
+  ) {
     const result = await this.apiKeyService.listApiKeys(tenantId, query.status);
     return { data: result.data.map((k) => k.toJSON()), total: result.total };
   }
 
   @Post()
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'API key created; raw key returned once' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'API key created; raw key returned once',
+  })
   @ApiOperation({ summary: 'Create an API key' })
   async create(
     @Headers('x-tenant-id') tenantId: string,
@@ -86,19 +101,30 @@ export class AdminApiKeyController {
 
   @Get(':id')
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Get an API key by ID' })
-  async getById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async getById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const apiKey = await this.apiKeyService.getApiKey(tenantId, id);
     return apiKey.toJSON();
   }
 
   @Post(':id/rotate')
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
@@ -118,7 +144,11 @@ export class AdminApiKeyController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+  @ApiHeader({
+    name: 'x-tenant-id',
+    required: true,
+    description: 'Tenant Identifier',
+  })
   @UseGuards(TenantGuard, RbacGuard)
   @UseInterceptors(TenantInterceptor)
   @Roles('tenant_admin')
@@ -128,7 +158,11 @@ export class AdminApiKeyController {
     @Param('id') id: string,
     @Req() req: any,
   ) {
-    const apiKey = await this.apiKeyService.revokeApiKey(tenantId, id, this.userOf(req));
+    const apiKey = await this.apiKeyService.revokeApiKey(
+      tenantId,
+      id,
+      this.userOf(req),
+    );
     return apiKey.toJSON();
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -30,7 +35,9 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
         this.logger.warn(`Redis Cache Client error: ${err.message}`);
       });
     } catch (e: any) {
-      this.logger.error(`Failed to initialize Redis Cache Client: ${e.message}`);
+      this.logger.error(
+        `Failed to initialize Redis Cache Client: ${e.message}`,
+      );
     }
   }
 
@@ -45,7 +52,11 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
     return `cache:${this.cacheVersion}:${tenantId}:${namespace}:${key}`;
   }
 
-  async get<T>(tenantId: string, namespace: string, key: string): Promise<T | null> {
+  async get<T>(
+    tenantId: string,
+    namespace: string,
+    key: string,
+  ): Promise<T | null> {
     if (!this.isConnected || !this.redisClient) {
       this.misses++;
       return null;
@@ -71,19 +82,28 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
     namespace: string,
     key: string,
     value: T,
-    ttlSeconds: number = 3600
+    ttlSeconds: number = 3600,
   ): Promise<void> {
     if (!this.isConnected || !this.redisClient) return;
 
     try {
       const fullKey = this.buildKey(tenantId, namespace, key);
-      await this.redisClient.set(fullKey, JSON.stringify(value), 'EX', ttlSeconds);
+      await this.redisClient.set(
+        fullKey,
+        JSON.stringify(value),
+        'EX',
+        ttlSeconds,
+      );
     } catch (err: any) {
       this.logger.warn(`Failed to SET in cache: ${err.message}`);
     }
   }
 
-  async invalidate(tenantId: string, namespace: string, key: string): Promise<void> {
+  async invalidate(
+    tenantId: string,
+    namespace: string,
+    key: string,
+  ): Promise<void> {
     if (!this.isConnected || !this.redisClient) return;
 
     try {
@@ -94,7 +114,10 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async invalidateNamespace(tenantId: string, namespace: string): Promise<void> {
+  async invalidateNamespace(
+    tenantId: string,
+    namespace: string,
+  ): Promise<void> {
     if (!this.isConnected || !this.redisClient) return;
 
     try {
@@ -102,7 +125,13 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
       const pattern = `cache:${this.cacheVersion}:${tenantId}:${namespace}:*`;
       let cursor = '0';
       do {
-        const reply = await this.redisClient.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+        const reply = await this.redisClient.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100,
+        );
         cursor = reply[0];
         const keys = reply[1];
         if (keys.length > 0) {
@@ -110,19 +139,29 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
         }
       } while (cursor !== '0');
     } catch (err: any) {
-      this.logger.warn(`Failed to invalidate namespace ${namespace}: ${err.message}`);
+      this.logger.warn(
+        `Failed to invalidate namespace ${namespace}: ${err.message}`,
+      );
     }
   }
 
-  async warmupCache(tenantId: string, namespace: string, dataLoader: () => Promise<Record<string, any>>): Promise<void> {
-    this.logger.log(`Warming up cache for tenant: ${tenantId}, namespace: ${namespace}`);
+  async warmupCache(
+    tenantId: string,
+    namespace: string,
+    dataLoader: () => Promise<Record<string, any>>,
+  ): Promise<void> {
+    this.logger.log(
+      `Warming up cache for tenant: ${tenantId}, namespace: ${namespace}`,
+    );
     try {
       const data = await dataLoader();
       for (const [key, value] of Object.entries(data)) {
         await this.set(tenantId, namespace, key, value, 7200); // cache for 2 hours
       }
     } catch (err: any) {
-      this.logger.error(`Warmup failed for ${tenantId}:${namespace}: ${err.message}`);
+      this.logger.error(
+        `Warmup failed for ${tenantId}:${namespace}: ${err.message}`,
+      );
     }
   }
 

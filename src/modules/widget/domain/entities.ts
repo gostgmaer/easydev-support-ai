@@ -14,6 +14,10 @@ export interface WidgetConfigProps {
   customCss?: string;
   customJs?: string;
   allowedDomains: string[];
+  /** Secret used to verify HMAC-signed identified-visitor requests
+   * (POST /v1/widget/auth/verify) - never exposed via toJSON()/the public
+   * config endpoint, only toAdminJSON(). */
+  identityVerificationSecret?: string;
   createdAt?: Date;
   updatedAt?: Date;
   version?: number;
@@ -32,21 +36,54 @@ export class WidgetConfig extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get widgetName(): string { return this.props.widgetName; }
-  get theme(): string { return this.props.theme; }
-  get primaryColor(): string { return this.props.primaryColor; }
-  get secondaryColor(): string { return this.props.secondaryColor; }
-  get position(): string { return this.props.position; }
-  get welcomeMessage(): string | undefined { return this.props.welcomeMessage; }
-  get offlineMessage(): string | undefined { return this.props.offlineMessage; }
-  get avatarUrl(): string | undefined { return this.props.avatarUrl; }
-  get customCss(): string | undefined { return this.props.customCss; }
-  get customJs(): string | undefined { return this.props.customJs; }
-  get allowedDomains(): string[] { return this.props.allowedDomains; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get widgetName(): string {
+    return this.props.widgetName;
+  }
+  get theme(): string {
+    return this.props.theme;
+  }
+  get primaryColor(): string {
+    return this.props.primaryColor;
+  }
+  get secondaryColor(): string {
+    return this.props.secondaryColor;
+  }
+  get position(): string {
+    return this.props.position;
+  }
+  get welcomeMessage(): string | undefined {
+    return this.props.welcomeMessage;
+  }
+  get offlineMessage(): string | undefined {
+    return this.props.offlineMessage;
+  }
+  get avatarUrl(): string | undefined {
+    return this.props.avatarUrl;
+  }
+  get customCss(): string | undefined {
+    return this.props.customCss;
+  }
+  get customJs(): string | undefined {
+    return this.props.customJs;
+  }
+  get allowedDomains(): string[] {
+    return this.props.allowedDomains;
+  }
+  get identityVerificationSecret(): string | undefined {
+    return this.props.identityVerificationSecret;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
   public update(props: Partial<Omit<WidgetConfigProps, 'tenantId'>>) {
     this.props = {
@@ -54,6 +91,11 @@ export class WidgetConfig extends AggregateRoot<string> {
       ...props,
       updatedAt: new Date(),
     };
+  }
+
+  public rotateIdentitySecret(secret: string): void {
+    this.props.identityVerificationSecret = secret;
+    this.props.updatedAt = new Date();
   }
 
   public toJSON() {
@@ -74,6 +116,14 @@ export class WidgetConfig extends AggregateRoot<string> {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       version: this.version,
+    };
+  }
+
+  /** Admin-only view - includes the identity verification secret. */
+  public toAdminJSON() {
+    return {
+      ...this.toJSON(),
+      identityVerificationSecret: this.identityVerificationSecret,
     };
   }
 }
@@ -111,22 +161,52 @@ export class WidgetVisitor extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get anonymousId(): string { return this.props.anonymousId; }
-  get customerId(): string | undefined { return this.props.customerId; }
-  get email(): string | undefined { return this.props.email; }
-  get phone(): string | undefined { return this.props.phone; }
-  get name(): string | undefined { return this.props.name; }
-  get country(): string | undefined { return this.props.country; }
-  get city(): string | undefined { return this.props.city; }
-  get firstSeenAt(): Date { return this.props.firstSeenAt!; }
-  get lastSeenAt(): Date { return this.props.lastSeenAt!; }
-  get visitCount(): number { return this.props.visitCount; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get anonymousId(): string {
+    return this.props.anonymousId;
+  }
+  get customerId(): string | undefined {
+    return this.props.customerId;
+  }
+  get email(): string | undefined {
+    return this.props.email;
+  }
+  get phone(): string | undefined {
+    return this.props.phone;
+  }
+  get name(): string | undefined {
+    return this.props.name;
+  }
+  get country(): string | undefined {
+    return this.props.country;
+  }
+  get city(): string | undefined {
+    return this.props.city;
+  }
+  get firstSeenAt(): Date {
+    return this.props.firstSeenAt!;
+  }
+  get lastSeenAt(): Date {
+    return this.props.lastSeenAt!;
+  }
+  get visitCount(): number {
+    return this.props.visitCount;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
-  public update(props: Partial<Omit<WidgetVisitorProps, 'tenantId' | 'anonymousId'>>) {
+  public update(
+    props: Partial<Omit<WidgetVisitorProps, 'tenantId' | 'anonymousId'>>,
+  ) {
     this.props = {
       ...this.props,
       ...props,
@@ -210,21 +290,51 @@ export class WidgetSession extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get visitorId(): string { return this.props.visitorId; }
-  get sessionToken(): string { return this.props.sessionToken; }
-  get startedAt(): Date { return this.props.startedAt!; }
-  get endedAt(): Date | undefined { return this.props.endedAt; }
-  get ipAddressHash(): string | undefined { return this.props.ipAddressHash; }
-  get userAgent(): string | undefined { return this.props.userAgent; }
-  get deviceType(): string | undefined { return this.props.deviceType; }
-  get browser(): string | undefined { return this.props.browser; }
-  get os(): string | undefined { return this.props.os; }
-  get referrer(): string | undefined { return this.props.referrer; }
-  get landingPage(): string | undefined { return this.props.landingPage; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get visitorId(): string {
+    return this.props.visitorId;
+  }
+  get sessionToken(): string {
+    return this.props.sessionToken;
+  }
+  get startedAt(): Date {
+    return this.props.startedAt!;
+  }
+  get endedAt(): Date | undefined {
+    return this.props.endedAt;
+  }
+  get ipAddressHash(): string | undefined {
+    return this.props.ipAddressHash;
+  }
+  get userAgent(): string | undefined {
+    return this.props.userAgent;
+  }
+  get deviceType(): string | undefined {
+    return this.props.deviceType;
+  }
+  get browser(): string | undefined {
+    return this.props.browser;
+  }
+  get os(): string | undefined {
+    return this.props.os;
+  }
+  get referrer(): string | undefined {
+    return this.props.referrer;
+  }
+  get landingPage(): string | undefined {
+    return this.props.landingPage;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
   public end() {
     this.props.endedAt = new Date();
@@ -277,13 +387,27 @@ export class WidgetIdentity extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get visitorId(): string { return this.props.visitorId; }
-  get externalUserId(): string { return this.props.externalUserId; }
-  get verificationMethod(): string { return this.props.verificationMethod; }
-  get verifiedAt(): Date { return this.props.verifiedAt!; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get visitorId(): string {
+    return this.props.visitorId;
+  }
+  get externalUserId(): string {
+    return this.props.externalUserId;
+  }
+  get verificationMethod(): string {
+    return this.props.verificationMethod;
+  }
+  get verifiedAt(): Date {
+    return this.props.verifiedAt!;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
 
   public toJSON() {
     return {
@@ -329,18 +453,42 @@ export class WidgetLead extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get name(): string | undefined { return this.props.name; }
-  get email(): string { return this.props.email; }
-  get phone(): string | undefined { return this.props.phone; }
-  get company(): string | undefined { return this.props.company; }
-  get source(): string { return this.props.source; }
-  get leadScore(): number { return this.props.leadScore; }
-  get status(): string { return this.props.status; }
-  get capturedAt(): Date { return this.props.capturedAt!; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get name(): string | undefined {
+    return this.props.name;
+  }
+  get email(): string {
+    return this.props.email;
+  }
+  get phone(): string | undefined {
+    return this.props.phone;
+  }
+  get company(): string | undefined {
+    return this.props.company;
+  }
+  get source(): string {
+    return this.props.source;
+  }
+  get leadScore(): number {
+    return this.props.leadScore;
+  }
+  get status(): string {
+    return this.props.status;
+  }
+  get capturedAt(): Date {
+    return this.props.capturedAt!;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
   public qualify(scoreChange: number) {
     this.props.leadScore += scoreChange;
@@ -394,11 +542,21 @@ export class WidgetEvent extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get sessionId(): string { return this.props.sessionId; }
-  get eventName(): string { return this.props.eventName; }
-  get eventData(): Record<string, any> | undefined { return this.props.eventData; }
-  get createdAt(): Date { return this.props.createdAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get sessionId(): string {
+    return this.props.sessionId;
+  }
+  get eventName(): string {
+    return this.props.eventName;
+  }
+  get eventData(): Record<string, any> | undefined {
+    return this.props.eventData;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
 
   public toJSON() {
     return {
@@ -433,12 +591,24 @@ export class WidgetPageView extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get sessionId(): string { return this.props.sessionId; }
-  get url(): string { return this.props.url; }
-  get title(): string | undefined { return this.props.title; }
-  get timeSpentSeconds(): number { return this.props.timeSpentSeconds; }
-  get createdAt(): Date { return this.props.createdAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get sessionId(): string {
+    return this.props.sessionId;
+  }
+  get url(): string {
+    return this.props.url;
+  }
+  get title(): string | undefined {
+    return this.props.title;
+  }
+  get timeSpentSeconds(): number {
+    return this.props.timeSpentSeconds;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
 
   public incrementTime(seconds: number) {
     this.props.timeSpentSeconds += seconds;
@@ -476,10 +646,18 @@ export class WidgetConversation extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get widgetSessionId(): string { return this.props.widgetSessionId; }
-  get conversationId(): string { return this.props.conversationId; }
-  get linkedAt(): Date { return this.props.linkedAt!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get widgetSessionId(): string {
+    return this.props.widgetSessionId;
+  }
+  get conversationId(): string {
+    return this.props.conversationId;
+  }
+  get linkedAt(): Date {
+    return this.props.linkedAt!;
+  }
 
   public toJSON() {
     return {
@@ -511,11 +689,21 @@ export class WidgetAuthToken extends Entity<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get visitorId(): string { return this.props.visitorId; }
-  get tokenHash(): string { return this.props.tokenHash; }
-  get expiresAt(): Date { return this.props.expiresAt; }
-  get lastUsedAt(): Date | undefined { return this.props.lastUsedAt; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get visitorId(): string {
+    return this.props.visitorId;
+  }
+  get tokenHash(): string {
+    return this.props.tokenHash;
+  }
+  get expiresAt(): Date {
+    return this.props.expiresAt;
+  }
+  get lastUsedAt(): Date | undefined {
+    return this.props.lastUsedAt;
+  }
 
   public use() {
     this.props.lastUsedAt = new Date();
@@ -562,14 +750,30 @@ export class WidgetInstallation extends AggregateRoot<string> {
     };
   }
 
-  get tenantId(): string { return this.props.tenantId; }
-  get domain(): string { return this.props.domain; }
-  get status(): string { return this.props.status; }
-  get verificationToken(): string { return this.props.verificationToken; }
-  get verifiedAt(): Date | undefined { return this.props.verifiedAt; }
-  get createdAt(): Date { return this.props.createdAt!; }
-  get updatedAt(): Date { return this.props.updatedAt!; }
-  get version(): number { return this.props.version!; }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get domain(): string {
+    return this.props.domain;
+  }
+  get status(): string {
+    return this.props.status;
+  }
+  get verificationToken(): string {
+    return this.props.verificationToken;
+  }
+  get verifiedAt(): Date | undefined {
+    return this.props.verifiedAt;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt!;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt!;
+  }
+  get version(): number {
+    return this.props.version!;
+  }
 
   public verify() {
     this.props.status = 'ACTIVE';

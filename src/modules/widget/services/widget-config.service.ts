@@ -13,6 +13,7 @@ import {
   UpdateWidgetConfigDto,
 } from '../dtos/widget.dto';
 import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class WidgetConfigService {
@@ -35,9 +36,21 @@ export class WidgetConfigService {
         welcomeMessage: 'Hello! How can we help you today?',
         offlineMessage: 'We are currently offline. Please leave a message.',
         allowedDomains: [],
+        identityVerificationSecret: crypto.randomBytes(32).toString('hex'),
       });
       await this.widgetRepo.saveWidgetConfig(config);
+    } else if (!config.identityVerificationSecret) {
+      // Backfill for configs created before this field existed.
+      config.rotateIdentitySecret(crypto.randomBytes(32).toString('hex'));
+      await this.widgetRepo.saveWidgetConfig(config);
     }
+    return config;
+  }
+
+  async rotateIdentitySecret(tenantId: string): Promise<WidgetConfig> {
+    const config = await this.getOrCreateConfig(tenantId);
+    config.rotateIdentitySecret(crypto.randomBytes(32).toString('hex'));
+    await this.widgetRepo.saveWidgetConfig(config);
     return config;
   }
 

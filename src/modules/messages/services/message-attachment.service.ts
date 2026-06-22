@@ -1,5 +1,6 @@
 import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { promises as fs } from 'fs';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import {
   AttachmentUploadedEvent,
@@ -64,8 +65,50 @@ export class MessageAttachmentService {
       metadata: dto.metadata || {},
     });
 
+    return this.persistAndNotify(attachment, message.conversationId, userId);
+  }
+
+  /**
+   * Registers a file already saved to local disk (e.g. by a multer
+   * diskStorage interceptor) - for surfaces with no External File Upload
+   * Service integration of their own, such as the widget. Skips the
+   * EasyDev File Upload Service entirely; process() correspondingly skips
+   * its virus-scan/thumbnail hooks for LOCAL-provider attachments.
+   */
+  async registerLocal(
+    tenantId: string,
+    messageId: string,
+    file: { fileName: string; fileType?: string; fileSize?: number; storagePath: string; publicUrl: string },
+    userId?: string,
+  ): Promise<MessageAttachment> {
+    const message = await this.messageRepo.findById(messageId, tenantId);
+    if (!message) {
+      throw new NotFoundException(`Message with ID ${messageId} not found`);
+    }
+
+    const attachment = new MessageAttachment(randomUUID(), {
+      tenantId,
+      messageId,
+      fileName: file.fileName,
+      fileType: file.fileType,
+      fileSize: file.fileSize,
+      storageProvider: 'LOCAL',
+      storagePath: file.storagePath,
+      publicUrl: file.publicUrl,
+      metadata: {},
+    });
+
+    return this.persistAndNotify(attachment, message.conversationId, userId);
+  }
+
+  private async persistAndNotify(
+    attachment: MessageAttachment,
+    conversationId: string,
+    userId?: string,
+  ): Promise<MessageAttachment> {
+    const tenantId = attachment.tenantId;
     await this.messageRepo.saveAttachment(attachment, tenantId);
-    await this.readModel.refresh(tenantId, message.conversationId);
+    await this.readModel.refresh(tenantId, conversationId);
 
     await this.queueService.addJob(
       QUEUES.MESSAGE,
@@ -77,7 +120,7 @@ export class MessageAttachmentService {
       new AttachmentUploadedEvent(
         tenantId,
         attachment.id,
-        messageId,
+        attachment.messageId,
         attachment.fileName,
       ),
     );
@@ -86,7 +129,7 @@ export class MessageAttachmentService {
       tenantId,
       userId,
       action: 'ATTACHMENT_UPLOAD',
-      details: `Registered attachment ${attachment.id} on message ${messageId}`,
+      details: `Registered attachment ${attachment.id} on message ${attachment.messageId}`,
     });
 
     return attachment;
@@ -101,6 +144,9 @@ export class MessageAttachmentService {
       attachmentId,
     );
     if (!attachment || !attachment.storagePath) return;
+    // LOCAL-provider attachments (e.g. widget uploads) aren't managed by the
+    // External File Upload Service, so its scan/thumbnail hooks don't apply.
+    if (attachment.storageProvider === 'LOCAL') return;
 
     const scan = await this.fileUpload.requestVirusScan(
       tenantId,
@@ -145,6 +191,11 @@ export class MessageAttachmentService {
     if (!attachment || !attachment.storagePath) {
       throw new NotFoundException(`Attachment ${attachmentId} not found`);
     }
+    // LOCAL-provider attachments already have a permanent, directly-servable
+    // publicUrl (no signing concept applies - they're served as static assets).
+    if (attachment.storageProvider === 'LOCAL') {
+      return { url: attachment.publicUrl! };
+    }
     const url = await this.fileUpload.generateSignedUrl(
       tenantId,
       attachment.storagePath,
@@ -165,7 +216,9 @@ export class MessageAttachmentService {
     if (!attachment) {
       throw new NotFoundException(`Attachment ${attachmentId} not found`);
     }
-    if (attachment.storagePath) {
+    if (attachment.storagePath && attachment.storageProvider === 'LOCAL') {
+      await fs.unlink(attachment.storagePath).catch(() => undefined);
+    } else if (attachment.storagePath) {
       await this.fileUpload.deleteFile(tenantId, attachment.storagePath);
     }
     const deleted = await this.messageRepo.deleteAttachment(

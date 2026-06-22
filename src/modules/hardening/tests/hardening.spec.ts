@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CircuitBreaker, CircuitState } from '../../../common/resilience/circuit-breaker';
+import {
+  CircuitBreaker,
+  CircuitState,
+} from '../../../common/resilience/circuit-breaker';
 import { EncryptionService } from '../../../common/resilience/encryption.service';
 import { IdempotencyInterceptor } from '../../../common/resilience/idempotency.interceptor';
 import { CostTrackerService } from '../cost/cost-tracker.service';
@@ -85,8 +88,12 @@ describe('Production Hardening & Resilience Tests', () => {
     costTracker = module.get<CostTrackerService>(CostTrackerService);
     outboxService = module.get<OutboxService>(OutboxService);
     cacheManager = module.get<CacheManagerService>(CacheManagerService);
-    partitionManager = module.get<PartitionManagerService>(PartitionManagerService);
-    idempotencyInterceptor = module.get<IdempotencyInterceptor>(IdempotencyInterceptor);
+    partitionManager = module.get<PartitionManagerService>(
+      PartitionManagerService,
+    );
+    idempotencyInterceptor = module.get<IdempotencyInterceptor>(
+      IdempotencyInterceptor,
+    );
   });
 
   describe('Circuit Breaker (Resilience)', () => {
@@ -117,9 +124,9 @@ describe('Production Hardening & Resilience Tests', () => {
       expect(breaker.getState()).toBe(CircuitState.OPEN);
 
       // Subsequent call should fast fail
-      await expect(breaker.execute(async () => 'should not run')).rejects.toThrow(
-        'Circuit is OPEN for test-service'
-      );
+      await expect(
+        breaker.execute(async () => 'should not run'),
+      ).rejects.toThrow('Circuit is OPEN for test-service');
     });
 
     it('should invoke fallback when breaker is tripped', async () => {
@@ -137,7 +144,7 @@ describe('Production Hardening & Resilience Tests', () => {
 
       const result = await breaker.execute(
         async () => 'try-again',
-        async (err) => 'fallback-value'
+        async (err) => 'fallback-value',
       );
       expect(result).toBe('fallback-value');
     });
@@ -152,13 +159,16 @@ describe('Production Hardening & Resilience Tests', () => {
       // Execute a long running task
       const longTask = () =>
         breaker.execute(
-          () => new Promise((resolve) => setTimeout(() => resolve('done'), 100))
+          () =>
+            new Promise((resolve) => setTimeout(() => resolve('done'), 100)),
         );
 
       const promise1 = longTask();
 
       // Second task should immediately trip bulkhead limits
-      await expect(longTask()).rejects.toThrow('Bulkhead concurrency limit of 1 reached');
+      await expect(longTask()).rejects.toThrow(
+        'Bulkhead concurrency limit of 1 reached',
+      );
 
       await promise1;
     });
@@ -175,9 +185,15 @@ describe('Production Hardening & Resilience Tests', () => {
     });
 
     it('should mask PII (email, phone, ip)', () => {
-      expect(encryptionService.maskPII('kishore@gmail.com', 'email')).toBe('k***e@gmail.com');
-      expect(encryptionService.maskPII('+919876543210', 'phone')).toBe('+91***10');
-      expect(encryptionService.maskPII('192.168.1.100', 'ip')).toBe('192.168.***.***');
+      expect(encryptionService.maskPII('kishore@gmail.com', 'email')).toBe(
+        'k***e@gmail.com',
+      );
+      expect(encryptionService.maskPII('+919876543210', 'phone')).toBe(
+        '+91***10',
+      );
+      expect(encryptionService.maskPII('192.168.1.100', 'ip')).toBe(
+        '192.168.***.***',
+      );
     });
 
     it('should redact sensitive keys in logs/data objects', () => {
@@ -213,7 +229,7 @@ describe('Production Hardening & Resilience Tests', () => {
 
       const result = await idempotencyInterceptor.intercept(
         mockExecutionContext,
-        mockCallHandler
+        mockCallHandler,
       );
       expect(result).toBeDefined();
     });
@@ -235,24 +251,36 @@ describe('Production Hardening & Resilience Tests', () => {
       };
 
       await expect(
-        idempotencyInterceptor.intercept(mockExecutionContext, mockCallHandler)
+        idempotencyInterceptor.intercept(mockExecutionContext, mockCallHandler),
       ).rejects.toThrow('Invalid format for x-idempotency-key header');
     });
   });
 
   describe('Cost Optimization Tracker', () => {
     it('should track AI token counts and estimate costs', async () => {
-      const cost = await costTracker.trackAiUsage(tenantId, 'gpt-4', 1000, 2000);
+      const cost = await costTracker.trackAiUsage(
+        tenantId,
+        'gpt-4',
+        1000,
+        2000,
+      );
       // Cost: (1000/1000)*0.01 + (2000/1000)*0.03 = 0.01 + 0.06 = 0.07
       expect(cost).toBeCloseTo(0.07);
     });
 
     it('should track network and storage executions costs', async () => {
-      const connCost = await costTracker.trackConnectorUsage(tenantId, 'webhook', 2048);
+      const connCost = await costTracker.trackConnectorUsage(
+        tenantId,
+        'webhook',
+        2048,
+      );
       // Cost: (2048/1024)*0.0001 = 0.0002
       expect(connCost).toBeCloseTo(0.0002);
 
-      const storageCost = await costTracker.trackStorageUsage(tenantId, 1048576 * 10); // 10MB
+      const storageCost = await costTracker.trackStorageUsage(
+        tenantId,
+        1048576 * 10,
+      ); // 10MB
       // Cost: 10 * 0.00002 = 0.0002
       expect(storageCost).toBeCloseTo(0.0002);
     });
@@ -260,7 +288,9 @@ describe('Production Hardening & Resilience Tests', () => {
 
   describe('Transactional Outbox Pattern', () => {
     it('should insert outbox record transactionally', async () => {
-      const id = await outboxService.storeEvent(tenantId, 'widget.installed', { domain: 'easydev.ai' });
+      const id = await outboxService.storeEvent(tenantId, 'widget.installed', {
+        domain: 'easydev.ai',
+      });
       expect(id).toBeDefined();
     });
   });

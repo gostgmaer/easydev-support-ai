@@ -63,7 +63,10 @@ export class AuditView extends Entity<string> {
     return new AuditView(id, props);
   }
 
-  public update(filterDefinition: Record<string, any>, isShared?: boolean): void {
+  public update(
+    filterDefinition: Record<string, any>,
+    isShared?: boolean,
+  ): void {
     this.props.filterDefinition = filterDefinition;
     if (isShared !== undefined) this.props.isShared = isShared;
     this.props.updatedAt = new Date();

@@ -28,7 +28,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Admin Webhooks')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/admin/webhooks')
@@ -38,27 +42,42 @@ export class AdminWebhookController {
   @Get()
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'List webhooks' })
-  async list(@Headers('x-tenant-id') tenantId: string, @Query() query: WebhookQueryDto) {
-    const result = await this.webhookService.listWebhooks(tenantId, query.status);
+  async list(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query() query: WebhookQueryDto,
+  ) {
+    const result = await this.webhookService.listWebhooks(
+      tenantId,
+      query.status,
+    );
     return { data: result.data.map((w) => w.toJSON()), total: result.total };
   }
 
   @Post()
   @Roles('tenant_admin')
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Webhook created; signing secret returned once' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Webhook created; signing secret returned once',
+  })
   @ApiOperation({ summary: 'Register a webhook' })
   async register(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: RegisterWebhookDto,
   ) {
-    const { webhook, secret } = await this.webhookService.registerWebhook(tenantId, dto);
+    const { webhook, secret } = await this.webhookService.registerWebhook(
+      tenantId,
+      dto,
+    );
     return { ...webhook.toJSON(), secret };
   }
 
   @Get(':id')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Get a webhook by ID' })
-  async getById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async getById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const webhook = await this.webhookService.getWebhook(tenantId, id);
     return webhook.toJSON();
   }
@@ -78,7 +97,10 @@ export class AdminWebhookController {
   @Post(':id/disable')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Disable a webhook' })
-  async disable(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async disable(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const webhook = await this.webhookService.disableWebhook(tenantId, id);
     return webhook.toJSON();
   }
@@ -86,7 +108,10 @@ export class AdminWebhookController {
   @Post(':id/enable')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Re-enable a disabled or failing webhook' })
-  async enable(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async enable(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const webhook = await this.webhookService.enableWebhook(tenantId, id);
     return webhook.toJSON();
   }
@@ -94,7 +119,10 @@ export class AdminWebhookController {
   @Post(':id/retry')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Manually retry the most recent delivery' })
-  async retry(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async retry(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const webhook = await this.webhookService.retryDelivery(tenantId, id);
     return webhook.toJSON();
   }
@@ -102,7 +130,10 @@ export class AdminWebhookController {
   @Delete(':id')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Delete a webhook' })
-  async delete(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async delete(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.webhookService.deleteWebhook(tenantId, id);
   }
 }

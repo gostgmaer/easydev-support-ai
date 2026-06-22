@@ -38,7 +38,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Admin Dashboard')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/admin/dashboards')
@@ -50,7 +54,8 @@ export class AdminDashboardController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 
@@ -91,7 +96,8 @@ export class AdminDashboardController {
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'List active announcements' })
   async activeAnnouncements(@Headers('x-tenant-id') tenantId: string) {
-    const announcements = await this.dashboardService.listActiveAnnouncements(tenantId);
+    const announcements =
+      await this.dashboardService.listActiveAnnouncements(tenantId);
     return announcements.map((a) => a.toJSON());
   }
 
@@ -103,7 +109,10 @@ export class AdminDashboardController {
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: CreateAnnouncementDto,
   ) {
-    const announcement = await this.dashboardService.createAnnouncement(tenantId, dto);
+    const announcement = await this.dashboardService.createAnnouncement(
+      tenantId,
+      dto,
+    );
     return announcement.toJSON();
   }
 
@@ -114,7 +123,10 @@ export class AdminDashboardController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
   ) {
-    const announcement = await this.dashboardService.deactivateAnnouncement(tenantId, id);
+    const announcement = await this.dashboardService.deactivateAnnouncement(
+      tenantId,
+      id,
+    );
     return announcement.toJSON();
   }
 
@@ -131,7 +143,10 @@ export class AdminDashboardController {
   @Get(':id')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Get a dashboard by ID' })
-  async getById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async getById(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const dashboard = await this.dashboardService.getDashboard(tenantId, id);
     return dashboard.toJSON();
   }
@@ -157,14 +172,20 @@ export class AdminDashboardController {
   @Delete(':id')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'Delete a dashboard' })
-  async delete(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async delete(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.dashboardService.deleteDashboard(tenantId, id);
   }
 
   @Get(':id/widgets')
   @Roles('tenant_admin')
   @ApiOperation({ summary: 'List widgets on a dashboard' })
-  async listWidgets(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+  async listWidgets(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+  ) {
     const widgets = await this.widgetService.listWidgets(tenantId, id);
     return widgets.map((w) => w.toJSON());
   }
@@ -190,7 +211,11 @@ export class AdminDashboardController {
     @Param('widgetId') widgetId: string,
     @Body() dto: UpdateWidgetDto,
   ) {
-    const widget = await this.widgetService.updateWidget(tenantId, widgetId, dto);
+    const widget = await this.widgetService.updateWidget(
+      tenantId,
+      widgetId,
+      dto,
+    );
     return widget.toJSON();
   }
 
@@ -212,6 +237,10 @@ export class AdminDashboardController {
     @Param('widgetId') widgetId: string,
     @Query() query: WidgetDataQueryDto,
   ) {
-    return this.widgetService.getWidgetData(tenantId, widgetId, query.timeRange);
+    return this.widgetService.getWidgetData(
+      tenantId,
+      widgetId,
+      query.timeRange,
+    );
   }
 }

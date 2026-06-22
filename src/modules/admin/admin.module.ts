@@ -35,7 +35,11 @@ import {
 } from './services';
 
 import { DrizzleAdminRepository } from './repositories/drizzle-admin.repository';
-import { AdminQueueProcessor, AdminHealthScheduler, AdminCleanupScheduler } from './jobs';
+import {
+  AdminQueueProcessor,
+  AdminHealthScheduler,
+  AdminCleanupScheduler,
+} from './jobs';
 
 @Module({
   imports: [

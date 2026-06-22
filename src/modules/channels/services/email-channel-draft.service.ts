@@ -1,5 +1,10 @@
 // @ts-nocheck
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { MessageService } from '../../messages/services/message.service';
@@ -95,7 +100,9 @@ export class EmailChannelDraftService {
 
     const lastCustomerMsg = [...messages]
       .reverse()
-      .find((m: any) => m.senderType === 'CUSTOMER' || m.direction === 'INBOUND');
+      .find(
+        (m: any) => m.senderType === 'CUSTOMER' || m.direction === 'INBOUND',
+      );
 
     const context = messages.map((m: any) => ({
       role: m.senderType === 'CUSTOMER' ? 'user' : 'assistant',
@@ -143,12 +150,16 @@ export class EmailChannelDraftService {
 
     // Notify agent that draft is ready for review
     if (agentId) {
-      await this.queueService.addJob(QUEUES.NOTIFICATION, 'email-draft-review', {
-        tenantId,
-        conversationId,
-        draftId,
-        agentId,
-      });
+      await this.queueService.addJob(
+        QUEUES.NOTIFICATION,
+        'email-draft-review',
+        {
+          tenantId,
+          conversationId,
+          draftId,
+          agentId,
+        },
+      );
     }
 
     await this.realtime.emitConversationUpdate(tenantId, {
@@ -219,7 +230,12 @@ export class EmailChannelDraftService {
     draft.updatedAt = new Date();
 
     await this.eventPublisher.publish(
-      new EmailDraftApprovedEvent(tenantId, draft.conversationId, draftId, agentId),
+      new EmailDraftApprovedEvent(
+        tenantId,
+        draft.conversationId,
+        draftId,
+        agentId,
+      ),
     );
     await this.eventPublisher.publish(
       new EmailReplySentEvent(
@@ -291,10 +307,16 @@ export class EmailChannelDraftService {
     return draft;
   }
 
-  getDraftsByConversation(tenantId: string, conversationId: string): EmailDraft[] {
+  getDraftsByConversation(
+    tenantId: string,
+    conversationId: string,
+  ): EmailDraft[] {
     const result: EmailDraft[] = [];
     for (const [key, draft] of this.draftStore.entries()) {
-      if (key.startsWith(`${tenantId}:`) && draft.conversationId === conversationId) {
+      if (
+        key.startsWith(`${tenantId}:`) &&
+        draft.conversationId === conversationId
+      ) {
         result.push(draft);
       }
     }

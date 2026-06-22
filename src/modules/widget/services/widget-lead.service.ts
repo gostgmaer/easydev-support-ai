@@ -18,7 +18,10 @@ export class WidgetLeadService {
     private readonly eventPublisher: WidgetEventPublisher,
   ) {}
 
-  async captureLead(tenantId: string, dto: CaptureLeadDto): Promise<WidgetLead> {
+  async captureLead(
+    tenantId: string,
+    dto: CaptureLeadDto,
+  ): Promise<WidgetLead> {
     let lead = await this.widgetRepo.getLeadByEmail(tenantId, dto.email);
     if (!lead) {
       lead = new WidgetLead(uuidv4(), {
@@ -44,7 +47,14 @@ export class WidgetLeadService {
       score += 15;
     }
     // Check if business email
-    const nonBusinessDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'aol.com', 'icloud.com'];
+    const nonBusinessDomains = [
+      'gmail.com',
+      'yahoo.com',
+      'outlook.com',
+      'hotmail.com',
+      'aol.com',
+      'icloud.com',
+    ];
     const emailDomain = dto.email.split('@')[1]?.toLowerCase();
     if (emailDomain && !nonBusinessDomains.includes(emailDomain)) {
       score += 30;
@@ -58,10 +68,12 @@ export class WidgetLeadService {
       const [existingCustomer] = await db
         .select()
         .from(schema.customers)
-        .where(and(
-          eq(schema.customers.tenantId, tenantId),
-          eq(schema.customers.email, dto.email)
-        ));
+        .where(
+          and(
+            eq(schema.customers.tenantId, tenantId),
+            eq(schema.customers.email, dto.email),
+          ),
+        );
 
       if (!existingCustomer) {
         const customerId = uuidv4();
@@ -92,7 +104,7 @@ export class WidgetLeadService {
     }
 
     await this.eventPublisher.publish(
-      new WidgetLeadCreatedEvent(tenantId, lead.id, lead.email, lead.source)
+      new WidgetLeadCreatedEvent(tenantId, lead.id, lead.email, lead.source),
     );
 
     return lead;

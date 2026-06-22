@@ -2,7 +2,10 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
 import { WidgetVisitor } from '../domain/entities';
 import { WidgetEventPublisher } from './widget-event.publisher';
-import { WidgetVisitorCreatedEvent, WidgetVisitorIdentifiedEvent } from '@easydev/shared-events';
+import {
+  WidgetVisitorCreatedEvent,
+  WidgetVisitorIdentifiedEvent,
+} from '@easydev/shared-events';
 import { IdentifyVisitorDto } from '../dtos/widget.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { db, schema } from '@easydev/database';
@@ -18,8 +21,14 @@ export class WidgetVisitorService {
     private readonly eventPublisher: WidgetEventPublisher,
   ) {}
 
-  async getOrCreateAnonymousVisitor(tenantId: string, anonymousId: string): Promise<WidgetVisitor> {
-    let visitor = await this.widgetRepo.getVisitorByAnonymousId(tenantId, anonymousId);
+  async getOrCreateAnonymousVisitor(
+    tenantId: string,
+    anonymousId: string,
+  ): Promise<WidgetVisitor> {
+    let visitor = await this.widgetRepo.getVisitorByAnonymousId(
+      tenantId,
+      anonymousId,
+    );
     if (!visitor) {
       visitor = new WidgetVisitor(uuidv4(), {
         tenantId,
@@ -27,7 +36,9 @@ export class WidgetVisitorService {
         visitCount: 1,
       });
       await this.widgetRepo.saveVisitor(visitor);
-      await this.eventPublisher.publish(new WidgetVisitorCreatedEvent(tenantId, visitor.id, anonymousId));
+      await this.eventPublisher.publish(
+        new WidgetVisitorCreatedEvent(tenantId, visitor.id, anonymousId),
+      );
     } else {
       visitor.incrementVisit();
       await this.widgetRepo.saveVisitor(visitor);
@@ -35,14 +46,23 @@ export class WidgetVisitorService {
     return visitor;
   }
 
-  async identify(tenantId: string, dto: IdentifyVisitorDto): Promise<WidgetVisitor> {
-    let visitor = await this.getOrCreateAnonymousVisitor(tenantId, dto.anonymousId);
+  async identify(
+    tenantId: string,
+    dto: IdentifyVisitorDto,
+  ): Promise<WidgetVisitor> {
+    const visitor = await this.getOrCreateAnonymousVisitor(
+      tenantId,
+      dto.anonymousId,
+    );
 
     // Identity Resolution
     // If an externalUserId is provided, search for existing identity or visitor
     let externalVisitor: WidgetVisitor | null = null;
     if (dto.externalUserId) {
-      const identity = await this.widgetRepo.getIdentityByVisitor(tenantId, visitor.id);
+      const identity = await this.widgetRepo.getIdentityByVisitor(
+        tenantId,
+        visitor.id,
+      );
       if (!identity) {
         // Create verification identity link
         const newIdentity = {
@@ -58,7 +78,10 @@ export class WidgetVisitorService {
     }
 
     if (dto.email) {
-      externalVisitor = await this.widgetRepo.getVisitorByEmail(tenantId, dto.email);
+      externalVisitor = await this.widgetRepo.getVisitorByEmail(
+        tenantId,
+        dto.email,
+      );
     }
 
     if (externalVisitor && externalVisitor.id !== visitor.id) {
@@ -66,7 +89,8 @@ export class WidgetVisitorService {
       visitor.merge(externalVisitor);
       await this.widgetRepo.saveVisitor(visitor);
       // Soft-delete or mark other visitor as merged
-      await db.update(schema.widgetVisitors)
+      await db
+        .update(schema.widgetVisitors)
         .set({ deletedAt: new Date() })
         .where(eq(schema.widgetVisitors.id, externalVisitor.id));
     }
@@ -76,11 +100,13 @@ export class WidgetVisitorService {
       const [customerRow] = await db
         .select()
         .from(schema.customers)
-        .where(and(
-          eq(schema.customers.tenantId, tenantId),
-          eq(schema.customers.email, dto.email)
-        ));
-      
+        .where(
+          and(
+            eq(schema.customers.tenantId, tenantId),
+            eq(schema.customers.email, dto.email),
+          ),
+        );
+
       if (customerRow) {
         visitor.linkCustomer(customerRow.id);
       }
@@ -102,7 +128,7 @@ export class WidgetVisitorService {
         visitor.id,
         dto.externalUserId,
         dto.email,
-      )
+      ),
     );
 
     return visitor;

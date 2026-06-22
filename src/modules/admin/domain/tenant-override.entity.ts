@@ -68,7 +68,9 @@ export class TenantOverride extends Entity<string> {
   }
 
   public isExpired(at: Date = new Date()): boolean {
-    return !!this.props.expiresAt && this.props.expiresAt.getTime() <= at.getTime();
+    return (
+      !!this.props.expiresAt && this.props.expiresAt.getTime() <= at.getTime()
+    );
   }
 
   public update(overrideValue: any, reason: string, expiresAt?: Date): void {

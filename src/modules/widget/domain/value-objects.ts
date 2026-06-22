@@ -99,7 +99,8 @@ export class DomainName extends ValueObject<{ value: string }> {
       throw new Error('DomainName cannot be empty');
     }
     // simple regex to check format if domain
-    const domainRegex = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
+    const domainRegex =
+      /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
     if (value !== 'localhost' && !domainRegex.test(value)) {
       throw new Error('Invalid DomainName format');
     }

@@ -22,16 +22,23 @@ export class IdempotencyInterceptor implements NestInterceptor {
         port: parseInt(process.env.REDIS_PORT || '6380', 10),
         maxRetriesPerRequest: 1,
       });
-      this.redisClient.on('connect', () => { this.isConnected = true; });
-      this.redisClient.on('error', () => { this.isConnected = false; });
+      this.redisClient.on('connect', () => {
+        this.isConnected = true;
+      });
+      this.redisClient.on('error', () => {
+        this.isConnected = false;
+      });
     } catch {
       this.isConnected = false;
     }
   }
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
-    
+
     // Only apply to POST/PUT/PATCH mutations
     if (!['POST', 'PUT', 'PATCH'].includes(request.method)) {
       return next.handle();
@@ -43,10 +50,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     if (!idempotencyKey.match(/^[a-zA-Z0-9_-]{8,128}$/)) {
-      throw new BadRequestException('Invalid format for x-idempotency-key header');
+      throw new BadRequestException(
+        'Invalid format for x-idempotency-key header',
+      );
     }
 
-    const tenantId = request.headers['x-tenant-id'] as string || 'default';
+    const tenantId = (request.headers['x-tenant-id'] as string) || 'default';
     const cacheKey = `idempotency:${tenantId}:${idempotencyKey}`;
 
     if (!this.isConnected || !this.redisClient) {
@@ -55,10 +64,18 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     // Try to acquire lock and check cache
     const lockKey = `${cacheKey}:lock`;
-    const isLocked = await (this.redisClient.set as any)(lockKey, 'LOCK', 'PX', 10000, 'NX'); // 10s execution lock
-    
+    const isLocked = await (this.redisClient.set as any)(
+      lockKey,
+      'LOCK',
+      'PX',
+      10000,
+      'NX',
+    ); // 10s execution lock
+
     if (!isLocked) {
-      throw new ConflictException('Concurrent request execution in progress. Please retry.');
+      throw new ConflictException(
+        'Concurrent request execution in progress. Please retry.',
+      );
     }
 
     const cachedResponse = await this.redisClient.get(cacheKey);
@@ -73,7 +90,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
         async (response) => {
           if (this.redisClient) {
             // Save response cache for 24 hours
-            await this.redisClient.set(cacheKey, JSON.stringify(response), 'EX', 86400);
+            await this.redisClient.set(
+              cacheKey,
+              JSON.stringify(response),
+              'EX',
+              86400,
+            );
             await this.redisClient.del(lockKey); // Release lock
           }
         },
@@ -81,8 +103,8 @@ export class IdempotencyInterceptor implements NestInterceptor {
           if (this.redisClient) {
             await this.redisClient.del(lockKey); // Release lock on error to allow retries
           }
-        }
-      )
+        },
+      ),
     );
   }
 }

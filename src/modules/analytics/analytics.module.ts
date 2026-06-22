@@ -23,6 +23,7 @@ import { AnalyticsExportService } from './services/analytics-export.service';
 import { AnalyticsScheduleService } from './services/analytics-schedule.service';
 import { AnalyticsRealtimeService } from './services/analytics-realtime.service';
 import { AnalyticsCronService } from './services/analytics-cron.service';
+import { CsatSurveyService } from './services/csat-survey.service';
 
 // Repositories
 import { DrizzleAnalyticsRepository } from './repositories/drizzle-analytics-repository';
@@ -69,6 +70,7 @@ import { IntegrationModule } from '../../integration/integration.module';
     AnalyticsCronService,
     AnalyticsEventConsumer,
     AnalyticsQueueProcessor,
+    CsatSurveyService,
   ],
   exports: [
     AnalyticsService,
@@ -79,6 +81,7 @@ import { IntegrationModule } from '../../integration/integration.module';
     AnalyticsExportService,
     AnalyticsScheduleService,
     AnalyticsRealtimeService,
+    CsatSurveyService,
     'IAnalyticsRepository',
   ],
 })

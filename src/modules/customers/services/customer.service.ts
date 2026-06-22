@@ -137,13 +137,17 @@ export class CustomerService {
       details: `Created customer ${customer.id} (${customer.email.value})`,
     });
 
-    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.CUSTOMER_CREATED, {
-      id: customer.id,
-      customerId: customer.id,
-      email: customer.email.value,
-      status: customer.status.value,
-      source: customer.source,
-    });
+    await this.evaluateWorkflowTriggers(
+      tenantId,
+      TriggerTypeEnum.CUSTOMER_CREATED,
+      {
+        id: customer.id,
+        customerId: customer.id,
+        email: customer.email.value,
+        status: customer.status.value,
+        source: customer.source,
+      },
+    );
 
     return saved;
   }
@@ -216,12 +220,16 @@ export class CustomerService {
       details: `Updated customer ${customer.id}`,
     });
 
-    await this.evaluateWorkflowTriggers(tenantId, TriggerTypeEnum.CUSTOMER_UPDATED, {
-      id: customer.id,
-      customerId: customer.id,
-      email: customer.email.value,
-      status: customer.status.value,
-    });
+    await this.evaluateWorkflowTriggers(
+      tenantId,
+      TriggerTypeEnum.CUSTOMER_UPDATED,
+      {
+        id: customer.id,
+        customerId: customer.id,
+        email: customer.email.value,
+        status: customer.status.value,
+      },
+    );
 
     return saved;
   }

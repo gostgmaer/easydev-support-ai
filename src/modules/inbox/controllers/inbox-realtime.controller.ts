@@ -67,7 +67,8 @@ export class InboxRealtimeController {
   @ApiOperation({ summary: 'Counters snapshot for realtime bootstrap' })
   async counters(@Headers('x-tenant-id') tenantId: string, @Req() req: any) {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return this.inboxService.getCounters(tenantId, userId);
   }
 }

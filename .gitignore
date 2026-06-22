@@ -23,6 +23,9 @@ build/
 postgres_data/
 redis_data/
 
+# Locally-stored uploaded files (widget attachments etc.)
+/uploads/
+
 # Test coverage
 coverage/
 *.lcov

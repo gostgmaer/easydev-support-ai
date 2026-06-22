@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Headers, Get, Param, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  Get,
+  Param,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { WidgetVisitorService } from '../services/widget-visitor.service';
 import { IdentifyVisitorDto } from '../dtos/widget.dto';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -33,7 +42,10 @@ export class WidgetVisitorController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('anonymousId') anonymousId: string,
   ) {
-    const visitor = await this.visitorService.getOrCreateAnonymousVisitor(tenantId, anonymousId);
+    const visitor = await this.visitorService.getOrCreateAnonymousVisitor(
+      tenantId,
+      anonymousId,
+    );
     return visitor.toJSON();
   }
 }

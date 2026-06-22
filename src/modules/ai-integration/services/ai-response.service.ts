@@ -303,7 +303,7 @@ export class AiResponseService {
       const results = await this.knowledgeSearchService.search(tenantId, {
         query,
         limit: KNOWLEDGE_CONTEXT_DOC_LIMIT,
-      } as any);
+      });
 
       if (!results || results.length === 0) {
         return '';

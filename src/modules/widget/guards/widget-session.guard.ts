@@ -33,11 +33,13 @@ export class WidgetSessionGuard implements CanActivate {
       : authHeader;
 
     try {
-      const { visitorId, sessionId } = await this.sessionService.validateSessionToken(
+      const { visitorId, sessionId } =
+        await this.sessionService.validateSessionToken(tenantId, token);
+      request.widgetSession = {
         tenantId,
-        token,
-      );
-      request.widgetSession = { tenantId, visitorId, sessionId } as WidgetSessionContext;
+        visitorId,
+        sessionId,
+      };
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired widget session');

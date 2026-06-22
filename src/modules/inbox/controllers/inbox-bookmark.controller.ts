@@ -46,7 +46,8 @@ export class InboxBookmarkController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 

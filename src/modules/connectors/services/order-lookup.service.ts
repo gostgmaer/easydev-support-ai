@@ -82,23 +82,33 @@ export class OrderLookupService {
       );
 
       // Escalate to human agent
-      await this.escalate(tenantId, conversationId, 'Order lookup connector failed');
+      await this.escalate(
+        tenantId,
+        conversationId,
+        'Order lookup connector failed',
+      );
 
       const reply =
         "I'm sorry, I couldn't retrieve your order details right now. " +
-        'I\'ve connected you with a support agent who will assist you shortly.';
+        "I've connected you with a support agent who will assist you shortly.";
 
       await this.persistBotMessage(tenantId, conversationId, reply);
       return { reply, escalated: true };
     }
 
     if (!orderData) {
-      const reply = `I couldn't find any order with ID "${orderId}". ` +
+      const reply =
+        `I couldn't find any order with ID "${orderId}". ` +
         'Please check the order number and try again, or speak with an agent for help.';
       await this.persistBotMessage(tenantId, conversationId, reply);
       await this.publishEvent(
         tenantId,
-        new OrderLookupFailedEvent(tenantId, conversationId, orderId, 'Order not found'),
+        new OrderLookupFailedEvent(
+          tenantId,
+          conversationId,
+          orderId,
+          'Order not found',
+        ),
       );
       return { reply, escalated: false };
     }
@@ -112,9 +122,13 @@ export class OrderLookupService {
         orderData,
         { conversationId },
       );
-      reply = interpretation?.humanReadableSummary || this.buildDefaultReply(orderData);
+      reply =
+        interpretation?.humanReadableSummary ||
+        this.buildDefaultReply(orderData);
     } catch (aiError: any) {
-      this.logger.warn(`AI interpretation failed: ${aiError.message}. Falling back to default reply.`);
+      this.logger.warn(
+        `AI interpretation failed: ${aiError.message}. Falling back to default reply.`,
+      );
       reply = this.buildDefaultReply(orderData);
     }
 

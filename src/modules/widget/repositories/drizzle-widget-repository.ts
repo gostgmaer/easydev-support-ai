@@ -33,6 +33,7 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
       customCss: config.customCss || null,
       customJs: config.customJs || null,
       allowedDomains: config.allowedDomains,
+      identityVerificationSecret: config.identityVerificationSecret || null,
       updatedAt: new Date(),
       version: config.version,
     };
@@ -40,10 +41,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetConfigs)
-      .where(and(
-        eq(schema.widgetConfigs.tenantId, config.tenantId),
-        eq(schema.widgetConfigs.id, config.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetConfigs.tenantId, config.tenantId),
+          eq(schema.widgetConfigs.id, config.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -80,6 +83,7 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
       customCss: row.customCss || undefined,
       customJs: row.customJs || undefined,
       allowedDomains: (row.allowedDomains as string[]) || [],
+      identityVerificationSecret: row.identityVerificationSecret || undefined,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       version: row.version,
@@ -108,10 +112,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetVisitors)
-      .where(and(
-        eq(schema.widgetVisitors.tenantId, visitor.tenantId),
-        eq(schema.widgetVisitors.id, visitor.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetVisitors.tenantId, visitor.tenantId),
+          eq(schema.widgetVisitors.id, visitor.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -126,14 +132,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }
   }
 
-  async getVisitorById(tenantId: string, id: string): Promise<WidgetVisitor | null> {
+  async getVisitorById(
+    tenantId: string,
+    id: string,
+  ): Promise<WidgetVisitor | null> {
     const [row] = await db
       .select()
       .from(schema.widgetVisitors)
-      .where(and(
-        eq(schema.widgetVisitors.tenantId, tenantId),
-        eq(schema.widgetVisitors.id, id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetVisitors.tenantId, tenantId),
+          eq(schema.widgetVisitors.id, id),
+        ),
+      );
 
     if (!row) return null;
 
@@ -155,14 +166,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     });
   }
 
-  async getVisitorByAnonymousId(tenantId: string, anonymousId: string): Promise<WidgetVisitor | null> {
+  async getVisitorByAnonymousId(
+    tenantId: string,
+    anonymousId: string,
+  ): Promise<WidgetVisitor | null> {
     const [row] = await db
       .select()
       .from(schema.widgetVisitors)
-      .where(and(
-        eq(schema.widgetVisitors.tenantId, tenantId),
-        eq(schema.widgetVisitors.anonymousId, anonymousId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetVisitors.tenantId, tenantId),
+          eq(schema.widgetVisitors.anonymousId, anonymousId),
+        ),
+      );
 
     if (!row) return null;
 
@@ -184,14 +200,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     });
   }
 
-  async getVisitorByEmail(tenantId: string, email: string): Promise<WidgetVisitor | null> {
+  async getVisitorByEmail(
+    tenantId: string,
+    email: string,
+  ): Promise<WidgetVisitor | null> {
     const [row] = await db
       .select()
       .from(schema.widgetVisitors)
-      .where(and(
-        eq(schema.widgetVisitors.tenantId, tenantId),
-        eq(schema.widgetVisitors.email, email)
-      ));
+      .where(
+        and(
+          eq(schema.widgetVisitors.tenantId, tenantId),
+          eq(schema.widgetVisitors.email, email),
+        ),
+      );
 
     if (!row) return null;
 
@@ -236,10 +257,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetSessions)
-      .where(and(
-        eq(schema.widgetSessions.tenantId, session.tenantId),
-        eq(schema.widgetSessions.id, session.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetSessions.tenantId, session.tenantId),
+          eq(schema.widgetSessions.id, session.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -254,14 +277,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }
   }
 
-  async getSessionById(tenantId: string, id: string): Promise<WidgetSession | null> {
+  async getSessionById(
+    tenantId: string,
+    id: string,
+  ): Promise<WidgetSession | null> {
     const [row] = await db
       .select()
       .from(schema.widgetSessions)
-      .where(and(
-        eq(schema.widgetSessions.tenantId, tenantId),
-        eq(schema.widgetSessions.id, id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetSessions.tenantId, tenantId),
+          eq(schema.widgetSessions.id, id),
+        ),
+      );
 
     if (!row) return null;
 
@@ -284,14 +312,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     });
   }
 
-  async getSessionByToken(tenantId: string, token: string): Promise<WidgetSession | null> {
+  async getSessionByToken(
+    tenantId: string,
+    token: string,
+  ): Promise<WidgetSession | null> {
     const [row] = await db
       .select()
       .from(schema.widgetSessions)
-      .where(and(
-        eq(schema.widgetSessions.tenantId, tenantId),
-        eq(schema.widgetSessions.sessionToken, token)
-      ));
+      .where(
+        and(
+          eq(schema.widgetSessions.tenantId, tenantId),
+          eq(schema.widgetSessions.sessionToken, token),
+        ),
+      );
 
     if (!row) return null;
 
@@ -329,10 +362,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetIdentities)
-      .where(and(
-        eq(schema.widgetIdentities.tenantId, identity.tenantId),
-        eq(schema.widgetIdentities.id, identity.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetIdentities.tenantId, identity.tenantId),
+          eq(schema.widgetIdentities.id, identity.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -347,14 +382,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }
   }
 
-  async getIdentityByVisitor(tenantId: string, visitorId: string): Promise<WidgetIdentity | null> {
+  async getIdentityByVisitor(
+    tenantId: string,
+    visitorId: string,
+  ): Promise<WidgetIdentity | null> {
     const [row] = await db
       .select()
       .from(schema.widgetIdentities)
-      .where(and(
-        eq(schema.widgetIdentities.tenantId, tenantId),
-        eq(schema.widgetIdentities.visitorId, visitorId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetIdentities.tenantId, tenantId),
+          eq(schema.widgetIdentities.visitorId, visitorId),
+        ),
+      );
 
     if (!row) return null;
 
@@ -389,10 +429,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetLeads)
-      .where(and(
-        eq(schema.widgetLeads.tenantId, lead.tenantId),
-        eq(schema.widgetLeads.id, lead.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetLeads.tenantId, lead.tenantId),
+          eq(schema.widgetLeads.id, lead.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -411,10 +453,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [row] = await db
       .select()
       .from(schema.widgetLeads)
-      .where(and(
-        eq(schema.widgetLeads.tenantId, tenantId),
-        eq(schema.widgetLeads.id, id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetLeads.tenantId, tenantId),
+          eq(schema.widgetLeads.id, id),
+        ),
+      );
 
     if (!row) return null;
 
@@ -434,14 +478,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     });
   }
 
-  async getLeadByEmail(tenantId: string, email: string): Promise<WidgetLead | null> {
+  async getLeadByEmail(
+    tenantId: string,
+    email: string,
+  ): Promise<WidgetLead | null> {
     const [row] = await db
       .select()
       .from(schema.widgetLeads)
-      .where(and(
-        eq(schema.widgetLeads.tenantId, tenantId),
-        eq(schema.widgetLeads.email, email)
-      ));
+      .where(
+        and(
+          eq(schema.widgetLeads.tenantId, tenantId),
+          eq(schema.widgetLeads.email, email),
+        ),
+      );
 
     if (!row) return null;
 
@@ -475,22 +524,30 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     await db.insert(schema.widgetEvents).values(raw);
   }
 
-  async getEventsBySession(tenantId: string, sessionId: string): Promise<WidgetEvent[]> {
+  async getEventsBySession(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<WidgetEvent[]> {
     const rows = await db
       .select()
       .from(schema.widgetEvents)
-      .where(and(
-        eq(schema.widgetEvents.tenantId, tenantId),
-        eq(schema.widgetEvents.sessionId, sessionId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetEvents.tenantId, tenantId),
+          eq(schema.widgetEvents.sessionId, sessionId),
+        ),
+      );
 
-    return rows.map((row) => new WidgetEvent(row.id, {
-      tenantId: row.tenantId,
-      sessionId: row.sessionId,
-      eventName: row.eventName,
-      eventData: (row.eventData as Record<string, any>) || undefined,
-      createdAt: row.createdAt,
-    }));
+    return rows.map(
+      (row) =>
+        new WidgetEvent(row.id, {
+          tenantId: row.tenantId,
+          sessionId: row.sessionId,
+          eventName: row.eventName,
+          eventData: (row.eventData as Record<string, any>) || undefined,
+          createdAt: row.createdAt,
+        }),
+    );
   }
 
   // ------------ Widget Page View ------------
@@ -508,10 +565,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetPageViews)
-      .where(and(
-        eq(schema.widgetPageViews.tenantId, pageView.tenantId),
-        eq(schema.widgetPageViews.id, pageView.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetPageViews.tenantId, pageView.tenantId),
+          eq(schema.widgetPageViews.id, pageView.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -523,23 +582,31 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }
   }
 
-  async getPageViewsBySession(tenantId: string, sessionId: string): Promise<WidgetPageView[]> {
+  async getPageViewsBySession(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<WidgetPageView[]> {
     const rows = await db
       .select()
       .from(schema.widgetPageViews)
-      .where(and(
-        eq(schema.widgetPageViews.tenantId, tenantId),
-        eq(schema.widgetPageViews.sessionId, sessionId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetPageViews.tenantId, tenantId),
+          eq(schema.widgetPageViews.sessionId, sessionId),
+        ),
+      );
 
-    return rows.map((row) => new WidgetPageView(row.id, {
-      tenantId: row.tenantId,
-      sessionId: row.sessionId,
-      url: row.url,
-      title: row.title || undefined,
-      timeSpentSeconds: row.timeSpentSeconds,
-      createdAt: row.createdAt,
-    }));
+    return rows.map(
+      (row) =>
+        new WidgetPageView(row.id, {
+          tenantId: row.tenantId,
+          sessionId: row.sessionId,
+          url: row.url,
+          title: row.title || undefined,
+          timeSpentSeconds: row.timeSpentSeconds,
+          createdAt: row.createdAt,
+        }),
+    );
   }
 
   // ------------ Widget Conversation ------------
@@ -555,38 +622,54 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     await db.insert(schema.widgetConversations).values(raw);
   }
 
-  async getConversationsBySession(tenantId: string, sessionId: string): Promise<WidgetConversation[]> {
+  async getConversationsBySession(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<WidgetConversation[]> {
     const rows = await db
       .select()
       .from(schema.widgetConversations)
-      .where(and(
-        eq(schema.widgetConversations.tenantId, tenantId),
-        eq(schema.widgetConversations.widgetSessionId, sessionId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetConversations.tenantId, tenantId),
+          eq(schema.widgetConversations.widgetSessionId, sessionId),
+        ),
+      );
 
-    return rows.map((row) => new WidgetConversation(row.id, {
-      tenantId: row.tenantId,
-      widgetSessionId: row.widgetSessionId,
-      conversationId: row.conversationId,
-      linkedAt: row.linkedAt,
-    }));
+    return rows.map(
+      (row) =>
+        new WidgetConversation(row.id, {
+          tenantId: row.tenantId,
+          widgetSessionId: row.widgetSessionId,
+          conversationId: row.conversationId,
+          linkedAt: row.linkedAt,
+        }),
+    );
   }
 
-  async getConversationLinksByConversationId(tenantId: string, conversationId: string): Promise<WidgetConversation[]> {
+  async getConversationLinksByConversationId(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<WidgetConversation[]> {
     const rows = await db
       .select()
       .from(schema.widgetConversations)
-      .where(and(
-        eq(schema.widgetConversations.tenantId, tenantId),
-        eq(schema.widgetConversations.conversationId, conversationId)
-      ));
+      .where(
+        and(
+          eq(schema.widgetConversations.tenantId, tenantId),
+          eq(schema.widgetConversations.conversationId, conversationId),
+        ),
+      );
 
-    return rows.map((row) => new WidgetConversation(row.id, {
-      tenantId: row.tenantId,
-      widgetSessionId: row.widgetSessionId,
-      conversationId: row.conversationId,
-      linkedAt: row.linkedAt,
-    }));
+    return rows.map(
+      (row) =>
+        new WidgetConversation(row.id, {
+          tenantId: row.tenantId,
+          widgetSessionId: row.widgetSessionId,
+          conversationId: row.conversationId,
+          linkedAt: row.linkedAt,
+        }),
+    );
   }
 
   // ------------ Widget Auth Token ------------
@@ -603,10 +686,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetAuthTokens)
-      .where(and(
-        eq(schema.widgetAuthTokens.tenantId, authToken.tenantId),
-        eq(schema.widgetAuthTokens.id, authToken.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetAuthTokens.tenantId, authToken.tenantId),
+          eq(schema.widgetAuthTokens.id, authToken.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -618,14 +703,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }
   }
 
-  async getAuthToken(tenantId: string, tokenHash: string): Promise<WidgetAuthToken | null> {
+  async getAuthToken(
+    tenantId: string,
+    tokenHash: string,
+  ): Promise<WidgetAuthToken | null> {
     const [row] = await db
       .select()
       .from(schema.widgetAuthTokens)
-      .where(and(
-        eq(schema.widgetAuthTokens.tenantId, tenantId),
-        eq(schema.widgetAuthTokens.tokenHash, tokenHash)
-      ));
+      .where(
+        and(
+          eq(schema.widgetAuthTokens.tenantId, tenantId),
+          eq(schema.widgetAuthTokens.tokenHash, tokenHash),
+        ),
+      );
 
     if (!row) return null;
 
@@ -641,10 +731,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
   async deleteAuthToken(tenantId: string, tokenHash: string): Promise<void> {
     await db
       .delete(schema.widgetAuthTokens)
-      .where(and(
-        eq(schema.widgetAuthTokens.tenantId, tenantId),
-        eq(schema.widgetAuthTokens.tokenHash, tokenHash)
-      ));
+      .where(
+        and(
+          eq(schema.widgetAuthTokens.tenantId, tenantId),
+          eq(schema.widgetAuthTokens.tokenHash, tokenHash),
+        ),
+      );
   }
 
   // ------------ Widget Installation ------------
@@ -663,10 +755,12 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     const [existing] = await db
       .select()
       .from(schema.widgetInstallations)
-      .where(and(
-        eq(schema.widgetInstallations.tenantId, installation.tenantId),
-        eq(schema.widgetInstallations.id, installation.id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetInstallations.tenantId, installation.tenantId),
+          eq(schema.widgetInstallations.id, installation.id),
+        ),
+      );
 
     if (existing) {
       await db
@@ -681,14 +775,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     }
   }
 
-  async getInstallationById(tenantId: string, id: string): Promise<WidgetInstallation | null> {
+  async getInstallationById(
+    tenantId: string,
+    id: string,
+  ): Promise<WidgetInstallation | null> {
     const [row] = await db
       .select()
       .from(schema.widgetInstallations)
-      .where(and(
-        eq(schema.widgetInstallations.tenantId, tenantId),
-        eq(schema.widgetInstallations.id, id)
-      ));
+      .where(
+        and(
+          eq(schema.widgetInstallations.tenantId, tenantId),
+          eq(schema.widgetInstallations.id, id),
+        ),
+      );
 
     if (!row) return null;
 
@@ -704,14 +803,19 @@ export class DrizzleWidgetRepository implements IWidgetRepository {
     });
   }
 
-  async getInstallationByDomain(tenantId: string, domain: string): Promise<WidgetInstallation | null> {
+  async getInstallationByDomain(
+    tenantId: string,
+    domain: string,
+  ): Promise<WidgetInstallation | null> {
     const [row] = await db
       .select()
       .from(schema.widgetInstallations)
-      .where(and(
-        eq(schema.widgetInstallations.tenantId, tenantId),
-        eq(schema.widgetInstallations.domain, domain)
-      ));
+      .where(
+        and(
+          eq(schema.widgetInstallations.tenantId, tenantId),
+          eq(schema.widgetInstallations.domain, domain),
+        ),
+      );
 
     if (!row) return null;
 

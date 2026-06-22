@@ -17,22 +17,34 @@ export class CreateWidgetConfigDto {
   @IsNotEmpty()
   widgetName: string;
 
-  @ApiPropertyOptional({ description: 'Theme mode (light/dark/etc.)', default: 'light' })
+  @ApiPropertyOptional({
+    description: 'Theme mode (light/dark/etc.)',
+    default: 'light',
+  })
   @IsString()
   @IsOptional()
   theme?: string;
 
-  @ApiPropertyOptional({ description: 'Primary theme color', default: '#000000' })
+  @ApiPropertyOptional({
+    description: 'Primary theme color',
+    default: '#000000',
+  })
   @IsString()
   @IsOptional()
   primaryColor?: string;
 
-  @ApiPropertyOptional({ description: 'Secondary theme color', default: '#ffffff' })
+  @ApiPropertyOptional({
+    description: 'Secondary theme color',
+    default: '#ffffff',
+  })
   @IsString()
   @IsOptional()
   secondaryColor?: string;
 
-  @ApiPropertyOptional({ description: 'Position on screen', default: 'bottom-right' })
+  @ApiPropertyOptional({
+    description: 'Position on screen',
+    default: 'bottom-right',
+  })
   @IsString()
   @IsOptional()
   position?: string;
@@ -62,7 +74,10 @@ export class CreateWidgetConfigDto {
   @IsOptional()
   customJs?: string;
 
-  @ApiPropertyOptional({ description: 'Allowed domains for widget embedding', type: [String] })
+  @ApiPropertyOptional({
+    description: 'Allowed domains for widget embedding',
+    type: [String],
+  })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
@@ -120,7 +135,10 @@ export class UpdateWidgetConfigDto {
   @IsOptional()
   customJs?: string;
 
-  @ApiPropertyOptional({ description: 'Allowed domains for widget embedding', type: [String] })
+  @ApiPropertyOptional({
+    description: 'Allowed domains for widget embedding',
+    type: [String],
+  })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
@@ -175,7 +193,9 @@ export class IdentifyVisitorDto {
   @IsNotEmpty()
   anonymousId: string;
 
-  @ApiPropertyOptional({ description: 'External user unique ID from client CRM/auth' })
+  @ApiPropertyOptional({
+    description: 'External user unique ID from client CRM/auth',
+  })
   @IsString()
   @IsOptional()
   externalUserId?: string;
@@ -244,7 +264,9 @@ export class CaptureLeadDto {
 }
 
 export class CreateInstallationDto {
-  @ApiProperty({ description: 'Domain name for the installation script verification' })
+  @ApiProperty({
+    description: 'Domain name for the installation script verification',
+  })
   @IsString()
   @IsNotEmpty()
   domain: string;
@@ -267,7 +289,10 @@ export class TrackWidgetEventDto {
   @IsNotEmpty()
   eventName: string;
 
-  @ApiPropertyOptional({ description: 'JSON metadata for the event', type: Object })
+  @ApiPropertyOptional({
+    description: 'JSON metadata for the event',
+    type: Object,
+  })
   @IsObject()
   @IsOptional()
   eventData?: Record<string, any>;

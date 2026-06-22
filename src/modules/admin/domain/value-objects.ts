@@ -99,7 +99,9 @@ export enum AdminWidgetTypeEnum {
   SYSTEM_HEALTH = 'SYSTEM_HEALTH',
 }
 
-export class AdminWidgetType extends ValueObject<{ value: AdminWidgetTypeEnum }> {
+export class AdminWidgetType extends ValueObject<{
+  value: AdminWidgetTypeEnum;
+}> {
   constructor(value: AdminWidgetTypeEnum) {
     if (!Object.values(AdminWidgetTypeEnum).includes(value)) {
       throw new Error(`Invalid AdminWidgetType: ${value}`);
@@ -207,7 +209,9 @@ export enum SystemHealthStatusEnum {
   DOWN = 'DOWN',
 }
 
-export class SystemHealthStatus extends ValueObject<{ value: SystemHealthStatusEnum }> {
+export class SystemHealthStatus extends ValueObject<{
+  value: SystemHealthStatusEnum;
+}> {
   constructor(value: SystemHealthStatusEnum) {
     if (!Object.values(SystemHealthStatusEnum).includes(value)) {
       throw new Error(`Invalid SystemHealthStatus: ${value}`);

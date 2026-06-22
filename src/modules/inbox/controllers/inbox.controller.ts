@@ -50,7 +50,8 @@ export class InboxController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 
@@ -67,10 +68,7 @@ export class InboxController {
   @Get('counters')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Live inbox counters for the current agent' })
-  async counters(
-    @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
-  ) {
+  async counters(@Headers('x-tenant-id') tenantId: string, @Req() req: any) {
     return this.inboxService.getCounters(tenantId, this.userOf(req));
   }
 
@@ -125,7 +123,10 @@ export class InboxController {
 
   @Post('saved-views')
   @Roles('tenant_admin', 'support_agent')
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Saved view created' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Saved view created',
+  })
   @ApiOperation({ summary: 'Create a saved view' })
   async createSavedView(
     @Headers('x-tenant-id') tenantId: string,
@@ -168,7 +169,11 @@ export class InboxController {
     @Param('conversationId') conversationId: string,
     @Req() req: any,
   ) {
-    await this.inboxService.markRead(tenantId, conversationId, this.userOf(req));
+    await this.inboxService.markRead(
+      tenantId,
+      conversationId,
+      this.userOf(req),
+    );
     return { read: true };
   }
 

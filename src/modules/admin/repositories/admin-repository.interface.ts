@@ -77,7 +77,9 @@ export interface IAdminRepository {
   // API keys
   saveApiKey(apiKey: ApiKey, tenantId: string): Promise<void>;
   getApiKey(tenantId: string, id: string): Promise<ApiKey | null>;
-  getApiKeyByHash(keyHash: string): Promise<{ apiKey: ApiKey; tenantId: string } | null>;
+  getApiKeyByHash(
+    keyHash: string,
+  ): Promise<{ apiKey: ApiKey; tenantId: string } | null>;
   listApiKeys(
     tenantId: string,
     options?: ApiKeyQueryOptions,
@@ -95,7 +97,10 @@ export interface IAdminRepository {
 
   // Operational incidents
   saveIncident(incident: OperationalIncident, tenantId: string): Promise<void>;
-  getIncident(tenantId: string, id: string): Promise<OperationalIncident | null>;
+  getIncident(
+    tenantId: string,
+    id: string,
+  ): Promise<OperationalIncident | null>;
   listIncidents(
     tenantId: string,
     options?: IncidentQueryOptions,

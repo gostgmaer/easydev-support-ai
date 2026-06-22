@@ -2,7 +2,10 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import type { IAdminRepository } from '../repositories/admin-repository.interface';
 import type { IConnectorRepository } from '../../connectors/repositories/connector-repository.interface';
-import { AuditRepository, AuditLogQueryOptions } from '../../audit/audit.repository';
+import {
+  AuditRepository,
+  AuditLogQueryOptions,
+} from '../../audit/audit.repository';
 import { WorkflowAuditService } from '../../workflows/services/workflow-audit.service';
 import { AuditView } from '../domain/audit-view.entity';
 import { CreateAuditViewDto } from '../dtos';
@@ -34,22 +37,43 @@ export class AdminAuditService {
     private readonly workflowAuditService: WorkflowAuditService,
   ) {}
 
-  public async listEntityChanges(tenantId: string, options: AuditLogQueryOptions) {
+  public async listEntityChanges(
+    tenantId: string,
+    options: AuditLogQueryOptions,
+  ) {
     return this.auditRepository.findPaginated(tenantId, options);
   }
 
-  public async listSettingsChanges(tenantId: string, options: AuditLogQueryOptions) {
-    return this.listByActionPredicate(tenantId, (action) => SETTINGS_ACTIONS.has(action), options);
-  }
-
-  public async listApiKeyChanges(tenantId: string, options: AuditLogQueryOptions) {
-    return this.listByActionPredicate(tenantId, (action) => action.startsWith('API_KEY'), options);
-  }
-
-  public async listSecurityEvents(tenantId: string, options: AuditLogQueryOptions) {
+  public async listSettingsChanges(
+    tenantId: string,
+    options: AuditLogQueryOptions,
+  ) {
     return this.listByActionPredicate(
       tenantId,
-      (action) => action.startsWith('SECURITY') || action === 'security_settings.updated',
+      (action) => SETTINGS_ACTIONS.has(action),
+      options,
+    );
+  }
+
+  public async listApiKeyChanges(
+    tenantId: string,
+    options: AuditLogQueryOptions,
+  ) {
+    return this.listByActionPredicate(
+      tenantId,
+      (action) => action.startsWith('API_KEY'),
+      options,
+    );
+  }
+
+  public async listSecurityEvents(
+    tenantId: string,
+    options: AuditLogQueryOptions,
+  ) {
+    return this.listByActionPredicate(
+      tenantId,
+      (action) =>
+        action.startsWith('SECURITY') || action === 'security_settings.updated',
       options,
     );
   }
@@ -73,7 +97,11 @@ export class AdminAuditService {
     workflowId?: string,
     executionId?: string,
   ) {
-    return this.workflowAuditService.getAuditLogs(tenantId, workflowId, executionId);
+    return this.workflowAuditService.getAuditLogs(
+      tenantId,
+      workflowId,
+      executionId,
+    );
   }
 
   public async listConnectorChanges(
@@ -84,8 +112,15 @@ export class AdminAuditService {
     return this.connectorRepository.findLogs(tenantId, connectorId, options);
   }
 
-  public async listAiConfigurationChanges(tenantId: string, options: AuditLogQueryOptions) {
-    return this.listByActionPredicate(tenantId, (action) => action.startsWith('AI_'), options);
+  public async listAiConfigurationChanges(
+    tenantId: string,
+    options: AuditLogQueryOptions,
+  ) {
+    return this.listByActionPredicate(
+      tenantId,
+      (action) => action.startsWith('AI_'),
+      options,
+    );
   }
 
   // ---- Saved audit views ----
@@ -106,7 +141,10 @@ export class AdminAuditService {
     return view;
   }
 
-  public async listAuditViews(tenantId: string, userId: string): Promise<AuditView[]> {
+  public async listAuditViews(
+    tenantId: string,
+    userId: string,
+  ): Promise<AuditView[]> {
     return this.repository.listAuditViews(tenantId, userId);
   }
 

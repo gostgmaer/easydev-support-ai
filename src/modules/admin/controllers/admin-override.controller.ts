@@ -22,9 +22,16 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AdminOverrideService } from '../services/admin-override.service';
-import { CreateOverrideDto, SetFeatureAccessDto, ConnectorLogQueryDto } from '../dtos';
+import {
+  CreateOverrideDto,
+  SetFeatureAccessDto,
+  ConnectorLogQueryDto,
+} from '../dtos';
 import { UpdateAiSettingsDto } from '../../settings/dtos/settings.dto';
-import { UpdateAgentDto, ModelConfigDto } from '../../ai-integration/dtos/ai.dto';
+import {
+  UpdateAgentDto,
+  ModelConfigDto,
+} from '../../ai-integration/dtos/ai.dto';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -32,7 +39,11 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
 
 @ApiTags('Admin Tenant Overrides & Governance')
 @ApiBearerAuth()
-@ApiHeader({ name: 'x-tenant-id', required: true, description: 'Tenant Identifier' })
+@ApiHeader({
+  name: 'x-tenant-id',
+  required: true,
+  description: 'Tenant Identifier',
+})
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/admin/overrides')
@@ -41,7 +52,8 @@ export class AdminOverrideController {
 
   private userOf(req: any): string {
     const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('Authenticated user is required');
+    if (!userId)
+      throw new BadRequestException('Authenticated user is required');
     return userId;
   }
 
@@ -77,7 +89,10 @@ export class AdminOverrideController {
     @Headers('x-tenant-id') tenantId: string,
     @Param('featureKey') featureKey: string,
   ) {
-    const override = await this.overrideService.getOverride(tenantId, featureKey);
+    const override = await this.overrideService.getOverride(
+      tenantId,
+      featureKey,
+    );
     return override.toJSON();
   }
 
@@ -89,7 +104,11 @@ export class AdminOverrideController {
     @Param('featureKey') featureKey: string,
     @Req() req: any,
   ) {
-    return this.overrideService.deleteOverride(tenantId, featureKey, this.userOf(req));
+    return this.overrideService.deleteOverride(
+      tenantId,
+      featureKey,
+      this.userOf(req),
+    );
   }
 
   @Get('feature-access/list')
@@ -125,13 +144,19 @@ export class AdminOverrideController {
 
   @Patch('governance/ai')
   @Roles('tenant_admin')
-  @ApiOperation({ summary: 'Update AI governance settings (limits, thresholds, model)' })
+  @ApiOperation({
+    summary: 'Update AI governance settings (limits, thresholds, model)',
+  })
   async updateAiGovernance(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: UpdateAiSettingsDto,
     @Req() req: any,
   ) {
-    return this.overrideService.updateAiGovernance(tenantId, dto, this.userOf(req));
+    return this.overrideService.updateAiGovernance(
+      tenantId,
+      dto,
+      this.userOf(req),
+    );
   }
 
   @Get('governance/ai/agents')
@@ -177,7 +202,9 @@ export class AdminOverrideController {
 
   @Get('governance/connectors/:connectorId')
   @Roles('tenant_admin')
-  @ApiOperation({ summary: 'Connector governance: health, rate limits, failures, retries' })
+  @ApiOperation({
+    summary: 'Connector governance: health, rate limits, failures, retries',
+  })
   async getConnectorGovernance(
     @Headers('x-tenant-id') tenantId: string,
     @Param('connectorId') connectorId: string,
@@ -193,6 +220,10 @@ export class AdminOverrideController {
     @Param('connectorId') connectorId: string,
     @Query() query: ConnectorLogQueryDto,
   ) {
-    return this.overrideService.getConnectorAuditLogs(tenantId, connectorId, query);
+    return this.overrideService.getConnectorAuditLogs(
+      tenantId,
+      connectorId,
+      query,
+    );
   }
 }

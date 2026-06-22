@@ -25,7 +25,10 @@ import { AdminMapper } from './admin.mapper';
 export class DrizzleAdminRepository implements IAdminRepository {
   // ---- Dashboards ----
 
-  async saveDashboard(dashboard: AdminDashboard, tenantId: string): Promise<void> {
+  async saveDashboard(
+    dashboard: AdminDashboard,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: dashboard.id,
       tenantId,
@@ -62,7 +65,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     }
   }
 
-  async getDashboard(tenantId: string, id: string): Promise<AdminDashboard | null> {
+  async getDashboard(
+    tenantId: string,
+    id: string,
+  ): Promise<AdminDashboard | null> {
     const [row] = await db
       .select()
       .from(schema.adminDashboards)
@@ -116,7 +122,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     return AdminMapper.dashboardToDomain(row);
   }
 
-  async clearDefaultDashboards(tenantId: string, exceptId?: string): Promise<void> {
+  async clearDefaultDashboards(
+    tenantId: string,
+    exceptId?: string,
+  ): Promise<void> {
     const conditions = [
       eq(schema.adminDashboards.tenantId, tenantId),
       eq(schema.adminDashboards.defaultView, true),
@@ -176,7 +185,9 @@ export class DrizzleAdminRepository implements IAdminRepository {
           ),
         );
     } else {
-      await db.insert(schema.adminWidgets).values({ ...raw, createdAt: widget.createdAt });
+      await db
+        .insert(schema.adminWidgets)
+        .values({ ...raw, createdAt: widget.createdAt });
     }
   }
 
@@ -185,13 +196,19 @@ export class DrizzleAdminRepository implements IAdminRepository {
       .select()
       .from(schema.adminWidgets)
       .where(
-        and(eq(schema.adminWidgets.tenantId, tenantId), eq(schema.adminWidgets.id, id)),
+        and(
+          eq(schema.adminWidgets.tenantId, tenantId),
+          eq(schema.adminWidgets.id, id),
+        ),
       );
     if (!row) return null;
     return AdminMapper.widgetToDomain(row);
   }
 
-  async listWidgets(tenantId: string, dashboardId: string): Promise<AdminWidget[]> {
+  async listWidgets(
+    tenantId: string,
+    dashboardId: string,
+  ): Promise<AdminWidget[]> {
     const rows = await db
       .select()
       .from(schema.adminWidgets)
@@ -208,7 +225,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const result = await db
       .delete(schema.adminWidgets)
       .where(
-        and(eq(schema.adminWidgets.tenantId, tenantId), eq(schema.adminWidgets.id, id)),
+        and(
+          eq(schema.adminWidgets.tenantId, tenantId),
+          eq(schema.adminWidgets.id, id),
+        ),
       )
       .returning({ id: schema.adminWidgets.id });
     return result.length > 0;
@@ -216,7 +236,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
 
   // ---- Announcements ----
 
-  async saveAnnouncement(announcement: Announcement, tenantId: string): Promise<void> {
+  async saveAnnouncement(
+    announcement: Announcement,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: announcement.id,
       tenantId,
@@ -255,7 +278,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     }
   }
 
-  async getAnnouncement(tenantId: string, id: string): Promise<Announcement | null> {
+  async getAnnouncement(
+    tenantId: string,
+    id: string,
+  ): Promise<Announcement | null> {
     const [row] = await db
       .select()
       .from(schema.adminAnnouncements)
@@ -278,7 +304,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     return rows.map((r) => AdminMapper.announcementToDomain(r));
   }
 
-  async listActiveAnnouncements(tenantId: string, at: Date): Promise<Announcement[]> {
+  async listActiveAnnouncements(
+    tenantId: string,
+    at: Date,
+  ): Promise<Announcement[]> {
     const rows = await db
       .select()
       .from(schema.adminAnnouncements)
@@ -340,7 +369,9 @@ export class DrizzleAdminRepository implements IAdminRepository {
           ),
         );
     } else {
-      await db.insert(schema.adminAuditViews).values({ ...raw, createdAt: view.createdAt });
+      await db
+        .insert(schema.adminAuditViews)
+        .values({ ...raw, createdAt: view.createdAt });
     }
   }
 
@@ -349,7 +380,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
       .select()
       .from(schema.adminAuditViews)
       .where(
-        and(eq(schema.adminAuditViews.tenantId, tenantId), eq(schema.adminAuditViews.id, id)),
+        and(
+          eq(schema.adminAuditViews.tenantId, tenantId),
+          eq(schema.adminAuditViews.id, id),
+        ),
       );
     if (!row) return null;
     return AdminMapper.auditViewToDomain(row);
@@ -373,7 +407,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const result = await db
       .delete(schema.adminAuditViews)
       .where(
-        and(eq(schema.adminAuditViews.tenantId, tenantId), eq(schema.adminAuditViews.id, id)),
+        and(
+          eq(schema.adminAuditViews.tenantId, tenantId),
+          eq(schema.adminAuditViews.id, id),
+        ),
       )
       .returning({ id: schema.adminAuditViews.id });
     return result.length > 0;
@@ -381,7 +418,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
 
   // ---- Feature access ----
 
-  async saveFeatureAccess(access: FeatureAccess, tenantId: string): Promise<void> {
+  async saveFeatureAccess(
+    access: FeatureAccess,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: access.id,
       tenantId,
@@ -396,7 +436,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
       .insert(schema.adminFeatureAccess)
       .values({ ...raw, createdAt: access.createdAt })
       .onConflictDoUpdate({
-        target: [schema.adminFeatureAccess.tenantId, schema.adminFeatureAccess.featureKey],
+        target: [
+          schema.adminFeatureAccess.tenantId,
+          schema.adminFeatureAccess.featureKey,
+        ],
         set: raw,
       });
   }
@@ -448,7 +491,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
       .select({ id: schema.adminApiKeys.id })
       .from(schema.adminApiKeys)
       .where(
-        and(eq(schema.adminApiKeys.id, apiKey.id), eq(schema.adminApiKeys.tenantId, tenantId)),
+        and(
+          eq(schema.adminApiKeys.id, apiKey.id),
+          eq(schema.adminApiKeys.tenantId, tenantId),
+        ),
       );
     if (existing) {
       await db
@@ -461,9 +507,11 @@ export class DrizzleAdminRepository implements IAdminRepository {
           ),
         );
     } else {
-      await db
-        .insert(schema.adminApiKeys)
-        .values({ ...raw, createdBy: apiKey.createdBy || null, createdAt: apiKey.createdAt });
+      await db.insert(schema.adminApiKeys).values({
+        ...raw,
+        createdBy: apiKey.createdBy || null,
+        createdAt: apiKey.createdAt,
+      });
     }
   }
 
@@ -471,7 +519,12 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const [row] = await db
       .select()
       .from(schema.adminApiKeys)
-      .where(and(eq(schema.adminApiKeys.tenantId, tenantId), eq(schema.adminApiKeys.id, id)));
+      .where(
+        and(
+          eq(schema.adminApiKeys.tenantId, tenantId),
+          eq(schema.adminApiKeys.id, id),
+        ),
+      );
     if (!row) return null;
     return AdminMapper.apiKeyToDomain(row);
   }
@@ -495,7 +548,8 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const page = options.page || 1;
     const offset = (page - 1) * limit;
     const conditions = [eq(schema.adminApiKeys.tenantId, tenantId)];
-    if (options.status) conditions.push(eq(schema.adminApiKeys.status, options.status));
+    if (options.status)
+      conditions.push(eq(schema.adminApiKeys.status, options.status));
 
     const rows = await db
       .select()
@@ -535,7 +589,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
       .select({ id: schema.adminWebhooks.id })
       .from(schema.adminWebhooks)
       .where(
-        and(eq(schema.adminWebhooks.id, webhook.id), eq(schema.adminWebhooks.tenantId, tenantId)),
+        and(
+          eq(schema.adminWebhooks.id, webhook.id),
+          eq(schema.adminWebhooks.tenantId, tenantId),
+        ),
       );
     if (existing) {
       await db
@@ -548,7 +605,9 @@ export class DrizzleAdminRepository implements IAdminRepository {
           ),
         );
     } else {
-      await db.insert(schema.adminWebhooks).values({ ...raw, createdAt: webhook.createdAt });
+      await db
+        .insert(schema.adminWebhooks)
+        .values({ ...raw, createdAt: webhook.createdAt });
     }
   }
 
@@ -556,7 +615,12 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const [row] = await db
       .select()
       .from(schema.adminWebhooks)
-      .where(and(eq(schema.adminWebhooks.tenantId, tenantId), eq(schema.adminWebhooks.id, id)));
+      .where(
+        and(
+          eq(schema.adminWebhooks.tenantId, tenantId),
+          eq(schema.adminWebhooks.id, id),
+        ),
+      );
     if (!row) return null;
     return AdminMapper.webhookToDomain(row);
   }
@@ -569,7 +633,8 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const page = options.page || 1;
     const offset = (page - 1) * limit;
     const conditions = [eq(schema.adminWebhooks.tenantId, tenantId)];
-    if (options.status) conditions.push(eq(schema.adminWebhooks.status, options.status));
+    if (options.status)
+      conditions.push(eq(schema.adminWebhooks.status, options.status));
 
     const rows = await db
       .select()
@@ -588,7 +653,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     };
   }
 
-  async findWebhooksForEvent(tenantId: string, eventName: string): Promise<Webhook[]> {
+  async findWebhooksForEvent(
+    tenantId: string,
+    eventName: string,
+  ): Promise<Webhook[]> {
     const rows = await db
       .select()
       .from(schema.adminWebhooks)
@@ -605,14 +673,22 @@ export class DrizzleAdminRepository implements IAdminRepository {
   async deleteWebhook(tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(schema.adminWebhooks)
-      .where(and(eq(schema.adminWebhooks.tenantId, tenantId), eq(schema.adminWebhooks.id, id)))
+      .where(
+        and(
+          eq(schema.adminWebhooks.tenantId, tenantId),
+          eq(schema.adminWebhooks.id, id),
+        ),
+      )
       .returning({ id: schema.adminWebhooks.id });
     return result.length > 0;
   }
 
   // ---- Operational incidents ----
 
-  async saveIncident(incident: OperationalIncident, tenantId: string): Promise<void> {
+  async saveIncident(
+    incident: OperationalIncident,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: incident.id,
       tenantId,
@@ -651,7 +727,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     }
   }
 
-  async getIncident(tenantId: string, id: string): Promise<OperationalIncident | null> {
+  async getIncident(
+    tenantId: string,
+    id: string,
+  ): Promise<OperationalIncident | null> {
     const [row] = await db
       .select()
       .from(schema.adminOperationalIncidents)
@@ -672,14 +751,23 @@ export class DrizzleAdminRepository implements IAdminRepository {
     const limit = options.limit || 25;
     const page = options.page || 1;
     const offset = (page - 1) * limit;
-    const conditions = [eq(schema.adminOperationalIncidents.tenantId, tenantId)];
+    const conditions = [
+      eq(schema.adminOperationalIncidents.tenantId, tenantId),
+    ];
     if (options.status)
-      conditions.push(eq(schema.adminOperationalIncidents.status, options.status));
+      conditions.push(
+        eq(schema.adminOperationalIncidents.status, options.status),
+      );
     if (options.severity)
-      conditions.push(eq(schema.adminOperationalIncidents.severity, options.severity));
+      conditions.push(
+        eq(schema.adminOperationalIncidents.severity, options.severity),
+      );
     if (options.affectedService)
       conditions.push(
-        eq(schema.adminOperationalIncidents.affectedService, options.affectedService),
+        eq(
+          schema.adminOperationalIncidents.affectedService,
+          options.affectedService,
+        ),
       );
 
     const rows = await db
@@ -710,7 +798,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
         and(
           eq(schema.adminOperationalIncidents.tenantId, tenantId),
           eq(schema.adminOperationalIncidents.affectedService, affectedService),
-          ne(schema.adminOperationalIncidents.status, IncidentStatusEnum.RESOLVED),
+          ne(
+            schema.adminOperationalIncidents.status,
+            IncidentStatusEnum.RESOLVED,
+          ),
         ),
       )
       .orderBy(desc(schema.adminOperationalIncidents.startedAt));
@@ -720,7 +811,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
 
   // ---- System health ----
 
-  async upsertSystemHealth(health: SystemHealth, tenantId: string): Promise<void> {
+  async upsertSystemHealth(
+    health: SystemHealth,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: health.id,
       tenantId,
@@ -736,7 +830,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
       .insert(schema.adminSystemHealth)
       .values({ ...raw, createdAt: health.createdAt })
       .onConflictDoUpdate({
-        target: [schema.adminSystemHealth.tenantId, schema.adminSystemHealth.serviceName],
+        target: [
+          schema.adminSystemHealth.tenantId,
+          schema.adminSystemHealth.serviceName,
+        ],
         set: raw,
       });
   }
@@ -769,7 +866,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
 
   // ---- Tenant overrides ----
 
-  async saveOverride(override: TenantOverride, tenantId: string): Promise<void> {
+  async saveOverride(
+    override: TenantOverride,
+    tenantId: string,
+  ): Promise<void> {
     const raw = {
       id: override.id,
       tenantId,
@@ -781,9 +881,16 @@ export class DrizzleAdminRepository implements IAdminRepository {
     };
     await db
       .insert(schema.adminTenantOverrides)
-      .values({ ...raw, createdBy: override.createdBy || null, createdAt: override.createdAt })
+      .values({
+        ...raw,
+        createdBy: override.createdBy || null,
+        createdAt: override.createdAt,
+      })
       .onConflictDoUpdate({
-        target: [schema.adminTenantOverrides.tenantId, schema.adminTenantOverrides.featureKey],
+        target: [
+          schema.adminTenantOverrides.tenantId,
+          schema.adminTenantOverrides.featureKey,
+        ],
         set: raw,
       });
   }
@@ -827,7 +934,10 @@ export class DrizzleAdminRepository implements IAdminRepository {
     return result.length > 0;
   }
 
-  async findExpiredOverrides(now: Date, limit: number): Promise<TenantOverride[]> {
+  async findExpiredOverrides(
+    now: Date,
+    limit: number,
+  ): Promise<TenantOverride[]> {
     const rows = await db
       .select()
       .from(schema.adminTenantOverrides)

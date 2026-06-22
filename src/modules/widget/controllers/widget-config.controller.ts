@@ -1,4 +1,13 @@
-import { Controller, Get, Put, Body, Headers, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  Headers,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -21,10 +30,13 @@ export class WidgetConfigController {
     if (!tenantId) {
       throw new BadRequestException('Missing Tenant ID');
     }
-    
+
     // Validate domain if origin exists
     if (origin) {
-      const isValidDomain = await this.configService.validateDomain(tenantId, origin);
+      const isValidDomain = await this.configService.validateDomain(
+        tenantId,
+        origin,
+      );
       if (!isValidDomain) {
         throw new BadRequestException('Domain origin not allowed');
       }
@@ -40,7 +52,20 @@ export class WidgetConfigController {
   @Get('admin')
   public async getAdminConfig(@Headers('x-tenant-id') tenantId: string) {
     const config = await this.configService.getOrCreateConfig(tenantId);
-    return config.toJSON();
+    return config.toAdminJSON();
+  }
+
+  @ApiOperation({
+    summary: 'Rotate the widget identity-verification secret (Admin)',
+  })
+  @UseGuards(TenantGuard, RbacGuard)
+  @Roles('tenant_admin')
+  @Post('admin/rotate-identity-secret')
+  public async rotateIdentitySecret(
+    @Headers('x-tenant-id') tenantId: string,
+  ) {
+    const config = await this.configService.rotateIdentitySecret(tenantId);
+    return config.toAdminJSON();
   }
 
   @ApiOperation({ summary: 'Update widget configuration (Admin)' })

@@ -1,6 +1,14 @@
-import { Injectable, Inject, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
-import type { IAdminRepository, PaginatedResult } from '../repositories/admin-repository.interface';
+import type {
+  IAdminRepository,
+  PaginatedResult,
+} from '../repositories/admin-repository.interface';
 import { ApiKey } from '../domain/api-key.entity';
 import { AdminEventPublisher } from './admin-event.publisher';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
@@ -28,7 +36,10 @@ export class AdminApiKeyService {
   }
 
   private hash(rawKey: string): string {
-    return crypto.createHmac('sha256', this.hashSecret).update(rawKey).digest('hex');
+    return crypto
+      .createHmac('sha256', this.hashSecret)
+      .update(rawKey)
+      .digest('hex');
   }
 
   private async enqueueAudit(
