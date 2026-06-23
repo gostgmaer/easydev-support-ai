@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { validateProductionEnv } from './config/validate-env';
 import { getAllowedOrigins } from './config/cors-origins';
+import { StructuredLogger } from './common/observability/logger.service';
 
 async function bootstrap() {
   validateProductionEnv();
@@ -13,6 +14,12 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   });
+
+  // StructuredLogger (JSON logs correlated to trace/request/tenant IDs, PII
+  // masking) existed but was never activated - app.useLogger() is required
+  // for Nest to route its own internal logs (and every Logger.log/error call
+  // app-wide) through it instead of plain unstructured console output.
+  app.useLogger(app.get(StructuredLogger));
 
   // No ValidationPipe was registered anywhere in this app - every
   // class-validator decorator on every DTO was inert, so malformed input

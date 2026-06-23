@@ -11,6 +11,7 @@ import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-
 import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
 import { InboxService } from '../../inbox/services/inbox.service';
 import { MessageDraftService } from '../../messages/services/message-draft.service';
+import { AiSettingsService } from '../../settings/services/ai-settings.service';
 import {
   MessageDirectionEnum,
   MessageTypeEnum,
@@ -37,6 +38,7 @@ export class AiResponseService {
     private readonly knowledgeChunkService: KnowledgeChunkService,
     private readonly inboxService: InboxService,
     private readonly draftService: MessageDraftService,
+    private readonly aiSettingsService: AiSettingsService,
   ) {}
 
   public async processInboundMessage(
@@ -69,6 +71,18 @@ export class AiResponseService {
         `AI is paused/handed-off for conversation ${conversationId}; skipping auto-response.`,
       );
       return { escalated: false, aiPaused: true };
+    }
+
+    // confidenceThreshold/escalationThreshold/autoResponseEnabled/
+    // autoEscalationEnabled were all fully modeled in AiSettings (entity,
+    // DTO, repository) but never read anywhere outside the settings module
+    // itself - tenants configuring them had no actual effect.
+    const aiSettings = await this.aiSettingsService.getAiSettings(tenantId);
+    if (!aiSettings.autoResponseEnabled) {
+      this.logger.log(
+        `Auto-response disabled for tenant ${tenantId}; skipping AI auto-response for conversation ${conversationId}.`,
+      );
+      return { escalated: false, autoResponseDisabled: true };
     }
 
     // 2. Agent Resolution
@@ -154,6 +168,23 @@ export class AiResponseService {
       const confidence = generateResult.confidence || 0.9;
       const tokensUsed = generateResult.tokensUsed || 100;
       const cost = generateResult.cost || 0.002;
+
+      // Confidence was computed and logged but never compared against
+      // anything - a low-confidence/hallucination-risk reply went straight
+      // to the customer exactly like a fully-confident one.
+      if (aiSettings.autoEscalationEnabled && confidence < aiSettings.escalationThreshold) {
+        this.logger.log(
+          `AI response confidence ${confidence} below escalation threshold ${aiSettings.escalationThreshold} for conversation ${conversationId}; escalating instead of auto-sending.`,
+        );
+        await this.escalationService.createEscalation(
+          tenantId,
+          conversationId,
+          `AI response confidence (${confidence}) below escalation threshold (${aiSettings.escalationThreshold})`,
+          confidence,
+          0.0,
+        );
+        return { escalated: true, confidence };
+      }
 
       // Mask sensitive data / PII protection (e.g. credit cards or emails)
       const maskedText = this.maskSensitiveData(replyText);

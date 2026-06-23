@@ -87,6 +87,34 @@ export class AnalyticsQueueProcessor extends BaseWorker {
         );
         return { success: true };
 
+      case 'ticket-event':
+        this.logger.log(
+          `Processing ticket-event ${job.id} for event ${job.data.eventName}`,
+        );
+        await this.eventConsumer.handleEvent({
+          tenantId,
+          eventName: job.data.eventName,
+          aggregateType: 'Ticket',
+          aggregateId: job.data.ticketId,
+          timestamp: new Date().toISOString(),
+          payload: {},
+        });
+        return { success: true };
+
+      case 'conversation-event':
+        this.logger.log(
+          `Processing conversation-event ${job.id} for event ${job.data.eventName}`,
+        );
+        await this.eventConsumer.handleEvent({
+          tenantId,
+          eventName: job.data.eventName,
+          aggregateType: 'Conversation',
+          aggregateId: job.data.conversationId,
+          timestamp: new Date().toISOString(),
+          payload: {},
+        });
+        return { success: true };
+
       case 'analytics-cleanup-job':
         this.logger.log(`Processing analytics-cleanup-job ${job.id}`);
         const retentionDays = job.data.retentionDays || 30;
