@@ -57,8 +57,12 @@ export class TicketCommentService {
     return comment;
   }
 
-  async listComments(tenantId: string, ticketId: string) {
-    return this.ticketRepo.findComments(tenantId, ticketId);
+  async listComments(
+    tenantId: string,
+    ticketId: string,
+    options?: { customerVisibleOnly?: boolean },
+  ) {
+    return this.ticketRepo.findComments(tenantId, ticketId, options);
   }
 
   /**

@@ -36,6 +36,7 @@ import { WidgetSessionService } from '../../widget/services/widget-session.servi
 import { WidgetRealtimeService } from '../../widget/services/widget-realtime.service';
 import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()
 export class MessageService {
@@ -52,6 +53,7 @@ export class MessageService {
     private readonly widgetRealtimeService: WidgetRealtimeService,
     @Inject(forwardRef(() => WorkflowEngineService))
     private readonly workflowEngineService: WorkflowEngineService,
+    private readonly queueService: QueueService,
   ) {}
 
   private async persist(message: Message, tenantId: string): Promise<void> {
@@ -154,6 +156,30 @@ export class MessageService {
         this.logger.warn(
           `Failed to evaluate workflow triggers for MESSAGE_RECEIVED: ${err.message}`,
         );
+      }
+
+      // The AI auto-response pipeline (AiResponseService.processInboundMessage,
+      // consumed by ConversationQueueProcessor) was fully built but had no
+      // production producer anywhere - customer messages just sat until an
+      // agent acted. This is the trigger: any inbound message actually sent
+      // by a customer gets a chance at an AI response.
+      if (dto.senderType === 'CUSTOMER') {
+        try {
+          await this.queueService.addJob(
+            QUEUES.CONVERSATION,
+            'ai-process-message',
+            {
+              tenantId,
+              messageId: message.id,
+              conversationId: message.conversationId,
+              messageText: message.content,
+            },
+          );
+        } catch (err: any) {
+          this.logger.warn(
+            `Failed to enqueue ai-process-message for ${message.id}: ${err.message}`,
+          );
+        }
       }
     }
 

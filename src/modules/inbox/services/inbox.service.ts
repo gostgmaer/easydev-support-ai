@@ -127,6 +127,26 @@ export class InboxService {
     );
   }
 
+  /**
+   * Whether the AI is still allowed to auto-respond in this conversation.
+   * Conversations with no inbox view yet (brand new) default to AI-active.
+   * Called by AiResponseService before it generates a reply, so that
+   * takeOverFromAi/setAiPaused actually stop the AI instead of just
+   * updating a projection nothing reads.
+   */
+  async isAiActive(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<boolean> {
+    const view = await this.inboxRepo.findViewByConversation(
+      tenantId,
+      conversationId,
+    );
+    if (!view) return true;
+    const metadata = view.metadata || {};
+    return metadata.aiHandling !== false && !metadata.aiPaused;
+  }
+
   // ---- AI handoff operations (integrations) ----
 
   async takeOverFromAi(

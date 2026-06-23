@@ -10,6 +10,7 @@ import { AiUsageService } from './ai-usage.service';
 import { AIPlatformClient } from './ai-platform.client';
 import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
 import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
+import { InboxService } from '../../inbox/services/inbox.service';
 import {
   MessageDirectionEnum,
   MessageTypeEnum,
@@ -34,6 +35,7 @@ export class AiResponseService {
     private readonly aiClient: AIPlatformClient,
     private readonly knowledgeSearchService: KnowledgeSearchService,
     private readonly knowledgeChunkService: KnowledgeChunkService,
+    private readonly inboxService: InboxService,
   ) {}
 
   public async processInboundMessage(
@@ -55,6 +57,17 @@ export class AiResponseService {
     if (!conversation) {
       this.logger.warn(`Conversation ${conversationId} not found`);
       return;
+    }
+
+    // A human agent taking over (or pausing the AI) must actually stop the
+    // AI from posting further replies - this check is the enforcement point
+    // for InboxService.takeOverFromAi/setAiPaused, which otherwise only
+    // update a read-model projection nothing else looks at.
+    if (!(await this.inboxService.isAiActive(tenantId, conversationId))) {
+      this.logger.log(
+        `AI is paused/handed-off for conversation ${conversationId}; skipping auto-response.`,
+      );
+      return { escalated: false, aiPaused: true };
     }
 
     // 2. Agent Resolution

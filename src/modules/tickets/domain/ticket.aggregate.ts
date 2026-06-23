@@ -197,6 +197,13 @@ export class Ticket extends AggregateRoot<string> {
       >
     >,
   ): void {
+    // Status can be changed via this generic path too (e.g. workflow actions),
+    // so it has to obey the same transition rules as the dedicated
+    // start/resolve/close/reopen/cancel methods below - otherwise it's a
+    // backdoor around all of them.
+    if (props.status) {
+      this.status.assertCanTransitionTo(props.status.value);
+    }
     this.props = { ...this.props, ...props };
     this.touch();
     this.emitUpdated();
@@ -241,6 +248,7 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public start(): void {
+    this.status.assertCanTransitionTo(TicketStatusEnum.IN_PROGRESS);
     this.props.status = TicketStatus.create(TicketStatusEnum.IN_PROGRESS);
     this.touch();
     this.emitUpdated();
@@ -260,6 +268,7 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public resolve(resolutionSummary?: string, resolvedBy?: string): void {
+    this.status.assertCanTransitionTo(TicketStatusEnum.RESOLVED);
     this.props.status = TicketStatus.create(TicketStatusEnum.RESOLVED);
     this.props.resolvedAt = new Date();
     if (resolutionSummary) this.props.resolutionSummary = resolutionSummary;
@@ -270,6 +279,7 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public close(closedBy?: string): void {
+    this.status.assertCanTransitionTo(TicketStatusEnum.CLOSED);
     this.props.status = TicketStatus.create(TicketStatusEnum.CLOSED);
     this.props.closedAt = new Date();
     this.touch();
@@ -279,6 +289,7 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public reopen(reopenedBy?: string): void {
+    this.status.assertCanTransitionTo(TicketStatusEnum.REOPENED);
     this.props.status = TicketStatus.create(TicketStatusEnum.REOPENED);
     this.props.resolvedAt = undefined;
     this.props.closedAt = undefined;
@@ -289,6 +300,7 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public cancel(): void {
+    this.status.assertCanTransitionTo(TicketStatusEnum.CANCELLED);
     this.props.status = TicketStatus.create(TicketStatusEnum.CANCELLED);
     this.touch();
     this.emitUpdated();

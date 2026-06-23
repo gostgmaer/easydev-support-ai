@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   NotFoundException,
+  BadRequestException,
   Logger,
   forwardRef,
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ import {
   TicketPriorityEnum,
   TicketSource,
   TicketSourceEnum,
+  InvalidTicketTransitionError,
 } from '../domain/value-objects';
 import {
   CreateTicketDto,
@@ -78,6 +80,17 @@ export class TicketService {
     await this.eventPublisher.publishAll(ticket.domainEvents);
     ticket.clearEvents();
     await this.realtime.emitTicketUpdate(tenantId, ticket.toJSON());
+  }
+
+  private runTransition<T>(fn: () => T): T {
+    try {
+      return fn();
+    } catch (err) {
+      if (err instanceof InvalidTicketTransitionError) {
+        throw new BadRequestException(err.message);
+      }
+      throw err;
+    }
   }
 
   private async getOrThrow(tenantId: string, id: string): Promise<Ticket> {
@@ -170,20 +183,24 @@ export class TicketService {
     const priorityChanged =
       dto.priority !== undefined && dto.priority !== ticket.priority.value;
 
-    ticket.update({
-      subject: dto.subject,
-      description: dto.description,
-      priority:
-        dto.priority !== undefined
-          ? TicketPriority.create(dto.priority)
+    this.runTransition(() =>
+      ticket.update({
+        subject: dto.subject,
+        description: dto.description,
+        priority:
+          dto.priority !== undefined
+            ? TicketPriority.create(dto.priority)
+            : undefined,
+        status:
+          dto.status !== undefined
+            ? TicketStatus.create(dto.status)
+            : undefined,
+        categoryId: dto.categoryId,
+        metadata: dto.metadata
+          ? { ...(ticket.metadata || {}), ...dto.metadata }
           : undefined,
-      status:
-        dto.status !== undefined ? TicketStatus.create(dto.status) : undefined,
-      categoryId: dto.categoryId,
-      metadata: dto.metadata
-        ? { ...(ticket.metadata || {}), ...dto.metadata }
-        : undefined,
-    });
+      }),
+    );
 
     await this.persist(ticket, tenantId);
 
@@ -219,8 +236,14 @@ export class TicketService {
 
   async start(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.start();
+    this.runTransition(() => ticket.start());
     await this.persist(ticket, tenantId);
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_START',
+      details: `Started work on ticket ${id}`,
+    });
     return ticket;
   }
 
@@ -231,7 +254,7 @@ export class TicketService {
     userId?: string,
   ): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.resolve(resolutionSummary, userId);
+    this.runTransition(() => ticket.resolve(resolutionSummary, userId));
     await this.persist(ticket, tenantId);
     await this.slaService.refreshRemaining(tenantId, id);
     await this.auditService.log({
@@ -245,7 +268,7 @@ export class TicketService {
 
   async close(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.close(userId);
+    this.runTransition(() => ticket.close(userId));
     await this.persist(ticket, tenantId);
     await this.auditService.log({
       tenantId,
@@ -258,7 +281,7 @@ export class TicketService {
 
   async reopen(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.reopen(userId);
+    this.runTransition(() => ticket.reopen(userId));
     await this.persist(ticket, tenantId);
     await this.slaService.configureForTicket(tenantId, ticket);
     await this.auditService.log({
@@ -272,8 +295,14 @@ export class TicketService {
 
   async cancel(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.cancel();
+    this.runTransition(() => ticket.cancel());
     await this.persist(ticket, tenantId);
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_CANCEL',
+      details: `Cancelled ticket ${id}`,
+    });
     return ticket;
   }
 
@@ -360,7 +389,9 @@ export class TicketService {
       ],
     });
     source.setMetadata({ mergedInto: targetId });
-    source.close(userId);
+    if (!source.status.isTerminal()) {
+      source.close(userId);
+    }
 
     await this.persist(target, tenantId);
     await this.persist(source, tenantId);

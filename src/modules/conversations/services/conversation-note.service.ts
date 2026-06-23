@@ -59,6 +59,11 @@ export class ConversationNoteService {
     return note;
   }
 
+  // Every note here is INTERNAL/PRIVATE by construction (see AddNoteDto -
+  // there is no PUBLIC visibility for conversation notes), unlike ticket
+  // comments which mix PUBLIC and INTERNAL in one table. Do not wire this
+  // into any customer-facing controller - there is no customer-safe subset
+  // to filter down to.
   async listNotes(
     tenantId: string,
     conversationId: string,

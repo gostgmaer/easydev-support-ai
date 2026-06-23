@@ -57,6 +57,7 @@ import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.servic
 import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
 import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
+import { InboxService } from '../../inbox/services/inbox.service';
 
 // Guards & Decorators
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -160,6 +161,10 @@ describe('AI Integration Module Services and Controllers', () => {
     getChunks: jest.fn(),
   };
 
+  const mockInboxService = {
+    isAiActive: jest.fn().mockResolvedValue(true),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [
@@ -203,6 +208,7 @@ describe('AI Integration Module Services and Controllers', () => {
           provide: KnowledgeChunkService,
           useValue: mockKnowledgeChunkService,
         },
+        { provide: InboxService, useValue: mockInboxService },
       ],
     })
       .overrideGuard(TenantGuard)

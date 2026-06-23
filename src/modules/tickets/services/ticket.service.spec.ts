@@ -143,6 +143,7 @@ describe('TicketService', () => {
     });
 
     it('reopens a ticket and reconfigures SLA', async () => {
+      ticket.resolve('done');
       const result = await service.reopen(tenantId, id, 'agent-1');
       expect(result.status.value).toBe(TicketStatusEnum.REOPENED);
       expect(sla.configureForTicket).toHaveBeenCalled();
