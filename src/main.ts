@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -8,6 +9,19 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   });
+
+  // No ValidationPipe was registered anywhere in this app - every
+  // class-validator decorator on every DTO was inert, so malformed input
+  // (e.g. a missing required field) reached services unchecked and surfaced
+  // as a raw DB constraint violation (500) instead of a clean 400. whitelist
+  // strips unknown properties rather than rejecting them outright, to avoid
+  // breaking any endpoint that currently tolerates extra fields.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   const allowedOrigins = (
     process.env.CORS_ALLOWED_ORIGINS ??
