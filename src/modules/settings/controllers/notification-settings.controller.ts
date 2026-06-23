@@ -13,7 +13,7 @@ export class NotificationSettingsController {
   ) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getNotificationSettings(
     @Headers('x-tenant-id') tenantId: string,
   ) {

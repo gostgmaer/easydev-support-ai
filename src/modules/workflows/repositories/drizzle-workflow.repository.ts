@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { db, schema } from '@easydev/database';
-import { eq, and, desc, asc } from 'drizzle-orm';
+import { eq, and, desc, asc, lte } from 'drizzle-orm';
 import { IWorkflowRepository } from './workflow-repository.interface';
 import {
   WorkflowTemplate,
@@ -547,6 +547,26 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
           eq(schema.workflowApprovals.tenantId, tenantId),
         ),
       );
+
+    return rows.map((r) => WorkflowMapper.approvalToDomain(r));
+  }
+
+  // Cross-tenant sweep when tenantId is omitted, mirroring
+  // findDueSlas's/findOfflineAgents's optional-tenantId pattern.
+  public async findExpiredPendingApprovals(
+    tenantId: string | undefined,
+    now: Date,
+  ): Promise<WorkflowApproval[]> {
+    const conditions = [
+      eq(schema.workflowApprovals.approvalStatus, 'PENDING'),
+      lte(schema.workflowApprovals.expiresAt, now),
+    ];
+    if (tenantId) conditions.push(eq(schema.workflowApprovals.tenantId, tenantId));
+
+    const rows = await db
+      .select()
+      .from(schema.workflowApprovals)
+      .where(and(...conditions));
 
     return rows.map((r) => WorkflowMapper.approvalToDomain(r));
   }

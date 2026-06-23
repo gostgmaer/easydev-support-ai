@@ -146,6 +146,11 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
         connection: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT || '6380', 10),
+          // BullMQ's documented requirement: without this, a transient Redis
+          // hiccup can throw "max retries per request" errors out of
+          // blocking commands instead of the client just waiting/retrying,
+          // which is the opposite of resilient under a real Redis blip.
+          maxRetriesPerRequest: null,
         },
       }),
     }),

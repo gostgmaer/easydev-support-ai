@@ -1,18 +1,40 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { validateProductionEnv } from './config/validate-env';
+import { getAllowedOrigins } from './config/cors-origins';
+import { StructuredLogger } from './common/observability/logger.service';
 
 async function bootstrap() {
+  validateProductionEnv();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   });
 
-  const allowedOrigins = (
-    process.env.CORS_ALLOWED_ORIGINS ??
-    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3005'
-  ).split(',');
+  // StructuredLogger (JSON logs correlated to trace/request/tenant IDs, PII
+  // masking) existed but was never activated - app.useLogger() is required
+  // for Nest to route its own internal logs (and every Logger.log/error call
+  // app-wide) through it instead of plain unstructured console output.
+  app.useLogger(app.get(StructuredLogger));
+
+  // No ValidationPipe was registered anywhere in this app - every
+  // class-validator decorator on every DTO was inert, so malformed input
+  // (e.g. a missing required field) reached services unchecked and surfaced
+  // as a raw DB constraint violation (500) instead of a clean 400. whitelist
+  // strips unknown properties rather than rejecting them outright, to avoid
+  // breaking any endpoint that currently tolerates extra fields.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
+
+  const allowedOrigins = getAllowedOrigins();
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

@@ -1,6 +1,6 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { TicketService } from '../services/ticket.service';
 import { TicketAssignmentService } from '../services/ticket-assignment.service';
@@ -8,7 +8,7 @@ import { TicketEscalationService } from '../services/ticket-escalation.service';
 import { TicketSLAService } from '../services/ticket-sla.service';
 import { CreateTicketDto } from '../dtos';
 
-@Processor('ticket-queue')
+@Processor('ticket-queue', WORKER_OPTIONS)
 @Injectable()
 export class TicketQueueProcessor extends BaseWorker {
   constructor(
@@ -23,7 +23,11 @@ export class TicketQueueProcessor extends BaseWorker {
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
-    if (!tenantId && job.name !== 'sla-monitor-job') {
+    if (
+      !tenantId &&
+      job.name !== 'sla-monitor-job' &&
+      job.name !== 'agent-offline-reassignment-job'
+    ) {
       this.logger.warn(
         `Job ${job.id} [${job.name}] ran without tenantId context`,
       );
@@ -68,6 +72,13 @@ export class TicketQueueProcessor extends BaseWorker {
       case 'sla-monitor-job': {
         this.logger.log(`Processing sla-monitor-job ${job.id}`);
         return this.slaService.runBreachSweep(job.data.tenantId);
+      }
+
+      case 'agent-offline-reassignment-job': {
+        this.logger.log(`Processing agent-offline-reassignment-job ${job.id}`);
+        return this.assignmentService.reassignFromOfflineAgents(
+          job.data.tenantId,
+        );
       }
 
       case 'ticket-approval-job': {

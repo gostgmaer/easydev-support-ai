@@ -72,6 +72,7 @@ export class TenantProvisioningService {
   async provision(
     tenantId: string,
     dto: ProvisionTenantDto,
+    actorUserId?: string,
   ): Promise<ProvisionResult> {
     this.logger.log(`Provisioning new tenant: ${tenantId} (plan=${dto.plan})`);
 
@@ -150,11 +151,13 @@ export class TenantProvisioningService {
     });
 
     // ─── 8. Audit ─────────────────────────────────────────────────────────
+    // userId must be a real IAM user UUID (audit_logs.user_id is uuid-typed) -
+    // dto.adminEmail is an arbitrary notification address, not the caller's id.
     await this.auditService.log({
       tenantId,
-      userId: dto.adminEmail,
+      userId: actorUserId,
       action: 'TENANT_PROVISIONED',
-      details: `Tenant ${tenantId} provisioned (plan=${dto.plan})`,
+      details: `Tenant ${tenantId} provisioned (plan=${dto.plan}, adminEmail=${dto.adminEmail})`,
     });
 
     this.logger.log(`Tenant ${tenantId} provisioned successfully`);
@@ -203,9 +206,8 @@ export class TenantProvisioningService {
 
     await this.auditService.log({
       tenantId,
-      userId: 'system',
       action: 'TENANT_PLAN_CHANGED',
-      details: `Tenant plan changed from ${previousPlan} to ${newPlan}`,
+      details: `Tenant plan changed from ${previousPlan} to ${newPlan} (system)`,
     });
   }
 
@@ -221,7 +223,6 @@ export class TenantProvisioningService {
 
     await this.auditService.log({
       tenantId,
-      userId: 'system',
       action: 'TENANT_SUSPENDED',
       details: reason,
     });
@@ -237,9 +238,8 @@ export class TenantProvisioningService {
 
     await this.auditService.log({
       tenantId,
-      userId: 'system',
       action: 'TENANT_REACTIVATED',
-      details: 'Tenant reactivated',
+      details: 'Tenant reactivated (system)',
     });
   }
 

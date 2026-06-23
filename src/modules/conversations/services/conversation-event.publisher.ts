@@ -12,6 +12,15 @@ const SUMMARY_TRIGGER_EVENTS = new Set([
   'conversation.archived',
 ]);
 
+// The only two event names InboxEventConsumer.handleEvent actually projects
+// into an InboxView (everything else hits its default no-op case). Without
+// this, no InboxView is ever created for a conversation - meaning every
+// inbox feature (take-over, pause-ai, bookmark, snooze...) 404s forever.
+const INBOX_PROJECTION_EVENTS = new Set([
+  'conversation.created',
+  'conversation.updated',
+]);
+
 @Injectable()
 export class ConversationEventPublisher {
   private readonly logger = new Logger(ConversationEventPublisher.name);
@@ -43,6 +52,17 @@ export class ConversationEventPublisher {
             eventName,
           },
         );
+      }
+
+      if (INBOX_PROJECTION_EVENTS.has(eventName)) {
+        const tenantId = (event as unknown as { tenantId?: string }).tenantId;
+        await this.queueService.addJob(QUEUES.INBOX, 'inbox-projection-job', {
+          tenantId,
+          eventName,
+          aggregateId: event.getAggregateId(),
+          conversationId: event.getAggregateId(),
+          payload: event,
+        });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

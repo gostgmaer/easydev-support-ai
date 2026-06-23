@@ -5,6 +5,7 @@ import { CustomersModule } from '../customers/customers.module';
 import { TeamsModule } from '../teams/teams.module';
 import { InboxModule } from '../inbox/inbox.module';
 import { WorkflowsModule } from '../workflows/workflows.module';
+import { SettingsModule } from '../settings/settings.module';
 
 import { TicketController } from './controllers/ticket.controller';
 import { TicketCommentController } from './controllers/ticket-comment.controller';
@@ -35,6 +36,7 @@ import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
     TeamsModule,
     InboxModule,
     forwardRef(() => WorkflowsModule),
+    forwardRef(() => SettingsModule),
   ],
   controllers: [
     TicketController,

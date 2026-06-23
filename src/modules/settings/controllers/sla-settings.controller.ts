@@ -11,7 +11,7 @@ export class SlaSettingsController {
   constructor(private readonly slaSettingsService: SlaSettingsService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getSlaSettings(@Headers('x-tenant-id') tenantId: string) {
     const settings = await this.slaSettingsService.getSlaSettings(tenantId);
     return settings.toJSON();

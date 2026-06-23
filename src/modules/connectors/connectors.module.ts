@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { WorkflowsModule } from '../workflows/workflows.module';
+import { SettingsModule } from '../settings/settings.module';
 
 // TypeORM Entities for compatibility registration in AppModule
 import { Connector as TypeOrmConnector } from './entities/connector.entity';
@@ -58,6 +59,7 @@ import { ConnectorQueueProcessor } from './jobs/connector-queue.processor';
       name: 'connector-queue',
     }),
     forwardRef(() => WorkflowsModule),
+    forwardRef(() => SettingsModule),
   ],
   controllers: [
     ConnectorsController,

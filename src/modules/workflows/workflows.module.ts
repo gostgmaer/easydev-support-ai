@@ -43,6 +43,7 @@ import { DrizzleWorkflowRepository } from './repositories/drizzle-workflow.repos
 
 // Queue Jobs
 import { WorkflowQueueProcessor } from './jobs/workflow-queue.processor';
+import { WorkflowApprovalTimeoutScheduler } from './jobs/workflow-approval-timeout.scheduler';
 
 // External Modules
 import { TicketsModule } from '../tickets/tickets.module';
@@ -98,6 +99,7 @@ import { CustomersModule } from '../customers/customers.module';
     WorkflowAuditService,
     WorkflowEngineService,
     WorkflowQueueProcessor,
+    WorkflowApprovalTimeoutScheduler,
   ],
   exports: [
     WorkflowTemplateService,

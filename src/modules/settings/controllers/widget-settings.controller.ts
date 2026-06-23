@@ -11,7 +11,7 @@ export class WidgetSettingsController {
   constructor(private readonly widgetSettingsService: WidgetSettingsService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getWidgetSettings(@Headers('x-tenant-id') tenantId: string) {
     const settings =
       await this.widgetSettingsService.getWidgetSettings(tenantId);

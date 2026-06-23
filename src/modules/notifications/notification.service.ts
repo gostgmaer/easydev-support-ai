@@ -19,6 +19,13 @@ export class NotificationService {
       });
     } catch (e: any) {
       this.logger.error(`Failed to send email: ${e.message}`);
+      // Every real caller of this method (NotificationQueueProcessor's 16
+      // job cases, AnalyticsExportService.triggerExport via
+      // analytics-queue.processor.ts) is itself a BaseWorker subclass with
+      // retry + dead-letter routing already wired and waiting - swallowing
+      // here meant a transient notification-service outage caused permanent,
+      // untraceable loss instead of a retry.
+      throw e;
     }
   }
 
@@ -35,6 +42,7 @@ export class NotificationService {
       });
     } catch (e: any) {
       this.logger.error(`Failed to send push notification: ${e.message}`);
+      throw e;
     }
   }
 }

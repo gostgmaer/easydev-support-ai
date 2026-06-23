@@ -4,6 +4,9 @@ import { LokiLogger } from '../loki-logger';
 import { HealthService } from '../health.service';
 import * as promClient from 'prom-client';
 import { ConsoleLogger } from '@nestjs/common';
+import axios from 'axios';
+
+jest.mock('axios');
 
 describe('Observability Platform Tests', () => {
   describe('OpenTelemetry Setup', () => {
@@ -126,6 +129,7 @@ describe('Observability Platform Tests', () => {
 
     beforeEach(() => {
       healthService = new HealthService();
+      jest.spyOn(axios, 'get').mockResolvedValue({ status: 200, data: {} });
     });
 
     it('should execute status query and report platform status', async () => {

@@ -1,6 +1,6 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
@@ -8,7 +8,7 @@ import { AuditService } from '../../audit/audit.service';
 import { db, schema } from '@easydev/database';
 import { and, eq, lt } from 'drizzle-orm';
 
-@Processor('widget-queue')
+@Processor('widget-queue', WORKER_OPTIONS)
 @Injectable()
 export class WidgetQueueProcessor extends BaseWorker {
   private redisClient: Redis | null = null;
@@ -50,8 +50,7 @@ export class WidgetQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.session.started',
-          details: `Widget Session Event: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Widget Session Event (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 
@@ -62,8 +61,7 @@ export class WidgetQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.lead.created',
-          details: `Widget Lead Captured: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Widget Lead Captured (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 
@@ -94,14 +92,18 @@ export class WidgetQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.installed',
-          details: `Widget Installation Configured: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Widget Installation Configured (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 
       default:
-        this.logger.warn(`Unknown job name in widget-queue: ${job.name}`);
-        throw new Error(`Unknown job name: ${job.name}`);
+        // Same rationale as AnalyticsQueueProcessor's default case: throwing
+        // here just burns retry budget toward the DLQ for job names this
+        // processor was never going to recognize. Acknowledge instead.
+        this.logger.warn(
+          `No handler implemented for job name "${job.name}" - acknowledging without processing`,
+        );
+        return { success: true, acknowledged: true, unhandled: job.name };
     }
   }
 }

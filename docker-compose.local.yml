@@ -20,6 +20,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ENABLE_OTEL=false
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
     networks:
       - frontend-network
       - backend-network
@@ -46,6 +47,7 @@ services:
       - DB_NAME=easydev_support_ai
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
     networks:
       - backend-network
       - database-network

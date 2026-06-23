@@ -23,6 +23,13 @@ const createInstrumentedPool = (
       process.env.DB_POOL_CONN_TIMEOUT || '2000',
       10,
     ),
+    // Without this, a single runaway/blocked query holds its connection
+    // (and a slot in the pool) indefinitely - enough of those exhausts the
+    // pool and takes the whole app down with it.
+    statement_timeout: parseInt(
+      process.env.DB_STATEMENT_TIMEOUT_MS || '30000',
+      10,
+    ),
   });
 
   const originalQuery = pool.query.bind(pool);

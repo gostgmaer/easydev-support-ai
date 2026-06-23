@@ -1,12 +1,12 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import type { ISettingsRepository } from '../repositories/settings-repository.interface';
 import { AuditService } from '../../audit/audit.service';
 
-@Processor('settings-queue')
+@Processor('settings-queue', WORKER_OPTIONS)
 @Injectable()
 export class SettingsQueueProcessor extends BaseWorker {
   private redisClient: Redis | null = null;
@@ -90,8 +90,7 @@ export class SettingsQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'settings.updated',
-          details: `Settings updated: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Settings updated (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 

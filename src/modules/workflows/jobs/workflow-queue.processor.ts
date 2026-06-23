@@ -1,13 +1,13 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { WorkflowEngineService } from '../services/workflow-engine.service';
 import { WorkflowScheduleService } from '../services/workflow-schedule.service';
 import { WorkflowApprovalService } from '../services/workflow-approval.service';
 import { WorkflowTemplateService } from '../services/workflow-template.service';
 
-@Processor('workflow-queue')
+@Processor('workflow-queue', WORKER_OPTIONS)
 @Injectable()
 export class WorkflowQueueProcessor extends BaseWorker {
   constructor(
@@ -24,6 +24,13 @@ export class WorkflowQueueProcessor extends BaseWorker {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
 
     switch (job.name) {
+      case 'workflow-approval-timeout-job': {
+        this.logger.log(
+          `Processing workflow-approval-timeout-job ${job.id}`,
+        );
+        return this.approvalService.sweepExpiredApprovals(job.data.tenantId);
+      }
+
       case 'workflow-execution-job':
         this.logger.log(
           `Processing workflow-execution-job ${job.id} for execution ${job.data.executionId}`,

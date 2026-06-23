@@ -11,7 +11,7 @@ export class UsageLimitController {
   constructor(private readonly usageLimitService: UsageLimitService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getUsageLimits(@Headers('x-tenant-id') tenantId: string) {
     const limits = await this.usageLimitService.getUsageLimits(tenantId);
     return limits.toJSON();

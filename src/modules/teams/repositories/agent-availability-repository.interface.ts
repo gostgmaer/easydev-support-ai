@@ -10,6 +10,7 @@ export interface IAgentAvailabilityRepository extends ITenantRepository<
     tenantId: string,
   ): Promise<AgentAvailability | null>;
   findOnlineAgents(tenantId: string): Promise<AgentAvailability[]>;
+  findOfflineAgents(tenantId?: string): Promise<AgentAvailability[]>;
   updateLoad(
     agentProfileId: string,
     change: number,

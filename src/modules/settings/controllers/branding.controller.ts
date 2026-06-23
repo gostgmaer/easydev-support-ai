@@ -11,7 +11,7 @@ export class BrandingController {
   constructor(private readonly brandingService: BrandingService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getBranding(@Headers('x-tenant-id') tenantId: string) {
     const branding = await this.brandingService.getBranding(tenantId);
     return branding.toJSON();

@@ -16,6 +16,7 @@ import { DrizzleTeamRepository } from './repositories/drizzle-team.repository';
 import { DrizzleAgentProfileRepository } from './repositories/drizzle-agent-profile.repository';
 import { DrizzleAgentAvailabilityRepository } from './repositories/drizzle-agent-availability.repository';
 import { TeamQueueProcessor } from './jobs/team-queue.processor';
+import { AgentOfflineReassignmentScheduler } from './jobs/agent-offline-reassignment.scheduler';
 
 // TypeORM Entities for compatibility
 import { Team } from './entities/team.entity';
@@ -41,6 +42,7 @@ import { AgentProfile } from './entities/agent-profile.entity';
     AgentAssignmentService,
     TeamEventPublisher,
     TeamQueueProcessor,
+    AgentOfflineReassignmentScheduler,
     {
       provide: 'ITeamRepository',
       useClass: DrizzleTeamRepository,

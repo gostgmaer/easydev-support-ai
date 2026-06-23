@@ -25,6 +25,20 @@ export class TenantGuard implements CanActivate {
       if (!iamResponse.isValid)
         throw new UnauthorizedException('IAM validation failed');
 
+      // IAM authenticates the bearer token but has no idea which tenant this
+      // request claims to act as - that's the caller-supplied x-tenant-id
+      // header. Enforce that the token's own tenantId claim matches it, so
+      // one tenant's valid credentials can never read/write another tenant's
+      // data by simply changing the header. super_admin is a platform
+      // operator role (see rbac.guard.ts's blanket bypass) and is exempt.
+      if (
+        !iamResponse.roles?.includes('super_admin') &&
+        iamResponse.tenantId &&
+        iamResponse.tenantId !== tenantId
+      ) {
+        throw new UnauthorizedException('Cross-tenant access attempt');
+      }
+
       // Attach the user identity and IAM roles to the request so RbacGuard can use it
       request.user = {
         id: iamResponse.userId,
@@ -49,11 +63,14 @@ export class TenantGuard implements CanActivate {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('IAM service URL is not configured');
       }
-      // Local dev fallback only: no IAM service configured.
+      // Local dev fallback only: no IAM service configured. Nil UUID keeps
+      // this valid wherever it flows into a uuid-typed column (e.g. audit_logs.user_id).
+      // No tenantId claim to check here, so the cross-tenant guard above is a no-op.
       return {
         isValid: true,
-        userId: 'user-123',
+        userId: '00000000-0000-0000-0000-000000000000',
         roles: ['support_agent', 'tenant_admin'],
+        tenantId: undefined,
       };
     }
 
@@ -65,6 +82,22 @@ export class TenantGuard implements CanActivate {
       timeout: 3000,
     });
     const me = res.data?.data ?? res.data;
-    return { isValid: true, userId: me.id, roles: me.roles };
+    // /auth/me's response body doesn't echo back tenantId (only tenantSlug),
+    // and the access token's own payload is the only place it's carried. IAM
+    // has already verified this token's signature/expiry by the time we get
+    // a 200 here, so decoding (not re-verifying) it locally is safe.
+    const tenantId = this.decodeTokenTenantId(authHeader);
+    return { isValid: true, userId: me.id, roles: me.roles, tenantId };
+  }
+
+  private decodeTokenTenantId(authHeader: string): string | undefined {
+    try {
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      const payload = token.split('.')[1];
+      const json = Buffer.from(payload, 'base64url').toString('utf8');
+      return JSON.parse(json).tenantId;
+    } catch {
+      return undefined;
+    }
   }
 }

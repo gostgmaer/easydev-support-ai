@@ -10,10 +10,11 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { IamIntegrationService } from '../../integration/iam/iam.service';
+import { getAllowedOrigins } from '../../config/cors-origins';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // Configure properly in production
+    origin: getAllowedOrigins(),
   },
   namespace: '/v1/agent-inbox',
 })

@@ -1,9 +1,15 @@
 const http = require('http');
 
+// /health/live is the cheap, no-dependency-checks liveness probe. Pointing
+// the container's own HEALTHCHECK at /health (which 503s when ANY downstream
+// dependency, e.g. the AI platform, is down) means Docker/the orchestrator
+// would restart a perfectly healthy api/worker/webhook process just because
+// an unrelated dependency blipped - the exact restart-storm /health/live
+// exists to avoid.
 const options = {
   host: 'localhost',
   port: process.env.PORT || 3000,
-  path: '/health',
+  path: '/health/live',
   timeout: 2000,
 };
 

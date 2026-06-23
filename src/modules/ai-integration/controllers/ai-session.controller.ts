@@ -6,6 +6,7 @@ import {
   Body,
   Headers,
   Param,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -23,7 +24,7 @@ export class AiSessionController {
   ) {}
 
   @Get('conversation/:conversationId')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getSession(
     @Headers('x-tenant-id') tenantId: string,
     @Param('conversationId') conversationId: string,
@@ -38,7 +39,7 @@ export class AiSessionController {
   }
 
   @Put('conversation/:conversationId/state')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async updateSessionState(
     @Headers('x-tenant-id') tenantId: string,
     @Param('conversationId') conversationId: string,
@@ -53,14 +54,16 @@ export class AiSessionController {
   }
 
   @Post('conversation/:conversationId/suggest')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async suggestDraft(
     @Headers('x-tenant-id') tenantId: string,
     @Param('conversationId') conversationId: string,
+    @Req() req: any,
   ) {
     return this.responseService.generateDraftSuggestion(
       tenantId,
       conversationId,
+      req.user?.id,
     );
   }
 }

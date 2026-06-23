@@ -1,6 +1,6 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { ConversationService } from '../services/conversation.service';
 import { ConversationAssignmentService } from '../services/conversation-assignment.service';
@@ -9,7 +9,7 @@ import { InboxService } from '../services/inbox.service';
 import { ConversationsGateway } from '../conversations.gateway';
 import { AiResponseService } from '../../ai-integration/services/ai-response.service';
 
-@Processor('conversation-queue')
+@Processor('conversation-queue', WORKER_OPTIONS)
 @Injectable()
 export class ConversationQueueProcessor extends BaseWorker {
   constructor(
@@ -26,7 +26,7 @@ export class ConversationQueueProcessor extends BaseWorker {
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
-    if (!tenantId) {
+    if (!tenantId && job.name !== 'agent-offline-reassignment-job') {
       this.logger.warn(
         `Job ${job.id} [${job.name}] ran without tenantId context`,
       );
@@ -83,12 +83,23 @@ export class ConversationQueueProcessor extends BaseWorker {
 
       case 'ai-process-message': {
         this.logger.log(`Processing ai-process-message job ${job.id}`);
+        // Whether the AI platform is reachable affects every attempt
+        // equally - a customer-facing "we're having trouble" message must
+        // only ever be sent once, on the final attempt, not once per retry.
+        const maxAttempts = job.opts.attempts ?? 1;
+        const isLastAttempt = job.attemptsMade + 1 >= maxAttempts;
         return this.aiResponseService.processInboundMessage(
           tenantId,
           job.data.messageId,
           job.data.conversationId,
           job.data.messageText,
+          isLastAttempt,
         );
+      }
+
+      case 'agent-offline-reassignment-job': {
+        this.logger.log(`Processing agent-offline-reassignment-job ${job.id}`);
+        return this.assignmentService.reassignFromOfflineAgents(tenantId);
       }
 
       case 'conversation-analytics-job': {

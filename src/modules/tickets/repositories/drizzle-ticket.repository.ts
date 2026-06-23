@@ -413,16 +413,23 @@ export class DrizzleTicketRepository implements ITicketRepository {
   async findComments(
     tenantId: string,
     ticketId: string,
+    options?: { customerVisibleOnly?: boolean },
   ): Promise<TicketComment[]> {
+    const conditions = [
+      eq(schema.ticketComments.tenantId, tenantId),
+      eq(schema.ticketComments.ticketId, ticketId),
+    ];
+    // No customer-facing caller exists for this yet, but the filter has to
+    // live here at the data layer - relying on every future caller to
+    // remember to exclude INTERNAL comments themselves is how internal notes
+    // leak to customers.
+    if (options?.customerVisibleOnly) {
+      conditions.push(eq(schema.ticketComments.visibility, 'PUBLIC'));
+    }
     const rows = await db
       .select()
       .from(schema.ticketComments)
-      .where(
-        and(
-          eq(schema.ticketComments.tenantId, tenantId),
-          eq(schema.ticketComments.ticketId, ticketId),
-        ),
-      )
+      .where(and(...conditions))
       .orderBy(asc(schema.ticketComments.createdAt));
     return rows.map((r) => TicketMapper.commentToDomain(r));
   }

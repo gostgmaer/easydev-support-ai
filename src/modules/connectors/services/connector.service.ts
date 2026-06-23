@@ -26,6 +26,7 @@ import {
   MapCapabilitiesDto,
 } from '../dtos/connector.dto';
 import { ConnectorEventPublisher } from './connector-event.publisher';
+import { UsageLimitService } from '../../settings/services/usage-limit.service';
 
 @Injectable()
 export class ConnectorService {
@@ -33,6 +34,7 @@ export class ConnectorService {
     @Inject('IConnectorRepository')
     private readonly repository: IConnectorRepository,
     private readonly eventPublisher: ConnectorEventPublisher,
+    private readonly usageLimitService: UsageLimitService,
   ) {}
 
   public async installConnector(
@@ -45,6 +47,18 @@ export class ConnectorService {
         `Connector with slug '${dto.slug}' already exists`,
       );
     }
+
+    // UsageLimits stored a maxConnectors ceiling per plan but nothing ever
+    // checked it before installing a new connector.
+    const { total: currentConnectors } = await this.repository.findPaginated(
+      tenantId,
+      { limit: 1 },
+    );
+    await this.usageLimitService.enforceLimit(
+      tenantId,
+      'connectors',
+      currentConnectors,
+    );
 
     const connectorId = crypto.randomUUID();
     const connector = Connector.create(connectorId, {

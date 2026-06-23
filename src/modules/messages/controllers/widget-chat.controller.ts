@@ -46,6 +46,27 @@ const WIDGET_ATTACHMENTS_DIR = join(process.cwd(), 'uploads', 'widget-attachment
 const PUBLIC_BASE_URL = process.env.API_PUBLIC_URL || 'http://localhost:3000';
 const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
 
+// Uploaded files land under uploads/ which main.ts serves directly as static
+// assets at the API's own origin - an unauthenticated widget visitor could
+// otherwise host stored-XSS (text/html, image/svg+xml carry script execution)
+// or executables on this domain. Allowlist rather than denylist: reject
+// anything not a known-safe attachment type for a support conversation.
+const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'text/plain',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'video/mp4',
+  'audio/mpeg',
+  'audio/wav',
+]);
+
 /**
  * Widget-facing messaging surface, authenticated by widget session token
  * (WidgetSessionGuard) rather than IAM - widget visitors never hold an IAM
@@ -276,6 +297,13 @@ export class WidgetChatController {
         },
       }),
       limits: { fileSize: MAX_ATTACHMENT_SIZE_BYTES },
+      fileFilter: (_req, file, cb) => {
+        if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(file.mimetype)) {
+          cb(new BadRequestException(`File type ${file.mimetype} is not allowed`), false);
+          return;
+        }
+        cb(null, true);
+      },
     }),
   )
   async uploadAttachment(

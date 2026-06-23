@@ -2,7 +2,7 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Optional, Logger } from '@nestjs/common';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { NotificationService } from './notification.service';
 
 /**
@@ -14,8 +14,14 @@ import { NotificationService } from './notification.service';
  *
  * Job names consumed:
  *  - approval-request         (FLOW 2 – ticket approval)
+ *  - ticket-created           (customer confirmation on ticket creation)
  *  - ticket-resolution        (FLOW 2 – resolution customer notification)
+ *  - ticket-closed            (customer notification on close)
+ *  - ticket-reopened          (customer notification on reopen)
+ *  - ticket-cancelled         (customer notification on cancel)
  *  - ticket-assigned          (FLOW 2 – agent-notification on assignment)
+ *  - conversation-assigned    (agent-notification on conversation assignment)
+ *  - mention-alert            (agent-notification when @mentioned in a conversation)
  *  - sla-breach               (SLA breach alert to agent / manager)
  *  - escalation-alert         (FLOW 1/3/7 – human escalation notification)
  *  - customer-survey          (post-resolution CSAT)
@@ -24,7 +30,7 @@ import { NotificationService } from './notification.service';
  *  - tenant-provisioned        (FLOW 12 – welcome email after tenant creation)
  *  - billing-payment-failed    (FLOW 12 – billing failure alert)
  */
-@Processor('notification-queue')
+@Processor('notification-queue', WORKER_OPTIONS)
 @Injectable()
 export class NotificationQueueProcessor extends BaseWorker {
   constructor(
@@ -75,6 +81,79 @@ export class NotificationQueueProcessor extends BaseWorker {
         return { notified: true, ticketId: job.data.ticketId };
       }
 
+      case 'ticket-created': {
+        this.logger.log(
+          `Dispatching ticket-created notification [job=${job.id}]`,
+        );
+        if (job.data.customerEmail) {
+          await this.notificationService.sendEmail(
+            tenantId,
+            job.data.customerEmail,
+            'ticket-created-customer',
+            {
+              ticketId: job.data.ticketId,
+              ticketNumber: job.data.ticketNumber,
+              subject: job.data.subject,
+            },
+          );
+        }
+        return { notified: true, ticketId: job.data.ticketId };
+      }
+
+      case 'ticket-closed': {
+        this.logger.log(
+          `Dispatching ticket-closed notification [job=${job.id}]`,
+        );
+        if (job.data.customerEmail) {
+          await this.notificationService.sendEmail(
+            tenantId,
+            job.data.customerEmail,
+            'ticket-closed-customer',
+            {
+              ticketId: job.data.ticketId,
+              ticketNumber: job.data.ticketNumber,
+            },
+          );
+        }
+        return { notified: true, ticketId: job.data.ticketId };
+      }
+
+      case 'ticket-reopened': {
+        this.logger.log(
+          `Dispatching ticket-reopened notification [job=${job.id}]`,
+        );
+        if (job.data.customerEmail) {
+          await this.notificationService.sendEmail(
+            tenantId,
+            job.data.customerEmail,
+            'ticket-reopened-customer',
+            {
+              ticketId: job.data.ticketId,
+              ticketNumber: job.data.ticketNumber,
+            },
+          );
+        }
+        return { notified: true, ticketId: job.data.ticketId };
+      }
+
+      case 'ticket-cancelled': {
+        this.logger.log(
+          `Dispatching ticket-cancelled notification [job=${job.id}]`,
+        );
+        if (job.data.customerEmail) {
+          await this.notificationService.sendEmail(
+            tenantId,
+            job.data.customerEmail,
+            'ticket-cancelled-customer',
+            {
+              ticketId: job.data.ticketId,
+              ticketNumber: job.data.ticketNumber,
+            },
+          );
+        }
+        return { notified: true, ticketId: job.data.ticketId };
+      }
+
       case 'ticket-assigned': {
         this.logger.log(
           `Dispatching ticket-assigned notification [job=${job.id}]`,
@@ -85,6 +164,28 @@ export class NotificationQueueProcessor extends BaseWorker {
           `Ticket #${job.data.ticketNumber} has been assigned to you.`,
         );
         return { notified: true, agentId: job.data.agentId };
+      }
+
+      case 'conversation-assigned': {
+        this.logger.log(
+          `Dispatching conversation-assigned notification [job=${job.id}]`,
+        );
+        await this.notificationService.sendPushNotification(
+          tenantId,
+          job.data.agentId,
+          `A conversation has been assigned to you.`,
+        );
+        return { notified: true, agentId: job.data.agentId };
+      }
+
+      case 'mention-alert': {
+        this.logger.log(`Dispatching mention-alert notification [job=${job.id}]`);
+        await this.notificationService.sendPushNotification(
+          tenantId,
+          job.data.mentionedUserId,
+          `You were mentioned in conversation ${job.data.conversationId}.`,
+        );
+        return { notified: true, mentionedUserId: job.data.mentionedUserId };
       }
 
       // ─── SLA Breach ────────────────────────────────────────────────────────
@@ -225,10 +326,14 @@ export class NotificationQueueProcessor extends BaseWorker {
       }
 
       default:
+        // Same fix as the analytics/connector/widget processors: throwing on
+        // an unrecognized job name burns the whole retry budget toward the
+        // DLQ for something that was never going to succeed differently on
+        // retry. Acknowledge and warn instead.
         this.logger.warn(
-          `Unknown notification job: ${job.name} [job=${job.id}]`,
+          `Unknown notification job: ${job.name} [job=${job.id}] - acknowledging without processing`,
         );
-        throw new Error(`Unknown notification job name: ${job.name}`);
+        return { success: true, acknowledged: true, unhandled: job.name };
     }
   }
 }

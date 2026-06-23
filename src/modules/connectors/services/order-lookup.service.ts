@@ -1,8 +1,11 @@
-// @ts-nocheck
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { AIPlatformClient } from '../../ai-integration/services/ai-platform.client';
 import { MessageService } from '../../messages/services/message.service';
+import {
+  MessageDirectionEnum,
+  MessageTypeEnum,
+} from '../../messages/domain/value-objects';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import {

@@ -77,6 +77,7 @@ import { MessageQueueProcessor } from './jobs/message-queue.processor';
     MessageDeliveryService,
     MessageAttachmentService,
     MessageInboundService,
+    MessageDraftService,
     'IMessageRepository',
   ],
 })

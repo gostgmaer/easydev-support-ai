@@ -47,7 +47,11 @@ export interface ITicketRepository extends ITenantRepository<Ticket, string> {
 
   // Comments
   addComment(comment: TicketComment, tenantId: string): Promise<void>;
-  findComments(tenantId: string, ticketId: string): Promise<TicketComment[]>;
+  findComments(
+    tenantId: string,
+    ticketId: string,
+    options?: { customerVisibleOnly?: boolean },
+  ): Promise<TicketComment[]>;
 
   // Attachments
   addAttachment(attachment: TicketAttachment, tenantId: string): Promise<void>;

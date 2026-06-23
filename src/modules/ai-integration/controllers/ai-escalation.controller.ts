@@ -18,7 +18,7 @@ export class AiEscalationController {
   constructor(private readonly escalationService: AiEscalationService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getEscalations(
     @Headers('x-tenant-id') tenantId: string,
     @Query('status') status?: string,
@@ -31,7 +31,7 @@ export class AiEscalationController {
   }
 
   @Post(':id/resolve')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async resolveEscalation(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,

@@ -48,7 +48,7 @@ export class WidgetConfigController {
 
   @ApiOperation({ summary: 'Get widget configuration (Admin)' })
   @UseGuards(TenantGuard, RbacGuard)
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   @Get('admin')
   public async getAdminConfig(@Headers('x-tenant-id') tenantId: string) {
     const config = await this.configService.getOrCreateConfig(tenantId);

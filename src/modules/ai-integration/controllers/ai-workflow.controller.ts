@@ -19,7 +19,7 @@ export class AiWorkflowController {
   constructor(private readonly workflowService: AiWorkflowService) {}
 
   @Post('trigger')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async triggerWorkflow(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: TriggerWorkflowDto,
@@ -34,7 +34,7 @@ export class AiWorkflowController {
   }
 
   @Get('execution/:id')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getExecution(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,

@@ -20,7 +20,7 @@ export class BusinessHoursController {
   constructor(private readonly businessHoursService: BusinessHoursService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getBusinessHours(@Headers('x-tenant-id') tenantId: string) {
     const list = await this.businessHoursService.getBusinessHours(tenantId);
     return list.map((h) => h.toJSON());
@@ -50,14 +50,14 @@ export class BusinessHoursController {
   }
 
   @Get('is-open')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async isOpenNow(@Headers('x-tenant-id') tenantId: string) {
     const open = await this.businessHoursService.isOpenNow(tenantId);
     return { isOpen: open };
   }
 
   @Get('next-open')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getNextOpenTime(@Headers('x-tenant-id') tenantId: string) {
     const time = await this.businessHoursService.getNextOpenTime(tenantId);
     return { nextOpenTime: time ? time.toISOString() : null };

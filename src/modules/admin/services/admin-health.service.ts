@@ -18,6 +18,7 @@ import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
 import { sql } from 'drizzle-orm';
+import { getAllowedOrigins } from '../../../config/cors-origins';
 import { db } from '@easydev/database';
 import {
   QUEUES,
@@ -62,7 +63,7 @@ const MONITORED_SERVICES = [
 ];
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: { origin: getAllowedOrigins() },
   namespace: '/v1/admin/health',
 })
 @Injectable()

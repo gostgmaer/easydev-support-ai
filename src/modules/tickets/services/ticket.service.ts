@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   NotFoundException,
+  BadRequestException,
   Logger,
   forwardRef,
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ import {
   TicketPriorityEnum,
   TicketSource,
   TicketSourceEnum,
+  InvalidTicketTransitionError,
 } from '../domain/value-objects';
 import {
   CreateTicketDto,
@@ -80,12 +82,54 @@ export class TicketService {
     await this.realtime.emitTicketUpdate(tenantId, ticket.toJSON());
   }
 
+  private runTransition<T>(fn: () => T): T {
+    try {
+      return fn();
+    } catch (err) {
+      if (err instanceof InvalidTicketTransitionError) {
+        throw new BadRequestException(err.message);
+      }
+      throw err;
+    }
+  }
+
   private async getOrThrow(tenantId: string, id: string): Promise<Ticket> {
     const ticket = await this.ticketRepo.findById(id, tenantId);
     if (!ticket) {
       throw new NotFoundException(`Ticket with ID ${id} not found`);
     }
     return ticket;
+  }
+
+  // Best-effort customer-facing notification on a ticket lifecycle event - a
+  // notification-side failure (e.g. stale customerId) must never fail the
+  // lifecycle transition itself.
+  private async notifyCustomer(
+    tenantId: string,
+    ticket: Ticket,
+    jobName: string,
+    extraPayload: Record<string, any> = {},
+  ): Promise<void> {
+    if (!ticket.customerId) return;
+    try {
+      const customer = await this.customerService.findById(
+        tenantId,
+        ticket.customerId,
+      );
+      if (customer?.email?.value) {
+        await this.queueService.addJob(QUEUES.NOTIFICATION, jobName, {
+          tenantId,
+          customerEmail: customer.email.value,
+          ticketId: ticket.id,
+          ticketNumber: ticket.ticketNumber.value,
+          ...extraPayload,
+        });
+      }
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to enqueue ${jobName} notification for ticket ${ticket.id}: ${err.message}`,
+      );
+    }
   }
 
   async create(
@@ -157,6 +201,10 @@ export class TicketService {
       },
     );
 
+    await this.notifyCustomer(tenantId, ticket, 'ticket-created', {
+      subject: ticket.subject,
+    });
+
     return ticket;
   }
 
@@ -170,20 +218,24 @@ export class TicketService {
     const priorityChanged =
       dto.priority !== undefined && dto.priority !== ticket.priority.value;
 
-    ticket.update({
-      subject: dto.subject,
-      description: dto.description,
-      priority:
-        dto.priority !== undefined
-          ? TicketPriority.create(dto.priority)
+    this.runTransition(() =>
+      ticket.update({
+        subject: dto.subject,
+        description: dto.description,
+        priority:
+          dto.priority !== undefined
+            ? TicketPriority.create(dto.priority)
+            : undefined,
+        status:
+          dto.status !== undefined
+            ? TicketStatus.create(dto.status)
+            : undefined,
+        categoryId: dto.categoryId,
+        metadata: dto.metadata
+          ? { ...(ticket.metadata || {}), ...dto.metadata }
           : undefined,
-      status:
-        dto.status !== undefined ? TicketStatus.create(dto.status) : undefined,
-      categoryId: dto.categoryId,
-      metadata: dto.metadata
-        ? { ...(ticket.metadata || {}), ...dto.metadata }
-        : undefined,
-    });
+      }),
+    );
 
     await this.persist(ticket, tenantId);
 
@@ -219,8 +271,14 @@ export class TicketService {
 
   async start(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.start();
+    this.runTransition(() => ticket.start());
     await this.persist(ticket, tenantId);
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_START',
+      details: `Started work on ticket ${id}`,
+    });
     return ticket;
   }
 
@@ -231,7 +289,7 @@ export class TicketService {
     userId?: string,
   ): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.resolve(resolutionSummary, userId);
+    this.runTransition(() => ticket.resolve(resolutionSummary, userId));
     await this.persist(ticket, tenantId);
     await this.slaService.refreshRemaining(tenantId, id);
     await this.auditService.log({
@@ -240,12 +298,20 @@ export class TicketService {
       action: 'TICKET_RESOLVE',
       details: `Resolved ticket ${id}`,
     });
+
+    // NotificationQueueProcessor already had a fully-built 'ticket-resolution'
+    // case (emails the customer) with no producer anywhere - customers were
+    // never told their ticket was resolved.
+    await this.notifyCustomer(tenantId, ticket, 'ticket-resolution', {
+      summary: resolutionSummary,
+    });
+
     return ticket;
   }
 
   async close(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.close(userId);
+    this.runTransition(() => ticket.close(userId));
     await this.persist(ticket, tenantId);
     await this.auditService.log({
       tenantId,
@@ -253,12 +319,13 @@ export class TicketService {
       action: 'TICKET_CLOSE',
       details: `Closed ticket ${id}`,
     });
+    await this.notifyCustomer(tenantId, ticket, 'ticket-closed');
     return ticket;
   }
 
   async reopen(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.reopen(userId);
+    this.runTransition(() => ticket.reopen(userId));
     await this.persist(ticket, tenantId);
     await this.slaService.configureForTicket(tenantId, ticket);
     await this.auditService.log({
@@ -267,13 +334,21 @@ export class TicketService {
       action: 'TICKET_REOPEN',
       details: `Reopened ticket ${id}`,
     });
+    await this.notifyCustomer(tenantId, ticket, 'ticket-reopened');
     return ticket;
   }
 
   async cancel(tenantId: string, id: string, userId?: string): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
-    ticket.cancel();
+    this.runTransition(() => ticket.cancel());
     await this.persist(ticket, tenantId);
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_CANCEL',
+      details: `Cancelled ticket ${id}`,
+    });
+    await this.notifyCustomer(tenantId, ticket, 'ticket-cancelled');
     return ticket;
   }
 
@@ -360,7 +435,9 @@ export class TicketService {
       ],
     });
     source.setMetadata({ mergedInto: targetId });
-    source.close(userId);
+    if (!source.status.isTerminal()) {
+      source.close(userId);
+    }
 
     await this.persist(target, tenantId);
     await this.persist(source, tenantId);

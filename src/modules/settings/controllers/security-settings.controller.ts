@@ -13,7 +13,7 @@ export class SecuritySettingsController {
   ) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getSecuritySettings(@Headers('x-tenant-id') tenantId: string) {
     const settings =
       await this.securitySettingsService.getSecuritySettings(tenantId);

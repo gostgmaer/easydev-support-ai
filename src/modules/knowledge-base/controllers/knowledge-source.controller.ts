@@ -38,7 +38,7 @@ export class KnowledgeSourceController {
   }
 
   @Get(':id')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getSource(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -48,7 +48,7 @@ export class KnowledgeSourceController {
   }
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async findSources(
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: any,

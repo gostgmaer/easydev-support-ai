@@ -7,6 +7,7 @@ import { ConversationMention } from '../domain/conversation-mention.entity';
 import { AddNoteDto, MentionUserDto } from '../dtos';
 import { ConversationEventPublisher } from './conversation-event.publisher';
 import { AuditService } from '../../audit/audit.service';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()
 export class ConversationNoteService {
@@ -15,6 +16,7 @@ export class ConversationNoteService {
     private readonly conversationRepo: IConversationRepository,
     private readonly eventPublisher: ConversationEventPublisher,
     private readonly auditService: AuditService,
+    private readonly queueService: QueueService,
   ) {}
 
   private async getOrThrow(
@@ -59,6 +61,11 @@ export class ConversationNoteService {
     return note;
   }
 
+  // Every note here is INTERNAL/PRIVATE by construction (see AddNoteDto -
+  // there is no PUBLIC visibility for conversation notes), unlike ticket
+  // comments which mix PUBLIC and INTERNAL in one table. Do not wire this
+  // into any customer-facing controller - there is no customer-safe subset
+  // to filter down to.
   async listNotes(
     tenantId: string,
     conversationId: string,
@@ -84,6 +91,19 @@ export class ConversationNoteService {
 
     conversation.addMention(mention);
     await this.conversationRepo.save(conversation, tenantId);
+
+    // The mention was persisted and audit-logged but nobody was ever told -
+    // notification-queue.processor.ts's 'mention-alert' case exists, it just
+    // had no producer.
+    try {
+      await this.queueService.addJob(QUEUES.NOTIFICATION, 'mention-alert', {
+        tenantId,
+        conversationId,
+        mentionedUserId: dto.mentionedUserId,
+      });
+    } catch {
+      // notification is best-effort; the mention itself already succeeded
+    }
 
     await this.auditService.log({
       tenantId,

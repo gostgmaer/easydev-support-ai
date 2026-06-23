@@ -37,7 +37,7 @@ export class AiAgentController {
   }
 
   @Get(':id')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getAgent(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -47,7 +47,7 @@ export class AiAgentController {
   }
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async findAgents(
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: any,

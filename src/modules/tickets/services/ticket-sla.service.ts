@@ -10,6 +10,7 @@ import { ConfigureSlaDto } from '../dtos';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
 import { addBusinessMinutes, addCalendarMinutes } from './business-hours';
+import { SlaSettingsService } from '../../settings/services/sla-settings.service';
 
 interface SlaTarget {
   responseMinutes: number;
@@ -43,6 +44,7 @@ export class TicketSLAService {
     private readonly queueService: QueueService,
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
+    private readonly slaSettingsService: SlaSettingsService,
   ) {}
 
   /**
@@ -56,14 +58,32 @@ export class TicketSLAService {
     dto: ConfigureSlaDto = {},
   ): Promise<TicketSLA> {
     const matrix = DEFAULT_SLA_MATRIX[ticket.priority.value];
-    const responseMinutes = dto.responseMinutes ?? matrix.responseMinutes;
-    const resolutionMinutes = dto.resolutionMinutes ?? matrix.resolutionMinutes;
+    const tenantSla = await this.slaSettingsService.getSlaSettings(tenantId);
+
+    // The settings UI only exposes one target pair, not a full per-priority
+    // matrix - so a tenant's configured values replace the matrix's MEDIUM
+    // (baseline) tier specifically. Other priorities keep their relative
+    // tiering from the matrix untouched, since there's nothing in the
+    // settings model that says how to rescale them.
+    const isBaselinePriority =
+      ticket.priority.value === TicketPriorityEnum.MEDIUM;
+    const defaultResponseMinutes = isBaselinePriority
+      ? Math.round(tenantSla.responseTimeTarget / 60)
+      : matrix.responseMinutes;
+    const defaultResolutionMinutes = isBaselinePriority
+      ? Math.round(tenantSla.resolutionTimeTarget / 60)
+      : matrix.resolutionMinutes;
+
+    const responseMinutes = dto.responseMinutes ?? defaultResponseMinutes;
+    const resolutionMinutes =
+      dto.resolutionMinutes ?? defaultResolutionMinutes;
+    const businessHours = dto.businessHours ?? tenantSla.businessHoursOnly;
     const base = ticket.openedAt;
 
-    const responseDueAt = dto.businessHours
+    const responseDueAt = businessHours
       ? addBusinessMinutes(base, responseMinutes)
       : addCalendarMinutes(base, responseMinutes);
-    const resolutionDueAt = dto.businessHours
+    const resolutionDueAt = businessHours
       ? addBusinessMinutes(base, resolutionMinutes)
       : addCalendarMinutes(base, resolutionMinutes);
 
@@ -135,6 +155,20 @@ export class TicketSLAService {
         tenantId: sla.tenantId,
         reason: `SLA_${breachType}_BREACH`,
       });
+
+      // NotificationQueueProcessor already had a fully-built 'sla-breach'
+      // case (push to the assigned agent, email to a manager) with no
+      // producer anywhere - the breach was tracked and escalated internally
+      // but nobody outside the system was ever actually alerted.
+      if (ticket.assignedAgentId) {
+        await this.queueService.addJob(QUEUES.NOTIFICATION, 'sla-breach', {
+          tenantId: sla.tenantId,
+          ticketId: ticket.id,
+          ticketNumber: ticket.ticketNumber.value,
+          breachType,
+          agentId: ticket.assignedAgentId,
+        });
+      }
 
       await this.auditService.log({
         tenantId: sla.tenantId,

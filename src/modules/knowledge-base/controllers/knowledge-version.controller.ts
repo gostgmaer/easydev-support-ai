@@ -10,7 +10,7 @@ export class KnowledgeVersionController {
   constructor(private readonly versionService: KnowledgeVersionService) {}
 
   @Get('document/:documentId')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getVersions(
     @Headers('x-tenant-id') tenantId: string,
     @Param('documentId') documentId: string,

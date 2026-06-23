@@ -1,12 +1,12 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { ConnectorExecutionService } from '../services/connector-execution.service';
 import { ConnectorHealthService } from '../services/connector-health.service';
 import { RetryEngine } from '../engine/retry-engine';
 
-@Processor('connector-queue')
+@Processor('connector-queue', WORKER_OPTIONS)
 @Injectable()
 export class ConnectorQueueProcessor extends BaseWorker {
   constructor(
@@ -76,8 +76,13 @@ export class ConnectorQueueProcessor extends BaseWorker {
         };
 
       default:
-        this.logger.warn(`Unknown job name: ${job.name}`);
-        throw new Error(`Unknown job name: ${job.name}`);
+        // Same rationale as AnalyticsQueueProcessor's default case: throwing
+        // here just burns retry budget toward the DLQ for job names this
+        // processor was never going to recognize. Acknowledge instead.
+        this.logger.warn(
+          `No handler implemented for job name "${job.name}" - acknowledging without processing`,
+        );
+        return { success: true, acknowledged: true, unhandled: job.name };
     }
   }
 }

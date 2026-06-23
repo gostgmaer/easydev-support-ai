@@ -62,6 +62,18 @@ const TERMINAL_STATUSES = new Set<TicketStatusEnum>([
   TicketStatusEnum.CANCELLED,
 ]);
 
+/**
+ * Thrown when a caller (HTTP PUT, workflow action, etc.) tries to move a
+ * ticket to a status that doesn't make sense from its current one - e.g.
+ * closing an already-closed ticket, or reopening one that's still active.
+ */
+export class InvalidTicketTransitionError extends Error {
+  constructor(from: TicketStatusEnum, to: TicketStatusEnum) {
+    super(`Cannot transition ticket from ${from} to ${to}`);
+    this.name = 'InvalidTicketTransitionError';
+  }
+}
+
 export class TicketStatus extends ValueObject<{ value: TicketStatusEnum }> {
   constructor(value: TicketStatusEnum) {
     if (!Object.values(TicketStatusEnum).includes(value)) {
@@ -80,6 +92,29 @@ export class TicketStatus extends ValueObject<{ value: TicketStatusEnum }> {
 
   public isResolved(): boolean {
     return this.props.value === TicketStatusEnum.RESOLVED;
+  }
+
+  /**
+   * The only way out of CLOSED/CANCELLED is an explicit reopen - including
+   * re-closing/re-cancelling an already-terminal ticket, which must be
+   * rejected rather than silently re-applied. Reopening only makes sense
+   * for a ticket that was actually resolved or terminal in the first place.
+   * Everything else (assignment, working, waiting, approval, re-resolving)
+   * stays freely interchangeable since the business never specified a
+   * stricter day-to-day workflow.
+   */
+  public canTransitionTo(next: TicketStatusEnum): boolean {
+    if (this.isTerminal()) return next === TicketStatusEnum.REOPENED;
+    if (next === TicketStatusEnum.REOPENED) {
+      return this.props.value === TicketStatusEnum.RESOLVED;
+    }
+    return true;
+  }
+
+  public assertCanTransitionTo(next: TicketStatusEnum): void {
+    if (!this.canTransitionTo(next)) {
+      throw new InvalidTicketTransitionError(this.props.value, next);
+    }
   }
 
   public static create(value: TicketStatusEnum): TicketStatus {

@@ -6,6 +6,7 @@ import { WorkflowAuditService } from './workflow-audit.service';
 import { WorkflowTemplateService } from './workflow-template.service';
 import { TriggerTypeEnum, WorkflowStatusEnum } from '../domain/value-objects';
 import { WorkflowCondition, WorkflowTemplate } from '../domain';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()
 export class WorkflowEngineService {
@@ -18,7 +19,32 @@ export class WorkflowEngineService {
     private readonly actionService: WorkflowActionService,
     private readonly auditService: WorkflowAuditService,
     private readonly templateService: WorkflowTemplateService,
+    private readonly queueService: QueueService,
   ) {}
+
+  // Failed executions were persisted and audit-logged but nobody was ever
+  // alerted - a tenant's automation could die with zero operational
+  // visibility. Reuses the same admin-incident-job pipeline already wired
+  // for connector failures and approval timeouts.
+  private async alertExecutionFailure(
+    tenantId: string,
+    executionId: string,
+    templateId: string,
+    reason: string,
+  ): Promise<void> {
+    try {
+      await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
+        tenantId,
+        affectedService: 'workflow.execution-failed',
+        title: 'Workflow execution failed',
+        severity: 'MEDIUM',
+        description: `Execution ${executionId} of workflow ${templateId} failed: ${reason}`,
+      });
+    } catch {
+      // Incident visibility is best-effort; failure is already recorded via
+      // failExecution + the audit log regardless.
+    }
+  }
 
   public async evaluateEventTriggers(
     tenantId: string,
@@ -93,6 +119,12 @@ export class WorkflowEngineService {
         execution.id,
         'EXECUTION_FAILED',
         `Workflow execution failed: ${error.message}`,
+      );
+      await this.alertExecutionFailure(
+        tenantId,
+        execution.id,
+        template.id,
+        error.message,
       );
     });
 
@@ -179,6 +211,12 @@ export class WorkflowEngineService {
         executionId,
         'EXECUTION_FAILED',
         `Resumed workflow execution failed: ${error.message}`,
+      );
+      await this.alertExecutionFailure(
+        tenantId,
+        executionId,
+        template.id,
+        error.message,
       );
     });
   }
