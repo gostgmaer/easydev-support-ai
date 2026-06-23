@@ -40,12 +40,20 @@ export class FileUploadIntegrationService {
     };
   }
 
+  // Every call here (finalize, signed-url, scan, thumbnail, delete) is a
+  // confirmation/query against state the upstream service already owns -
+  // safely repeatable. Previously a single transient blip threw straight
+  // through with no retry, surfacing as a raw 503 mid-request (e.g. a
+  // half-attached file with no attachment record) instead of riding out a
+  // momentary outage.
   private async request<T>(
     method: string,
     path: string,
     tenantId: string,
     body?: unknown,
+    attempt = 1,
   ): Promise<T> {
+    const maxAttempts = 3;
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method,
@@ -61,7 +69,17 @@ export class FileUploadIntegrationService {
       return (await response.json()) as T;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`File Upload Service request failed: ${message}`);
+      if (attempt < maxAttempts) {
+        const delayMs = 500 * 2 ** (attempt - 1);
+        this.logger.warn(
+          `File Upload Service request failed (attempt ${attempt}/${maxAttempts}): ${message}. Retrying in ${delayMs}ms.`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        return this.request<T>(method, path, tenantId, body, attempt + 1);
+      }
+      this.logger.error(
+        `File Upload Service request failed after ${maxAttempts} attempts: ${message}`,
+      );
       throw new ServiceUnavailableException(
         'File Upload Service is unavailable',
       );

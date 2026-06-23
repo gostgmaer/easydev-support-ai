@@ -24,11 +24,15 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { ConversationService } from '../services/conversation.service';
 import { ConversationSearchService } from '../services/conversation-search.service';
+import { ConversationTagService } from '../services/conversation-tag.service';
 import {
   CreateConversationDto,
   UpdateConversationDto,
   ConversationQueryDto,
   MergeConversationsDto,
+  BulkResolveDto,
+  BulkCloseDto,
+  BulkTagDto,
 } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
@@ -49,6 +53,7 @@ export class ConversationController {
   constructor(
     private readonly conversationService: ConversationService,
     private readonly searchService: ConversationSearchService,
+    private readonly tagService: ConversationTagService,
   ) {}
 
   @Post()
@@ -116,6 +121,59 @@ export class ConversationController {
       req.user?.id,
     );
     return target.toJSON();
+  }
+
+  // Registered before :id/... below - bulk/resolve and :id/resolve are the
+  // same path shape, so a static segment must be matched first or it would
+  // be swallowed by :id treating "bulk" as the conversation id.
+  @Post('bulk/resolve')
+  @Roles('tenant_admin', 'support_agent')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @ApiOperation({ summary: 'Bulk resolve conversations' })
+  async bulkResolve(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: BulkResolveDto,
+    @Req() req: any,
+  ) {
+    return this.conversationService.bulkResolve(
+      tenantId,
+      dto.conversationIds,
+      req.user?.id,
+    );
+  }
+
+  @Post('bulk/close')
+  @Roles('tenant_admin', 'support_agent')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @ApiOperation({ summary: 'Bulk close conversations' })
+  async bulkClose(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: BulkCloseDto,
+    @Req() req: any,
+  ) {
+    return this.conversationService.bulkClose(
+      tenantId,
+      dto.conversationIds,
+      dto.reason,
+      req.user?.id,
+    );
+  }
+
+  @Post('bulk/tag')
+  @Roles('tenant_admin', 'support_agent')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @ApiOperation({ summary: 'Bulk tag conversations' })
+  async bulkTag(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: BulkTagDto,
+    @Req() req: any,
+  ) {
+    return this.tagService.bulkAddTag(
+      tenantId,
+      dto.conversationIds,
+      { tag: dto.tag, color: dto.color },
+      req.user?.id,
+    );
   }
 
   @Get(':id')

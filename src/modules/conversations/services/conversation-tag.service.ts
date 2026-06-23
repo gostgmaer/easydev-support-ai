@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { IConversationRepository } from '../repositories/conversation-repository.interface';
 import { Conversation } from '../domain/conversation.aggregate';
@@ -9,6 +9,8 @@ import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class ConversationTagService {
+  private readonly logger = new Logger(ConversationTagService.name);
+
   constructor(
     @Inject('IConversationRepository')
     private readonly conversationRepo: IConversationRepository,
@@ -56,6 +58,29 @@ export class ConversationTagService {
     });
 
     return tag;
+  }
+
+  // Mirrors InboxAssignmentService.bulkAssign()'s per-item dispatch pattern.
+  async bulkAddTag(
+    tenantId: string,
+    conversationIds: string[],
+    dto: TagConversationDto,
+    userId?: string,
+  ): Promise<{ tagged: number; failed: string[] }> {
+    let tagged = 0;
+    const failed: string[] = [];
+    for (const conversationId of conversationIds) {
+      try {
+        await this.addTag(tenantId, conversationId, dto, userId);
+        tagged += 1;
+      } catch (err) {
+        this.logger.warn(
+          `Bulk tag skipped ${conversationId}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        failed.push(conversationId);
+      }
+    }
+    return { tagged, failed };
   }
 
   async removeTag(

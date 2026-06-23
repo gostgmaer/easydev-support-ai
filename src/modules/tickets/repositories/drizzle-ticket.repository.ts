@@ -12,7 +12,6 @@ import {
   lt,
   lte,
   isNull,
-  inArray,
 } from 'drizzle-orm';
 import { Ticket } from '../domain/ticket.aggregate';
 import { TicketComment } from '../domain/ticket-comment.entity';
@@ -375,25 +374,6 @@ export class DrizzleTicketRepository implements ITicketRepository {
       .orderBy(desc(schema.tickets.openedAt))
       .limit(limit);
     return rows.map((r) => TicketMapper.toDomain(r));
-  }
-
-  async bulkUpdateStatus(
-    tenantId: string,
-    ticketIds: string[],
-    status: string,
-  ): Promise<number> {
-    if (ticketIds.length === 0) return 0;
-    const updated = await db
-      .update(schema.tickets)
-      .set({ status, updatedAt: new Date() })
-      .where(
-        and(
-          eq(schema.tickets.tenantId, tenantId),
-          inArray(schema.tickets.id, ticketIds),
-        ),
-      )
-      .returning({ id: schema.tickets.id });
-    return updated.length;
   }
 
   async addComment(comment: TicketComment, tenantId: string): Promise<void> {

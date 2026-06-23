@@ -1,7 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Param,
   Headers,
   UseGuards,
   UseInterceptors,
@@ -53,5 +55,17 @@ export class AssignmentController {
       options,
     );
     return { assignedAgentId, success: true };
+  }
+
+  @Get(':teamId/workload')
+  @Roles('tenant_admin', 'manager')
+  @ApiOperation({
+    summary: 'Per-agent current workload for a team (manager visibility)',
+  })
+  async teamWorkload(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('teamId') teamId: string,
+  ) {
+    return this.assignmentService.getTeamWorkload(tenantId, teamId);
   }
 }

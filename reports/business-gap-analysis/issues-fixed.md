@@ -1,68 +1,51 @@
-# Issues Fixed This Pass
+# Issues Fixed
 
-All fixes below: typechecked clean (`tsc --noEmit` exit 0), reuse already-built infrastructure rather than inventing new mechanisms, and were live-verified where practical (direct SQL execution against real data, or live HTTP checks against the dev server).
+All fixes below: typechecked clean (`tsc --noEmit` exit 0), full app boots clean against the live dev server after every change, existing test suite green throughout (7 suites / 69 tests — see `regression-results.md` for why this baseline is smaller than earlier in the day). Each reuses already-built infrastructure (existing services, existing queue processors, established per-item dispatch patterns) rather than inventing new mechanisms, per this mission's "do not create new features" framing — except the two items explicitly approved as net-new (OPS-03, OPS-05).
 
-## SUP-01 — SLA breach notifications never fired
-**File:** `src/modules/tickets/services/ticket-sla.service.ts` (`runBreachSweep`)
-`NotificationQueueProcessor` already had a fully-built `'sla-breach'` case (push to the assigned agent, email to a manager). Added the producer call right after the existing `'ticket-escalation-job'` enqueue, guarded on `ticket.assignedAgentId` being set. Single-fire by construction — `sla.markBreached()` persists before the next sweep runs, so retries of the sweep job can't re-notify for an already-breached SLA.
+## Pass 1 — initial gap-analysis fixes
 
-## SUP-02 — Ticket resolution never notified the customer
-**File:** `src/modules/tickets/services/ticket.service.ts` (`resolve`)
-`NotificationQueueProcessor` already had a fully-built `'ticket-resolution'` case (emails the customer). Added the producer call, wrapped in try/catch: `CustomerService.findById` throws `NotFoundException` rather than returning `null`, so a stale `customerId` must never be allowed to fail the actual ticket resolution — the notification is strictly best-effort.
+**SUP-01 — SLA breach notifications never fired.** `ticket-sla.service.ts`'s `runBreachSweep` now enqueues the already-built `'sla-breach'` notification job.
 
-## OPS-01 — Analytics events silently dropped
-**File:** `src/modules/analytics/jobs/analytics-queue.processor.ts`
-`ticket-queue.processor.ts` and `conversation-queue.processor.ts` both already enqueue `'ticket-event'`/`'conversation-event'` jobs to the analytics queue, but `AnalyticsQueueProcessor` had no case for either name — they fell into the `default:` handler, which warns and acknowledges without ever recording anything. Added both cases, routing into the existing `AnalyticsEventConsumer.handleEvent()` (the same consumer real events already use), mapping `ticketId`/`conversationId` → `aggregateId` and a fixed `aggregateType`.
+**SUP-02 — Ticket resolution never notified the customer.** `ticket.service.ts`'s `resolve()` now enqueues the already-built `'ticket-resolution'` job, best-effort (wrapped so a notification failure can't fail the actual resolution).
 
-## OPS-02 — Realtime analytics dashboards showed random fake data
-**File:** `src/modules/analytics/services/analytics-realtime.service.ts`
-`getLiveCounters`, `getLiveSlaMetrics`, `getLiveAiMetrics` all returned `Math.random()`-based placeholders. Replaced with real queries:
-- `activeConversations` — count of conversations not in `CLOSED`/`ARCHIVED`
-- `activeAgents` — count of `inboxPresence` rows with status `ONLINE`/`AWAY`/`BUSY`
-- `queuedTickets` — count of `OPEN` tickets
-- `slaBreachRiskCount` — `ticketSla` rows not yet breached with `resolutionDueAt` in the next 30 minutes
-- `slaComplianceRate` — % of `ticketSla` rows with `breached=false` among those whose deadline has passed in the last 30 days
-- `averageWaitTimeMs` — average `firstResponseAt - createdAt` over tickets from the last 30 days
-- `liveRequestRatePerSecond` — today's AI request count (from `aiUsageMetrics`) divided by seconds elapsed today
+**OPS-01 — Ticket/conversation analytics events silently dropped.** `AnalyticsQueueProcessor` had no case for `'ticket-event'`/`'conversation-event'` despite real producers; both now route into the existing `AnalyticsEventConsumer`.
 
-`currentAiResolutionRate` and `liveAverageResponseTimeMs` are returned as `null` — no field in the schema tracks "resolved by AI without human takeover" or per-call AI response latency, so there's nothing real to compute them from. Returning `null` rather than a plausible-looking fabricated number.
+**OPS-02 — Realtime analytics dashboards showed random fake data.** `AnalyticsRealtimeService`'s three methods replaced with real DB queries. Two fields (`currentAiResolutionRate`, `liveAverageResponseTimeMs`) intentionally return `null` — no schema field exists to compute them honestly.
 
-Verified directly by executing the new queries against the real local database: returned `activeConversations: 3`, `queuedTickets: 3`, `activeAgents: 0` (no presence rows currently), `ticketSla { total: 5, compliant: 4 }`.
+**AI-01 — AI confidence/escalation/auto-response settings had no effect.** `AiResponseService` now reads `AiSettings` (already fully modeled, never wired) and gates auto-response/escalates low-confidence replies instead of always auto-posting.
 
-## AI-01 — AI confidence/escalation/auto-response settings had no effect
-**Files:** `src/modules/ai-integration/services/ai-response.service.ts`, `src/modules/ai-integration/ai-integration.module.ts`
-`AiSettings` already modeled `confidenceThreshold`, `escalationThreshold`, `autoResponseEnabled`, `autoEscalationEnabled` end-to-end (entity, DTO, repository, service) but `processInboundMessage()` never read any of them:
-- If `autoResponseEnabled` is `false`, the method now returns early without posting anything (mirrors the existing `isAiActive` early-return pattern).
-- After generation, if `autoEscalationEnabled` is `true` and the AI's own reported `confidence` is below `escalationThreshold`, the reply is now escalated via the existing `AiEscalationService.createEscalation()` instead of being auto-posted to the customer.
+## Pass 2 — "fix them" follow-up
 
-Injected `AiSettingsService` into `AiResponseService`; added `forwardRef(() => SettingsModule)` to `AiIntegrationModule` (no real circular dependency — `SettingsModule` doesn't import `AiIntegrationModule`).
+**DR-05 — Silent failure with no AI agent configured.** Now escalates to a human instead of returning nothing.
 
----
+**AI-06 — Connector encryption key had a hardcoded fallback.** Added `CONNECTOR_ENCRYPTION_KEY` to the production fail-fast list (`validate-env.ts`).
 
-## Follow-up pass ("fix remaining issues")
+**DR-03 — No stalled-job recovery config on any BullMQ processor.** Added shared `WORKER_OPTIONS` (`lockDuration: 60000`, `stalledInterval: 30000`, `maxStalledCount: 2`), applied to all 16 processors. Also fixed `notification-queue.processor.ts`'s `default:` case (was throwing, now warns+acknowledges).
 
-### DR-05 — Tenant with no AI agent configured: total silent failure
-**File:** `ai-response.service.ts`
-When `AiRoutingService.selectAgent()` returns null, the method now creates an escalation (reusing the same `AiEscalationService.createEscalation()` call used elsewhere) instead of logging a warning and returning nothing. A misconfigured tenant now gets a human looking at the conversation instead of total silence.
+**DR-01 — AI platform timeout left the customer with total silence.** Fixed properly this time: `conversation-queue.processor.ts` computes `isLastAttempt` from `job.attemptsMade`/`job.opts.attempts` and threads it through, so the customer-facing fallback message and the escalation record are only created once, on the terminal retry — not once per attempt.
 
-### AI-06 — Connector credential encryption key had a hardcoded fallback
-**File:** `src/config/validate-env.ts`
-`CredentialManager` falls back to a literal string baked into the source if `CONNECTOR_ENCRYPTION_KEY` is unset — same pattern as `WIDGET_JWT_SECRET`, fixed this morning. Confirmed `CredentialManager` is live-wired (connectors module, execution engine) before adding it to the production fail-fast list.
+**SUP-09 — `NotificationService` silently swallowed every send failure.** Both `sendEmail`/`sendPushNotification` now re-throw after logging, so the retry+DLQ infrastructure their callers (`NotificationQueueProcessor`, `AnalyticsExportService` via `analytics-queue.processor.ts`) already extend actually engages.
 
-### DR-03 — No stalled-job recovery config on any of the 16 BullMQ processors
-**Files:** `packages/shared-queues/src/queue-definitions.ts` (new `WORKER_OPTIONS` export), all 16 `*.processor.ts` files under `src/modules/*/jobs/`
-Every `@Processor()` relied entirely on BullMQ's defaults (30s lock, no explicit stalled-check interval, no cap on stall-recovery attempts) — too short for jobs that legitimately take longer (AI generation calls, connector executions), risking a job being reclaimed and re-run while still genuinely in flight. Added a shared `WORKER_OPTIONS` constant (`lockDuration: 60000`, `stalledInterval: 30000`, `maxStalledCount: 2`) and applied it to every processor. Also fixed `notification-queue.processor.ts`'s `default:` case, which still threw on an unrecognized job name (same bug class as the analytics/connector/widget processors fixed earlier today) — now warns and acknowledges instead of burning the retry budget toward the DLQ.
+**SUP-03/04 — Ticket close/reopen/cancel/creation had no customer notification.** Added `'ticket-created'`/`'ticket-closed'`/`'ticket-reopened'`/`'ticket-cancelled'` cases to `NotificationQueueProcessor` and a shared `notifyCustomer()` helper in `ticket.service.ts` (best-effort, used by `create`/`resolve`/`close`/`reopen`/`cancel`).
 
-### DR-01 — AI platform timeout left the customer with total silence
-**Files:** `ai-response.service.ts`, `conversation-queue.processor.ts`
-Originally deferred (see `remaining-risks.md`'s prior version) because the catch block re-throws and `'ai-process-message'` retries 3x by default — posting a customer-facing message unconditionally there would spam the customer up to 3 times for one underlying failure. Fixed properly: `conversation-queue.processor.ts` now computes `isLastAttempt` from `job.attemptsMade`/`job.opts.attempts` and threads it into `processInboundMessage()`. The catch block now only creates the escalation record and posts a "we're having trouble, a team member will follow up" message when `isLastAttempt` is true — intermediate retries still just log and rethrow silently, exactly as before.
+**TEN-01/02 — Zero tenant quota/cost enforcement.** Per your direction ("hard block + overage billing warning"): added `UsageLimitService.enforceLimit()` - hard-blocks (`ForbiddenException`) once usage reaches the plan limit and opens/escalates an operational incident (reusing the `admin-incident-job` pipeline) so ops has billing/overage visibility. Wired into conversation creation (`maxConversations`), connector installation (`maxConnectors`), and AI auto-response (`maxAiRequests`, monthly, escalates to a human instead of throwing since this runs inside a retrying job).
 
-### SUP-09 — `NotificationService` silently swallowed every send failure
-**File:** `src/modules/notifications/notification.service.ts`
-`sendEmail`/`sendPushNotification` caught all errors and only logged them — a transient outage caused permanent, untraceable loss. Both real callers (`NotificationQueueProcessor`'s 16 job cases, `AnalyticsExportService.triggerExport` via `analytics-queue.processor.ts`) are themselves `BaseWorker` subclasses with retry + dead-letter routing already wired and waiting. Changed both methods to re-throw after logging, so the existing infrastructure actually engages instead of the error dying silently. Confirmed the third nominal caller (`conversation-resolution.service.ts`) never actually invokes either method — dead injection, unaffected.
+**OPS-04 — No reassignment when an agent goes offline.** Per your direction (`AgentAvailability` as canonical): added `findOfflineAgents()` to the repository, `reassignFromOfflineAgents()` to both `ConversationAssignmentService` and `TicketAssignmentService` (reuses the existing `autoAssign`/`assignEntity` engine, which already excludes non-`ONLINE` agents by construction), and a new `AgentOfflineReassignmentScheduler` sweeping every 2 minutes.
 
-All fixes in this follow-up pass: typechecked clean (`tsc --noEmit` exit 0), full `build:packages` clean, existing test suite (7 suites / 69 tests post test-deletion baseline) still green.
+**DR-02 — `submitToolResult()` failure left the AI workflow hung.** Found a second, worse bug while fixing this: the success path had *no* try/catch at all, so a submission failure would corrupt a successful tool execution into a recorded failure. Both paths now route through a private wrapper that falls back to a durable `'ai-tool-result-submission-job'` (on the existing `BaseWorker`-backed `ai-queue`) instead of swallowing or corrupting state.
 
----
+**AI-04 — Workflow approval timeouts were never proactively detected.** The existing expiry-check logic (`workflow-queue.processor.ts`'s `'workflow-approval-job'` case) only ever ran *immediately* on approval creation (no `delay`), so `isExpired()` was always false there - a functional no-op. Added `findExpiredPendingApprovals()`, `WorkflowApprovalService.sweepExpiredApprovals()`, and a new scheduler running every 5 minutes that proactively rejects expired approvals and raises an incident.
 
-Carried over from the same-day Production Hardening pass (not re-verified here, listed for completeness since this gap-analysis audit explicitly excluded re-finding them): global `ValidationPipe`, real AI-platform/storage health checks, `/health` split into live/ready with correct status codes, Docker `HEALTHCHECK` pointed at `/health/live`, DB `statement_timeout`, BullMQ `maxRetriesPerRequest`, production-only startup env validation, realtime gateway CORS lockdown, widget upload MIME allowlist, `uploads/` non-root permission fix, HTTP metrics recording, structured logging activation, `EASYDEV_AI_URL` local-env fix, widget `message_sync` bug fix.
+**AI-05 — Failed workflow executions had no alert.** Added `alertExecutionFailure()` to `workflow-engine.service.ts`, called from both failure-catch sites, reusing the same incident pipeline.
+
+**DR-04 — File upload service failures had no retry.** `FileUploadIntegrationService.request()` now retries up to 3 times with exponential backoff before giving up - confirmed safe since every call (finalize/signed-url/scan/thumbnail/delete) is an idempotent confirmation against state the upstream service already owns.
+
+**Bonus discovery — bulk ticket status update bypassed every state-machine guard.** Found while building OPS-03: the *existing* `POST /v1/tickets/bulk/status` endpoint called a raw `UPDATE ... WHERE id IN (...)` with zero validation - completely bypassing `canTransitionTo()` (the exact guard fixed earlier this engagement), no domain events, no SLA recalc, no notifications. Rewrote `bulkUpdateStatus()` to dispatch each ticket through the same guarded single-item method real single-ticket requests use, and removed the now-dead raw repository method entirely (a footgun otherwise).
+
+**OPS-03 — No bulk close/resolve/tag for conversations (approved net-new).** Added `bulkResolve`/`bulkClose` to `ConversationService` and `bulkAddTag` to `ConversationTagService`, mirroring the established safe per-item dispatch pattern from `InboxAssignmentService.bulkAssign()`. New `POST /v1/conversations/bulk/{resolve,close,tag}` endpoints, registered before the `:id/...` routes (same path shape, registration order matters - verified via live boot log).
+
+**OPS-05 — No manager team-workload view (approved net-new).** Added `getTeamWorkload()` to `AgentAssignmentService` (reuses the existing per-agent profile/availability lookup already inside `assignEntity()`, without the online-only filter). New `GET /v1/assignments/:teamId/workload` endpoint (manager/tenant_admin only).
+
+## Verified false, not fixed (no action needed)
+
+- **DR-06 — "Redis failure breaks rate limiting hard."** False on direct verification: the connector engine's `checkRateLimit()` already gracefully degrades to a DB-backed fallback when Redis is unavailable, and the HTTP `ThrottlerModule` doesn't use Redis storage at all (default in-memory) - there was nothing to fix.
