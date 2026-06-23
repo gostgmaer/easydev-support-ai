@@ -50,8 +50,7 @@ export class WidgetQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.session.started',
-          details: `Widget Session Event: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Widget Session Event (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 
@@ -62,8 +61,7 @@ export class WidgetQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.lead.created',
-          details: `Widget Lead Captured: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Widget Lead Captured (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 
@@ -94,8 +92,7 @@ export class WidgetQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'widget.installed',
-          details: `Widget Installation Configured: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Widget Installation Configured (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 

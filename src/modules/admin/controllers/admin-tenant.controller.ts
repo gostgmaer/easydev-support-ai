@@ -3,9 +3,11 @@ import {
   Post,
   Body,
   Headers,
+  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -50,7 +52,8 @@ export class AdminTenantController {
   async provision(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: ProvisionTenantDto,
+    @Req() req: Request & { user?: { id: string } },
   ) {
-    return this.provisioningService.provision(tenantId, dto);
+    return this.provisioningService.provision(tenantId, dto, req.user?.id);
   }
 }

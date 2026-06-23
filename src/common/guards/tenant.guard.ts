@@ -49,10 +49,11 @@ export class TenantGuard implements CanActivate {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('IAM service URL is not configured');
       }
-      // Local dev fallback only: no IAM service configured.
+      // Local dev fallback only: no IAM service configured. Nil UUID keeps
+      // this valid wherever it flows into a uuid-typed column (e.g. audit_logs.user_id).
       return {
         isValid: true,
-        userId: 'user-123',
+        userId: '00000000-0000-0000-0000-000000000000',
         roles: ['support_agent', 'tenant_admin'],
       };
     }

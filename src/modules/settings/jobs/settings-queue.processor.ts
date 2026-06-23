@@ -90,8 +90,7 @@ export class SettingsQueueProcessor extends BaseWorker {
         await this.auditService.log({
           tenantId,
           action: job.data.eventName || 'settings.updated',
-          details: `Settings updated: ${JSON.stringify(job.data.payload || {})}`,
-          createdBy: 'system-queue',
+          details: `Settings updated (system-queue): ${JSON.stringify(job.data.payload || {})}`,
         });
         return { success: true };
 

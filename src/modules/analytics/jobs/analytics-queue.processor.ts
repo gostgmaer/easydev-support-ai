@@ -68,6 +68,25 @@ export class AnalyticsQueueProcessor extends BaseWorker {
         await this.exportService.triggerExport(tenantId, job.data);
         return { success: true };
 
+      case 'audit-event':
+        // Durable record is already written synchronously by AuditService.log()
+        // via AuditRepository; this queue hop exists only so other consumers
+        // could observe audit activity. Acknowledge rather than throw.
+        this.logger.debug(
+          `Audit event acknowledged: ${job.data.action} (tenant ${tenantId})`,
+        );
+        return { success: true };
+
+      case 'admin-event':
+        // Same shape as audit-event: AdminEventPublisher already persisted the
+        // underlying admin-module change via its own service; this queue hop
+        // exists only so other consumers could observe it. Acknowledge rather
+        // than throw.
+        this.logger.debug(
+          `Admin event acknowledged: ${job.data.eventName} (aggregate ${job.data.aggregateId})`,
+        );
+        return { success: true };
+
       case 'analytics-cleanup-job':
         this.logger.log(`Processing analytics-cleanup-job ${job.id}`);
         const retentionDays = job.data.retentionDays || 30;
@@ -80,8 +99,18 @@ export class AnalyticsQueueProcessor extends BaseWorker {
         return { success: true, deletedBefore: cutoff.toISOString() };
 
       default:
-        this.logger.warn(`Unknown job name: ${job.name}`);
-        throw new Error(`Unknown job name: ${job.name}`);
+        // Many independent publishers feed this queue (tickets, conversations,
+        // messages, notifications, inbox, widget, help-center, tenant
+        // lifecycle...) without a shared job-name registry, and most of them
+        // have no aggregation handler implemented yet on this side. Throwing
+        // here causes BullMQ to retry forever and spam logs for job types that
+        // were never going to succeed. Acknowledge so the queue drains, but
+        // warn loudly since this means that event's metrics are NOT being
+        // aggregated - see analytics module follow-up work.
+        this.logger.warn(
+          `No aggregation handler implemented for job name "${job.name}" - acknowledging without processing (tenant ${tenantId})`,
+        );
+        return { success: true, acknowledged: true, unhandled: job.name };
     }
   }
 }
