@@ -1,6 +1,6 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
@@ -8,7 +8,7 @@ import { AuditService } from '../../audit/audit.service';
 import { db, schema } from '@easydev/database';
 import { and, eq, lt } from 'drizzle-orm';
 
-@Processor('widget-queue')
+@Processor('widget-queue', WORKER_OPTIONS)
 @Injectable()
 export class WidgetQueueProcessor extends BaseWorker {
   private redisClient: Redis | null = null;

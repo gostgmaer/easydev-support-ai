@@ -1,14 +1,14 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Optional } from '@nestjs/common';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { InboxEventConsumer } from '../consumers/inbox-event.consumer';
 import { InboxSnoozeService } from '../services/inbox-snooze.service';
 import { InboxSearchService } from '../services/inbox-search.service';
 import { InboxPresenceService } from '../services/inbox-presence.service';
 import { PresenceStatusEnum } from '../domain/value-objects';
 
-@Processor('inbox-queue')
+@Processor('inbox-queue', WORKER_OPTIONS)
 @Injectable()
 export class InboxQueueProcessor extends BaseWorker {
   constructor(

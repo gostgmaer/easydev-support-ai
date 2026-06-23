@@ -1,20 +1,35 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { ITicketRepository } from '../repositories/ticket-repository.interface';
 import { Ticket } from '../domain/ticket.aggregate';
 import { TicketAssignment } from '../domain/ticket-assignment.entity';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
+import type { IAgentAvailabilityRepository } from '../../teams/repositories/agent-availability-repository.interface';
 import { AuditService } from '../../audit/audit.service';
 import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 
+const ACTIVE_TICKET_STATUSES = [
+  'OPEN',
+  'ASSIGNED',
+  'IN_PROGRESS',
+  'WAITING_CUSTOMER',
+  'WAITING_INTERNAL',
+  'APPROVAL_PENDING',
+  'REOPENED',
+];
+
 @Injectable()
 export class TicketAssignmentService {
+  private readonly logger = new Logger(TicketAssignmentService.name);
+
   constructor(
     @Inject('ITicketRepository')
     private readonly ticketRepo: ITicketRepository,
     private readonly agentAssignmentService: AgentAssignmentService,
+    @Inject('IAgentAvailabilityRepository')
+    private readonly availabilityRepo: IAgentAvailabilityRepository,
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
     private readonly realtime: InboxRealtimeService,
@@ -163,5 +178,53 @@ export class TicketAssignmentService {
 
   async listAssignments(tenantId: string, ticketId: string) {
     return this.ticketRepo.findAssignments(tenantId, ticketId);
+  }
+
+  /**
+   * No ticket was ever automatically reassigned when its agent went offline
+   * - it just sat assigned to someone who would never see it again.
+   * AgentAvailability (status field) is the canonical "is this agent online"
+   * source the auto-assignment engine itself already trusts; this reuses
+   * the exact same engine rather than inventing new selection logic.
+   */
+  async reassignFromOfflineAgents(
+    tenantId?: string,
+  ): Promise<{ reassigned: number; skipped: number }> {
+    const offlineAgents = await this.availabilityRepo.findOfflineAgents(
+      tenantId,
+    );
+    let reassigned = 0;
+    let skipped = 0;
+
+    for (const agent of offlineAgents) {
+      const { data: assigned } = await this.ticketRepo.findPaginated(
+        agent.tenantId,
+        { assignedAgentId: agent.agentProfileId, limit: 200 },
+      );
+
+      for (const ticket of assigned) {
+        if (!ACTIVE_TICKET_STATUSES.includes(ticket.status.value)) {
+          continue;
+        }
+        if (!ticket.assignedTeamId) {
+          this.logger.warn(
+            `Ticket ${ticket.id} is assigned to offline agent ${agent.agentProfileId} with no team to reassign within - skipping`,
+          );
+          skipped += 1;
+          continue;
+        }
+        try {
+          await this.autoAssign(agent.tenantId, ticket.id, ticket.assignedTeamId);
+          reassigned += 1;
+        } catch (err: any) {
+          this.logger.warn(
+            `Failed to reassign ticket ${ticket.id} away from offline agent ${agent.agentProfileId}: ${err.message}`,
+          );
+          skipped += 1;
+        }
+      }
+    }
+
+    return { reassigned, skipped };
   }
 }

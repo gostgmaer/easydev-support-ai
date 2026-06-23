@@ -1,14 +1,15 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { AiResponseService } from '../services/ai-response.service';
 import { AiToolExecutionService } from '../services/ai-tool-execution.service';
 import { AiEscalationService } from '../services/ai-escalation.service';
 import { AiUsageService } from '../services/ai-usage.service';
 import { AiWorkflowService } from '../services/ai-workflow.service';
+import { AIPlatformClient } from '../services/ai-platform.client';
 
-@Processor('ai-queue')
+@Processor('ai-queue', WORKER_OPTIONS)
 @Injectable()
 export class AiQueueProcessor extends BaseWorker {
   constructor(
@@ -17,6 +18,7 @@ export class AiQueueProcessor extends BaseWorker {
     private readonly escalationService: AiEscalationService,
     private readonly usageService: AiUsageService,
     private readonly workflowService: AiWorkflowService,
+    private readonly aiClient: AIPlatformClient,
     @Optional() queueService?: QueueService,
   ) {
     super('AiQueueProcessor', 'ai-queue' as any, queueService);
@@ -45,6 +47,19 @@ export class AiQueueProcessor extends BaseWorker {
           job.data.capability,
           job.data.payload || {},
         );
+
+      case 'ai-tool-result-submission-job':
+        this.logger.log(
+          `Processing ai-tool-result-submission-job ${job.id} for request ${job.data.requestId}`,
+        );
+        await this.aiClient.submitToolResult(
+          tenantId,
+          job.data.workflowId,
+          job.data.requestId,
+          job.data.payload,
+          job.data.status,
+        );
+        return { submitted: true, requestId: job.data.requestId };
 
       case 'ai-escalation-job':
         this.logger.log(

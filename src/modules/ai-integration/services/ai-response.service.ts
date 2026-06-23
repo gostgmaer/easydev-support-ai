@@ -12,6 +12,7 @@ import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-c
 import { InboxService } from '../../inbox/services/inbox.service';
 import { MessageDraftService } from '../../messages/services/message-draft.service';
 import { AiSettingsService } from '../../settings/services/ai-settings.service';
+import { UsageLimitService } from '../../settings/services/usage-limit.service';
 import {
   MessageDirectionEnum,
   MessageTypeEnum,
@@ -39,6 +40,7 @@ export class AiResponseService {
     private readonly inboxService: InboxService,
     private readonly draftService: MessageDraftService,
     private readonly aiSettingsService: AiSettingsService,
+    private readonly usageLimitService: UsageLimitService,
   ) {}
 
   public async processInboundMessage(
@@ -46,6 +48,7 @@ export class AiResponseService {
     messageId: string,
     conversationId: string,
     messageText: string,
+    isLastAttempt: boolean,
   ): Promise<any> {
     const startTime = Date.now();
     this.logger.log(
@@ -85,6 +88,43 @@ export class AiResponseService {
       return { escalated: false, autoResponseDisabled: true };
     }
 
+    // UsageLimits.maxAiRequests was a plan ceiling nothing ever enforced.
+    // A blocked AI call must hand the conversation to a human rather than
+    // leaving it in silence - and must not throw here, since this method is
+    // invoked from a retrying BullMQ job and quota exhaustion won't resolve
+    // itself on retry.
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthlyUsage = await this.usageService.getUsageMetrics(
+      tenantId,
+      undefined,
+      monthStart.toISOString().slice(0, 10),
+    );
+    const requestsThisMonth = monthlyUsage.reduce(
+      (sum, m) => sum + m.requests,
+      0,
+    );
+    try {
+      await this.usageLimitService.enforceLimit(
+        tenantId,
+        'aiRequests',
+        requestsThisMonth,
+      );
+    } catch {
+      this.logger.warn(
+        `Tenant ${tenantId} has exceeded its monthly AI request quota; escalating conversation ${conversationId} to a human instead of auto-responding.`,
+      );
+      await this.escalationService.createEscalation(
+        tenantId,
+        conversationId,
+        'Monthly AI request quota exceeded',
+        0.0,
+        0.0,
+      );
+      return { escalated: true, reason: 'ai_quota_exceeded' };
+    }
+
     // 2. Agent Resolution
     const agent = await this.routingService.selectAgent(tenantId, {
       language: conversation.language?.value || 'en',
@@ -92,7 +132,18 @@ export class AiResponseService {
 
     if (!agent) {
       this.logger.warn(`No active AI Agent found for tenant ${tenantId}`);
-      return;
+      // Previously returned silently - the customer's message was processed
+      // but generated no response and no signal anywhere that anything was
+      // wrong. A misconfigured tenant (no AI agent set up yet) should still
+      // get a human looking at the conversation.
+      await this.escalationService.createEscalation(
+        tenantId,
+        conversationId,
+        'No active AI agent configured for this tenant',
+        0.0,
+        0.0,
+      );
+      return { escalated: true, reason: 'no_ai_agent_configured' };
     }
 
     // 3. Load/Create Conversation Session
@@ -241,14 +292,42 @@ export class AiResponseService {
       this.logger.error(
         `Failed during AI auto-response generation: ${err.message}`,
       );
-      // Fallback response or trigger manager escalation if repeated failure
-      await this.escalationService.createEscalation(
-        tenantId,
-        conversationId,
-        `AI Auto-response processing failed: ${err.message}`,
-        0.0,
-        -1.0,
-      );
+
+      // Only act on the terminal attempt - this method re-throws below, and
+      // BullMQ retries 'ai-process-message' (DEFAULT_JOB_OPTIONS, 3 attempts
+      // with exponential backoff). Creating the escalation / posting a
+      // customer-facing message on every attempt would create duplicate
+      // escalation records and show the customer the same "we're having
+      // trouble" message up to 3 times for one underlying failure.
+      if (isLastAttempt) {
+        await this.escalationService.createEscalation(
+          tenantId,
+          conversationId,
+          `AI Auto-response processing failed: ${err.message}`,
+          0.0,
+          -1.0,
+        );
+
+        // Previously the customer got no message at all on AI failure - the
+        // escalation was purely internal. A human will see it via the
+        // escalation queue, but the customer was left staring at silence.
+        try {
+          await this.messageService.create(tenantId, {
+            conversationId,
+            direction: MessageDirectionEnum.OUTBOUND,
+            messageType: MessageTypeEnum.TEXT,
+            content:
+              "We're having trouble processing your message right now. A member of our support team will follow up with you shortly.",
+            senderId: agent.id,
+            senderType: 'AGENT',
+          });
+        } catch (notifyErr: any) {
+          this.logger.error(
+            `Failed to post AI-failure fallback message for conversation ${conversationId}: ${notifyErr.message}`,
+          );
+        }
+      }
+
       throw err;
     }
   }

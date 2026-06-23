@@ -22,6 +22,9 @@ export function validateProductionEnv(): void {
   if (!process.env.WIDGET_JWT_SECRET) {
     missing.push('WIDGET_JWT_SECRET');
   }
+  if (!process.env.CONNECTOR_ENCRYPTION_KEY) {
+    missing.push('CONNECTOR_ENCRYPTION_KEY');
+  }
   if (
     !process.env.EASYDEV_IAM_URL &&
     !process.env.IAM_SERVICE_INTERNAL_URL &&

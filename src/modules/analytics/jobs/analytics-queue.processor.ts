@@ -1,6 +1,6 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { AnalyticsEventConsumer } from '../consumers/analytics-event.consumer';
 import { AnalyticsAggregationService } from '../services/analytics-aggregation.service';
@@ -9,7 +9,7 @@ import { AnalyticsExportService } from '../services/analytics-export.service';
 import { db, schema } from '@easydev/database';
 import { lte } from 'drizzle-orm';
 
-@Processor('analytics-queue')
+@Processor('analytics-queue', WORKER_OPTIONS)
 @Injectable()
 export class AnalyticsQueueProcessor extends BaseWorker {
   constructor(

@@ -101,6 +101,37 @@ export class TicketService {
     return ticket;
   }
 
+  // Best-effort customer-facing notification on a ticket lifecycle event - a
+  // notification-side failure (e.g. stale customerId) must never fail the
+  // lifecycle transition itself.
+  private async notifyCustomer(
+    tenantId: string,
+    ticket: Ticket,
+    jobName: string,
+    extraPayload: Record<string, any> = {},
+  ): Promise<void> {
+    if (!ticket.customerId) return;
+    try {
+      const customer = await this.customerService.findById(
+        tenantId,
+        ticket.customerId,
+      );
+      if (customer?.email?.value) {
+        await this.queueService.addJob(QUEUES.NOTIFICATION, jobName, {
+          tenantId,
+          customerEmail: customer.email.value,
+          ticketId: ticket.id,
+          ticketNumber: ticket.ticketNumber.value,
+          ...extraPayload,
+        });
+      }
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to enqueue ${jobName} notification for ticket ${ticket.id}: ${err.message}`,
+      );
+    }
+  }
+
   async create(
     tenantId: string,
     dto: CreateTicketDto,
@@ -169,6 +200,10 @@ export class TicketService {
         source: ticket.source.value,
       },
     );
+
+    await this.notifyCustomer(tenantId, ticket, 'ticket-created', {
+      subject: ticket.subject,
+    });
 
     return ticket;
   }
@@ -263,6 +298,14 @@ export class TicketService {
       action: 'TICKET_RESOLVE',
       details: `Resolved ticket ${id}`,
     });
+
+    // NotificationQueueProcessor already had a fully-built 'ticket-resolution'
+    // case (emails the customer) with no producer anywhere - customers were
+    // never told their ticket was resolved.
+    await this.notifyCustomer(tenantId, ticket, 'ticket-resolution', {
+      summary: resolutionSummary,
+    });
+
     return ticket;
   }
 
@@ -276,6 +319,7 @@ export class TicketService {
       action: 'TICKET_CLOSE',
       details: `Closed ticket ${id}`,
     });
+    await this.notifyCustomer(tenantId, ticket, 'ticket-closed');
     return ticket;
   }
 
@@ -290,6 +334,7 @@ export class TicketService {
       action: 'TICKET_REOPEN',
       details: `Reopened ticket ${id}`,
     });
+    await this.notifyCustomer(tenantId, ticket, 'ticket-reopened');
     return ticket;
   }
 
@@ -303,6 +348,7 @@ export class TicketService {
       action: 'TICKET_CANCEL',
       details: `Cancelled ticket ${id}`,
     });
+    await this.notifyCustomer(tenantId, ticket, 'ticket-cancelled');
     return ticket;
   }
 

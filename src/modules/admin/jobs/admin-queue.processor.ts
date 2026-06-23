@@ -1,7 +1,7 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Optional } from '@nestjs/common';
-import { BaseWorker, QueueService, QUEUES } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { AdminHealthService } from '../services/admin-health.service';
 import { AdminWebhookService } from '../services/admin-webhook.service';
 import { AdminIncidentService } from '../services/admin-incident.service';
@@ -9,7 +9,7 @@ import { AdminOverrideService } from '../services/admin-override.service';
 import { AuditService } from '../../audit/audit.service';
 import { IncidentSeverityEnum } from '../domain/value-objects';
 
-@Processor('admin-queue')
+@Processor('admin-queue', WORKER_OPTIONS)
 @Injectable()
 export class AdminQueueProcessor extends BaseWorker {
   constructor(

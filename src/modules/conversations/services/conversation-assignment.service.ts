@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { IConversationRepository } from '../repositories/conversation-repository.interface';
 import { Conversation } from '../domain/conversation.aggregate';
@@ -6,15 +6,28 @@ import { ConversationAssignment } from '../domain/conversation-assignment.entity
 import { ConversationEventPublisher } from './conversation-event.publisher';
 import { ConversationSummaryService } from './conversation-summary.service';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
+import type { IAgentAvailabilityRepository } from '../../teams/repositories/agent-availability-repository.interface';
 import { AuditService } from '../../audit/audit.service';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 
+const ACTIVE_CONVERSATION_STATUSES = [
+  'OPEN',
+  'PENDING',
+  'ASSIGNED',
+  'WAITING_CUSTOMER',
+  'WAITING_AGENT',
+];
+
 @Injectable()
 export class ConversationAssignmentService {
+  private readonly logger = new Logger(ConversationAssignmentService.name);
+
   constructor(
     @Inject('IConversationRepository')
     private readonly conversationRepo: IConversationRepository,
     private readonly agentAssignmentService: AgentAssignmentService,
+    @Inject('IAgentAvailabilityRepository')
+    private readonly availabilityRepo: IAgentAvailabilityRepository,
     private readonly eventPublisher: ConversationEventPublisher,
     private readonly summaryService: ConversationSummaryService,
     private readonly auditService: AuditService,
@@ -176,5 +189,59 @@ export class ConversationAssignmentService {
 
   async listAssignments(tenantId: string, conversationId: string) {
     return this.conversationRepo.findAssignments(conversationId, tenantId);
+  }
+
+  /**
+   * No conversation was ever automatically reassigned when its agent went
+   * offline - it just sat assigned to someone who would never see it again.
+   * AgentAvailability (status field) is the canonical "is this agent online"
+   * source the auto-assignment engine itself already trusts; this reuses
+   * the exact same engine rather than inventing new selection logic.
+   */
+  async reassignFromOfflineAgents(
+    tenantId?: string,
+  ): Promise<{ reassigned: number; skipped: number }> {
+    const offlineAgents = await this.availabilityRepo.findOfflineAgents(
+      tenantId,
+    );
+    let reassigned = 0;
+    let skipped = 0;
+
+    for (const agent of offlineAgents) {
+      const { data: assigned } = await this.conversationRepo.findPaginated(
+        agent.tenantId,
+        { assignedAgentId: agent.agentProfileId, limit: 200 },
+      );
+
+      for (const conversation of assigned) {
+        if (
+          !ACTIVE_CONVERSATION_STATUSES.includes(conversation.status.value)
+        ) {
+          continue;
+        }
+        if (!conversation.assignedTeamId) {
+          this.logger.warn(
+            `Conversation ${conversation.id} is assigned to offline agent ${agent.agentProfileId} with no team to reassign within - skipping`,
+          );
+          skipped += 1;
+          continue;
+        }
+        try {
+          await this.autoAssign(
+            agent.tenantId,
+            conversation.id,
+            conversation.assignedTeamId,
+          );
+          reassigned += 1;
+        } catch (err: any) {
+          this.logger.warn(
+            `Failed to reassign conversation ${conversation.id} away from offline agent ${agent.agentProfileId}: ${err.message}`,
+          );
+          skipped += 1;
+        }
+      }
+    }
+
+    return { reassigned, skipped };
   }
 }

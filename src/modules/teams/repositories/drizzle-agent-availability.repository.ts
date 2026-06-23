@@ -73,6 +73,21 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
     return rows.map((r) => AgentAvailabilityMapper.toDomain(r));
   }
 
+  // Cross-tenant sweep when tenantId is omitted, mirroring
+  // DrizzleTicketRepository.findDueSlas's optional-tenantId pattern used by
+  // the SLA monitor scheduler.
+  async findOfflineAgents(tenantId?: string): Promise<AgentAvailability[]> {
+    const conditions = [eq(schema.agentAvailability.status, 'OFFLINE')];
+    if (tenantId) conditions.push(eq(schema.agentAvailability.tenantId, tenantId));
+
+    const rows = await db
+      .select()
+      .from(schema.agentAvailability)
+      .where(and(...conditions));
+
+    return rows.map((r) => AgentAvailabilityMapper.toDomain(r));
+  }
+
   async findAll(tenantId: string): Promise<AgentAvailability[]> {
     const rows = await db
       .select()

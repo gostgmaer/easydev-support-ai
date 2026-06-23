@@ -1,4 +1,4 @@
-import type { JobsOptions } from 'bullmq';
+import type { JobsOptions, WorkerOptions } from 'bullmq';
 
 /**
  * Canonical registry of every BullMQ queue used across the modular monolith.
@@ -63,6 +63,25 @@ export const DEAD_LETTER_JOB_OPTIONS: JobsOptions = {
   removeOnComplete: false,
   removeOnFail: false,
   ...RETRY_POLICIES.NONE,
+};
+
+/**
+ * Every @Processor() in the app was registered with no stalled-job recovery
+ * config, relying entirely on BullMQ's defaults. A worker that crashes or
+ * hangs mid-job (OOM, unhandled exception, network partition) holds its
+ * Redis lock until lockDuration expires; without an explicit, generous
+ * lockDuration here, jobs that legitimately take longer than BullMQ's
+ * 30s default (AI generation calls, connector executions) get reclaimed and
+ * re-run while still in flight. maxStalledCount caps how many times a job
+ * can be reclaimed before BullMQ gives up on it as failed.
+ */
+export const WORKER_OPTIONS: Pick<
+  WorkerOptions,
+  'lockDuration' | 'stalledInterval' | 'maxStalledCount'
+> = {
+  lockDuration: 60000,
+  stalledInterval: 30000,
+  maxStalledCount: 2,
 };
 
 /** Envelope persisted for every job routed to the dead-letter queue. */

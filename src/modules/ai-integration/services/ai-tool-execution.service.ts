@@ -9,6 +9,7 @@ import {
   AiToolRequestedEvent,
   AiToolCompletedEvent,
 } from '@easydev/shared-events';
+import { QueueService } from '@easydev/shared-queues';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -21,7 +22,42 @@ export class AiToolExecutionService {
     private readonly connectorService: ConnectorExecutionService,
     private readonly aiClient: AIPlatformClient,
     private readonly eventPublisher: AiEventPublisher,
+    private readonly queueService: QueueService,
   ) {}
+
+  // Decoupled from the tool-execution flow itself: a submission failure here
+  // must never be confused with - or retried as - the connector action
+  // itself (which may not be safely repeatable, e.g. a refund). Routed
+  // through its own durable queued job (AiQueueProcessor, already a
+  // BaseWorker with retry + dead-letter routing) so the AI platform
+  // eventually learns the real outcome instead of it being lost on the
+  // first network blip.
+  private async submitToolResult(
+    tenantId: string,
+    workflowId: string,
+    requestId: string,
+    payload: any,
+    status: 'SUCCESS' | 'FAILED',
+  ): Promise<void> {
+    try {
+      await this.aiClient.submitToolResult(
+        tenantId,
+        workflowId,
+        requestId,
+        payload,
+        status,
+      );
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to submit tool ${status} status to AI platform directly; queuing for retry: ${err.message}`,
+      );
+      await this.queueService.addJob(
+        'ai-queue' as any,
+        'ai-tool-result-submission-job',
+        { tenantId, workflowId, requestId, payload, status },
+      );
+    }
+  }
 
   public async executeTool(
     tenantId: string,
@@ -80,8 +116,10 @@ export class AiToolExecutionService {
 
       await this.repository.saveToolResult(result, tenantId);
 
-      // Post results back to AI Platform Tool Result API
-      await this.aiClient.submitToolResult(
+      // Post results back to AI Platform Tool Result API. A submission
+      // failure here must not be conflated with the connector action itself
+      // having failed - it already succeeded and is recorded as such above.
+      await this.submitToolResult(
         tenantId,
         workflowId,
         requestId,
@@ -115,19 +153,13 @@ export class AiToolExecutionService {
       await this.repository.saveToolResult(result, tenantId);
 
       // Post failures back to AI Platform
-      try {
-        await this.aiClient.submitToolResult(
-          tenantId,
-          workflowId,
-          requestId,
-          { error: error.message },
-          'FAILED',
-        );
-      } catch (err: any) {
-        this.logger.warn(
-          `Failed to submit tool failure status to AI platform: ${err.message}`,
-        );
-      }
+      await this.submitToolResult(
+        tenantId,
+        workflowId,
+        requestId,
+        { error: error.message },
+        'FAILED',
+      );
 
       await this.eventPublisher.publish(
         new AiToolCompletedEvent(

@@ -13,6 +13,7 @@ import {
   WorkflowRejectedEvent,
   WorkflowApprovalRequestedEvent,
 } from '@easydev/shared-events';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -21,6 +22,7 @@ export class WorkflowApprovalService {
     @Inject('IWorkflowRepository')
     private readonly repository: IWorkflowRepository,
     private readonly eventPublisher: WorkflowEventPublisher,
+    private readonly queueService: QueueService,
   ) {}
 
   public async createApproval(
@@ -121,5 +123,50 @@ export class WorkflowApprovalService {
     executionId: string,
   ): Promise<WorkflowApproval[]> {
     return this.repository.findApprovalsByExecutionId(executionId, tenantId);
+  }
+
+  /**
+   * isExpired() existed but was only ever checked lazily, if and when
+   * someone happened to call approve() on an already-expired approval - an
+   * approval nobody ever touched again just sat PENDING forever, silently
+   * blocking its workflow execution with no escalation to anyone. This sweep
+   * (invoked by a scheduler mirroring SlaMonitorScheduler) proactively
+   * rejects expired approvals and raises an operational incident so a human
+   * knows a workflow died waiting on an approval that timed out.
+   */
+  public async sweepExpiredApprovals(
+    tenantId?: string,
+  ): Promise<{ expired: number }> {
+    const expired = await this.repository.findExpiredPendingApprovals(
+      tenantId,
+      new Date(),
+    );
+
+    for (const approval of expired) {
+      approval.reject('Auto-rejected: Approval request expired.');
+      await this.repository.saveApproval(approval, approval.tenantId);
+      await this.eventPublisher.publish(
+        new WorkflowRejectedEvent(
+          approval.tenantId,
+          approval.id,
+          approval.workflowExecutionId,
+        ),
+      );
+
+      try {
+        await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
+          tenantId: approval.tenantId,
+          affectedService: 'workflow.approval-timeout',
+          title: 'Workflow execution blocked by an expired approval',
+          severity: 'MEDIUM',
+          description: `Approval ${approval.id} for workflow execution ${approval.workflowExecutionId} expired without a decision and was auto-rejected.`,
+        });
+      } catch {
+        // Incident visibility is best-effort; the rejection above already
+        // unblocked the workflow either way.
+      }
+    }
+
+    return { expired: expired.length };
   }
 }

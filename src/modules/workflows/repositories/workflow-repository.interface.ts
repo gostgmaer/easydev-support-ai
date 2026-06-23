@@ -48,6 +48,10 @@ export interface IWorkflowRepository {
     executionId: string,
     tenantId: string,
   ): Promise<WorkflowApproval[]>;
+  findExpiredPendingApprovals(
+    tenantId: string | undefined,
+    now: Date,
+  ): Promise<WorkflowApproval[]>;
 
   // Workflow Schedules
   saveSchedule(

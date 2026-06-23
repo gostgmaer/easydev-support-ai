@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CustomersModule } from '../customers/customers.module';
 import { TeamsModule } from '../teams/teams.module';
 import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
+import { SettingsModule } from '../settings/settings.module';
 
 import { ConversationController } from './controllers/conversation.controller';
 import { ConversationAssignmentController } from './controllers/conversation-assignment.controller';
@@ -46,6 +47,7 @@ import { Attachment } from './entities/attachment.entity';
     forwardRef(() => CustomersModule),
     TeamsModule,
     forwardRef(() => AiIntegrationModule),
+    forwardRef(() => SettingsModule),
   ],
   controllers: [
     ConversationController,

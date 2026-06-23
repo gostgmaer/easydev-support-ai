@@ -1,9 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { ForbiddenException, Injectable, Inject } from '@nestjs/common';
 import type { ISettingsRepository } from '../repositories/settings-repository.interface';
 import { UsageLimits } from '../domain/entities';
 import { UpdateUsageLimitsDto } from '../dtos/settings.dto';
 import { SettingsEventPublisher } from './settings-event.publisher';
 import { v4 as uuidv4 } from 'uuid';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()
 export class UsageLimitService {
@@ -11,6 +12,7 @@ export class UsageLimitService {
     @Inject('ISettingsRepository')
     private readonly settingsRepo: ISettingsRepository,
     private readonly eventPublisher: SettingsEventPublisher,
+    private readonly queueService: QueueService,
   ) {}
 
   async getUsageLimits(tenantId: string): Promise<UsageLimits> {
@@ -68,5 +70,47 @@ export class UsageLimitService {
       limits.toJSON(),
     );
     return limits;
+  }
+
+  /**
+   * UsageLimits stored plan ceilings but nothing in the codebase ever
+   * compared real usage against them - a tenant could exceed every plan
+   * limit with zero rejection. Hard-blocks once usage reaches the limit and
+   * opens/escalates an operational incident (reusing the same
+   * 'admin-incident-job' pipeline already wired for connector failures) so
+   * ops has visibility into the overage rather than the tenant just being
+   * silently blocked with no one aware billing/upgrade action may be needed.
+   */
+  async enforceLimit(
+    tenantId: string,
+    resource: 'conversations' | 'connectors' | 'aiRequests',
+    currentUsage: number,
+  ): Promise<void> {
+    const limits = await this.getUsageLimits(tenantId);
+    const limitByResource: Record<typeof resource, number> = {
+      conversations: limits.maxConversations,
+      connectors: limits.maxConnectors,
+      aiRequests: limits.maxAiRequests,
+    };
+    const limit = limitByResource[resource];
+
+    if (currentUsage < limit) return;
+
+    try {
+      await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
+        tenantId,
+        affectedService: `quota.${resource}`,
+        title: `Tenant exceeded ${resource} plan limit`,
+        severity: 'MEDIUM',
+        description: `Tenant has reached ${currentUsage}/${limit} ${resource}. The triggering action was blocked. Overage billing or a plan upgrade may be needed to raise this limit.`,
+      });
+    } catch {
+      // The throw below is the actual enforcement - incident visibility is
+      // best-effort and must never be the reason enforcement fails to apply.
+    }
+
+    throw new ForbiddenException(
+      `You've reached your plan's ${resource} limit (${limit}). Upgrade your plan or contact billing about overage charges to continue.`,
+    );
   }
 }

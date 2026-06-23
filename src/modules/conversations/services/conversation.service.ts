@@ -25,6 +25,7 @@ import { ConversationEventPublisher } from './conversation-event.publisher';
 import { ConversationSummaryService } from './conversation-summary.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { AuditService } from '../../audit/audit.service';
+import { UsageLimitService } from '../../settings/services/usage-limit.service';
 
 @Injectable()
 export class ConversationService {
@@ -35,6 +36,7 @@ export class ConversationService {
     private readonly summaryService: ConversationSummaryService,
     private readonly customerService: CustomerService,
     private readonly auditService: AuditService,
+    private readonly usageLimitService: UsageLimitService,
   ) {}
 
   private async persist(
@@ -54,6 +56,17 @@ export class ConversationService {
   ): Promise<Conversation> {
     // Integrate with Customer Module: the customer must exist for this tenant.
     await this.customerService.findById(tenantId, dto.customerId);
+
+    // UsageLimits stored a maxConversations ceiling per plan but nothing
+    // ever checked it before creating a new conversation - any tenant could
+    // exceed every plan limit with zero rejection.
+    const { total: currentConversations } =
+      await this.conversationRepo.findPaginated(tenantId, { limit: 1 });
+    await this.usageLimitService.enforceLimit(
+      tenantId,
+      'conversations',
+      currentConversations,
+    );
 
     const conversationId = randomUUID();
     const initialStatus = dto.assignedAgentId
