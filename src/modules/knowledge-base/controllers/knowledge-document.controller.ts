@@ -46,7 +46,7 @@ export class KnowledgeDocumentController {
   }
 
   @Get(':id')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getDocument(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -69,7 +69,7 @@ export class KnowledgeDocumentController {
   }
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async findDocuments(
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: any,

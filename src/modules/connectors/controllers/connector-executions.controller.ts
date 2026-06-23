@@ -21,7 +21,7 @@ export class ConnectorExecutionsController {
   constructor(private readonly executionService: ConnectorExecutionService) {}
 
   @Post('executions/execute')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async executeCapability(
     @Headers('x-tenant-id') tenantId: string,
     @Query('capabilityType') capabilityType: CapabilityTypeEnum,
@@ -42,7 +42,7 @@ export class ConnectorExecutionsController {
   }
 
   @Get(':id/executions')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getExecutions(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') connectorId: string,
@@ -60,7 +60,7 @@ export class ConnectorExecutionsController {
   }
 
   @Get('executions/:executionId')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getExecution(
     @Headers('x-tenant-id') tenantId: string,
     @Param('executionId') executionId: string,
@@ -73,7 +73,7 @@ export class ConnectorExecutionsController {
   }
 
   @Post('executions/:executionId/retry')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async retryExecution(
     @Headers('x-tenant-id') tenantId: string,
     @Param('executionId') executionId: string,

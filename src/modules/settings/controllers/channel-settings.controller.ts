@@ -21,14 +21,14 @@ export class ChannelSettingsController {
   ) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getChannelSettings(@Headers('x-tenant-id') tenantId: string) {
     const list = await this.channelSettingsService.getChannelSettings(tenantId);
     return list.map((c) => c.toJSON());
   }
 
   @Get(':type')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getChannelSettingsByType(
     @Headers('x-tenant-id') tenantId: string,
     @Param('type') type: string,

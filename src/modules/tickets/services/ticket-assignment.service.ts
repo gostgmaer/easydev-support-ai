@@ -7,6 +7,7 @@ import { TicketEventPublisher } from './ticket-event.publisher';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
 import { AuditService } from '../../audit/audit.service';
 import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()
 export class TicketAssignmentService {
@@ -17,7 +18,29 @@ export class TicketAssignmentService {
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
     private readonly realtime: InboxRealtimeService,
+    private readonly queueService: QueueService,
   ) {}
+
+  // NotificationQueueProcessor's 'ticket-assigned' case was fully built but
+  // had no producer anywhere in the codebase - the assigned agent was never
+  // actually told. Fire-and-forget: a notification failure shouldn't block
+  // the assignment itself.
+  private async notifyAssignedAgent(
+    tenantId: string,
+    agentId: string,
+    ticket: Ticket,
+  ): Promise<void> {
+    try {
+      await this.queueService.addJob(QUEUES.NOTIFICATION, 'ticket-assigned', {
+        tenantId,
+        agentId,
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticketNumber.value,
+      });
+    } catch {
+      // notification is best-effort; assignment itself already succeeded
+    }
+  }
 
   private async persist(ticket: Ticket, tenantId: string): Promise<void> {
     await this.ticketRepo.save(ticket, tenantId);
@@ -75,6 +98,7 @@ export class TicketAssignmentService {
       assignmentType,
       userId,
     );
+    await this.notifyAssignedAgent(tenantId, agentId, ticket);
 
     await this.auditService.log({
       tenantId,
@@ -126,6 +150,7 @@ export class TicketAssignmentService {
       'TRANSFER',
       userId,
     );
+    await this.notifyAssignedAgent(tenantId, toAgentId, ticket);
 
     await this.auditService.log({
       tenantId,

@@ -76,8 +76,13 @@ export class ConnectorQueueProcessor extends BaseWorker {
         };
 
       default:
-        this.logger.warn(`Unknown job name: ${job.name}`);
-        throw new Error(`Unknown job name: ${job.name}`);
+        // Same rationale as AnalyticsQueueProcessor's default case: throwing
+        // here just burns retry budget toward the DLQ for job names this
+        // processor was never going to recognize. Acknowledge instead.
+        this.logger.warn(
+          `No handler implemented for job name "${job.name}" - acknowledging without processing`,
+        );
+        return { success: true, acknowledged: true, unhandled: job.name };
     }
   }
 }

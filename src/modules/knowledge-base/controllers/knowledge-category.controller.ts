@@ -33,7 +33,7 @@ export class KnowledgeCategoryController {
   }
 
   @Get(':id')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getCategory(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -43,7 +43,7 @@ export class KnowledgeCategoryController {
   }
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async findCategories(@Headers('x-tenant-id') tenantId: string) {
     const categories = await this.categoryService.findCategories(tenantId);
     return categories.map((c) => c.toJSON());

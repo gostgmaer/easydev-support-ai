@@ -6,6 +6,7 @@ import { ConversationEventPublisher } from './conversation-event.publisher';
 import { ConversationSummaryService } from './conversation-summary.service';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
 import { AuditService } from '../../audit/audit.service';
+import { QueueService } from '@easydev/shared-queues';
 import { Conversation } from '../domain/conversation.aggregate';
 import {
   ConversationStatus,
@@ -51,6 +52,7 @@ describe('ConversationAssignmentService', () => {
   const mockPublisher = { publishAll: jest.fn() };
   const mockSummary = { rebuild: jest.fn() };
   const mockAudit = { log: jest.fn() };
+  const mockQueueService = { addJob: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,6 +63,7 @@ describe('ConversationAssignmentService', () => {
         { provide: ConversationEventPublisher, useValue: mockPublisher },
         { provide: ConversationSummaryService, useValue: mockSummary },
         { provide: AuditService, useValue: mockAudit },
+        { provide: QueueService, useValue: mockQueueService },
       ],
     }).compile();
 

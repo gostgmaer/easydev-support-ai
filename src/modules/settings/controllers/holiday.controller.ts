@@ -20,7 +20,7 @@ export class HolidayController {
   constructor(private readonly holidayService: HolidayService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getHolidays(@Headers('x-tenant-id') tenantId: string) {
     const list = await this.holidayService.getHolidays(tenantId);
     return list.map((h) => h.toJSON());

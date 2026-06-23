@@ -4,6 +4,7 @@ import { TicketSLAService } from './ticket-sla.service';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
 import { QueueService } from '@easydev/shared-queues';
+import { SlaSettingsService } from '../../settings/services/sla-settings.service';
 import { Ticket } from '../domain/ticket.aggregate';
 import { TicketSLA } from '../domain/ticket-sla.entity';
 import {
@@ -70,6 +71,16 @@ describe('TicketSLAService', () => {
   const mockQueue = { addJob: jest.fn() };
   const mockPublisher = { publish: jest.fn(), publishAll: jest.fn() };
   const mockAudit = { log: jest.fn() };
+  // businessHoursOnly: false keeps existing calendar-mode assertions below
+  // valid; these tests don't exercise the business-hours branch.
+  const mockSlaSettingsService = {
+    getSlaSettings: jest.fn().mockResolvedValue({
+      responseTimeTarget: 3600,
+      resolutionTimeTarget: 86400,
+      escalationTimeTarget: 14400,
+      businessHoursOnly: false,
+    }),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -79,6 +90,7 @@ describe('TicketSLAService', () => {
         { provide: QueueService, useValue: mockQueue },
         { provide: TicketEventPublisher, useValue: mockPublisher },
         { provide: AuditService, useValue: mockAudit },
+        { provide: SlaSettingsService, useValue: mockSlaSettingsService },
       ],
     }).compile();
 

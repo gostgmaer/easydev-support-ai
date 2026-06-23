@@ -24,7 +24,7 @@ export class WorkflowApprovalController {
   ) {}
 
   @Get(':id')
-  @Roles('tenant_admin', 'manager', 'agent')
+  @Roles('tenant_admin', 'manager', 'support_agent')
   public async getApproval(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -34,7 +34,7 @@ export class WorkflowApprovalController {
   }
 
   @Get('execution/:executionId')
-  @Roles('tenant_admin', 'manager', 'agent')
+  @Roles('tenant_admin', 'manager', 'support_agent')
   public async getApprovalsForExecution(
     @Headers('x-tenant-id') tenantId: string,
     @Param('executionId') executionId: string,

@@ -49,7 +49,7 @@ export class WorkflowExecutionController {
   }
 
   @Get(':id')
-  @Roles('tenant_admin', 'manager', 'agent')
+  @Roles('tenant_admin', 'manager', 'support_agent')
   public async getExecution(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -59,7 +59,7 @@ export class WorkflowExecutionController {
   }
 
   @Get()
-  @Roles('tenant_admin', 'manager', 'agent')
+  @Roles('tenant_admin', 'manager', 'support_agent')
   public async findExecutions(
     @Headers('x-tenant-id') tenantId: string,
     @Query('workflowId') workflowId?: string,

@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { ConversationService } from '../../conversations/services/conversation.service';
 import { MessageService } from '../../messages/services/message.service';
 import { AiRoutingService } from './ai-routing.service';
@@ -11,6 +10,7 @@ import { AIPlatformClient } from './ai-platform.client';
 import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
 import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
 import { InboxService } from '../../inbox/services/inbox.service';
+import { MessageDraftService } from '../../messages/services/message-draft.service';
 import {
   MessageDirectionEnum,
   MessageTypeEnum,
@@ -36,6 +36,7 @@ export class AiResponseService {
     private readonly knowledgeSearchService: KnowledgeSearchService,
     private readonly knowledgeChunkService: KnowledgeChunkService,
     private readonly inboxService: InboxService,
+    private readonly draftService: MessageDraftService,
   ) {}
 
   public async processInboundMessage(
@@ -230,7 +231,13 @@ export class AiResponseService {
   public async generateDraftSuggestion(
     tenantId: string,
     conversationId: string,
-  ): Promise<{ content: string; confidence: number; cost: number }> {
+    authorId: string,
+  ): Promise<{
+    draftId: string;
+    content: string;
+    confidence: number;
+    cost: number;
+  }> {
     const conversation = await this.conversationService.findById(
       tenantId,
       conversationId,
@@ -285,10 +292,20 @@ export class AiResponseService {
     const cost = generateResult.cost || 0.002;
     const maskedText = this.maskSensitiveData(replyText);
 
+    // Previously this returned content with no persisted draft behind it -
+    // there was nothing for the agent to later accept/reject. Saving it as a
+    // real MessageDraft gives InboxService.decideAiDraft something to send
+    // or discard.
+    const draft = await this.draftService.save(tenantId, authorId, {
+      conversationId,
+      draftContent: maskedText,
+      draftType: 'TEXT',
+    });
+
     await this.usageService.logResponse(
       tenantId,
       conversationId,
-      randomUUID(),
+      draft.id,
       undefined,
       ResponseTypeEnum.SUGGESTION,
       0,
@@ -305,7 +322,7 @@ export class AiResponseService {
       0,
     );
 
-    return { content: maskedText, confidence, cost };
+    return { draftId: draft.id, content: maskedText, confidence, cost };
   }
 
   private async retrieveKnowledgeContext(

@@ -61,7 +61,7 @@ export class WidgetInstallationController {
   }
 
   @ApiOperation({ summary: 'Get widget installation script' })
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   @Get('script')
   public getScript(
     @Headers('x-tenant-id') tenantId: string,

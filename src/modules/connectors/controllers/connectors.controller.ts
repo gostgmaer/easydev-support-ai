@@ -69,7 +69,7 @@ export class ConnectorsController {
   }
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getConnectors(
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: any,
@@ -82,7 +82,7 @@ export class ConnectorsController {
   }
 
   @Get(':id')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getConnector(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
@@ -234,7 +234,7 @@ export class ConnectorsController {
   }
 
   @Get(':id/instances')
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getInstances(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,

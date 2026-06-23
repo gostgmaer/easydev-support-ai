@@ -7,6 +7,7 @@ import { ConversationEventPublisher } from './conversation-event.publisher';
 import { ConversationSummaryService } from './conversation-summary.service';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
 import { AuditService } from '../../audit/audit.service';
+import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()
 export class ConversationAssignmentService {
@@ -17,7 +18,24 @@ export class ConversationAssignmentService {
     private readonly eventPublisher: ConversationEventPublisher,
     private readonly summaryService: ConversationSummaryService,
     private readonly auditService: AuditService,
+    private readonly queueService: QueueService,
   ) {}
+
+  private async notifyAssignedAgent(
+    tenantId: string,
+    agentId: string,
+    conversationId: string,
+  ): Promise<void> {
+    try {
+      await this.queueService.addJob(
+        QUEUES.NOTIFICATION,
+        'conversation-assigned',
+        { tenantId, agentId, conversationId },
+      );
+    } catch {
+      // notification is best-effort; assignment itself already succeeded
+    }
+  }
 
   private async persist(
     conversation: Conversation,
@@ -82,6 +100,8 @@ export class ConversationAssignmentService {
       userId,
     );
 
+    await this.notifyAssignedAgent(tenantId, agentProfileId, conversationId);
+
     await this.auditService.log({
       tenantId,
       userId,
@@ -141,6 +161,8 @@ export class ConversationAssignmentService {
       'TRANSFER',
       userId,
     );
+
+    await this.notifyAssignedAgent(tenantId, toAgentProfileId, conversationId);
 
     await this.auditService.log({
       tenantId,

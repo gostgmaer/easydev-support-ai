@@ -11,7 +11,7 @@ export class KnowledgeSearchController {
   constructor(private readonly searchService: KnowledgeSearchService) {}
 
   @Post()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async search(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: SearchQueryDto,

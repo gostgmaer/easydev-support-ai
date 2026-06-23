@@ -26,6 +26,36 @@ export class ConnectorEventPublisher {
           tenantId: (event as any).tenantId,
         });
       }
+
+      // A connector exhausting its retries had no operational visibility at
+      // all beyond a log line - route it through the already-built incident
+      // pipeline (AdminQueueProcessor's 'admin-incident-job') so Operations
+      // actually finds out. A subsequent successful call on the same
+      // connector auto-resolves it.
+      if (eventName === 'connector.failed') {
+        const e = event as unknown as {
+          tenantId: string;
+          connectorId: string;
+          capabilityName: string;
+          reason: string;
+        };
+        await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
+          tenantId: e.tenantId,
+          affectedService: `connector:${e.connectorId}`,
+          title: `Connector failed: ${e.capabilityName}`,
+          severity: 'HIGH',
+          description: e.reason,
+        });
+      }
+
+      if (eventName === 'connector.executed') {
+        const e = event as unknown as { tenantId: string; connectorId: string };
+        await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
+          tenantId: e.tenantId,
+          affectedService: `connector:${e.connectorId}`,
+          resolve: true,
+        });
+      }
     } catch (err: any) {
       this.logger.error(
         `Failed to publish connector event ${eventName}: ${err.message}`,

@@ -14,6 +14,7 @@ import { InboxActivityService } from './inbox-activity.service';
 import { InboxRealtimeService } from './inbox-realtime.service';
 import { AuditService } from '../../audit/audit.service';
 import { CreateFilterDto, CreateSavedViewDto, InboxQueryDto } from '../dtos';
+import { MessageDraftService } from '../../messages/services/message-draft.service';
 
 @Injectable()
 export class InboxService {
@@ -27,6 +28,7 @@ export class InboxService {
     private readonly realtime: InboxRealtimeService,
     private readonly queueService: QueueService,
     private readonly auditService: AuditService,
+    private readonly draftService: MessageDraftService,
   ) {}
 
   private async getViewOrThrow(
@@ -207,6 +209,13 @@ export class InboxService {
     userId: string,
   ): Promise<void> {
     await this.getViewOrThrow(tenantId, conversationId);
+    // Previously this only wrote an activity-log entry - the draft itself
+    // was never sent or discarded, so "approve"/"reject" had no real effect.
+    if (approved) {
+      await this.draftService.send(tenantId, draftId, 'AGENT', userId);
+    } else {
+      await this.draftService.discard(tenantId, draftId);
+    }
     await this.activityService.record(
       tenantId,
       conversationId,

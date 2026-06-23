@@ -36,7 +36,7 @@ export class WidgetVisitorController {
 
   @ApiOperation({ summary: 'Get visitor profile (Admin)' })
   @UseGuards(TenantGuard, RbacGuard)
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   @Get(':anonymousId')
   public async getVisitor(
     @Headers('x-tenant-id') tenantId: string,

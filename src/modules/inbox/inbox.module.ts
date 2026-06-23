@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
 
 import { TeamsModule } from '../teams/teams.module';
+import { MessagesModule } from '../messages/messages.module';
 
 import {
   InboxController,
@@ -36,6 +37,7 @@ import { InboxCleanupScheduler } from './jobs/inbox-cleanup.scheduler';
     ScheduleModule.forRoot(),
     BullModule.registerQueue({ name: 'inbox-queue' }),
     TeamsModule,
+    forwardRef(() => MessagesModule),
   ],
   controllers: [
     InboxBookmarkController,

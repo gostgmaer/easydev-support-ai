@@ -11,7 +11,7 @@ export class TenantSettingsController {
   constructor(private readonly tenantSettingsService: TenantSettingsService) {}
 
   @Get()
-  @Roles('tenant_admin', 'agent')
+  @Roles('tenant_admin', 'support_agent')
   public async getSettings(@Headers('x-tenant-id') tenantId: string) {
     const settings = await this.tenantSettingsService.getSettings(tenantId);
     return settings.toJSON();

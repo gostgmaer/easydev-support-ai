@@ -16,6 +16,7 @@ import { InboxSearchService } from '../services/inbox-search.service';
 import { InboxPresenceService } from '../services/inbox-presence.service';
 import { AgentAssignmentService } from '../../teams/services/agent-assignment.service';
 import { AuditService } from '../../audit/audit.service';
+import { MessageDraftService } from '../../messages/services/message-draft.service';
 import { InboxView } from '../domain/inbox-view.aggregate';
 import { InboxSnooze } from '../domain/inbox-snooze.entity';
 import { InboxFilter } from '../domain/inbox-filter.entity';
@@ -264,6 +265,10 @@ describe('InboxService filters & saved views', () => {
         { provide: InboxRealtimeService, useValue: realtimeMock },
         { provide: QueueService, useValue: { addJob: jest.fn() } },
         { provide: AuditService, useValue: { log: jest.fn() } },
+        {
+          provide: MessageDraftService,
+          useValue: { send: jest.fn(), discard: jest.fn() },
+        },
       ],
     }).compile();
     service = module.get(InboxService);

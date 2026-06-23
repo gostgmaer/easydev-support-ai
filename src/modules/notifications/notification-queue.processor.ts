@@ -16,6 +16,8 @@ import { NotificationService } from './notification.service';
  *  - approval-request         (FLOW 2 – ticket approval)
  *  - ticket-resolution        (FLOW 2 – resolution customer notification)
  *  - ticket-assigned          (FLOW 2 – agent-notification on assignment)
+ *  - conversation-assigned    (agent-notification on conversation assignment)
+ *  - mention-alert            (agent-notification when @mentioned in a conversation)
  *  - sla-breach               (SLA breach alert to agent / manager)
  *  - escalation-alert         (FLOW 1/3/7 – human escalation notification)
  *  - customer-survey          (post-resolution CSAT)
@@ -85,6 +87,28 @@ export class NotificationQueueProcessor extends BaseWorker {
           `Ticket #${job.data.ticketNumber} has been assigned to you.`,
         );
         return { notified: true, agentId: job.data.agentId };
+      }
+
+      case 'conversation-assigned': {
+        this.logger.log(
+          `Dispatching conversation-assigned notification [job=${job.id}]`,
+        );
+        await this.notificationService.sendPushNotification(
+          tenantId,
+          job.data.agentId,
+          `A conversation has been assigned to you.`,
+        );
+        return { notified: true, agentId: job.data.agentId };
+      }
+
+      case 'mention-alert': {
+        this.logger.log(`Dispatching mention-alert notification [job=${job.id}]`);
+        await this.notificationService.sendPushNotification(
+          tenantId,
+          job.data.mentionedUserId,
+          `You were mentioned in conversation ${job.data.conversationId}.`,
+        );
+        return { notified: true, mentionedUserId: job.data.mentionedUserId };
       }
 
       // ─── SLA Breach ────────────────────────────────────────────────────────
