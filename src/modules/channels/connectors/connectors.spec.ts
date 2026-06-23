@@ -10,8 +10,11 @@ import {
 } from './implementations';
 import { ChannelConnectorRegistry } from './channel-connector.registry';
 import { ChannelTypeEnum } from '../domain/value-objects';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHmac } from 'crypto';
 import { NotFoundException } from '@nestjs/common';
+
+const hmacHex = (secret: string, data: string) =>
+  createHmac('sha256', secret).update(data).digest('hex');
 
 describe('Channel Connector Implementations & Registry', () => {
   const tenantId = randomUUID();
@@ -63,7 +66,16 @@ describe('Channel Connector Implementations & Registry', () => {
     });
   });
 
-  const runCommonConnectorTests = (connector: any, type: ChannelTypeEnum) => {
+  const runCommonConnectorTests = (
+    connector: any,
+    type: ChannelTypeEnum,
+    webhookPayload: any = {},
+    signatureFixture: {
+      signature?: string;
+      secret?: string;
+      headers?: Record<string, string>;
+    } = { signature: 'sig', secret: 'sig' },
+  ) => {
     describe(`${connector.constructor.name} - Common Checks`, () => {
       it('should return correct channel type and capabilities', () => {
         expect(connector.channelType).toBe(type);
@@ -80,17 +92,18 @@ describe('Channel Connector Implementations & Registry', () => {
         const validWebhook = await connector.validateWebhook(
           tenantId,
           channelId,
-          {},
-          {},
+          webhookPayload,
+          signatureFixture.headers || {},
         );
         expect(validWebhook).toBe(true);
 
         const sig = await connector.verifySignature(
           tenantId,
           channelId,
-          {},
-          'sig',
-          'sig',
+          webhookPayload,
+          signatureFixture.signature || '',
+          signatureFixture.secret || '',
+          signatureFixture.headers || {},
         );
         expect(sig).toBe(true);
 
@@ -123,13 +136,87 @@ describe('Channel Connector Implementations & Registry', () => {
   };
 
   runCommonConnectorTests(new WebChatConnector(), ChannelTypeEnum.WEBCHAT);
-  runCommonConnectorTests(new EmailConnector(), ChannelTypeEnum.EMAIL);
-  runCommonConnectorTests(new WhatsAppConnector(), ChannelTypeEnum.WHATSAPP);
-  runCommonConnectorTests(new TelegramConnector(), ChannelTypeEnum.TELEGRAM);
-  runCommonConnectorTests(new FacebookConnector(), ChannelTypeEnum.FACEBOOK);
-  runCommonConnectorTests(new InstagramConnector(), ChannelTypeEnum.INSTAGRAM);
-  runCommonConnectorTests(new SlackConnector(), ChannelTypeEnum.SLACK);
-  runCommonConnectorTests(new TeamsConnector(), ChannelTypeEnum.TEAMS);
+
+  {
+    const payload = [{ event: 'delivered', email: 'a@b.com' }];
+    const secret = 'email-secret';
+    const signature = hmacHex(secret, JSON.stringify(payload));
+    runCommonConnectorTests(new EmailConnector(), ChannelTypeEnum.EMAIL, payload, {
+      secret,
+      headers: { 'x-sendgrid-signature': signature },
+    });
+  }
+
+  {
+    const payload = { entry: [{ changes: [{ value: { messages: [] } }] }] };
+    const secret = 'whatsapp-secret';
+    const signature = `sha256=${hmacHex(secret, JSON.stringify(payload))}`;
+    runCommonConnectorTests(
+      new WhatsAppConnector(),
+      ChannelTypeEnum.WHATSAPP,
+      payload,
+      { secret, headers: { 'x-hub-signature-256': signature } },
+    );
+  }
+
+  {
+    const payload = { update_id: 123456 };
+    const secret = 'telegram-secret-token';
+    runCommonConnectorTests(
+      new TelegramConnector(),
+      ChannelTypeEnum.TELEGRAM,
+      payload,
+      { secret, headers: { 'x-telegram-bot-api-secret-token': secret } },
+    );
+  }
+
+  {
+    const payload = { object: 'page', entry: [{ messaging: [{}] }] };
+    const secret = 'facebook-secret';
+    const signature = `sha256=${hmacHex(secret, JSON.stringify(payload))}`;
+    runCommonConnectorTests(
+      new FacebookConnector(),
+      ChannelTypeEnum.FACEBOOK,
+      payload,
+      { secret, headers: { 'x-hub-signature-256': signature } },
+    );
+  }
+
+  {
+    const payload = { object: 'instagram', entry: [{ messaging: [{}] }] };
+    const secret = 'instagram-secret';
+    const signature = `sha256=${hmacHex(secret, JSON.stringify(payload))}`;
+    runCommonConnectorTests(
+      new InstagramConnector(),
+      ChannelTypeEnum.INSTAGRAM,
+      payload,
+      { secret, headers: { 'x-hub-signature-256': signature } },
+    );
+  }
+
+  {
+    const payload = { type: 'event_callback', event: {} };
+    const secret = 'slack-secret';
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const signature = `v0=${hmacHex(secret, `v0:${timestamp}:${JSON.stringify(payload)}`)}`;
+    runCommonConnectorTests(new SlackConnector(), ChannelTypeEnum.SLACK, payload, {
+      secret,
+      headers: {
+        'x-slack-signature': signature,
+        'x-slack-request-timestamp': timestamp,
+      },
+    });
+  }
+
+  {
+    const payload = { type: 'message', text: 'hi' };
+    const secret = 'teams-secret';
+    const signature = hmacHex(secret, JSON.stringify(payload));
+    runCommonConnectorTests(new TeamsConnector(), ChannelTypeEnum.TEAMS, payload, {
+      secret,
+      signature,
+    });
+  }
 
   describe('WebChatConnector specific normalization & formatting', () => {
     const connector = new WebChatConnector();
@@ -211,7 +298,7 @@ describe('Channel Connector Implementations & Registry', () => {
       const isValid = await connector.validateWebhook(
         tenantId,
         channelId,
-        {},
+        [{ event: 'delivered' }],
         { 'x-sendgrid-signature': 'sig' },
       );
       expect(isValid).toBe(true);
@@ -277,7 +364,7 @@ describe('Channel Connector Implementations & Registry', () => {
       const isValid = await connector.validateWebhook(
         tenantId,
         channelId,
-        {},
+        { entry: [{ changes: [] }] },
         { 'x-hub-signature-256': 'sig' },
       );
       expect(isValid).toBe(true);

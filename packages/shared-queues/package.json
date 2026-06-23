@@ -6,9 +6,12 @@
   "private": true,
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",
-    "@nestjs/common": "^11.0.0",
     "bullmq": "^5.79.0",
     "ioredis": "^5.4.1",
     "@easydev/shared-kernel": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
   }
 }
