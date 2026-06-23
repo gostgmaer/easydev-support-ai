@@ -3112,7 +3112,7 @@ PASS WITH WARNINGS
 
 FAIL
 
-Do not stop until all Critical operational risks are documented with remediation plans.
+Do not stop until all Critical operational risks are documented with remediation plans and do a fixes plat for all operational risks.
 
 
 

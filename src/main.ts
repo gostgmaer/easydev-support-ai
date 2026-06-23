@@ -4,8 +4,12 @@ import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { validateProductionEnv } from './config/validate-env';
+import { getAllowedOrigins } from './config/cors-origins';
 
 async function bootstrap() {
+  validateProductionEnv();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   });
@@ -23,10 +27,7 @@ async function bootstrap() {
     }),
   );
 
-  const allowedOrigins = (
-    process.env.CORS_ALLOWED_ORIGINS ??
-    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3005'
-  ).split(',');
+  const allowedOrigins = getAllowedOrigins();
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

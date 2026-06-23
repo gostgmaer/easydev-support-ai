@@ -25,6 +25,11 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/packages ./packages
 COPY scripts/health-check.js ./dist/health-check.js
 
+# uploads/ is created and served (main.ts useStaticAssets) and written to at
+# runtime (widget attachment uploads) by the unprivileged node user below -
+# without this it's root-owned and every write fails with EACCES.
+RUN mkdir -p uploads && chown -R node:node uploads
+
 USER node
 
 ENV NODE_ENV=production

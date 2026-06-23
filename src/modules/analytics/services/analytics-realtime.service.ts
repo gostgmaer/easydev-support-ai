@@ -13,10 +13,11 @@ import {
 import { Server, Socket } from 'socket.io';
 import Redis from 'ioredis';
 import { IamIntegrationService } from '../../../integration/iam/iam.service';
+import { getAllowedOrigins } from '../../../config/cors-origins';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: getAllowedOrigins(),
   },
   namespace: '/v1/analytics/realtime',
 })

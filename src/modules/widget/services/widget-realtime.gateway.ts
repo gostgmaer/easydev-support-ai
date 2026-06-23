@@ -12,7 +12,7 @@ import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { WidgetSessionService } from './widget-session.service';
 import { WidgetEventService } from './widget-event.service';
 import { db, schema } from '@easydev/database';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -183,14 +183,21 @@ export class WidgetRealtimeGateway
       return;
     }
 
-    // Fetch messages since last sync timestamp or last 50 messages
-    const query = db
+    // Fetch messages since last sync timestamp, across every conversation
+    // linked to this session, capped to the most recent 50.
+    const conditions = [inArray(schema.messages.conversationId, conversationIds)];
+    if (body.lastSyncedAt) {
+      conditions.push(gt(schema.messages.createdAt, new Date(body.lastSyncedAt)));
+    }
+
+    const messages = await db
       .select()
       .from(schema.messages)
-      .where(eq(schema.messages.conversationId, conversationIds[0])); // Fetch from first active conversation
+      .where(and(...conditions))
+      .orderBy(desc(schema.messages.createdAt))
+      .limit(50);
 
-    const messages = await query;
-    client.emit('message_sync_response', { messages });
+    client.emit('message_sync_response', { messages: messages.reverse() });
   }
 
   // Helper function to send messages to widget client directly from service layer
