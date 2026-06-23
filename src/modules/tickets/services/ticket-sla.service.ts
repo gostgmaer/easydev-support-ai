@@ -156,6 +156,20 @@ export class TicketSLAService {
         reason: `SLA_${breachType}_BREACH`,
       });
 
+      // NotificationQueueProcessor already had a fully-built 'sla-breach'
+      // case (push to the assigned agent, email to a manager) with no
+      // producer anywhere - the breach was tracked and escalated internally
+      // but nobody outside the system was ever actually alerted.
+      if (ticket.assignedAgentId) {
+        await this.queueService.addJob(QUEUES.NOTIFICATION, 'sla-breach', {
+          tenantId: sla.tenantId,
+          ticketId: ticket.id,
+          ticketNumber: ticket.ticketNumber.value,
+          breachType,
+          agentId: ticket.assignedAgentId,
+        });
+      }
+
       await this.auditService.log({
         tenantId: sla.tenantId,
         action: 'SLA_BREACH',
