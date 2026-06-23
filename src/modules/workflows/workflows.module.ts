@@ -52,9 +52,11 @@ import { ConnectorsModule } from '../connectors/connectors.module';
 import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
 import { InboxModule } from '../inbox/inbox.module';
 import { CustomersModule } from '../customers/customers.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
+    SettingsModule,
     TypeOrmModule.forFeature([
       WorkflowTemplate,
       WorkflowVersion,

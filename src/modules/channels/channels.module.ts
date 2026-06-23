@@ -44,12 +44,16 @@ import {
 // Queue jobs
 import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
 
+// External Modules
+import { SettingsModule } from '../settings/settings.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([TypeOrmChannel]),
     BullModule.registerQueue({
       name: 'channel-queue',
     }),
+    SettingsModule,
   ],
   controllers: [
     ChannelController,

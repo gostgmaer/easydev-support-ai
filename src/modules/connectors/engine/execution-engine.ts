@@ -57,6 +57,21 @@ export class ExecutionEngine {
     });
   }
 
+  // Groups breakers by the actual upstream (connectorType + baseUrl) rather
+  // than tenant+connectorId, so tenants sharing a host (e.g. a global SaaS
+  // API) share breaker protection. Falls back to connectorType alone when
+  // baseUrl isn't stored on the connector (resolved internally by the
+  // factory instead) - never falls back to connector.id, which would just
+  // recreate per-tenant isolation under a different name.
+  private getBreakerGroupKey(connector: {
+    connectorType: { value: string };
+    baseUrl?: string;
+  }): string {
+    return connector.baseUrl
+      ? `${connector.connectorType.value}:${connector.baseUrl}`
+      : connector.connectorType.value;
+  }
+
   public async execute(
     tenantId: string,
     capabilityType: any,
@@ -96,7 +111,8 @@ export class ExecutionEngine {
     }
 
     // 2. Check Circuit Breaker
-    const breaker = await this.cbManager.getBreaker(tenantId, connector.id);
+    const breakerGroupKey = this.getBreakerGroupKey(connector);
+    const breaker = await this.cbManager.getBreaker(breakerGroupKey);
     if (!breaker.canRequest()) {
       this.logger.warn(`Circuit breaker is OPEN for connector ${connector.id}`);
 
@@ -231,7 +247,7 @@ export class ExecutionEngine {
 
       // Update Circuit Breaker
       breaker.recordSuccess();
-      await this.cbManager.saveBreaker(tenantId, connector.id, breaker);
+      await this.cbManager.saveBreaker(breakerGroupKey, breaker);
 
       // Log success
       await this.repository.addLog(tenantId, {
@@ -266,7 +282,7 @@ export class ExecutionEngine {
 
       // Update Circuit Breaker
       breaker.recordFailure();
-      await this.cbManager.saveBreaker(tenantId, connector.id, breaker);
+      await this.cbManager.saveBreaker(breakerGroupKey, breaker);
 
       // Log failure
       await this.repository.addLog(tenantId, {

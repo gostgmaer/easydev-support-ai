@@ -5,7 +5,8 @@ import { UpdateUsageLimitsDto } from '../dtos/settings.dto';
 import { SettingsEventPublisher } from './settings-event.publisher';
 import { v4 as uuidv4 } from 'uuid';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
-import { PaymentClient } from '@easydev/shared-clients';
+import { PaymentClient, IamClient } from '@easydev/shared-clients';
+import { NotificationService } from '../../notifications/notification.service';
 import Redis from 'ioredis';
 
 const BILLING_SYNC_TTL_SECONDS = 3600;
@@ -14,6 +15,7 @@ const BILLING_SYNC_TTL_SECONDS = 3600;
 export class UsageLimitService {
   private readonly logger = new Logger(UsageLimitService.name);
   private readonly paymentClient: PaymentClient;
+  private readonly iamClient: IamClient;
   private readonly redis: Redis;
 
   constructor(
@@ -21,11 +23,18 @@ export class UsageLimitService {
     private readonly settingsRepo: ISettingsRepository,
     private readonly eventPublisher: SettingsEventPublisher,
     private readonly queueService: QueueService,
+    private readonly notificationService: NotificationService,
   ) {
     this.paymentClient = new PaymentClient(
       process.env.PAYMENT_SERVICE_URL || 'http://localhost:3302',
       process.env.PAYMENT_SERVICE_API_KEY || '',
       process.env.FILE_UPLOAD_HMAC_SECRET,
+    );
+    this.iamClient = new IamClient(
+      process.env.IAM_SERVICE_INTERNAL_URL ||
+        process.env.IAM_SERVICE_URL ||
+        'http://localhost:3304',
+      process.env.IAM_SERVICE_API_KEY,
     );
     // Same best-effort, never-block-the-hot-path Redis pattern already used
     // by RedisCacheService/CircuitBreakerManager - this is purely a throttle
@@ -217,6 +226,29 @@ export class UsageLimitService {
     } catch {
       // The throw below is the actual enforcement - incident visibility is
       // best-effort and must never be the reason enforcement fails to apply.
+    }
+
+    // Best-effort: email the tenant's own admins directly, in addition to
+    // the internal incident dashboard above - same "never block enforcement"
+    // rule applies, since NotificationService.sendEmail() throws by design
+    // for its queue-worker callers' retry logic, which doesn't apply here.
+    try {
+      const admins = await this.iamClient.getTenantAdmins(tenantId);
+      await Promise.all(
+        admins
+          .filter((admin) => admin.email)
+          .map((admin) =>
+            this.notificationService
+              .sendEmail(tenantId, admin.email as string, 'quota-overage', {
+                resource,
+                currentUsage,
+                limit,
+              })
+              .catch(() => {}),
+          ),
+      );
+    } catch {
+      // Best-effort only - see above.
     }
 
     throw new ForbiddenException(

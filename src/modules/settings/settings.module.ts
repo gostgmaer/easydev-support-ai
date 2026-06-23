@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 // Controllers
 import { TenantSettingsController } from './controllers/tenant-settings.controller';
@@ -45,6 +46,7 @@ import { SettingsQueueProcessor } from './jobs/settings-queue.processor';
     BullModule.registerQueue({
       name: 'settings-queue',
     }),
+    NotificationsModule,
   ],
   controllers: [
     TenantSettingsController,

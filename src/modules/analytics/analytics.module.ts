@@ -37,6 +37,7 @@ import { AnalyticsQueueProcessor } from './jobs/analytics-queue.processor';
 // External Modules
 import { NotificationsModule } from '../notifications/notifications.module';
 import { IntegrationModule } from '../../integration/integration.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { IntegrationModule } from '../../integration/integration.module';
     }),
     NotificationsModule,
     IntegrationModule,
+    SettingsModule,
   ],
   controllers: [
     AnalyticsController,

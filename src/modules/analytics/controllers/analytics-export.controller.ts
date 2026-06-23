@@ -18,6 +18,8 @@ import {
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { FeatureFlagGuard } from '../../../common/guards/feature-flag.guard';
+import { RequireFeature } from '../../../common/decorators/feature-flag.decorator';
 import { AnalyticsExportService } from '../services/analytics-export.service';
 import { ExportReportDto } from '../dtos/analytics.dto';
 import type { Response } from 'express';
@@ -36,6 +38,8 @@ export class AnalyticsExportController {
 
   @Post('manual')
   @Roles('tenant_admin', 'manager')
+  @RequireFeature('analytics.advanced')
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({
     summary: 'Manually trigger an export generation and delivery',
   })
