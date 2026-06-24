@@ -11,6 +11,7 @@ import { eq } from 'drizzle-orm';
 import { ConnectorMapper } from '../repositories/connector.mapper';
 import type { IConnectorRepository } from '../repositories/connector-repository.interface';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
+import { CredentialManager } from './credential-manager';
 
 @Injectable()
 export class WebhookDispatcher {
@@ -20,6 +21,7 @@ export class WebhookDispatcher {
     @Inject('IConnectorRepository')
     private readonly repository: IConnectorRepository,
     private readonly queueService: QueueService,
+    private readonly credentialManager: CredentialManager,
   ) {}
 
   public async dispatch(
@@ -64,8 +66,11 @@ export class WebhookDispatcher {
       const bodyToSign =
         rawBody ||
         (typeof payload === 'string' ? payload : JSON.stringify(payload));
+      const decryptedSecret = this.credentialManager.decryptIfEncrypted(
+        webhook.secret,
+      );
       const expectedSignature = crypto
-        .createHmac('sha256', webhook.secret)
+        .createHmac('sha256', decryptedSecret)
         .update(bodyToSign)
         .digest('hex');
 

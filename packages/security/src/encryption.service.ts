@@ -7,8 +7,10 @@ export class EncryptionService {
   private readonly activeKeyVersion: string = 'v1';
 
   constructor() {
-    const envKey = process.env.ENCRYPTION_KEY || 'default-32-byte-encryption-key-123456';
-    const parsedKey = crypto.createHash('sha256').update(envKey).digest();
+    if (!process.env.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY must be set - refusing to encrypt with no configured key');
+    }
+    const parsedKey = crypto.createHash('sha256').update(process.env.ENCRYPTION_KEY).digest();
     this.keys['v1'] = parsedKey;
 
     if (process.env.ROTATED_KEYS) {

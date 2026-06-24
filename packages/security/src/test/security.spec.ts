@@ -187,6 +187,7 @@ describe('Security Hardening Platform Tests', () => {
     let service: FileSecurityService;
 
     beforeEach(() => {
+      process.env.SIGNED_URL_SECRET = 'test-signed-url-secret';
       service = new FileSecurityService();
     });
 
@@ -243,6 +244,7 @@ describe('Security Hardening Platform Tests', () => {
     let redisMock: any;
 
     beforeEach(() => {
+      process.env.JWT_SECRET = 'test-jwt-secret';
       redisMock = (Redis.prototype as any);
       redisMock.lrange = jest.fn().mockResolvedValue([]);
       redisMock.lpush = jest.fn().mockResolvedValue(1);

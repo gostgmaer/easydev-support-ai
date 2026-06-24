@@ -25,6 +25,12 @@ export function validateProductionEnv(): void {
   if (!process.env.CONNECTOR_ENCRYPTION_KEY) {
     missing.push('CONNECTOR_ENCRYPTION_KEY');
   }
+  if (!process.env.EASYDEV_AI_URL) {
+    missing.push('EASYDEV_AI_URL');
+  }
+  if (!process.env.EASYDEV_AI_API_KEY) {
+    missing.push('EASYDEV_AI_API_KEY');
+  }
   if (
     !process.env.EASYDEV_IAM_URL &&
     !process.env.IAM_SERVICE_INTERNAL_URL &&

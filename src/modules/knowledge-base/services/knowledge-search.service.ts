@@ -1,6 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { IKnowledgeRepository } from '../repositories/knowledge-repository.interface';
 import { AIPlatformClient } from './ai-platform.client';
+import { KnowledgePermissionService } from './knowledge-permission.service';
 import { KnowledgeSearchLog } from '../domain/knowledge-search-log.entity';
 import { SearchQueryDto } from '../dtos/knowledge.dto';
 import { KnowledgeDocument } from '../domain/knowledge-document.aggregate';
@@ -13,12 +14,15 @@ export class KnowledgeSearchService {
     @Inject('IKnowledgeRepository')
     private readonly repository: IKnowledgeRepository,
     private readonly aiClient: AIPlatformClient,
+    private readonly permissionService: KnowledgePermissionService,
   ) {}
 
   public async search(
     tenantId: string,
     dto: SearchQueryDto,
     userId?: string,
+    teamId?: string,
+    role?: string,
   ): Promise<any> {
     const startTime = Date.now();
     this.logger.log(
@@ -36,7 +40,19 @@ export class KnowledgeSearchService {
       limit: dto.limit || 50,
     });
 
-    const docs = paginated.data;
+    // Team/role ACL enforcement - findDocuments() only filters by tenant,
+    // category, status, etc. A document with permission rows that don't
+    // match this caller must never appear in search results, no matter how
+    // it scored. Anonymous public callers pass teamId/role as undefined,
+    // which checkAccess already treats as "no team/role match" - they only
+    // see documents with zero ACL rows or an explicit public grant.
+    const accessFlags = await Promise.all(
+      paginated.data.map((d) =>
+        this.permissionService.checkAccess(tenantId, d.id, teamId, role, 'READ'),
+      ),
+    );
+    const docs = paginated.data.filter((_, i) => accessFlags[i]);
+
     if (docs.length === 0) {
       await this.logSearch(
         tenantId,

@@ -27,9 +27,18 @@ export class AIPlatformClient {
   private readonly apiKey: string;
 
   constructor() {
-    this.baseUrl = process.env.EASYDEV_AI_URL || 'https://api.easydev.ai';
-    this.apiKey =
-      process.env.EASYDEV_AI_API_KEY || 'easydev_ai_api_key_default';
+    if (!process.env.EASYDEV_AI_URL) {
+      throw new Error(
+        'EASYDEV_AI_URL must be set - refusing to start with no configured AI Platform endpoint',
+      );
+    }
+    if (!process.env.EASYDEV_AI_API_KEY) {
+      throw new Error(
+        'EASYDEV_AI_API_KEY must be set - refusing to start with no configured AI Platform API key',
+      );
+    }
+    this.baseUrl = process.env.EASYDEV_AI_URL;
+    this.apiKey = process.env.EASYDEV_AI_API_KEY;
   }
 
   public async ingestDocument(

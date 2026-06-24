@@ -1,6 +1,8 @@
 import {
   Injectable,
   Inject,
+  forwardRef,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -15,14 +17,19 @@ import {
 } from '@easydev/shared-events';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import * as crypto from 'crypto';
+import { WorkflowEngineService } from './workflow-engine.service';
 
 @Injectable()
 export class WorkflowApprovalService {
+  private readonly logger = new Logger(WorkflowApprovalService.name);
+
   constructor(
     @Inject('IWorkflowRepository')
     private readonly repository: IWorkflowRepository,
     private readonly eventPublisher: WorkflowEventPublisher,
     private readonly queueService: QueueService,
+    @Inject(forwardRef(() => WorkflowEngineService))
+    private readonly engineService: WorkflowEngineService,
   ) {}
 
   public async createApproval(
@@ -84,6 +91,11 @@ export class WorkflowApprovalService {
       await this.eventPublisher.publish(
         new WorkflowRejectedEvent(tenantId, id, approval.workflowExecutionId),
       );
+      await this.resumeAsRejected(
+        tenantId,
+        approval.workflowExecutionId,
+        'Auto-rejected: Approval request expired.',
+      );
       throw new BadRequestException(
         'Approval request has expired and was auto-rejected.',
       );
@@ -126,13 +138,44 @@ export class WorkflowApprovalService {
   }
 
   /**
+   * Auto-rejecting the approval row alone never touched the paused
+   * WorkflowExecution - resumeExecution() must run the same way it does from
+   * the manual approve/reject HTTP path (workflow-approval.controller.ts),
+   * or the execution sits PAUSED forever even after its approval is
+   * resolved. Best-effort: if the execution already moved on (e.g. a manual
+   * decision raced this sweep), resumeExecution() throws because it's no
+   * longer PAUSED - that's not a failure of this sweep, the approval row is
+   * already correctly rejected either way.
+   */
+  private async resumeAsRejected(
+    tenantId: string,
+    workflowExecutionId: string,
+    comments: string,
+  ): Promise<void> {
+    try {
+      await this.engineService.resumeExecution(
+        tenantId,
+        workflowExecutionId,
+        false,
+        'system',
+        comments,
+      );
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to resume execution ${workflowExecutionId} after approval rejection: ${err.message}`,
+      );
+    }
+  }
+
+  /**
    * isExpired() existed but was only ever checked lazily, if and when
    * someone happened to call approve() on an already-expired approval - an
    * approval nobody ever touched again just sat PENDING forever, silently
    * blocking its workflow execution with no escalation to anyone. This sweep
    * (invoked by a scheduler mirroring SlaMonitorScheduler) proactively
-   * rejects expired approvals and raises an operational incident so a human
-   * knows a workflow died waiting on an approval that timed out.
+   * rejects expired approvals, resumes (and fails) their paused execution,
+   * and raises an operational incident so a human knows a workflow died
+   * waiting on an approval that timed out.
    */
   public async sweepExpiredApprovals(
     tenantId?: string,
@@ -153,6 +196,12 @@ export class WorkflowApprovalService {
         ),
       );
 
+      await this.resumeAsRejected(
+        approval.tenantId,
+        approval.workflowExecutionId,
+        'Auto-rejected: Approval request expired.',
+      );
+
       try {
         await this.queueService.addJob(QUEUES.ADMIN, 'admin-incident-job', {
           tenantId: approval.tenantId,
@@ -162,8 +211,8 @@ export class WorkflowApprovalService {
           description: `Approval ${approval.id} for workflow execution ${approval.workflowExecutionId} expired without a decision and was auto-rejected.`,
         });
       } catch {
-        // Incident visibility is best-effort; the rejection above already
-        // unblocked the workflow either way.
+        // Incident visibility is best-effort; the rejection and resume
+        // above already unblocked the workflow either way.
       }
     }
 

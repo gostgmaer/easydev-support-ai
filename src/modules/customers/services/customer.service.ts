@@ -296,6 +296,85 @@ export class CustomerService {
     return this.customerRepo.findByEmail(email, tenantId);
   }
 
+  /**
+   * Resolves a Customer from a channel-native identity (phone number, Slack
+   * user ID, etc.) that has no email at message-receive time. The domain
+   * model requires `email`, so a deterministic, non-routable (.invalid TLD,
+   * RFC 2606) placeholder is synthesized and flagged via
+   * `metadata.syntheticEmail` so outbound-email flows (e.g. ticket
+   * notifications) know never to send to it.
+   */
+  async findOrCreateByExternalId(
+    tenantId: string,
+    channelId: string,
+    externalId: string,
+    channelType: string,
+  ): Promise<Customer> {
+    const existing = await this.customerRepo.findByExternalId(
+      externalId,
+      tenantId,
+    );
+    if (existing) {
+      return existing;
+    }
+
+    const customerId = randomUUID();
+    const localPart = externalId.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const syntheticEmail = `${localPart}.${channelId}@channel.invalid`;
+
+    const customer = Customer.create(customerId, {
+      tenantId,
+      externalCustomerId: externalId,
+      email: CustomerEmail.create(syntheticEmail),
+      status: CustomerStatus.create(CustomerStatusEnum.ACTIVE),
+      preferredLanguage: CustomerLanguage.create('en'),
+      timezone: CustomerTimezone.create('UTC'),
+      source: channelType,
+      metadata: { syntheticEmail: true, channelId },
+    });
+
+    const metrics = new CustomerMetrics(randomUUID(), {
+      tenantId,
+      customerId,
+      totalConversations: 0,
+      totalTickets: 0,
+      totalOrders: 0,
+      totalSpend: 0,
+      averageCsat: 0,
+      averageResponseTime: 0,
+      averageResolutionTime: 0,
+      sentimentScore: 0,
+      lifetimeValue: 0,
+      riskScore: 0,
+      vipStatus: false,
+    });
+    customer.setMetrics(metrics);
+
+    const saved = await this.customerRepo.save(customer, tenantId);
+    await this.eventPublisher.publishAll(customer.domainEvents);
+    customer.clearEvents();
+
+    await this.auditService.log({
+      tenantId,
+      action: 'CUSTOMER_CREATE',
+      details: `Created customer ${customer.id} from ${channelType} channel identity`,
+    });
+
+    await this.evaluateWorkflowTriggers(
+      tenantId,
+      TriggerTypeEnum.CUSTOMER_CREATED,
+      {
+        id: customer.id,
+        customerId: customer.id,
+        email: customer.email.value,
+        status: customer.status.value,
+        source: customer.source,
+      },
+    );
+
+    return saved;
+  }
+
   async findPaginated(tenantId: string, query: CustomerQueryDto) {
     return this.customerRepo.findPaginated(tenantId, query);
   }

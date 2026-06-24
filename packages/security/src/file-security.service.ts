@@ -3,8 +3,15 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class FileSecurityService {
-  private readonly signedUrlSecret = process.env.SIGNED_URL_SECRET || 'signed-url-secret-key-123456';
+  private readonly signedUrlSecret: string;
   private readonly defaultExpiryMs = 3600000; // 1 hour
+
+  constructor() {
+    if (!process.env.SIGNED_URL_SECRET) {
+      throw new Error('SIGNED_URL_SECRET must be set - refusing to sign URLs with no configured secret');
+    }
+    this.signedUrlSecret = process.env.SIGNED_URL_SECRET;
+  }
 
   validateFile(filename: string, mimeType: string, sizeInBytes: number, allowedMimeTypes: string[], maxSizeBytes: number): void {
     if (sizeInBytes > maxSizeBytes) {

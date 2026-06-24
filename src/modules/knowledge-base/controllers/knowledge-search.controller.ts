@@ -16,7 +16,9 @@ export class KnowledgeSearchController {
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: SearchQueryDto,
     @Headers('x-user-id') userId: string,
+    @Headers('x-user-role') role?: string,
+    @Headers('x-user-team-id') teamId?: string,
   ) {
-    return this.searchService.search(tenantId, dto, userId);
+    return this.searchService.search(tenantId, dto, userId, teamId, role);
   }
 }

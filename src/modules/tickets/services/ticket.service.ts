@@ -116,7 +116,7 @@ export class TicketService {
         tenantId,
         ticket.customerId,
       );
-      if (customer?.email?.value) {
+      if (customer?.email?.value && !customer.metadata?.syntheticEmail) {
         await this.queueService.addJob(QUEUES.NOTIFICATION, jobName, {
           tenantId,
           customerEmail: customer.email.value,

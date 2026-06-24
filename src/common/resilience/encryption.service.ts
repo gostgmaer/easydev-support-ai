@@ -8,11 +8,11 @@ export class EncryptionService {
   private readonly key: Buffer;
 
   constructor() {
-    const rawKey =
-      process.env.ENCRYPTION_KEY ||
-      'easydev-fallback-encryption-key-must-be-32bytes-long!';
+    if (!process.env.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY must be set - refusing to encrypt with no configured key');
+    }
     this.key = Buffer.alloc(32);
-    Buffer.from(rawKey, 'utf-8').copy(this.key);
+    Buffer.from(process.env.ENCRYPTION_KEY, 'utf-8').copy(this.key);
   }
 
   public encrypt(text: string): string {

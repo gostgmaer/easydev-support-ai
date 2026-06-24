@@ -3,6 +3,7 @@ import type { IConnectorRepository } from '../repositories/connector-repository.
 import { ConnectorWebhook } from '../domain/connector-webhook.entity';
 import { ConfigureWebhookDto } from '../dtos/connector.dto';
 import { WebhookDispatcher } from '../engine/webhook-dispatcher';
+import { CredentialManager } from '../engine/credential-manager';
 
 @Injectable()
 export class ConnectorWebhookService {
@@ -10,6 +11,7 @@ export class ConnectorWebhookService {
     @Inject('IConnectorRepository')
     private readonly repository: IConnectorRepository,
     private readonly webhookDispatcher: WebhookDispatcher,
+    private readonly credentialManager: CredentialManager,
   ) {}
 
   public async registerWebhook(
@@ -23,7 +25,9 @@ export class ConnectorWebhookService {
       connectorId,
       instanceId,
       url: dto.url,
-      secret: dto.secret,
+      secret: dto.secret
+        ? this.credentialManager.encrypt(dto.secret).encryptedData
+        : dto.secret,
       signatureHeader: dto.signatureHeader || 'x-signature',
       events: dto.events || [],
       status: 'ACTIVE',

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 
@@ -46,6 +46,8 @@ import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
 
 // External Modules
 import { SettingsModule } from '../settings/settings.module';
+import { CustomersModule } from '../customers/customers.module';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { SettingsModule } from '../settings/settings.module';
       name: 'channel-queue',
     }),
     SettingsModule,
+    forwardRef(() => CustomersModule),
+    forwardRef(() => MessagesModule),
   ],
   controllers: [
     ChannelController,

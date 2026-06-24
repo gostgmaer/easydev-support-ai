@@ -5,10 +5,14 @@ import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class SessionSecurityService {
   private readonly redis: Redis;
-  private readonly jwtSecret = process.env.JWT_SECRET || 'jwt-session-secret-key-123456';
+  private readonly jwtSecret: string;
   private readonly maxConcurrentSessions = 5;
 
   constructor() {
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET must be set - refusing to sign sessions with no configured secret');
+    }
+    this.jwtSecret = process.env.JWT_SECRET;
     this.redis = new Redis({
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6380', 10),

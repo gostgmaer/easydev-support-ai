@@ -4,6 +4,18 @@ This document is the master playbook for the **Infrastructure and DevOps Teams**
 
 ---
 
+## 0. Actual Edge/TLS Topology (verified directly, 2026-06-24)
+
+The rest of this document's "Ingress Controller / Nginx Proxy" framing (§1, §2.3) predates this verification and describes an alternative design, not what's actually wired. Recorded here so this doesn't need re-discovering:
+
+- **A separate `infra/` repo** (sibling to this one, not under `Backend/`) runs the only real edge proxy: Traefik v2.11 + Portainer, terminating TLS via Let's Encrypt on an external Docker network named `edge` (`TRAEFIK_NETWORK_NAME=edge` in `infra/.env`).
+- **A separate `easydev-infra` repo** (`docker network/easydev-infra` relative to this workspace - easy to miss, it's not alongside the other backend repos) defines the actual production compose stacks for 5 services, all already correctly joined to the `edge` network with real Traefik labels, TLS, and `expose`-only (no host port mapping) for Postgres/Redis: **gateway**, **auth-service** (`multi-tannet-auth-services`/IAM), **payment-service** (`payment-microservice`), **ai-automation-communication-service** (`multi-tennet-ai-agent`), and **job-agent-service**. Their own per-repo `docker-compose.production.yml`/`docker-compose.prod.yml` files explicitly say (in their own header comments) that they are NOT used for real deployment - `easydev-infra` is.
+- **This repo, `notification-service`, and `file-upload-service` were not part of either stack at all** - the original launch-readiness audit's RR-03 finding ("no backend service is wired to Traefik, only multi-tennet-ai-agent") was accurate for these three specifically, but incorrect that IAM/payment-microservice/ai-agent were unwired - they already were, just via the easy-to-miss `easydev-infra` repo.
+- **Fixed as part of RR-03's remediation**: this repo's `nginx` service (`docker-compose.production.yml`), `notification-service`'s own container, and `file-upload-service`'s own container all now join the external `edge` network and carry the same Traefik label convention as the other 5 services, with their direct host port mappings removed (Traefik becomes the sole public entrypoint). **Not yet folded into `easydev-infra`'s unified stack structure** - that would mean creating new stack folders/env-file conventions there, a real architecture decision involving secrets management this fix didn't make unilaterally. Each of these 3 services can be deployed today by running them alongside `infra/`'s Traefik stack on the same host/network; migrating them into `easydev-infra` properly is a follow-up, not done here.
+- **Not yet verified against live infrastructure** - no Docker daemon available in the environment this fix was made in. The label syntax matches the proven-working pattern already used by `multi-tennet-ai-agent`'s entry in `easydev-infra`, character-for-character where applicable.
+
+---
+
 ## 1. System Architecture Mapping
 
 ```mermaid

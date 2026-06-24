@@ -47,7 +47,11 @@ export class ConversationSummaryService {
         tenantId,
         conversation.customerId,
       );
-      customerName = customer.profile?.displayName || customer.email.value;
+      customerName =
+        customer.profile?.displayName ||
+        (customer.metadata?.syntheticEmail
+          ? customer.externalCustomerId
+          : customer.email.value);
       customerAvatar = customer.profile?.avatarUrl;
     } catch {
       customerName = undefined;
