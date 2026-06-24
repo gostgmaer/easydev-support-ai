@@ -1,6 +1,6 @@
 import { WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { TenantContext } from '@easydev/shared-kernel';
 import { QueueName } from './queue-definitions';
 import { QueueService } from './queue.service';
@@ -17,7 +17,10 @@ import { QueueService } from './queue.service';
  * and the {@link QueueService} to `super(...)`. The extra arguments are optional
  * to preserve backwards compatibility with workers that only log failures.
  */
-export abstract class BaseWorker extends WorkerHost {
+export abstract class BaseWorker
+  extends WorkerHost
+  implements OnApplicationBootstrap
+{
   protected readonly logger: Logger;
 
   constructor(
@@ -27,6 +30,28 @@ export abstract class BaseWorker extends WorkerHost {
   ) {
     super();
     this.logger = new Logger(workerName);
+  }
+
+  /**
+   * A job that exceeds WORKER_OPTIONS.maxStalledCount (worker crash/OOM mid-job,
+   * repeated lock loss) is failed by BullMQ's own stalled-checker before our
+   * process() override ever runs - it never reaches handleJob()/handleFailure()
+   * below, so it was previously dropped silently (not retried, not dead-lettered,
+   * invisible to the replay endpoint). BullMQ surfaces this case as an
+   * UnrecoverableError on the underlying Worker's 'failed' event, which is the
+   * one signal available after the fact to catch it and route it to the same
+   * dead-letter queue normal exhausted-retry failures already use.
+   */
+  onApplicationBootstrap(): void {
+    this.worker.on('failed', (job, err) => {
+      if (!job || err?.name !== 'UnrecoverableError') {
+        return;
+      }
+      this.logger.error(
+        `Job ${job.id} [${job.name}] dropped by BullMQ's stalled-job checker (${err.message}) - routing to dead-letter-queue instead of losing it.`,
+      );
+      void this.routeToDeadLetter(job, err);
+    });
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
@@ -67,6 +92,13 @@ export abstract class BaseWorker extends WorkerHost {
       `Job ${job.id} breached max attempts (${maxAttempts}). Routing to dead-letter-queue.`,
     );
 
+    await this.routeToDeadLetter(job, error);
+  }
+
+  private async routeToDeadLetter(
+    job: Job<any, any, string>,
+    error: Error,
+  ): Promise<void> {
     if (this.queueService && this.sourceQueue) {
       try {
         await this.queueService.moveToDeadLetter(this.sourceQueue, job, error);

@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -9,13 +10,39 @@ import Redis from 'ioredis';
 @Injectable()
 export class WebhookSecurityService {
   private readonly redis: Redis;
+  private readonly logger = new Logger(WebhookSecurityService.name);
   private readonly signatureValidityWindowMs = 300000; // 5 minutes
+  private redisAvailable = true;
 
   constructor() {
+    // Matches the established resilient pattern used elsewhere in this
+    // codebase (e.g. RedisCacheService) - previously a bare client with no
+    // lazyConnect/error handler, so a Redis blip would throw uncaught out
+    // of validateWebhookRequest() and fail every incoming webhook delivery,
+    // not just the replay-dedup check it actually needed Redis for.
     this.redis = new Redis({
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6380', 10),
+      lazyConnect: true,
       maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+    });
+
+    this.redis.on('error', (err: Error) => {
+      if (this.redisAvailable) {
+        this.redisAvailable = false;
+        this.logger.warn(
+          `Webhook replay-dedup Redis unavailable - signature verification still applies, but replay detection is degraded until it recovers: ${err.message}`,
+        );
+      }
+    });
+
+    this.redis.on('ready', () => {
+      this.redisAvailable = true;
+    });
+
+    this.redis.connect().catch(() => {
+      this.redisAvailable = false;
     });
   }
 
@@ -45,11 +72,18 @@ export class WebhookSecurityService {
     }
 
     const cacheKey = `webhook:sig:${crypto.createHash('md5').update(signature).digest('hex')}`;
-    const signatureProcessed = await this.redis.get(cacheKey);
-    if (signatureProcessed) {
-      throw new BadRequestException(
-        'Replay attack detected: webhook signature already processed',
-      );
+    if (this.redisAvailable) {
+      try {
+        const signatureProcessed = await this.redis.get(cacheKey);
+        if (signatureProcessed) {
+          throw new BadRequestException(
+            'Replay attack detected: webhook signature already processed',
+          );
+        }
+      } catch (err) {
+        if (err instanceof BadRequestException) throw err;
+        this.logger.warn(`Replay-dedup check failed, proceeding without it: ${(err as Error)?.message}`);
+      }
     }
 
     const isMatch =
@@ -64,12 +98,18 @@ export class WebhookSecurityService {
       );
     }
 
-    await this.redis.set(
-      cacheKey,
-      'processed',
-      'EX',
-      Math.ceil(this.signatureValidityWindowMs / 1000),
-    );
+    if (this.redisAvailable) {
+      try {
+        await this.redis.set(
+          cacheKey,
+          'processed',
+          'EX',
+          Math.ceil(this.signatureValidityWindowMs / 1000),
+        );
+      } catch (err: any) {
+        this.logger.warn(`Failed to record processed webhook signature: ${err?.message}`);
+      }
+    }
     return true;
   }
 

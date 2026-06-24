@@ -108,6 +108,7 @@ export class WidgetChatController {
   @ApiOperation({
     summary: "Start (or resume) the widget session's conversation",
   })
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // public, unauthenticated endpoint - tighter than the generic 100/min global default
   @Post()
   async startConversation(
     @Req() req: any,
@@ -198,6 +199,7 @@ export class WidgetChatController {
   }
 
   @ApiOperation({ summary: 'Send a message as the widget visitor' })
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // public, unauthenticated endpoint - tighter than the generic 100/min global default
   @Post(':conversationId/messages')
   async sendMessage(
     @Req() req: any,
@@ -220,6 +222,7 @@ export class WidgetChatController {
   @ApiOperation({
     summary: 'Create a support ticket from this widget conversation',
   })
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // public, unauthenticated endpoint - tighter than the generic 100/min global default
   @Post(':conversationId/ticket')
   async createTicket(
     @Req() req: any,
@@ -254,6 +257,7 @@ export class WidgetChatController {
   @ApiOperation({
     summary: 'Submit a CSAT rating/feedback for this widget conversation',
   })
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // public, unauthenticated endpoint - tighter than the generic 100/min global default
   @Post(':conversationId/feedback')
   async submitFeedback(
     @Req() req: any,
