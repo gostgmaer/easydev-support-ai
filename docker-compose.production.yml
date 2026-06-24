@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # 1. API Gateways (Scalable REST APIs / Socket.io)
   api:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-api:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.api
@@ -34,7 +34,7 @@ services:
 
   # 2. Webhook Dispatcher
   webhook:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-webhook:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.webhook
@@ -58,7 +58,7 @@ services:
 
   # 3. Independent Workers
   worker-conversation:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -79,7 +79,7 @@ services:
         condition: service_healthy
 
   worker-workflow:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -100,7 +100,7 @@ services:
         condition: service_healthy
 
   worker-analytics:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -121,7 +121,7 @@ services:
         condition: service_healthy
 
   worker-connector:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -142,7 +142,7 @@ services:
         condition: service_healthy
 
   worker-notification:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
