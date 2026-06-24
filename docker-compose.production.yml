@@ -44,7 +44,7 @@ services:
         condition: on-failure
     environment:
       - NODE_ENV=production
-      - RUN_WEBHOOKS=true
+      - PROCESS_QUEUE=admin-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:
@@ -66,7 +66,7 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=conversation-queue
+      - PROCESS_QUEUE=conversation-queue,message-queue,inbox-queue,channel-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:
@@ -87,7 +87,7 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=workflow-queue
+      - PROCESS_QUEUE=workflow-queue,ticket-queue,settings-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:
@@ -108,7 +108,7 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=analytics-queue
+      - PROCESS_QUEUE=analytics-queue,knowledge-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:
@@ -129,7 +129,7 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=connector-queue
+      - PROCESS_QUEUE=connector-queue,ai-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:
@@ -150,7 +150,7 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=notification-queue
+      - PROCESS_QUEUE=notification-queue,team-queue,customer-queue,widget-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
     networks:

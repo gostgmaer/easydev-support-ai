@@ -33,6 +33,8 @@ import { AnalyticsEventConsumer } from './consumers/analytics-event.consumer';
 
 // Jobs
 import { AnalyticsQueueProcessor } from './jobs/analytics-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // External Modules
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -71,7 +73,7 @@ import { SettingsModule } from '../settings/settings.module';
     AnalyticsRealtimeService,
     AnalyticsCronService,
     AnalyticsEventConsumer,
-    AnalyticsQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.ANALYTICS) ? [AnalyticsQueueProcessor] : []),
     CsatSurveyService,
   ],
   exports: [

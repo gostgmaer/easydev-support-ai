@@ -1,6 +1,6 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
+import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { AiResponseService } from '../services/ai-response.service';
 import { AiToolExecutionService } from '../services/ai-tool-execution.service';
@@ -21,7 +21,7 @@ export class AiQueueProcessor extends BaseWorker {
     private readonly aiClient: AIPlatformClient,
     @Optional() queueService?: QueueService,
   ) {
-    super('AiQueueProcessor', 'ai-queue' as any, queueService);
+    super('AiQueueProcessor', QUEUES.AI, queueService);
   }
 
   async handleJob(job: Job<any, any, string>): Promise<any> {

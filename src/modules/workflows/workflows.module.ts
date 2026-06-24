@@ -44,6 +44,8 @@ import { DrizzleWorkflowRepository } from './repositories/drizzle-workflow.repos
 // Queue Jobs
 import { WorkflowQueueProcessor } from './jobs/workflow-queue.processor';
 import { WorkflowApprovalTimeoutScheduler } from './jobs/workflow-approval-timeout.scheduler';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // External Modules
 import { TicketsModule } from '../tickets/tickets.module';
@@ -100,7 +102,7 @@ import { SettingsModule } from '../settings/settings.module';
     WorkflowActionService,
     WorkflowAuditService,
     WorkflowEngineService,
-    WorkflowQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.WORKFLOW) ? [WorkflowQueueProcessor] : []),
     WorkflowApprovalTimeoutScheduler,
   ],
   exports: [

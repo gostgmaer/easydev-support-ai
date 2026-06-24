@@ -40,6 +40,8 @@ import {
   AdminHealthScheduler,
   AdminCleanupScheduler,
 } from './jobs';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -74,7 +76,7 @@ import {
     AdminOverrideService,
     AdminAuditService,
     TenantProvisioningService,
-    AdminQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.ADMIN) ? [AdminQueueProcessor] : []),
     AdminHealthScheduler,
     AdminCleanupScheduler,
     {

@@ -33,7 +33,6 @@ RUN mkdir -p uploads && chown -R node:node uploads
 USER node
 
 ENV NODE_ENV=production
-ENV RUN_WORKERS=true
 ENV PORT=3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD [ "node", "dist/health-check.js" ]

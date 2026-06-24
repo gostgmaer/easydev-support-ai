@@ -35,6 +35,8 @@ import { DrizzleAiRepository } from './repositories/drizzle-ai.repository';
 
 // Queue Jobs
 import { AiQueueProcessor } from './jobs/ai-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // External Modules
 import { ConversationsModule } from '../conversations/conversations.module';
@@ -96,7 +98,7 @@ import { SettingsModule } from '../settings/settings.module';
     AiResponseService,
 
     // Queue Processor
-    AiQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.AI) ? [AiQueueProcessor] : []),
   ],
   exports: [
     AiAgentService,

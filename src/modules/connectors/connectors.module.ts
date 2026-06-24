@@ -46,6 +46,8 @@ import {
 
 // Queue
 import { ConnectorQueueProcessor } from './jobs/connector-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -96,7 +98,7 @@ import { ConnectorQueueProcessor } from './jobs/connector-queue.processor';
     CircuitBreakerManager,
 
     // Queue Processor
-    ConnectorQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.CONNECTOR) ? [ConnectorQueueProcessor] : []),
   ],
   exports: [
     ConnectorService,

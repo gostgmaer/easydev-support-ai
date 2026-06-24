@@ -27,6 +27,8 @@ import {
 import { DrizzleConversationRepository } from './repositories/drizzle-conversation.repository';
 import { ConversationQueueProcessor } from './jobs/conversation-queue.processor';
 import { ConversationsGateway } from './conversations.gateway';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // TypeORM entities kept for compatibility with the global data source registration.
 import { Conversation } from './entities/conversation.entity';
@@ -66,7 +68,7 @@ import { Attachment } from './entities/attachment.entity';
     InboxService,
     RedisCacheService,
     ConversationEventPublisher,
-    ConversationQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.CONVERSATION) ? [ConversationQueueProcessor] : []),
     ConversationsGateway,
     {
       provide: 'IConversationRepository',

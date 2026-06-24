@@ -43,6 +43,8 @@ import {
 
 // Queue jobs
 import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // External Modules
 import { SettingsModule } from '../settings/settings.module';
@@ -125,7 +127,7 @@ import { MessagesModule } from '../messages/messages.module';
     ChannelConnectorRegistry,
 
     // Queue Processor
-    ChannelQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.CHANNEL) ? [ChannelQueueProcessor] : []),
   ],
   exports: [
     ChannelService,

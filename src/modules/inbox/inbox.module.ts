@@ -31,6 +31,8 @@ import { InboxEventConsumer } from './consumers/inbox-event.consumer';
 import { DrizzleInboxRepository } from './repositories/drizzle-inbox.repository';
 import { InboxQueueProcessor } from './jobs/inbox-queue.processor';
 import { InboxCleanupScheduler } from './jobs/inbox-cleanup.scheduler';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -59,7 +61,7 @@ import { InboxCleanupScheduler } from './jobs/inbox-cleanup.scheduler';
     InboxProjectionService,
     InboxEventPublisher,
     InboxEventConsumer,
-    InboxQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.INBOX) ? [InboxQueueProcessor] : []),
     InboxCleanupScheduler,
     {
       provide: 'IInboxRepository',

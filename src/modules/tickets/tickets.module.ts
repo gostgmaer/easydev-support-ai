@@ -28,6 +28,8 @@ import { DrizzleTicketRepository } from './repositories/drizzle-ticket.repositor
 import { DrizzleTicketCategoryRepository } from './repositories/drizzle-ticket-category.repository';
 import { TicketQueueProcessor } from './jobs/ticket-queue.processor';
 import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -54,7 +56,7 @@ import { SlaMonitorScheduler } from './jobs/sla-monitor.scheduler';
     TicketCategoryService,
     TicketEscalationService,
     TicketEventPublisher,
-    TicketQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.TICKET) ? [TicketQueueProcessor] : []),
     SlaMonitorScheduler,
     {
       provide: 'ITicketRepository',

@@ -40,6 +40,8 @@ import { DrizzleSettingsRepository } from './repositories/drizzle-settings-repos
 
 // Jobs
 import { SettingsQueueProcessor } from './jobs/settings-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -82,7 +84,7 @@ import { SettingsQueueProcessor } from './jobs/settings-queue.processor';
     SettingsEventPublisher,
     FeatureFlagEngine,
     BusinessHoursEngine,
-    SettingsQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.SETTINGS) ? [SettingsQueueProcessor] : []),
   ],
   exports: [
     TenantSettingsService,
