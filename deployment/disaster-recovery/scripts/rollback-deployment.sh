@@ -9,7 +9,7 @@ CONFIG_FILE=${3:-""}
 DB_CONTAINER="support-ai-postgres"
 DB_USER=${DB_USER:-"support_ai_prod"}
 DB_NAME=${DB_NAME:-"easydev_support_ai_prod"}
-DB_PASSWORD=${DB_PASSWORD:-"prod_db_pass_extremely_secure_991823"}
+: "${DB_PASSWORD:?DB_PASSWORD must be set in the environment - no default committed here (see RR-42)}"
 
 export PGPASSWORD="${DB_PASSWORD}"
 

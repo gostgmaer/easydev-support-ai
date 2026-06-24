@@ -114,6 +114,20 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./packages/observability/src/alerts/alert-rules.yml:/etc/prometheus/alert-rules.yml
+    depends_on:
+      - alertmanager
+    networks:
+      - easydev-net
+
+  # 6b. Alertmanager - alert-rules.yml's rules were evaluated by Prometheus
+  # but had nowhere to be routed/notified; a firing alert previously only
+  # showed up if someone happened to check the Prometheus UI.
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
     networks:
       - easydev-net
 

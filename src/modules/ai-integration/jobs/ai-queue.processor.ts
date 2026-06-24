@@ -46,6 +46,10 @@ export class AiQueueProcessor extends BaseWorker {
           job.data.toolName,
           job.data.capability,
           job.data.payload || {},
+          // RR-18: stable across a BullMQ-level retry of this same job and
+          // across the AI Platform redispatching the same logical tool call
+          // - the connector-level idempotency key, not just an id for logging.
+          job.data.toolRequestId,
         );
 
       case 'ai-tool-result-submission-job':

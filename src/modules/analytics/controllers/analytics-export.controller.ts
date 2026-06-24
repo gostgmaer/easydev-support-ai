@@ -4,15 +4,18 @@ import {
   Get,
   Body,
   Param,
+  Query,
   Headers,
   UseGuards,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiHeader,
+  ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
@@ -48,28 +51,40 @@ export class AnalyticsExportController {
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: ExportReportDto,
   ) {
-    await this.exportService.triggerExport(tenantId, dto);
+    const { downloadUrl } = await this.exportService.triggerExport(
+      tenantId,
+      dto,
+    );
     return {
       success: true,
       message: 'Export triggered and queued for delivery.',
+      downloadUrl,
     };
   }
 
   @Get('download/:filename')
   @Roles('tenant_admin', 'manager')
   @ApiOperation({ summary: 'Download generated report exports directly' })
+  @ApiQuery({
+    name: 'reportId',
+    required: true,
+    description: 'The report this export was generated from (returned as part of the downloadUrl from POST /manual).',
+  })
   @ApiResponse({ status: 200, description: 'Export file stream returned.' })
   async downloadExport(
     @Headers('x-tenant-id') tenantId: string,
     @Param('filename') filename: string,
+    @Query('reportId') reportId: string,
     @Res() res: Response,
   ) {
+    if (!reportId) {
+      throw new BadRequestException('Missing reportId query parameter.');
+    }
     const format = filename.endsWith('.csv')
       ? 'CSV'
       : filename.endsWith('.pdf')
         ? 'PDF'
         : 'JSON';
-    const reportId = 'dummy-report-id';
     const { buffer, mimeType } = await this.exportService.generateExport(
       tenantId,
       reportId,

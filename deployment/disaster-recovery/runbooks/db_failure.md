@@ -24,6 +24,17 @@ Reconfigure Nginx upstream pointers inside `/etc/nginx/conf.d/upstreams.conf` to
 
 When tables are dropped or data gets corrupted, execute Point-In-Time-Recovery (PITR).
 
+> **Scope: all tenants, not one.** This database uses a single shared schema
+> with a `tenantId` column on every table - there is no way to restore a
+> single tenant's data to a point in time without rolling back every other
+> tenant on this database too. This is an accepted architectural limitation
+> of the shared-schema design (see `risk-register.md` RR-54), not a gap to
+> work around mid-incident. If a request comes in for one tenant's data to be
+> recovered without affecting others, this procedure is not the right tool -
+> `tenant-manager.sh`'s per-tenant export/import (a live-data snapshot, not
+> time-travel) is the closest available option, and even that can only
+> restore to the time of a prior snapshot, not an arbitrary point in time.
+
 ### Step 1: Locate Target Timestamp
 Identify the timestamp immediately prior to the incident (e.g., `"2026-06-21 02:00:00"`).
 

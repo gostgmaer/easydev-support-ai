@@ -66,8 +66,20 @@ export class AiToolExecutionService {
     toolName: string,
     capability: string,
     payload: Record<string, any>,
+    // RR-18: the AI Platform's own stable id for this tool call, when it
+    // supplies one (e.g. job.data.toolRequestId from a BullMQ retry, or a
+    // redispatch after the platform timed out waiting for a result it
+    // never got because the process crashed between the connector call
+    // succeeding and submitToolResult being reached). Used as the
+    // connector-level idempotency key so a second invocation of the SAME
+    // logical tool call - not just a second attempt at submitting its
+    // result - returns the already-recorded outcome instead of re-running
+    // a side-effecting action like a refund. Falls back to a fresh internal
+    // id for callers that don't supply one (unchanged behavior for those).
+    externalRequestId?: string,
   ): Promise<any> {
     const requestId = crypto.randomUUID();
+    const idempotencyKey = externalRequestId || requestId;
     const request = new AiToolRequest(requestId, {
       tenantId,
       workflowExecutionId,
@@ -100,6 +112,7 @@ export class AiToolExecutionService {
         payload,
         {
           workflowId: workflowExecutionId,
+          idempotencyKey,
         },
       );
 

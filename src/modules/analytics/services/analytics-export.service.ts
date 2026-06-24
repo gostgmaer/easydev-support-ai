@@ -61,12 +61,20 @@ export class AnalyticsExportService {
     return { buffer, mimeType, filename };
   }
 
-  async triggerExport(tenantId: string, dto: ExportReportDto): Promise<void> {
-    const { buffer, filename } = await this.generateExport(
+  async triggerExport(
+    tenantId: string,
+    dto: ExportReportDto,
+  ): Promise<{ filename: string; downloadUrl: string }> {
+    const { filename } = await this.generateExport(
       tenantId,
       dto.reportId,
       dto.format,
     );
+
+    // The download endpoint regenerates the export from the live report data
+    // rather than re-serving these exact bytes - nothing persists the buffer
+    // between trigger and download, so reportId must travel with the link.
+    const downloadUrl = `https://api.easydev.ai/v1/analytics/exports/download/${filename}?reportId=${dto.reportId}`;
 
     const recipients = dto.recipients || [];
     this.logger.log(
@@ -81,11 +89,13 @@ export class AnalyticsExportService {
         {
           reportName: filename,
           exportFormat: dto.format,
-          downloadUrl: `https://api.easydev.ai/v1/analytics/exports/download/${filename}`,
+          downloadUrl,
           exportedAt: new Date().toISOString(),
         },
       );
     }
+
+    return { filename, downloadUrl };
   }
 
   private convertToCsv(data: Record<string, any>): string {

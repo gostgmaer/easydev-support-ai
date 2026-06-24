@@ -131,13 +131,34 @@ export class MetricsService {
       help: 'Host machine Memory utilization bytes',
     });
 
-    // Populate system stats periodically
+    // Populate system stats periodically. CPU is a real delta-sampled
+    // percentage (process.cpuUsage() between ticks), not the placeholder
+    // `Math.random() * 100` this used to report - the HighCpuUsage alert in
+    // alert-rules.yml was firing/not-firing on random noise, never real load.
+    let lastCpuUsage = process.cpuUsage();
+    let lastSampleAt = Date.now();
+    const SAMPLE_INTERVAL_MS = 15000;
     setInterval(() => {
       const memory = process.memoryUsage();
       this.memoryUsageGauge.set(memory.heapUsed);
-      // Simulate CPU calculation hook
-      this.cpuUsageGauge.set(Math.random() * 100);
-    }, 15000);
+
+      const currentCpuUsage = process.cpuUsage();
+      const now = Date.now();
+      const elapsedMs = now - lastSampleAt;
+      const cpuTimeUsedMicros =
+        (currentCpuUsage.user - lastCpuUsage.user) +
+        (currentCpuUsage.system - lastCpuUsage.system);
+      // cpuTimeUsedMicros is split across all CPU cores under load; clamp to
+      // 100% per-core-normalized rather than letting a multi-core busy process
+      // report >100%, which would otherwise be a confusing gauge value.
+      const cpuPercent = elapsedMs > 0
+        ? Math.min(100, (cpuTimeUsedMicros / 1000 / elapsedMs) * 100)
+        : 0;
+      this.cpuUsageGauge.set(cpuPercent);
+
+      lastCpuUsage = currentCpuUsage;
+      lastSampleAt = now;
+    }, SAMPLE_INTERVAL_MS);
   }
 
   // --- API request tracking ---
