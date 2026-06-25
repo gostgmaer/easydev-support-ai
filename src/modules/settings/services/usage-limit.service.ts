@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { PaymentClient, IamClient } from '@easydev/shared-clients';
 import { NotificationService } from '../../notifications/notification.service';
+import { TenantSettingsService } from './tenant-settings.service';
 import Redis from 'ioredis';
 
 const BILLING_SYNC_TTL_SECONDS = 3600;
@@ -24,6 +25,7 @@ export class UsageLimitService {
     private readonly eventPublisher: SettingsEventPublisher,
     private readonly queueService: QueueService,
     private readonly notificationService: NotificationService,
+    private readonly tenantSettingsService: TenantSettingsService,
   ) {
     this.paymentClient = new PaymentClient(
       process.env.PAYMENT_SERVICE_URL || 'http://localhost:3302',
@@ -234,16 +236,25 @@ export class UsageLimitService {
     // for its queue-worker callers' retry logic, which doesn't apply here.
     try {
       const admins = await this.iamClient.getTenantAdmins(tenantId);
+      const tenantName = (
+        await this.tenantSettingsService.getSettings(tenantId)
+      ).tenantName;
       await Promise.all(
         admins
           .filter((admin) => admin.email)
           .map((admin) =>
             this.notificationService
-              .sendEmail(tenantId, admin.email as string, 'quota-overage', {
-                resource,
-                currentUsage,
-                limit,
-              })
+              .sendEmail(
+                tenantId,
+                admin.email as string,
+                'quota-overage',
+                {
+                  resource,
+                  currentUsage,
+                  limit,
+                },
+                tenantName,
+              )
               .catch(() => {}),
           ),
       );

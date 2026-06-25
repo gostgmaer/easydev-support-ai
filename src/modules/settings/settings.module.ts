@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationsModule } from '../notifications/notifications.module';
 
@@ -48,7 +48,7 @@ import { shouldRunProcessor } from '../../config/queue-role';
     BullModule.registerQueue({
       name: 'settings-queue',
     }),
-    NotificationsModule,
+    forwardRef(() => NotificationsModule),
   ],
   controllers: [
     TenantSettingsController,

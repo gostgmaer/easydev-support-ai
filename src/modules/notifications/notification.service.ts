@@ -5,14 +5,23 @@ import axios from 'axios';
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  async sendEmail(tenantId: string, to: string, templateId: string, data: any) {
+  async sendEmail(
+    tenantId: string,
+    to: string,
+    templateId: string,
+    data: any,
+    tenantName?: string,
+  ) {
     try {
       this.logger.log(
         `Dispatching email via EasyDev Notification Service to ${to}`,
       );
-      // Integrates with EasyDev Notification Service
+      // Integrates with EasyDev Notification Service. tenant_id remains the
+      // stable key the Notification Service actually uses; tenant_name is
+      // purely so tenant activity is identifiable at a glance in its logs.
       await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/v1/email`, {
         tenant_id: tenantId,
+        ...(tenantName ? { tenant_name: tenantName } : {}),
         to,
         template_id: templateId,
         data,
@@ -33,10 +42,12 @@ export class NotificationService {
     tenantId: string,
     userId: string,
     message: string,
+    tenantName?: string,
   ) {
     try {
       await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/v1/push`, {
         tenant_id: tenantId,
+        ...(tenantName ? { tenant_name: tenantName } : {}),
         user_id: userId,
         message,
       });

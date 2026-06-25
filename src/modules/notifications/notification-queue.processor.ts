@@ -4,6 +4,7 @@ import { Job } from 'bullmq';
 import { Injectable, Optional, Logger } from '@nestjs/common';
 import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
 import { NotificationService } from './notification.service';
+import { TenantSettingsService } from '../settings/services/tenant-settings.service';
 
 /**
  * Notification Queue Processor
@@ -35,6 +36,7 @@ import { NotificationService } from './notification.service';
 export class NotificationQueueProcessor extends BaseWorker {
   constructor(
     private readonly notificationService: NotificationService,
+    private readonly tenantSettingsService: TenantSettingsService,
     @Optional() queueService?: QueueService,
   ) {
     super('NotificationQueueProcessor', QUEUES.NOTIFICATION, queueService);
@@ -42,6 +44,17 @@ export class NotificationQueueProcessor extends BaseWorker {
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
+    let tenantName: string | undefined;
+    if (tenantId) {
+      try {
+        tenantName = (await this.tenantSettingsService.getSettings(tenantId))
+          .tenantName;
+      } catch (err: any) {
+        this.logger.warn(
+          `Failed to resolve tenant name for ${tenantId}: ${err.message}`,
+        );
+      }
+    }
 
     switch (job.name) {
       // ─── FLOW 2: Ticket Creation → Assignment Rules → Customer Notification ──
@@ -58,6 +71,7 @@ export class NotificationQueueProcessor extends BaseWorker {
             approvalId: job.data.approvalId,
             approverId: job.data.approverId,
           },
+          tenantName,
         );
         return { notified: true, approvalId: job.data.approvalId };
       }
@@ -76,6 +90,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketNumber: job.data.ticketNumber,
               summary: job.data.summary,
             },
+            tenantName,
           );
         }
         return { notified: true, ticketId: job.data.ticketId };
@@ -95,6 +110,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketNumber: job.data.ticketNumber,
               subject: job.data.subject,
             },
+            tenantName,
           );
         }
         return { notified: true, ticketId: job.data.ticketId };
@@ -113,6 +129,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketId: job.data.ticketId,
               ticketNumber: job.data.ticketNumber,
             },
+            tenantName,
           );
         }
         return { notified: true, ticketId: job.data.ticketId };
@@ -131,6 +148,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketId: job.data.ticketId,
               ticketNumber: job.data.ticketNumber,
             },
+            tenantName,
           );
         }
         return { notified: true, ticketId: job.data.ticketId };
@@ -149,6 +167,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketId: job.data.ticketId,
               ticketNumber: job.data.ticketNumber,
             },
+            tenantName,
           );
         }
         return { notified: true, ticketId: job.data.ticketId };
@@ -162,6 +181,7 @@ export class NotificationQueueProcessor extends BaseWorker {
           tenantId,
           job.data.agentId,
           `Ticket #${job.data.ticketNumber} has been assigned to you.`,
+          tenantName,
         );
         return { notified: true, agentId: job.data.agentId };
       }
@@ -174,6 +194,7 @@ export class NotificationQueueProcessor extends BaseWorker {
           tenantId,
           job.data.agentId,
           `A conversation has been assigned to you.`,
+          tenantName,
         );
         return { notified: true, agentId: job.data.agentId };
       }
@@ -184,6 +205,7 @@ export class NotificationQueueProcessor extends BaseWorker {
           tenantId,
           job.data.mentionedUserId,
           `You were mentioned in conversation ${job.data.conversationId}.`,
+          tenantName,
         );
         return { notified: true, mentionedUserId: job.data.mentionedUserId };
       }
@@ -195,6 +217,7 @@ export class NotificationQueueProcessor extends BaseWorker {
           tenantId,
           job.data.agentId,
           `SLA breached for ticket #${job.data.ticketNumber} (${job.data.breachType}).`,
+          tenantName,
         );
         if (job.data.managerEmail) {
           await this.notificationService.sendEmail(
@@ -206,6 +229,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketNumber: job.data.ticketNumber,
               breachType: job.data.breachType,
             },
+            tenantName,
           );
         }
         return { notified: true, ticketId: job.data.ticketId };
@@ -218,6 +242,7 @@ export class NotificationQueueProcessor extends BaseWorker {
           tenantId,
           job.data.agentId || job.data.teamId,
           `Conversation ${job.data.conversationId} requires human handling: ${job.data.reason}`,
+          tenantName,
         );
         return { notified: true, conversationId: job.data.conversationId };
       }
@@ -235,6 +260,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               ticketId: job.data.ticketId,
               surveyUrl: job.data.surveyUrl,
             },
+            tenantName,
           );
         }
         return { notified: true };
@@ -249,6 +275,7 @@ export class NotificationQueueProcessor extends BaseWorker {
           tenantId,
           job.data.agentId,
           `AI draft ready for review in conversation ${job.data.conversationId}.`,
+          tenantName,
         );
         return { notified: true, draftId: job.data.draftId };
       }
@@ -282,6 +309,7 @@ export class NotificationQueueProcessor extends BaseWorker {
             adminName: job.data.adminName,
             portalUrl: process.env.PORTAL_URL || 'https://app.easydev.ai',
           },
+          tenantName,
         );
         return { notified: true, tenantId };
       }
@@ -302,6 +330,7 @@ export class NotificationQueueProcessor extends BaseWorker {
             failureReason: job.data.failureReason,
             retryUrl: job.data.retryUrl,
           },
+          tenantName,
         );
         return { notified: true, invoiceId: job.data.invoiceId };
       }
@@ -320,6 +349,7 @@ export class NotificationQueueProcessor extends BaseWorker {
               conversationId: job.data.conversationId,
               summary: job.data.summary,
             },
+            tenantName,
           );
         }
         return { notified: true, conversationId: job.data.conversationId };

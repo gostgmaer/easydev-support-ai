@@ -1,6 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { AnalyticsReportService } from './analytics-report.service';
 import { NotificationService } from '../../notifications/notification.service';
+import { TenantSettingsService } from '../../settings/services/tenant-settings.service';
 import { ExportReportDto } from '../dtos/analytics.dto';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AnalyticsExportService {
   constructor(
     private readonly reportService: AnalyticsReportService,
     private readonly notificationService: NotificationService,
+    private readonly tenantSettingsService: TenantSettingsService,
   ) {}
 
   async generateExport(
@@ -81,6 +83,16 @@ export class AnalyticsExportService {
       `Triggering export delivery for ${filename} to ${recipients.length} recipients`,
     );
 
+    let tenantName: string | undefined;
+    try {
+      tenantName = (await this.tenantSettingsService.getSettings(tenantId))
+        .tenantName;
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to resolve tenant name for ${tenantId}: ${err.message}`,
+      );
+    }
+
     for (const recipient of recipients) {
       await this.notificationService.sendEmail(
         tenantId,
@@ -92,6 +104,7 @@ export class AnalyticsExportService {
           downloadUrl,
           exportedAt: new Date().toISOString(),
         },
+        tenantName,
       );
     }
 

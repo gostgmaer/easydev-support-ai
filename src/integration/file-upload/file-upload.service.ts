@@ -3,6 +3,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { TenantSettingsService } from '../../modules/settings/services/tenant-settings.service';
 
 export interface StorageReference {
   storageProvider: string;
@@ -32,10 +33,25 @@ export class FileUploadIntegrationService {
     process.env.FILE_UPLOAD_SERVICE_URL || 'http://easydev-file-upload:8080';
   private readonly apiKey = process.env.FILE_UPLOAD_SERVICE_API_KEY || '';
 
-  private headers(tenantId: string): Record<string, string> {
+  constructor(private readonly tenantSettingsService: TenantSettingsService) {}
+
+  // x-tenant-id stays the stable identifier the File Upload Service actually
+  // partitions/secures storage by; x-tenant-name is purely a human-readable
+  // label so tenant activity is identifiable at a glance in its logs/dashboard.
+  private async headers(tenantId: string): Promise<Record<string, string>> {
+    let tenantName: string | undefined;
+    try {
+      tenantName = (await this.tenantSettingsService.getSettings(tenantId))
+        .tenantName;
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to resolve tenant name for ${tenantId}: ${err.message}`,
+      );
+    }
     return {
       'content-type': 'application/json',
       'x-tenant-id': tenantId,
+      ...(tenantName ? { 'x-tenant-name': tenantName } : {}),
       ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
     };
   }
@@ -57,7 +73,7 @@ export class FileUploadIntegrationService {
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method,
-        headers: this.headers(tenantId),
+        headers: await this.headers(tenantId),
         body: body ? JSON.stringify(body) : undefined,
       });
       if (!response.ok) {
