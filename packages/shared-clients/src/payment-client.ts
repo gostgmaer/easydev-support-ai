@@ -1,6 +1,13 @@
-import { BaseClient } from './base-client';
+import { BaseClient, AuthProbeResult } from './base-client';
 import { createHmac } from 'crypto';
 import { IamServiceTokenProvider } from './iam-service-token';
+
+// A well-formed but certainly-nonexistent tenant - used only to exercise
+// the real auth path for health checks without depending on real tenant
+// data existing. A 404/null-subscription response proves auth passed
+// (it got past the gateway guard to business logic); 401/403 proves it
+// didn't.
+const HEALTH_PROBE_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * Mirrors the real payment-microservice response shape from
@@ -71,11 +78,17 @@ export class PaymentClient extends BaseClient {
     method: string,
     path: string,
     tenantId: string,
-  ): { 'x-gateway-hmac': string; 'x-gateway-timestamp': string } | Record<string, never> {
+  ):
+    | { 'x-gateway-hmac': string; 'x-gateway-timestamp': string }
+    | Record<string, never> {
     if (!this.gatewayHmacSecret) return {};
     const timestamp = Date.now().toString();
-    const payload = [method.toUpperCase(), path, tenantId, '', timestamp].join('|');
-    const hmac = createHmac('sha256', this.gatewayHmacSecret).update(payload).digest('hex');
+    const payload = [method.toUpperCase(), path, tenantId, '', timestamp].join(
+      '|',
+    );
+    const hmac = createHmac('sha256', this.gatewayHmacSecret)
+      .update(payload)
+      .digest('hex');
     return { 'x-gateway-hmac': hmac, 'x-gateway-timestamp': timestamp };
   }
 
@@ -107,8 +120,28 @@ export class PaymentClient extends BaseClient {
       });
       return response.data;
     } catch (e: any) {
-      this.logger.error(`Payment getTenantSubscriptionStatus failed: ${e.message}`);
+      this.logger.error(
+        `Payment getTenantSubscriptionStatus failed: ${e.message}`,
+      );
       return null;
     }
+  }
+
+  /**
+   * Exercises this client's actual auth path (HMAC + api-key/Bearer)
+   * against the real endpoint with a sentinel tenant, for health checks
+   * that need to prove credentials work, not just that the host answers.
+   */
+  async checkAuth(): Promise<AuthProbeResult> {
+    const path = '/api/v1/subscriptions/active';
+    return this.probeAuth({
+      method: 'GET',
+      url: path,
+      headers: {
+        ...(await this.authHeaders()),
+        'x-tenant-id': HEALTH_PROBE_TENANT_ID,
+        ...this.signGatewayRequest('GET', path, HEALTH_PROBE_TENANT_ID),
+      },
+    });
   }
 }

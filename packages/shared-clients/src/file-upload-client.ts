@@ -1,5 +1,12 @@
 import { createHmac } from 'crypto';
-import { BaseClient } from './base-client';
+import { BaseClient, AuthProbeResult } from './base-client';
+
+// A 24-hex-char string is a well-formed Mongo ObjectId that will never
+// resolve to a real file - used only to exercise the real auth path for
+// health checks. A 404 ("not found") proves auth passed (it got through
+// the gateway HMAC guard to business logic); 401/403 proves it didn't.
+const HEALTH_PROBE_FILE_ID = '000000000000000000000000';
+const HEALTH_PROBE_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * Mirrors the real file-upload-service's `formatFile()` response shape
@@ -164,5 +171,18 @@ export class FileUploadClient extends BaseClient {
     } catch (e: any) {
       return { status: 'DOWN', error: e.message };
     }
+  }
+
+  /**
+   * Exercises this client's actual auth path (gateway HMAC + identity
+   * headers) against a real route with sentinel values, for health checks
+   * that need to prove credentials work, not just that the host answers.
+   */
+  async checkAuth(): Promise<AuthProbeResult> {
+    return this.probeAuth({
+      method: 'GET',
+      url: `/${HEALTH_PROBE_FILE_ID}`,
+      headers: this.headers(HEALTH_PROBE_TENANT_ID),
+    });
   }
 }

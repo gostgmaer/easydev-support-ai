@@ -13,11 +13,31 @@ import {
   shouldRunProcessor,
   QueueName,
 } from '@easydev/shared-queues';
+import {
+  IamClient,
+  PaymentClient,
+  NotificationClient,
+  FileUploadClient,
+  IamServiceTokenProvider,
+  AuthProbeResult,
+} from '@easydev/shared-clients';
 
 type ComponentResult = {
   status: 'UP' | 'DOWN';
   latencyMs?: number;
   error?: string;
+};
+
+// Reachability (does the host answer at all) plus a real credential-
+// exercising probe (does THIS app's actual auth - HMAC/API key/Bearer -
+// get accepted), reported separately. A service can be reachable but
+// AUTH_FAILED (misconfigured/revoked credentials on either side) - that's
+// a materially different problem than the host being down, and the whole
+// point of asking "is service-to-service communication actually working".
+type ServiceCommResult = {
+  status: 'UP' | 'DOWN';
+  reachable: ComponentResult;
+  authVerified: AuthProbeResult;
 };
 
 @Injectable()
@@ -88,6 +108,10 @@ export class HealthService {
       // /health/live is the AI platform's own cheap liveness probe (no DB/
       // Redis checks on its side) - hitting its deep /health would couple
       // this service's readiness to that platform's downstream dependencies.
+      // No real auth-verifying probe here: every actual endpoint
+      // (workflows/run, knowledge-base ingest/embed/rerank) has side
+      // effects, so unlike IAM/payment/notification/file-upload there's no
+      // safe read-only authenticated route to exercise.
       await axios.get(`${baseUrl}/health/live`, { timeout: 3000 });
       return { status: 'UP', latencyMs: Date.now() - start };
     } catch (e: any) {
@@ -96,36 +120,116 @@ export class HealthService {
     }
   }
 
-  async checkIamService(): Promise<ComponentResult> {
+  private iamClient(): IamClient {
+    const baseUrl =
+      process.env.EASYDEV_IAM_URL ||
+      process.env.IAM_SERVICE_INTERNAL_URL ||
+      process.env.IAM_SERVICE_URL ||
+      'http://localhost:3304';
+    return new IamClient(baseUrl, process.env.IAM_SERVICE_API_KEY);
+  }
+
+  async checkIamService(): Promise<ServiceCommResult> {
+    const client = this.iamClient();
     const baseUrl =
       process.env.EASYDEV_IAM_URL ||
       process.env.IAM_SERVICE_INTERNAL_URL ||
       process.env.IAM_SERVICE_URL;
-    return this.probeHttp(baseUrl, '/api/v1/iam/health');
+    const [reachable, authVerified] = await Promise.all([
+      this.probeHttp(baseUrl, '/api/v1/iam/health'),
+      client.checkAuth(),
+    ]);
+    return {
+      status: authVerified.status === 'UP' ? 'UP' : 'DOWN',
+      reachable,
+      authVerified,
+    };
   }
 
-  async checkPaymentService(): Promise<ComponentResult> {
-    return this.probeHttp(process.env.PAYMENT_SERVICE_URL, '/health');
+  private paymentClient(): PaymentClient {
+    const iamBaseUrl =
+      process.env.EASYDEV_IAM_URL ||
+      process.env.IAM_SERVICE_INTERNAL_URL ||
+      process.env.IAM_SERVICE_URL ||
+      'http://localhost:3304';
+    const serviceTokenProvider = new IamServiceTokenProvider(
+      iamBaseUrl,
+      process.env.PAYMENT_IAM_CLIENT_ID,
+      process.env.PAYMENT_IAM_CLIENT_SECRET,
+      process.env.PAYMENT_IAM_SCOPES || 'payment:read payment:write',
+    );
+    return new PaymentClient(
+      process.env.PAYMENT_SERVICE_URL || 'http://localhost:3302',
+      process.env.PAYMENT_SERVICE_API_KEY || '',
+      process.env.FILE_UPLOAD_HMAC_SECRET,
+      serviceTokenProvider,
+    );
   }
 
-  async checkNotificationService(): Promise<ComponentResult> {
-    return this.probeHttp(process.env.NOTIFICATION_SERVICE_URL, '/health');
+  async checkPaymentService(): Promise<ServiceCommResult> {
+    const client = this.paymentClient();
+    const [reachable, authVerified] = await Promise.all([
+      // payment-microservice's real Terminus health endpoint (verified
+      // against its source) - /api/v1/health, not bare /health.
+      this.probeHttp(process.env.PAYMENT_SERVICE_URL, '/api/v1/health'),
+      client.checkAuth(),
+    ]);
+    return {
+      status: authVerified.status === 'UP' ? 'UP' : 'DOWN',
+      reachable,
+      authVerified,
+    };
   }
 
-  async checkFileUploadService(): Promise<ComponentResult> {
-    // A dedicated health URL is already provisioned for this one - use it
-    // directly rather than guessing a /health path off the base URL.
+  private notificationClient(): NotificationClient {
+    return new NotificationClient(
+      process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3003',
+      process.env.NOTIFICATION_SERVICE_API_KEY || '',
+    );
+  }
+
+  async checkNotificationService(): Promise<ServiceCommResult> {
+    const client = this.notificationClient();
+    const [reachable, authVerified] = await Promise.all([
+      // Real public liveness route (verified against its source) -
+      // /v1/health, not bare /health.
+      this.probeHttp(process.env.NOTIFICATION_SERVICE_URL, '/v1/health'),
+      client.checkAuth(),
+    ]);
+    return {
+      status: authVerified.status === 'UP' ? 'UP' : 'DOWN',
+      reachable,
+      authVerified,
+    };
+  }
+
+  private fileUploadClient(): FileUploadClient {
+    const baseUrl = (
+      process.env.FILE_UPLOAD_SERVICE_URL || 'http://easydev-file-upload:8080'
+    ).replace(/\/+$/, '');
+    return new FileUploadClient(
+      `${baseUrl}/api/files`,
+      process.env.FILE_UPLOAD_HMAC_SECRET,
+    );
+  }
+
+  async checkFileUploadService(): Promise<ServiceCommResult> {
+    const client = this.fileUploadClient();
     const healthUrl = process.env.FILE_UPLOAD_SERVICE_HEALTH_URL;
-    if (!healthUrl) {
-      return { status: 'DOWN', error: 'FILE_UPLOAD_SERVICE_HEALTH_URL not configured' };
-    }
-    const start = Date.now();
-    try {
-      await axios.get(healthUrl, { timeout: 3000, validateStatus: () => true });
-      return { status: 'UP', latencyMs: Date.now() - start };
-    } catch (e: any) {
-      return { status: 'DOWN', error: e.message };
-    }
+    const [reachable, authVerified] = await Promise.all([
+      healthUrl
+        ? client.checkHealth(healthUrl)
+        : Promise.resolve<ComponentResult>({
+            status: 'DOWN',
+            error: 'FILE_UPLOAD_SERVICE_HEALTH_URL not configured',
+          }),
+      client.checkAuth(),
+    ]);
+    return {
+      status: authVerified.status === 'UP' ? 'UP' : 'DOWN',
+      reachable,
+      authVerified,
+    };
   }
 
   async checkStorage(): Promise<{
@@ -137,7 +241,8 @@ export class HealthService {
     // `uploads/` directory (widget attachments, served via
     // useStaticAssets in main.ts) - verify it's actually writable rather
     // than reporting a hardcoded fake value.
-    const uploadsDir = process.env.UPLOADS_DIR || join(process.cwd(), 'uploads');
+    const uploadsDir =
+      process.env.UPLOADS_DIR || join(process.cwd(), 'uploads');
     const probeFile = join(uploadsDir, `.health-check-${process.pid}`);
     try {
       await fs.mkdir(uploadsDir, { recursive: true });
@@ -201,7 +306,9 @@ export class HealthService {
               waiting: 0,
               active: 0,
               failed: 0,
-              status: managedByThisProcess ? ('DOWN' as const) : ('N/A' as const),
+              status: managedByThisProcess
+                ? ('DOWN' as const)
+                : ('N/A' as const),
               error: managedByThisProcess ? 'Queue not registered' : undefined,
             };
           }

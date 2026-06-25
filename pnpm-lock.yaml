@@ -214,6 +214,9 @@ importers:
       '@easydev/database':
         specifier: workspace:*
         version: link:../database
+      '@easydev/shared-clients':
+        specifier: workspace:*
+        version: link:../shared-clients
       '@easydev/shared-queues':
         specifier: workspace:*
         version: link:../shared-queues

@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "@easydev/database": "workspace:*",
+    "@easydev/shared-clients": "workspace:*",
     "@easydev/shared-queues": "workspace:*",
     "axios": "^1.18.0",
     "drizzle-orm": "^0.45.2",
