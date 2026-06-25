@@ -3,6 +3,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { FileUploadClient } from '@easydev/shared-clients';
 import { TenantSettingsService } from '../../modules/settings/services/tenant-settings.service';
 
 export interface StorageReference {
@@ -17,85 +18,79 @@ export interface StorageReference {
 
 export interface ScanResult {
   status: 'CLEAN' | 'INFECTED' | 'PENDING';
-  scanId?: string;
 }
 
 /**
- * Thin HTTP client for the shared EasyDev File Upload Service. Files are never
- * stored locally; this adapter only resolves storage references, signed URLs
- * and post-processing hooks (virus scan, thumbnail) against the upstream
- * service configured via FILE_UPLOAD_SERVICE_URL.
+ * Thin wrapper around FileUploadClient (packages/shared-clients) that adds
+ * tenant-name resolution (needs TenantSettingsService, a NestJS DI service
+ * the plain shared client can't depend on) and maps the real service's
+ * resource shape onto this app's existing StorageReference/ScanResult
+ * contracts so callers (knowledge-base, messages, tickets) didn't need to
+ * change at all.
+ *
+ * `storagePath` here is repurposed to hold the file's real id (the only
+ * thing every follow-up call - download/delete/status - actually needs),
+ * not the provider's storageKey - verified against the real service's
+ * fileController.js, which keys every other route off :id, not storageKey.
  */
 @Injectable()
 export class FileUploadIntegrationService {
   private readonly logger = new Logger(FileUploadIntegrationService.name);
-  private readonly baseUrl =
-    process.env.FILE_UPLOAD_SERVICE_URL || 'http://easydev-file-upload:8080';
-  private readonly apiKey = process.env.FILE_UPLOAD_SERVICE_API_KEY || '';
+  private readonly client: FileUploadClient;
 
-  constructor(private readonly tenantSettingsService: TenantSettingsService) {}
+  constructor(private readonly tenantSettingsService: TenantSettingsService) {
+    const baseUrl = (
+      process.env.FILE_UPLOAD_SERVICE_URL || 'http://easydev-file-upload:8080'
+    ).replace(/\/+$/, '');
+    // Real service mounts file routes at /api/files (app.js:
+    // app.use('/api/files', fileRoutes)) - every relative path in
+    // FileUploadClient assumes that prefix is already in the base URL.
+    this.client = new FileUploadClient(
+      `${baseUrl}/api/files`,
+      process.env.FILE_UPLOAD_HMAC_SECRET,
+    );
+  }
 
-  // x-tenant-id stays the stable identifier the File Upload Service actually
-  // partitions/secures storage by; x-tenant-name is purely a human-readable
-  // label so tenant activity is identifiable at a glance in its logs/dashboard.
-  private async headers(tenantId: string): Promise<Record<string, string>> {
-    let tenantName: string | undefined;
+  private async resolveTenantName(
+    tenantId: string,
+  ): Promise<string | undefined> {
     try {
-      tenantName = (await this.tenantSettingsService.getSettings(tenantId))
+      return (await this.tenantSettingsService.getSettings(tenantId))
         .tenantName;
     } catch (err: any) {
       this.logger.warn(
         `Failed to resolve tenant name for ${tenantId}: ${err.message}`,
       );
+      return undefined;
     }
-    return {
-      'content-type': 'application/json',
-      'x-tenant-id': tenantId,
-      ...(tenantName ? { 'x-tenant-name': tenantName } : {}),
-      ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
-    };
   }
 
-  // Every call here (finalize, signed-url, scan, thumbnail, delete) is a
-  // confirmation/query against state the upstream service already owns -
-  // safely repeatable. Previously a single transient blip threw straight
-  // through with no retry, surfacing as a raw 503 mid-request (e.g. a
-  // half-attached file with no attachment record) instead of riding out a
-  // momentary outage.
-  private async request<T>(
-    method: string,
-    path: string,
+  /**
+   * Confirms an upload the frontend already completed directly against
+   * storage via a presigned URL, and returns a storage reference. Retries
+   * are handled inside BaseClient (circuit breaker + backoff), shared with
+   * every other client in this package.
+   */
+  async finalizeUpload(
     tenantId: string,
-    body?: unknown,
-    attempt = 1,
-  ): Promise<T> {
-    const maxAttempts = 3;
+    uploadReference: string,
+  ): Promise<StorageReference> {
     try {
-      const response = await fetch(`${this.baseUrl}${path}`, {
-        method,
-        headers: await this.headers(tenantId),
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(
-          `File Upload Service responded ${response.status}: ${text}`,
-        );
-      }
-      return (await response.json()) as T;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (attempt < maxAttempts) {
-        const delayMs = 500 * 2 ** (attempt - 1);
-        this.logger.warn(
-          `File Upload Service request failed (attempt ${attempt}/${maxAttempts}): ${message}. Retrying in ${delayMs}ms.`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-        return this.request<T>(method, path, tenantId, body, attempt + 1);
-      }
-      this.logger.error(
-        `File Upload Service request failed after ${maxAttempts} attempts: ${message}`,
+      const tenantName = await this.resolveTenantName(tenantId);
+      const file = await this.client.confirmUpload(
+        tenantId,
+        uploadReference,
+        tenantName,
       );
+      return {
+        storageProvider: 'EXTERNAL',
+        storagePath: file.id,
+        publicUrl: file.publicUrl,
+        fileSize: file.fileSize,
+        contentType: file.contentType,
+      };
+    } catch (e: any) {
+      this.logger.error(`finalizeUpload failed: ${e.message}`);
       throw new ServiceUnavailableException(
         'File Upload Service is unavailable',
       );
@@ -103,63 +98,76 @@ export class FileUploadIntegrationService {
   }
 
   /**
-   * Confirms an upload performed by the client against the File Upload Service
-   * and returns the persisted storage reference.
+   * Generates a time-limited signed URL for a stored object (storagePath
+   * here is the file id - see class docstring). No expiresInSeconds param -
+   * the real service's /:id/download signs and redirects with its own
+   * fixed expiry server-side, no per-request override exists.
    */
-  async finalizeUpload(
-    tenantId: string,
-    uploadReference: string,
-  ): Promise<StorageReference> {
-    return this.request<StorageReference>(
-      'POST',
-      `/v1/uploads/${encodeURIComponent(uploadReference)}/finalize`,
-      tenantId,
-    );
-  }
-
-  /** Generates a time-limited signed URL for a stored object. */
   async generateSignedUrl(
     tenantId: string,
     storagePath: string,
-    expiresInSeconds = 900,
   ): Promise<string> {
-    const result = await this.request<{ url: string }>(
-      'POST',
-      `/v1/files/signed-url`,
-      tenantId,
-      { storagePath, expiresInSeconds },
-    );
-    return result.url;
+    try {
+      const tenantName = await this.resolveTenantName(tenantId);
+      return await this.client.getSignedDownloadUrl(
+        tenantId,
+        storagePath,
+        tenantName,
+      );
+    } catch (e: any) {
+      this.logger.error(`generateSignedUrl failed: ${e.message}`);
+      throw new ServiceUnavailableException(
+        'File Upload Service is unavailable',
+      );
+    }
   }
 
-  /** Virus scan hook — enqueues/queries a scan for the stored object. */
+  /**
+   * scanStatus is set automatically by the upstream service after upload -
+   * there's no action endpoint to "request" one, this just reads the
+   * current value (kept as a method named requestVirusScan so callers,
+   * which poll it the same way, didn't need to change).
+   */
   async requestVirusScan(
     tenantId: string,
     storagePath: string,
   ): Promise<ScanResult> {
-    return this.request<ScanResult>('POST', `/v1/files/scan`, tenantId, {
-      storagePath,
-    });
+    try {
+      const tenantName = await this.resolveTenantName(tenantId);
+      return await this.client.getScanStatus(tenantId, storagePath, tenantName);
+    } catch (e: any) {
+      this.logger.error(`requestVirusScan failed: ${e.message}`);
+      throw new ServiceUnavailableException(
+        'File Upload Service is unavailable',
+      );
+    }
   }
 
-  /** Thumbnail generation hook for image/video attachments. */
-  async requestThumbnail(
+  /**
+   * KNOWN GAP: the real file-upload-service has no thumbnail generation
+   * capability at all (verified against its source - no field, no route).
+   * No-op with a clear log instead of calling an endpoint that doesn't
+   * exist, until a real thumbnail pipeline exists somewhere.
+   */
+  requestThumbnail(
     tenantId: string,
     storagePath: string,
-  ): Promise<{ thumbnailUrl: string }> {
-    return this.request<{ thumbnailUrl: string }>(
-      'POST',
-      `/v1/files/thumbnail`,
-      tenantId,
-      { storagePath },
+  ): Promise<{ thumbnailUrl?: string }> {
+    this.logger.warn(
+      `Thumbnail request for ${storagePath} (tenant ${tenantId}) skipped - file-upload-service has no thumbnail capability`,
     );
+    return Promise.resolve({ thumbnailUrl: undefined });
   }
 
   async deleteFile(tenantId: string, storagePath: string): Promise<void> {
-    await this.request<{ deleted: boolean }>(
-      'DELETE',
-      `/v1/files?storagePath=${encodeURIComponent(storagePath)}`,
-      tenantId,
-    );
+    try {
+      const tenantName = await this.resolveTenantName(tenantId);
+      await this.client.deleteFile(tenantId, storagePath, tenantName);
+    } catch (e: any) {
+      this.logger.error(`deleteFile failed: ${e.message}`);
+      throw new ServiceUnavailableException(
+        'File Upload Service is unavailable',
+      );
+    }
   }
 }

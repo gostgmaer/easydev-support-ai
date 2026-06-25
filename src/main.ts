@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { validateProductionEnv } from './config/validate-env';
 import { getAllowedOrigins } from './config/cors-origins';
 import { StructuredLogger } from './common/observability/logger.service';
+import { HealthService } from '@easydev/observability';
 
 async function bootstrap() {
   validateProductionEnv();
@@ -76,5 +77,34 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(process.env.PORT ?? 3100);
+
+  // Visibility, not a boot gate: a downstream outage (IAM/AI platform/etc
+  // blipping) shouldn't crash-loop this process - validateProductionEnv()
+  // above already hard-fails on missing config, this just reports actual
+  // reachability of every dependency (and, for queues this process is
+  // configured to run via PROCESS_QUEUE, whether a worker actually attached)
+  // right in the boot log instead of requiring someone to separately poll
+  // GET /health to find out something's unreachable.
+  void (async () => {
+    try {
+      const healthService = app.get(HealthService);
+      const { status, components } = await healthService.runFullLivenessCheck();
+      const logger = app.get(StructuredLogger);
+      const summary = Object.entries(components)
+        .map(([name, result]: [string, any]) => `${name}=${result.status}`)
+        .join(', ');
+      const message = `Startup dependency check: ${status} (${summary})`;
+      if (status === 'UP') {
+        logger.log(message, 'Bootstrap');
+      } else {
+        logger.warn(message, 'Bootstrap');
+      }
+    } catch (e: any) {
+      app.get(StructuredLogger).warn(
+        `Startup dependency check failed to run: ${e.message}`,
+        'Bootstrap',
+      );
+    }
+  })();
 }
 bootstrap();

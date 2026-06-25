@@ -23,17 +23,33 @@ export class NotificationService {
       this.logger.log(
         `Dispatching email via EasyDev Notification Service to ${to}`,
       );
-      // Integrates with EasyDev Notification Service. tenant_id remains the
-      // stable key the Notification Service actually uses; tenant_name is
-      // purely so tenant activity is identifiable at a glance in its logs.
+      // Verified directly against the real notification-service's
+      // SendEmailDto/EmailController (a separate repo): the route is
+      // POST /v1/email/send (not /v1/email), the DTO has no tenant_id/
+      // tenant_name fields at all (tenant context goes in `metadata`,
+      // which it stores with the log but never sends in the email), and
+      // the template field is `template` (a name resolved against that
+      // service's own template catalog), not `template_id`.
+      //
+      // KNOWN GAP: `templateId` here is one of this app's own kebab-case
+      // names (e.g. 'ticket-approval-request', 'sla-breach-manager') -
+      // none of these exist in notification-service's template catalog
+      // today, which throws "Email template not found" for any unknown
+      // name with no fallback. Fixing that requires either registering
+      // these as custom templates over there or remapping each call site
+      // to one of its existing templates - a content decision for
+      // whoever owns that service's template library, not something to
+      // guess at here.
       await axios.post(
-        `${process.env.NOTIFICATION_SERVICE_URL}/v1/email`,
+        `${process.env.NOTIFICATION_SERVICE_URL}/v1/email/send`,
         {
-          tenant_id: tenantId,
-          ...(tenantName ? { tenant_name: tenantName } : {}),
           to,
-          template_id: templateId,
+          template: templateId,
           data,
+          metadata: {
+            tenantId,
+            ...(tenantName ? { tenantName } : {}),
+          },
         },
         { headers: this.authHeaders },
       );
@@ -55,20 +71,15 @@ export class NotificationService {
     message: string,
     tenantName?: string,
   ) {
-    try {
-      await axios.post(
-        `${process.env.NOTIFICATION_SERVICE_URL}/v1/push`,
-        {
-          tenant_id: tenantId,
-          ...(tenantName ? { tenant_name: tenantName } : {}),
-          user_id: userId,
-          message,
-        },
-        { headers: this.authHeaders },
-      );
-    } catch (e: any) {
-      this.logger.error(`Failed to send push notification: ${e.message}`);
-      throw e;
-    }
+    // The real notification-service (a separate repo) has no push channel
+    // at all - only /v1/email/* and /v1/sms/* controllers exist. Every call
+    // here previously 404'd, got retried by the caller's BaseWorker logic,
+    // and eventually landed in the dead-letter queue - permanent, repeated
+    // failure for something that can never succeed, not a transient outage.
+    // No-op with a clear log instead until a real push channel exists
+    // somewhere (this service, or a dedicated push provider).
+    this.logger.warn(
+      `Push notification to user ${userId} (tenant ${tenantId}${tenantName ? ` / ${tenantName}` : ''}) skipped - notification-service has no push channel: "${message}"`,
+    );
   }
 }

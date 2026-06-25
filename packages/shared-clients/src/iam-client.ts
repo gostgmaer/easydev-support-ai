@@ -20,13 +20,16 @@ export class IamClient extends BaseClient {
     this.apiKey = apiKey;
   }
 
-  async validateToken(token: string, tenantId: string): Promise<ValidateTokenResponse> {
+  async validateToken(
+    token: string,
+    tenantId: string,
+  ): Promise<ValidateTokenResponse> {
     try {
       const response = await this.request<ValidateTokenResponse>({
         method: 'POST',
         url: '/auth/validate',
         data: { token, tenantId },
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
     } catch (e: any) {

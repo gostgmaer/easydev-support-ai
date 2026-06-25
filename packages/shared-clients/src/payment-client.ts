@@ -1,5 +1,6 @@
 import { BaseClient } from './base-client';
 import { createHmac } from 'crypto';
+import { IamServiceTokenProvider } from './iam-service-token';
 
 /**
  * Mirrors the real payment-microservice response shape from
@@ -30,11 +31,30 @@ export interface TenantSubscriptionStatus {
 export class PaymentClient extends BaseClient {
   private readonly apiKey: string;
   private readonly gatewayHmacSecret?: string;
+  private readonly serviceTokenProvider?: IamServiceTokenProvider;
 
-  constructor(baseURL: string, apiKey: string, gatewayHmacSecret?: string) {
+  constructor(
+    baseURL: string,
+    apiKey: string,
+    gatewayHmacSecret?: string,
+    // OAuth2 client_credentials token provider (preferred, scope-limited)
+    // - payment-microservice's own docs mark the shared x-api-key as a
+    // legacy fallback in favor of this. Optional and additive: when unset,
+    // or when it can't get a token (app not yet registered with IAM),
+    // every call below falls back to the legacy x-api-key unchanged.
+    serviceTokenProvider?: IamServiceTokenProvider,
+  ) {
     super(baseURL, 'PaymentClient');
     this.apiKey = apiKey;
     this.gatewayHmacSecret = gatewayHmacSecret;
+    this.serviceTokenProvider = serviceTokenProvider;
+  }
+
+  /** Bearer token from IAM when configured and reachable; otherwise the
+   * legacy shared x-api-key header (ServiceOrJwtGuard accepts either). */
+  private async authHeaders(): Promise<Record<string, string>> {
+    const bearer = await this.serviceTokenProvider?.getAuthHeader();
+    return bearer ? { authorization: bearer } : { 'x-api-key': this.apiKey };
   }
 
   /**
@@ -61,10 +81,12 @@ export class PaymentClient extends BaseClient {
 
   /**
    * Tenant-only lookup against the real, verified endpoint
-   * (GET /api/v1/subscriptions/active) - authenticates via the legacy
-   * shared x-api-key + x-tenant-id header pair (ServiceOrJwtGuard's
-   * documented legacy path) plus the gateway HMAC signature
-   * GatewayHmacGuard requires on every route.
+   * (GET /api/v1/subscriptions/active) - authenticates via an IAM-issued
+   * client_credentials Bearer token when configured, falling back to the
+   * legacy shared x-api-key + x-tenant-id header pair (both accepted by
+   * ServiceOrJwtGuard) otherwise, plus the gateway HMAC signature
+   * GatewayHmacGuard requires on every route regardless of which auth path
+   * is used.
    * Returns null (not a fabricated default) when the call fails, so the
    * caller can decide its own fallback rather than silently trusting
    * invented numbers as if they came from billing.
@@ -78,7 +100,7 @@ export class PaymentClient extends BaseClient {
         method: 'GET',
         url: path,
         headers: {
-          'x-api-key': this.apiKey,
+          ...(await this.authHeaders()),
           'x-tenant-id': tenantId,
           ...this.signGatewayRequest('GET', path, tenantId),
         },

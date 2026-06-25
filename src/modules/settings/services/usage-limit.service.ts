@@ -5,7 +5,11 @@ import { UpdateUsageLimitsDto } from '../dtos/settings.dto';
 import { SettingsEventPublisher } from './settings-event.publisher';
 import { v4 as uuidv4 } from 'uuid';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
-import { PaymentClient, IamClient } from '@easydev/shared-clients';
+import {
+  PaymentClient,
+  IamClient,
+  IamServiceTokenProvider,
+} from '@easydev/shared-clients';
 import { NotificationService } from '../../notifications/notification.service';
 import { TenantSettingsService } from './tenant-settings.service';
 import Redis from 'ioredis';
@@ -27,15 +31,32 @@ export class UsageLimitService {
     private readonly notificationService: NotificationService,
     private readonly tenantSettingsService: TenantSettingsService,
   ) {
+    const iamBaseUrl =
+      process.env.IAM_SERVICE_INTERNAL_URL ||
+      process.env.IAM_SERVICE_URL ||
+      'http://localhost:3304';
+    // Preferred service-to-service auth: an IAM-issued client_credentials
+    // token scoped to payment operations, replacing the legacy shared
+    // x-api-key (payment-microservice's own source marks that path
+    // "deprecated, being phased out" in favor of this). Resolves to null
+    // until PAYMENT_IAM_CLIENT_ID/SECRET are set, in which case
+    // PaymentClient transparently keeps using the legacy key - this app
+    // must be registered as an application on the IAM service (POST /apps)
+    // and issued credentials before these env vars do anything.
+    const paymentServiceTokenProvider = new IamServiceTokenProvider(
+      iamBaseUrl,
+      process.env.PAYMENT_IAM_CLIENT_ID,
+      process.env.PAYMENT_IAM_CLIENT_SECRET,
+      process.env.PAYMENT_IAM_SCOPES || 'payment:read payment:write',
+    );
     this.paymentClient = new PaymentClient(
       process.env.PAYMENT_SERVICE_URL || 'http://localhost:3302',
       process.env.PAYMENT_SERVICE_API_KEY || '',
       process.env.FILE_UPLOAD_HMAC_SECRET,
+      paymentServiceTokenProvider,
     );
     this.iamClient = new IamClient(
-      process.env.IAM_SERVICE_INTERNAL_URL ||
-        process.env.IAM_SERVICE_URL ||
-        'http://localhost:3304',
+      iamBaseUrl,
       process.env.IAM_SERVICE_API_KEY,
     );
     // Same best-effort, never-block-the-hot-path Redis pattern already used

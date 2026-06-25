@@ -128,7 +128,7 @@ describe('Observability Platform Tests', () => {
     let healthService: HealthService;
 
     beforeEach(() => {
-      healthService = new HealthService();
+      healthService = new HealthService({} as any);
       jest.spyOn(axios, 'get').mockResolvedValue({ status: 200, data: {} });
     });
 

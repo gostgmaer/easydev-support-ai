@@ -214,6 +214,9 @@ importers:
       '@easydev/database':
         specifier: workspace:*
         version: link:../database
+      '@easydev/shared-queues':
+        specifier: workspace:*
+        version: link:../shared-queues
       axios:
         specifier: ^1.18.0
         version: 1.18.0
