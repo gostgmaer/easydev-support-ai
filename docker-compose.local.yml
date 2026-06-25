@@ -26,6 +26,7 @@ services:
       - REDIS_PORT=6379
       - ENABLE_OTEL=false
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
@@ -62,6 +63,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
@@ -96,6 +98,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
@@ -130,6 +133,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
@@ -164,6 +168,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
@@ -198,6 +203,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
@@ -232,6 +238,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
