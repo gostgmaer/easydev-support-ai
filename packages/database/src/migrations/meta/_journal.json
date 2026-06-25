@@ -68,8 +68,57 @@
     {
       "idx": 9,
       "version": "7",
+      "when": 1781960000000,
+      "tag": "0009_ai_integration",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781970000000,
+      "tag": "0010_workflow_orchestration",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781980000000,
+      "tag": "0011_inbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1781990000000,
+      "tag": "0012_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0013_production_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1782010000000,
+      "tag": "0014_widget_identity_secret",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
       "when": 1782019200000,
       "tag": "0015_analytics_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1782386839902,
+      "tag": "0016_missing_tables",
       "breakpoints": true
     }
   ]
