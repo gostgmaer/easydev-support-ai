@@ -4,6 +4,13 @@ import axios from 'axios';
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
+  // Was never sent despite being configured everywhere - every call to the
+  // notification service went out completely unauthenticated.
+  private readonly apiKey = process.env.NOTIFICATION_SERVICE_API_KEY || '';
+
+  private get authHeaders() {
+    return this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {};
+  }
 
   async sendEmail(
     tenantId: string,
@@ -19,13 +26,17 @@ export class NotificationService {
       // Integrates with EasyDev Notification Service. tenant_id remains the
       // stable key the Notification Service actually uses; tenant_name is
       // purely so tenant activity is identifiable at a glance in its logs.
-      await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/v1/email`, {
-        tenant_id: tenantId,
-        ...(tenantName ? { tenant_name: tenantName } : {}),
-        to,
-        template_id: templateId,
-        data,
-      });
+      await axios.post(
+        `${process.env.NOTIFICATION_SERVICE_URL}/v1/email`,
+        {
+          tenant_id: tenantId,
+          ...(tenantName ? { tenant_name: tenantName } : {}),
+          to,
+          template_id: templateId,
+          data,
+        },
+        { headers: this.authHeaders },
+      );
     } catch (e: any) {
       this.logger.error(`Failed to send email: ${e.message}`);
       // Every real caller of this method (NotificationQueueProcessor's 16
@@ -45,12 +56,16 @@ export class NotificationService {
     tenantName?: string,
   ) {
     try {
-      await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/v1/push`, {
-        tenant_id: tenantId,
-        ...(tenantName ? { tenant_name: tenantName } : {}),
-        user_id: userId,
-        message,
-      });
+      await axios.post(
+        `${process.env.NOTIFICATION_SERVICE_URL}/v1/push`,
+        {
+          tenant_id: tenantId,
+          ...(tenantName ? { tenant_name: tenantName } : {}),
+          user_id: userId,
+          message,
+        },
+        { headers: this.authHeaders },
+      );
     } catch (e: any) {
       this.logger.error(`Failed to send push notification: ${e.message}`);
       throw e;
