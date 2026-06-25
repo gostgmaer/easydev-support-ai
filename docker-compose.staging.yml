@@ -18,6 +18,18 @@ services:
       - ENABLE_OTEL=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
       - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - CORS_ALLOWED_ORIGINS=https://admin-staging.easydev.in,https://app-staging.easydev.in,https://widget-staging.easydev.in,https://help-staging.easydev.in
+      # validateProductionEnv() (src/config/validate-env.ts) refuses to boot
+      # without these - they were missing from every service below, so
+      # api/webhook/worker-* all process.exit(1)'d immediately on start.
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - frontend-network
       - backend-network
@@ -38,6 +50,14 @@ services:
       - RUN_WEBHOOKS=true
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -57,6 +77,14 @@ services:
       - PROCESS_QUEUE=conversation-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -76,6 +104,14 @@ services:
       - PROCESS_QUEUE=workflow-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -95,6 +131,14 @@ services:
       - PROCESS_QUEUE=analytics-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -114,6 +158,14 @@ services:
       - PROCESS_QUEUE=connector-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -133,6 +185,14 @@ services:
       - PROCESS_QUEUE=notification-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_staging:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_staging?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -146,7 +206,9 @@ services:
     image: postgres:17-alpine
     environment:
       - POSTGRES_USER=support_ai_staging
-      - POSTGRES_PASSWORD=staging_password_secure_99
+      # Was a literal password committed to git - see the same fix's comment
+      # on the production compose file's postgres service.
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in the environment}
       - POSTGRES_DB=easydev_support_ai_staging
     volumes:
       - postgres-data:/var/lib/postgresql/data

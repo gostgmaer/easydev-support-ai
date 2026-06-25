@@ -31,6 +31,7 @@ services:
       - AI_PLATFORM_INTERNAL_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - ENABLE_OTEL=false
+      - CORS_ALLOWED_ORIGINS=http://localhost:3011,http://localhost:3012,http://localhost:3013,http://localhost:3014
     depends_on:
       - postgres
       - redis
@@ -61,12 +62,16 @@ services:
       - AI_PLATFORM_INTERNAL_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - ENABLE_OTEL=false
+      # shouldRunProcessor() (src/config/queue-role.ts) gates every
+      # @Processor() on this var - without it this service ran zero queue
+      # processors despite being labelled the dedicated worker node.
+      - PROCESS_QUEUE=conversation-queue,message-queue,ticket-queue,knowledge-queue,connector-queue,workflow-queue,analytics-queue,notification-queue,customer-queue,team-queue,channel-queue,settings-queue,inbox-queue,admin-queue,widget-queue,ai-queue
     depends_on:
       - postgres
       - redis
     networks:
       - easydev-net
-      
+
   # 3. Next.js Frontend Operations Center
   # Disabled: UI repo (../../UI/easydev-support-ai-web) is a pnpm monorepo without a Dockerfile.
   # Run on host instead: `pnpm dev:agent-workspace` (port 3012) or `pnpm dev:help-center` (port 3014)

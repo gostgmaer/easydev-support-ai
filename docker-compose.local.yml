@@ -29,6 +29,7 @@ services:
       - EASYDEV_AI_URL=http://host.docker.internal:8000
       - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
       - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
+      - CORS_ALLOWED_ORIGINS=http://localhost:3011,http://localhost:3012,http://localhost:3013,http://localhost:3014
     networks:
       - frontend-network
       - backend-network
