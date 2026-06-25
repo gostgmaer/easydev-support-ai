@@ -10,5 +10,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
 COPY --from=development /app/dist ./dist
-EXPOSE 3000
+EXPOSE 3100
 CMD ["node", "dist/main"]

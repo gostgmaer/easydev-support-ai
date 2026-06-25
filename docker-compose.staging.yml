@@ -10,7 +10,7 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3100
       - DB_HOST=postgres
       - DB_PORT=5432
       - REDIS_HOST=redis

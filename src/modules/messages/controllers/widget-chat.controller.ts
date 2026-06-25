@@ -43,7 +43,7 @@ import { TicketSourceEnum } from '../../tickets/domain/value-objects';
 import { CsatSurveyService } from '../../analytics/services/csat-survey.service';
 
 const WIDGET_ATTACHMENTS_DIR = join(process.cwd(), 'uploads', 'widget-attachments');
-const PUBLIC_BASE_URL = process.env.API_PUBLIC_URL || 'http://localhost:3000';
+const PUBLIC_BASE_URL = process.env.API_PUBLIC_URL || 'http://localhost:3100';
 const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
 
 // Uploaded files land under uploads/ which main.ts serves directly as static

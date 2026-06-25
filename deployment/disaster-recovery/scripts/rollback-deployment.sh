@@ -76,7 +76,7 @@ fi
 # 4. Final Verification health check of API Gateway
 if [ "${STATUS}" = "SUCCESS" ]; then
     echo "[ROLLBACK-DEPLOY] Performing final smoke tests..."
-    API_HEALTH_URL="http://localhost:3000/health"
+    API_HEALTH_URL="http://localhost:3100/health"
     SUCCESS=false
     for i in {1..10}; do
         if response=$(curl -s -f "${API_HEALTH_URL}"); then

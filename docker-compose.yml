@@ -10,10 +10,10 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:3000"
+      - "3100:3100"
     environment:
       - NODE_ENV=development
-      - PORT=3000
+      - PORT=3100
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
@@ -69,16 +69,16 @@ services:
       
   # 3. Next.js Frontend Operations Center
   # Disabled: UI repo (../../UI/easydev-support-ai-web) is a pnpm monorepo without a Dockerfile.
-  # Run on host instead: `pnpm dev:agent-workspace` (port 3000) or `pnpm dev:help-center` (port 3001)
+  # Run on host instead: `pnpm dev:agent-workspace` (port 3012) or `pnpm dev:help-center` (port 3014)
   # from C:\Users\kisho\WorkSpace\UI\easydev-support-ai-web.
   # frontend:
   #   build:
   #     context: ../../UI/easydev-support-ai-web
   #     dockerfile: Dockerfile
   #   ports:
-  #     - "3005:3005"
+  #     - "3012:3012"
   #   environment:
-  #     - NEXT_PUBLIC_API_URL=http://localhost:3000
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3100
   #   networks:
   #     - easydev-net
 

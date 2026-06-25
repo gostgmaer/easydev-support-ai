@@ -8,7 +8,7 @@ const http = require('http');
 // exists to avoid.
 const options = {
   host: 'localhost',
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3100,
   path: '/health/live',
   timeout: 2000,
 };

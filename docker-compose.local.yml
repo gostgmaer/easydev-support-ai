@@ -1,4 +1,5 @@
 version: '3.8'
+name: easydev-support-ai-local
 
 services:
   api:
@@ -7,13 +8,17 @@ services:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "3000:3000"
+      - "3100:3100"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
-      - PORT=3000
+      - PORT=3100
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
       - DB_HOST=postgres
       - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=easydev_support_ai
@@ -21,6 +26,9 @@ services:
       - REDIS_PORT=6379
       - ENABLE_OTEL=false
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
     networks:
       - frontend-network
       - backend-network
@@ -31,23 +39,162 @@ services:
       redis:
         condition: service_healthy
 
-  worker:
+  worker-conversation:
     image: easydev-support-ai-worker:local
     build:
       context: .
       dockerfile: Dockerfile.worker
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
-      - RUN_WORKERS=true
+      - PROCESS_QUEUE=conversation-queue,message-queue,inbox-queue,channel-queue
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
       - DB_HOST=postgres
       - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=easydev_support_ai
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-workflow:
+    image: easydev-support-ai-worker:local
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PROCESS_QUEUE=workflow-queue,ticket-queue,settings-queue
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-analytics:
+    image: easydev-support-ai-worker:local
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PROCESS_QUEUE=analytics-queue,knowledge-queue
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-connector:
+    image: easydev-support-ai-worker:local
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PROCESS_QUEUE=connector-queue,ai-queue
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker-notification:
+    image: easydev-support-ai-worker:local
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PROCESS_QUEUE=notification-queue,team-queue,customer-queue,widget-queue
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=easydev_support_ai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
     networks:
       - backend-network
       - database-network
@@ -62,17 +209,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.webhook
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
-      - RUN_WEBHOOKS=true
+      - PROCESS_QUEUE=admin-queue
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
       - DB_HOST=postgres
       - DB_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=easydev_support_ai
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - EASYDEV_IAM_URL=http://host.docker.internal:3304
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
+      - CONNECTOR_ENCRYPTION_KEY=local-dev-only-connector-key-not-for-prod
+      - WIDGET_JWT_SECRET=local-dev-only-widget-jwt-secret-not-for-prod
     networks:
       - backend-network
       - database-network

@@ -12,11 +12,11 @@ echo "[DEPLOY] Beginning $ENV deployment using tag: $TAG"
 if docker ps --format '{{.Names}}' | grep -q "support-ai-blue"; then
   ACTIVE_COLOR="blue"
   TARGET_COLOR="green"
-  TARGET_PORT=3002
+  TARGET_PORT=3102
 else
   ACTIVE_COLOR="green"
   TARGET_COLOR="blue"
-  TARGET_PORT=3000
+  TARGET_PORT=3100
 fi
 
 echo "[DEPLOY] Active environment color: $ACTIVE_COLOR. Target deployment: $TARGET_COLOR on port $TARGET_PORT"
@@ -29,9 +29,9 @@ echo "[DEPLOY] Bootstrapping $TARGET_COLOR container..."
 docker run -d \
   --name "support-ai-${TARGET_COLOR}" \
   --network "easydev-net" \
-  -p "${TARGET_PORT}:3000" \
+  -p "${TARGET_PORT}:3100" \
   --env-file "./deployment/environments/${ENV}.env" \
-  -e "PORT=3000" \
+  -e "PORT=3100" \
   "${IMAGE_NAME}:${TAG}"
 
 # 4. Perform Health Check / Smoke Test
