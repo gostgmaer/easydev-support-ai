@@ -86,6 +86,16 @@ jobs:
       - name: Verify NestJS Build
         run: pnpm run build
 
+      - name: Check Database Schema Drift
+        run: |
+          chmod +x ./scripts/check-schema-drift.sh
+          ./scripts/check-schema-drift.sh
+
+      - name: Verify Migrations Apply Cleanly From Scratch
+        run: |
+          chmod +x ./scripts/check-migrations-clean-apply.sh
+          ./scripts/check-migrations-clean-apply.sh
+
       - name: Run Test Suites with Coverage
         run: pnpm test -- --coverage --coverageThreshold='{"global":{"branches":90,"functions":90,"lines":90,"statements":90}}'
 
