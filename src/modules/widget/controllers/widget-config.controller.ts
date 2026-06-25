@@ -61,9 +61,7 @@ export class WidgetConfigController {
   @UseGuards(TenantGuard, RbacGuard)
   @Roles('tenant_admin')
   @Post('admin/rotate-identity-secret')
-  public async rotateIdentitySecret(
-    @Headers('x-tenant-id') tenantId: string,
-  ) {
+  public async rotateIdentitySecret(@Headers('x-tenant-id') tenantId: string) {
     const config = await this.configService.rotateIdentitySecret(tenantId);
     return config.toAdminJSON();
   }

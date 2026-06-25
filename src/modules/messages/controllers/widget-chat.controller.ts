@@ -42,7 +42,11 @@ import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { TicketSourceEnum } from '../../tickets/domain/value-objects';
 import { CsatSurveyService } from '../../analytics/services/csat-survey.service';
 
-const WIDGET_ATTACHMENTS_DIR = join(process.cwd(), 'uploads', 'widget-attachments');
+const WIDGET_ATTACHMENTS_DIR = join(
+  process.cwd(),
+  'uploads',
+  'widget-attachments',
+);
 const PUBLIC_BASE_URL = process.env.API_PUBLIC_URL || 'http://localhost:3100';
 const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -285,7 +289,8 @@ export class WidgetChatController {
    * a browser to upload to it directly. See MessageAttachmentService.registerLocal.
    */
   @ApiOperation({
-    summary: 'Upload a file and attach it to a new message in this widget conversation',
+    summary:
+      'Upload a file and attach it to a new message in this widget conversation',
   })
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post(':conversationId/attachments')
@@ -303,7 +308,12 @@ export class WidgetChatController {
       limits: { fileSize: MAX_ATTACHMENT_SIZE_BYTES },
       fileFilter: (_req, file, cb) => {
         if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(file.mimetype)) {
-          cb(new BadRequestException(`File type ${file.mimetype} is not allowed`), false);
+          cb(
+            new BadRequestException(
+              `File type ${file.mimetype} is not allowed`,
+            ),
+            false,
+          );
           return;
         }
         cb(null, true);

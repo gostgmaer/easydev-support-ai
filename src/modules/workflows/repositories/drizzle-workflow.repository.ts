@@ -561,7 +561,8 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
       eq(schema.workflowApprovals.approvalStatus, 'PENDING'),
       lte(schema.workflowApprovals.expiresAt, now),
     ];
-    if (tenantId) conditions.push(eq(schema.workflowApprovals.tenantId, tenantId));
+    if (tenantId)
+      conditions.push(eq(schema.workflowApprovals.tenantId, tenantId));
 
     const rows = await db
       .select()

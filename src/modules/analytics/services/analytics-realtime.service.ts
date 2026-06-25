@@ -226,7 +226,8 @@ export class AnalyticsRealtimeService
       slaBreachRiskCount: riskRow?.count ?? 0,
       slaComplianceRate:
         complianceRow?.total && complianceRow.total > 0
-          ? Math.round((complianceRow.compliant / complianceRow.total) * 1000) / 10
+          ? Math.round((complianceRow.compliant / complianceRow.total) * 1000) /
+            10
           : null,
       averageWaitTimeMs: waitTimeRow?.avgMs ?? null,
     };
@@ -260,7 +261,9 @@ export class AnalyticsRealtimeService
       currentAiResolutionRate: null,
       liveRequestRatePerSecond:
         secondsSinceMidnight > 0
-          ? Math.round(((usageRow?.requests ?? 0) / secondsSinceMidnight) * 1000) / 1000
+          ? Math.round(
+              ((usageRow?.requests ?? 0) / secondsSinceMidnight) * 1000,
+            ) / 1000
           : 0,
       liveAverageResponseTimeMs: null,
     };

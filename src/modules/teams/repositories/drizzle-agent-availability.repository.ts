@@ -78,7 +78,8 @@ export class DrizzleAgentAvailabilityRepository implements IAgentAvailabilityRep
   // the SLA monitor scheduler.
   async findOfflineAgents(tenantId?: string): Promise<AgentAvailability[]> {
     const conditions = [eq(schema.agentAvailability.status, 'OFFLINE')];
-    if (tenantId) conditions.push(eq(schema.agentAvailability.tenantId, tenantId));
+    if (tenantId)
+      conditions.push(eq(schema.agentAvailability.tenantId, tenantId));
 
     const rows = await db
       .select()

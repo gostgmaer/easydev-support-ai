@@ -48,7 +48,13 @@ export class KnowledgeSearchService {
     // see documents with zero ACL rows or an explicit public grant.
     const accessFlags = await Promise.all(
       paginated.data.map((d) =>
-        this.permissionService.checkAccess(tenantId, d.id, teamId, role, 'READ'),
+        this.permissionService.checkAccess(
+          tenantId,
+          d.id,
+          teamId,
+          role,
+          'READ',
+        ),
       ),
     );
     const docs = paginated.data.filter((_, i) => accessFlags[i]);

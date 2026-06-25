@@ -6,10 +6,7 @@ import type { IConnectorRepository } from '../repositories/connector-repository.
 import { Connector } from '../domain/connector.aggregate';
 import { ConnectorEventPublisher } from './connector-event.publisher';
 
-const BLOCKED_HOSTNAMES = new Set([
-  'localhost',
-  'metadata.google.internal',
-]);
+const BLOCKED_HOSTNAMES = new Set(['localhost', 'metadata.google.internal']);
 
 // IPv4 ranges that must never be reachable from a tenant-supplied connector
 // URL: loopback, RFC1918 private space, link-local (this also covers the
@@ -49,7 +46,8 @@ function isBlockedIpv4(ip: string): boolean {
 function isBlockedIpv6(ip: string): boolean {
   const normalized = ip.toLowerCase();
   if (normalized === '::1' || normalized === '::') return true;
-  if (normalized.startsWith('fe80:') || normalized.startsWith('fe8')) return true; // link-local
+  if (normalized.startsWith('fe80:') || normalized.startsWith('fe8'))
+    return true; // link-local
   if (/^fc[0-9a-f]{2}:|^fd[0-9a-f]{2}:/.test(normalized)) return true; // unique local fc00::/7
   // IPv4-mapped (::ffff:a.b.c.d) - unwrap and check the embedded IPv4.
   const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
@@ -139,21 +137,31 @@ export class ConnectorHealthService {
     }
 
     const hostname = parsed.hostname.toLowerCase();
-    if (BLOCKED_HOSTNAMES.has(hostname) || hostname.endsWith('.internal') || hostname.endsWith('.local')) {
+    if (
+      BLOCKED_HOSTNAMES.has(hostname) ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local')
+    ) {
       throw new Error(`Blocked probe: disallowed hostname ${hostname}`);
     }
 
     if (net.isIP(hostname)) {
-      const blocked = net.isIP(hostname) === 6 ? isBlockedIpv6(hostname) : isBlockedIpv4(hostname);
+      const blocked =
+        net.isIP(hostname) === 6
+          ? isBlockedIpv6(hostname)
+          : isBlockedIpv4(hostname);
       if (blocked) {
-        throw new Error(`Blocked probe: target IP ${hostname} is in a reserved/private range`);
+        throw new Error(
+          `Blocked probe: target IP ${hostname} is in a reserved/private range`,
+        );
       }
       return;
     }
 
     const addresses = await dns.promises.lookup(hostname, { all: true });
     for (const { address, family } of addresses) {
-      const blocked = family === 6 ? isBlockedIpv6(address) : isBlockedIpv4(address);
+      const blocked =
+        family === 6 ? isBlockedIpv6(address) : isBlockedIpv4(address);
       if (blocked) {
         throw new Error(
           `Blocked probe: ${hostname} resolves to reserved/private address ${address}`,

@@ -14,7 +14,9 @@ import { SettingsModule } from '../settings/settings.module';
   ],
   providers: [
     NotificationService,
-    ...(shouldRunProcessor(QUEUES.NOTIFICATION) ? [NotificationQueueProcessor] : []),
+    ...(shouldRunProcessor(QUEUES.NOTIFICATION)
+      ? [NotificationQueueProcessor]
+      : []),
   ],
   exports: [NotificationService],
 })

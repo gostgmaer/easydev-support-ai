@@ -78,7 +78,13 @@ export class MessageAttachmentService {
   async registerLocal(
     tenantId: string,
     messageId: string,
-    file: { fileName: string; fileType?: string; fileSize?: number; storagePath: string; publicUrl: string },
+    file: {
+      fileName: string;
+      fileType?: string;
+      fileSize?: number;
+      storagePath: string;
+      publicUrl: string;
+    },
     userId?: string,
   ): Promise<MessageAttachment> {
     const message = await this.messageRepo.findById(messageId, tenantId);

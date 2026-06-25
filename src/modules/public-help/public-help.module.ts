@@ -20,7 +20,12 @@ import { AIPlatformClient } from '../ai-integration/services/ai-platform.client'
  * dependencies of its own (just reads env vars), and AiIntegrationModule
  * pulls in a web of forwardRef'd modules that aren't needed for this. */
 @Module({
-  imports: [KnowledgeBaseModule, TicketsModule, CustomersModule, SettingsModule],
+  imports: [
+    KnowledgeBaseModule,
+    TicketsModule,
+    CustomersModule,
+    SettingsModule,
+  ],
   controllers: [
     PublicKnowledgeController,
     PublicTicketController,

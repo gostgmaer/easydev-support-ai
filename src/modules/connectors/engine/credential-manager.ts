@@ -97,7 +97,10 @@ export class CredentialManager {
    */
   public decryptIfEncrypted(value: string): string {
     if (!value) return value;
-    if (GCM_CIPHERTEXT_SHAPE.test(value) || LEGACY_CIPHERTEXT_SHAPE.test(value)) {
+    if (
+      GCM_CIPHERTEXT_SHAPE.test(value) ||
+      LEGACY_CIPHERTEXT_SHAPE.test(value)
+    ) {
       try {
         return this.decrypt<string>(value);
       } catch {

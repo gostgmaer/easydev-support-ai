@@ -79,7 +79,13 @@ export class KnowledgeDocumentController {
     const result = await this.documentService.findDocuments(tenantId, query);
     const accessFlags = await Promise.all(
       result.data.map((d) =>
-        this.permissionService.checkAccess(tenantId, d.id, teamId, role, 'READ'),
+        this.permissionService.checkAccess(
+          tenantId,
+          d.id,
+          teamId,
+          role,
+          'READ',
+        ),
       ),
     );
     const allowed = result.data.filter((_, i) => accessFlags[i]);

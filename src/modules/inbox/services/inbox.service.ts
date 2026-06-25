@@ -136,10 +136,7 @@ export class InboxService {
    * takeOverFromAi/setAiPaused actually stop the AI instead of just
    * updating a projection nothing reads.
    */
-  async isAiActive(
-    tenantId: string,
-    conversationId: string,
-  ): Promise<boolean> {
+  async isAiActive(tenantId: string, conversationId: string): Promise<boolean> {
     const view = await this.inboxRepo.findViewByConversation(
       tenantId,
       conversationId,

@@ -78,7 +78,9 @@ export class PublicKnowledgeController {
         ),
       ),
     );
-    return docs.filter((_: any, i: number) => accessFlags[i]).map((d: any) => d.toJSON());
+    return docs
+      .filter((_: any, i: number) => accessFlags[i])
+      .map((d: any) => d.toJSON());
   }
 
   @ApiOperation({ summary: 'Get a published article by slug (public)' })

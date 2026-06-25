@@ -68,7 +68,9 @@ import { Attachment } from './entities/attachment.entity';
     InboxService,
     RedisCacheService,
     ConversationEventPublisher,
-    ...(shouldRunProcessor(QUEUES.CONVERSATION) ? [ConversationQueueProcessor] : []),
+    ...(shouldRunProcessor(QUEUES.CONVERSATION)
+      ? [ConversationQueueProcessor]
+      : []),
     ConversationsGateway,
     {
       provide: 'IConversationRepository',

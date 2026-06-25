@@ -225,7 +225,10 @@ export class AiResponseService {
       // Confidence was computed and logged but never compared against
       // anything - a low-confidence/hallucination-risk reply went straight
       // to the customer exactly like a fully-confident one.
-      if (aiSettings.autoEscalationEnabled && confidence < aiSettings.escalationThreshold) {
+      if (
+        aiSettings.autoEscalationEnabled &&
+        confidence < aiSettings.escalationThreshold
+      ) {
         this.logger.log(
           `AI response confidence ${confidence} below escalation threshold ${aiSettings.escalationThreshold} for conversation ${conversationId}; escalating instead of auto-sending.`,
         );

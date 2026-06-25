@@ -36,7 +36,10 @@ export class IamProxyController {
   constructor(private readonly gateway: IamGatewayService) {}
 
   @Post('auth/login')
-  async login(@Body() credentials: LoginCredentials, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() credentials: LoginCredentials,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const session = await this.gateway.login(credentials);
     this.setRefreshCookie(res, session.tokens.refreshToken);
     return session;
@@ -53,7 +56,10 @@ export class IamProxyController {
   }
 
   @Post('auth/refresh')
-  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const refreshToken = this.getRefreshCookie(req);
     const tokens = await this.gateway.refresh(refreshToken ?? '');
     this.setRefreshCookie(res, tokens.refreshToken);

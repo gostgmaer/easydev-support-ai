@@ -1,6 +1,11 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
+import {
+  BaseWorker,
+  QueueService,
+  QUEUES,
+  WORKER_OPTIONS,
+} from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { AnalyticsEventConsumer } from '../consumers/analytics-event.consumer';
 import { AnalyticsAggregationService } from '../services/analytics-aggregation.service';

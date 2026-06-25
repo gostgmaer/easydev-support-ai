@@ -191,8 +191,8 @@ export class OrderLookupService {
         content,
         senderType: 'BOT',
         senderId: 'system-order-lookup',
-        direction: MessageDirectionEnum.OUTBOUND as any,
-        messageType: MessageTypeEnum.TEXT as any,
+        direction: MessageDirectionEnum.OUTBOUND,
+        messageType: MessageTypeEnum.TEXT,
       });
     } catch (err: any) {
       this.logger.warn(`Failed to persist bot message: ${err.message}`);

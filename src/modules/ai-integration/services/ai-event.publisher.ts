@@ -19,7 +19,7 @@ export class AiEventPublisher {
       // Route events to BullMQ jobs
       if (eventName === 'ai.workflow.started') {
         const e = event as any;
-        await this.queueService.addJob('ai-queue' as any, 'ai-workflow-job', {
+        await this.queueService.addJob('ai-queue', 'ai-workflow-job', {
           tenantId: e.tenantId,
           workflowExecutionId: e.workflowExecutionId,
           workflowId: e.workflowId,
@@ -29,22 +29,18 @@ export class AiEventPublisher {
 
       if (eventName === 'ai.tool.requested') {
         const e = event as any;
-        await this.queueService.addJob(
-          'ai-queue' as any,
-          'ai-tool-execution-job',
-          {
-            tenantId: e.tenantId,
-            toolRequestId: e.toolRequestId,
-            workflowExecutionId: e.workflowExecutionId,
-            toolName: e.toolName,
-            capability: e.capability,
-          },
-        );
+        await this.queueService.addJob('ai-queue', 'ai-tool-execution-job', {
+          tenantId: e.tenantId,
+          toolRequestId: e.toolRequestId,
+          workflowExecutionId: e.workflowExecutionId,
+          toolName: e.toolName,
+          capability: e.capability,
+        });
       }
 
       if (eventName === 'ai.escalation.created') {
         const e = event as any;
-        await this.queueService.addJob('ai-queue' as any, 'ai-escalation-job', {
+        await this.queueService.addJob('ai-queue', 'ai-escalation-job', {
           tenantId: e.tenantId,
           escalationId: e.escalationId,
           conversationId: e.conversationId,
@@ -55,7 +51,7 @@ export class AiEventPublisher {
 
       if (eventName === 'ai.usage.recorded') {
         const e = event as any;
-        await this.queueService.addJob('ai-queue' as any, 'ai-usage-job', {
+        await this.queueService.addJob('ai-queue', 'ai-usage-job', {
           tenantId: e.tenantId,
           agentId: e.agentId,
           date: e.date,

@@ -68,7 +68,8 @@ export class AnalyticsExportController {
   @ApiQuery({
     name: 'reportId',
     required: true,
-    description: 'The report this export was generated from (returned as part of the downloadUrl from POST /manual).',
+    description:
+      'The report this export was generated from (returned as part of the downloadUrl from POST /manual).',
   })
   @ApiResponse({ status: 200, description: 'Export file stream returned.' })
   async downloadExport(

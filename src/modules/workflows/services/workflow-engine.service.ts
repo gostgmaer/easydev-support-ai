@@ -313,7 +313,11 @@ export class WorkflowEngineService {
     }
 
     let lastError: any;
-    for (let attempt = 0; attempt <= ACTION_RETRY_BACKOFF_MS.length; attempt++) {
+    for (
+      let attempt = 0;
+      attempt <= ACTION_RETRY_BACKOFF_MS.length;
+      attempt++
+    ) {
       try {
         return await this.actionService.executeAction(
           tenantId,

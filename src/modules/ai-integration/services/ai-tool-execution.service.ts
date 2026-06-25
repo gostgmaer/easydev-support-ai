@@ -52,7 +52,7 @@ export class AiToolExecutionService {
         `Failed to submit tool ${status} status to AI platform directly; queuing for retry: ${err.message}`,
       );
       await this.queueService.addJob(
-        'ai-queue' as any,
+        'ai-queue',
         'ai-tool-result-submission-job',
         { tenantId, workflowId, requestId, payload, status },
       );

@@ -36,11 +36,12 @@ export function validateProductionEnv(): void {
     !process.env.IAM_SERVICE_INTERNAL_URL &&
     !process.env.IAM_SERVICE_URL
   ) {
-    missing.push('EASYDEV_IAM_URL (or IAM_SERVICE_INTERNAL_URL / IAM_SERVICE_URL)');
+    missing.push(
+      'EASYDEV_IAM_URL (or IAM_SERVICE_INTERNAL_URL / IAM_SERVICE_URL)',
+    );
   }
 
   if (missing.length > 0) {
-    // eslint-disable-next-line no-console
     console.error(
       `Refusing to start in production: missing required environment variable(s):\n${missing
         .map((name) => `  - ${name}`)

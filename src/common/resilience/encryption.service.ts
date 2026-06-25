@@ -9,7 +9,9 @@ export class EncryptionService {
 
   constructor() {
     if (!process.env.ENCRYPTION_KEY) {
-      throw new Error('ENCRYPTION_KEY must be set - refusing to encrypt with no configured key');
+      throw new Error(
+        'ENCRYPTION_KEY must be set - refusing to encrypt with no configured key',
+      );
     }
     this.key = Buffer.alloc(32);
     Buffer.from(process.env.ENCRYPTION_KEY, 'utf-8').copy(this.key);

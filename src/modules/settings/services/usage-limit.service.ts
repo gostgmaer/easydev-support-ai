@@ -107,15 +107,20 @@ export class UsageLimitService {
     }
 
     try {
-      const status = await this.paymentClient.getTenantSubscriptionStatus(tenantId);
+      const status =
+        await this.paymentClient.getTenantSubscriptionStatus(tenantId);
       const quotas = status?.subscription?.plan?.metadata?.quotas;
       const sanitized = this.sanitizeQuotas(quotas);
       if (sanitized) {
         await this.updateUsageLimits(tenantId, sanitized);
-        this.logger.log(`Synced usage limits for tenant ${tenantId} from billing plan metadata`);
+        this.logger.log(
+          `Synced usage limits for tenant ${tenantId} from billing plan metadata`,
+        );
       }
     } catch (err: any) {
-      this.logger.warn(`Billing sync failed for tenant ${tenantId}: ${err.message}`);
+      this.logger.warn(
+        `Billing sync failed for tenant ${tenantId}: ${err.message}`,
+      );
     }
 
     try {

@@ -2,7 +2,12 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Optional, Logger } from '@nestjs/common';
-import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
+import {
+  BaseWorker,
+  QueueService,
+  QUEUES,
+  WORKER_OPTIONS,
+} from '@easydev/shared-queues';
 import { NotificationService } from './notification.service';
 import { TenantSettingsService } from '../settings/services/tenant-settings.service';
 
@@ -200,7 +205,9 @@ export class NotificationQueueProcessor extends BaseWorker {
       }
 
       case 'mention-alert': {
-        this.logger.log(`Dispatching mention-alert notification [job=${job.id}]`);
+        this.logger.log(
+          `Dispatching mention-alert notification [job=${job.id}]`,
+        );
         await this.notificationService.sendPushNotification(
           tenantId,
           job.data.mentionedUserId,
