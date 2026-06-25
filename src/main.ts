@@ -100,10 +100,12 @@ async function bootstrap() {
         logger.warn(message, 'Bootstrap');
       }
     } catch (e: any) {
-      app.get(StructuredLogger).warn(
-        `Startup dependency check failed to run: ${e.message}`,
-        'Bootstrap',
-      );
+      app
+        .get(StructuredLogger)
+        .warn(
+          `Startup dependency check failed to run: ${e.message}`,
+          'Bootstrap',
+        );
     }
   })();
 }

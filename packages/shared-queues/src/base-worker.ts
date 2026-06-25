@@ -62,9 +62,7 @@ export abstract class BaseWorker
         return await this.handleJob(job);
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
-        this.logger.error(
-          `Job ${job.id} [${job.name}] failed: ${err.message}`,
-        );
+        this.logger.error(`Job ${job.id} [${job.name}] failed: ${err.message}`);
         await this.handleFailure(job, err);
         throw err;
       }

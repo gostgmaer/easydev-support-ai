@@ -30,10 +30,13 @@ export class LokiLogger extends ConsoleLogger {
     // Basic regex pattern masking for common secrets and keys
     return message
       .replace(/[\w\.-]+@[\w\.-]+\.\w{2,4}/g, '***@***.***') // email mask
-      .replace(/"?(?:password|token|apikey|secret|key)"?\s*[:=]\s*["']?[a-zA-Z0-9_-]+["']?/gi, (match) => {
-        const parts = match.split(/[:=]/);
-        return `${parts[0]}:"[REDACTED]"`;
-      });
+      .replace(
+        /"?(?:password|token|apikey|secret|key)"?\s*[:=]\s*["']?[a-zA-Z0-9_-]+["']?/gi,
+        (match) => {
+          const parts = match.split(/[:=]/);
+          return `${parts[0]}:"[REDACTED]"`;
+        },
+      );
   }
 
   async shipLog(entry: LokiLogEntry) {
@@ -52,7 +55,9 @@ export class LokiLogger extends ConsoleLogger {
       message_id: entry.messageId,
       level: entry.level,
       event: entry.context || 'general',
-      payload: entry.payload ? JSON.parse(this.maskSensitiveData(JSON.stringify(entry.payload))) : undefined,
+      payload: entry.payload
+        ? JSON.parse(this.maskSensitiveData(JSON.stringify(entry.payload)))
+        : undefined,
       message: maskedMessage,
     });
 

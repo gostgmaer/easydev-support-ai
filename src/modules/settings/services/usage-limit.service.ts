@@ -55,10 +55,7 @@ export class UsageLimitService {
       process.env.FILE_UPLOAD_HMAC_SECRET,
       paymentServiceTokenProvider,
     );
-    this.iamClient = new IamClient(
-      iamBaseUrl,
-      process.env.IAM_SERVICE_API_KEY,
-    );
+    this.iamClient = new IamClient(iamBaseUrl, process.env.IAM_SERVICE_API_KEY);
     // Same best-effort, never-block-the-hot-path Redis pattern already used
     // by RedisCacheService/CircuitBreakerManager - this is purely a throttle
     // on how often the real payment service gets called, not a dependency

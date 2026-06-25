@@ -24,7 +24,6 @@ export const QUEUES = {
   DEAD_LETTER: 'dead-letter-queue',
 } as const;
 
-
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
 export const DEAD_LETTER_QUEUE: QueueName = QUEUES.DEAD_LETTER;

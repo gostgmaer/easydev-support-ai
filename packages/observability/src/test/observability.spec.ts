@@ -17,11 +17,15 @@ describe('Observability Platform Tests', () => {
         requestId: 'req-456',
       };
 
-      const result = await OpenTelemetrySetup.startActiveSpan('test-span', mockContext, async (span) => {
-        span.setAttribute('custom.attr', 'value');
-        span.end();
-        return 'span-completed';
-      });
+      const result = await OpenTelemetrySetup.startActiveSpan(
+        'test-span',
+        mockContext,
+        async (span) => {
+          span.setAttribute('custom.attr', 'value');
+          span.end();
+          return 'span-completed';
+        },
+      );
 
       expect(result).toBe('span-completed');
     });
@@ -40,7 +44,13 @@ describe('Observability Platform Tests', () => {
     });
 
     it('should track API requests and observe durations in Prometheus metrics registry', async () => {
-      metricsService.recordHttpRequest('tenant-123', 'GET', '/api/users', '200', 0.123);
+      metricsService.recordHttpRequest(
+        'tenant-123',
+        'GET',
+        '/api/users',
+        '200',
+        0.123,
+      );
       const metricsOutput = await metricsService.getMetrics();
       expect(metricsOutput).toContain('http_requests_total');
       expect(metricsOutput).toContain('tenant_id="tenant-123"');
@@ -74,7 +84,9 @@ describe('Observability Platform Tests', () => {
     });
 
     it('should mask email addresses from console logs', async () => {
-      const spy = jest.spyOn(ConsoleLogger.prototype, 'log').mockImplementation(() => {});
+      const spy = jest
+        .spyOn(ConsoleLogger.prototype, 'log')
+        .mockImplementation(() => {});
       await logger.shipLog({
         level: 'info',
         message: 'Send invite to user@example.com for onboarding',
@@ -88,10 +100,13 @@ describe('Observability Platform Tests', () => {
     });
 
     it('should mask sensitive credential keys in logging messages', async () => {
-      const spy = jest.spyOn(ConsoleLogger.prototype, 'log').mockImplementation(() => {});
+      const spy = jest
+        .spyOn(ConsoleLogger.prototype, 'log')
+        .mockImplementation(() => {});
       await logger.shipLog({
         level: 'info',
-        message: 'Connection configuration settings: apikey="secretkey123" and token=abcxyz123',
+        message:
+          'Connection configuration settings: apikey="secretkey123" and token=abcxyz123',
         tenantId: 'tenant-1',
       });
       expect(spy).toHaveBeenCalled();
@@ -102,7 +117,9 @@ describe('Observability Platform Tests', () => {
     });
 
     it('should mask sensitive values in payload data properties', async () => {
-      const spy = jest.spyOn(ConsoleLogger.prototype, 'log').mockImplementation(() => {});
+      const spy = jest
+        .spyOn(ConsoleLogger.prototype, 'log')
+        .mockImplementation(() => {});
       await logger.shipLog({
         level: 'info',
         message: 'Processing payload',

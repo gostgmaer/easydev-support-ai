@@ -6,7 +6,8 @@ export class TenantResolver {
     const request = context.switchToHttp().getRequest();
     if (!request) return undefined;
 
-    let tenantId = request.headers['x-tenant-id'] || request.headers['x-tenant-slug'];
+    let tenantId =
+      request.headers['x-tenant-id'] || request.headers['x-tenant-slug'];
     if (tenantId) return String(tenantId);
 
     const user = request.user;

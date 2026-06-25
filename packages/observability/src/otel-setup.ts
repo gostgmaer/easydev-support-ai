@@ -19,11 +19,16 @@ export class OpenTelemetrySetup {
     if (process.env.ENABLE_OTEL === 'true') {
       try {
         const { NodeSDK } = require('@opentelemetry/sdk-node');
-        const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-        const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
+        const {
+          getNodeAutoInstrumentations,
+        } = require('@opentelemetry/auto-instrumentations-node');
+        const {
+          OTLPTraceExporter,
+        } = require('@opentelemetry/exporter-trace-otlp-grpc');
 
         const traceExporter = new OTLPTraceExporter({
-          url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
+          url:
+            process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
         });
 
         const sdk = new NodeSDK({
@@ -34,9 +39,15 @@ export class OpenTelemetrySetup {
                 requestHook: (span: any, request: any) => {
                   // Propagate custom context headers to OTEL span attributes
                   const headers = request.headers || {};
-                  if (headers['x-tenant-id']) span.setAttribute('tenant_id', headers['x-tenant-id']);
-                  if (headers['x-correlation-id']) span.setAttribute('correlation_id', headers['x-correlation-id']);
-                  if (headers['x-request-id']) span.setAttribute('request_id', headers['x-request-id']);
+                  if (headers['x-tenant-id'])
+                    span.setAttribute('tenant_id', headers['x-tenant-id']);
+                  if (headers['x-correlation-id'])
+                    span.setAttribute(
+                      'correlation_id',
+                      headers['x-correlation-id'],
+                    );
+                  if (headers['x-request-id'])
+                    span.setAttribute('request_id', headers['x-request-id']);
                 },
               },
             }),
@@ -45,9 +56,13 @@ export class OpenTelemetrySetup {
 
         sdk.start();
         this.isInitialized = true;
-        this.logger.log('OpenTelemetry SDK bootstrapped successfully with OTLP Exporter.');
+        this.logger.log(
+          'OpenTelemetry SDK bootstrapped successfully with OTLP Exporter.',
+        );
       } catch (err: any) {
-        this.logger.warn(`OTel auto-instrumentation packages not found. Running tracing fallback: ${err.message}`);
+        this.logger.warn(
+          `OTel auto-instrumentation packages not found. Running tracing fallback: ${err.message}`,
+        );
       }
     }
   }
@@ -56,7 +71,10 @@ export class OpenTelemetrySetup {
   public static startActiveSpan<T>(
     name: string,
     context: TraceContext,
-    callback: (span: { setAttribute: (k: string, v: any) => void; end: () => void }) => Promise<T>
+    callback: (span: {
+      setAttribute: (k: string, v: any) => void;
+      end: () => void;
+    }) => Promise<T>,
   ): Promise<T> {
     const attributes = new Map<string, any>(Object.entries(context));
     const span = {

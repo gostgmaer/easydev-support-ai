@@ -1,38 +1,57 @@
-"use strict";
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+var __decorate =
+  (this && this.__decorate) ||
+  function (decorators, target, key, desc) {
+    var c = arguments.length,
+      r =
+        c < 3
+          ? target
+          : desc === null
+            ? (desc = Object.getOwnPropertyDescriptor(target, key))
+            : desc,
+      d;
+    if (typeof Reflect === 'object' && typeof Reflect.decorate === 'function')
+      r = Reflect.decorate(decorators, target, key, desc);
+    else
+      for (var i = decorators.length - 1; i >= 0; i--)
+        if ((d = decorators[i]))
+          r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return (c > 3 && r && Object.defineProperty(target, key, r), r);
+  };
+var __metadata =
+  (this && this.__metadata) ||
+  function (k, v) {
+    if (typeof Reflect === 'object' && typeof Reflect.metadata === 'function')
+      return Reflect.metadata(k, v);
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.TenantInterceptor = void 0;
-const common_1 = require("@nestjs/common");
-const rxjs_1 = require("rxjs");
-const tenant_resolver_1 = require("./tenant-resolver");
-const tenant_context_1 = require("./tenant-context");
+const common_1 = require('@nestjs/common');
+const rxjs_1 = require('rxjs');
+const tenant_resolver_1 = require('./tenant-resolver');
+const tenant_context_1 = require('./tenant-context');
 let TenantInterceptor = class TenantInterceptor {
-    tenantResolver;
-    constructor(tenantResolver) {
-        this.tenantResolver = tenantResolver;
+  tenantResolver;
+  constructor(tenantResolver) {
+    this.tenantResolver = tenantResolver;
+  }
+  intercept(context, next) {
+    const tenantId = this.tenantResolver.resolve(context);
+    if (tenantId) {
+      return new rxjs_1.Observable((subscriber) => {
+        tenant_context_1.TenantContext.run(tenantId, () => {
+          next.handle().subscribe(subscriber);
+        });
+      });
     }
-    intercept(context, next) {
-        const tenantId = this.tenantResolver.resolve(context);
-        if (tenantId) {
-            return new rxjs_1.Observable((subscriber) => {
-                tenant_context_1.TenantContext.run(tenantId, () => {
-                    next.handle().subscribe(subscriber);
-                });
-            });
-        }
-        return next.handle();
-    }
+    return next.handle();
+  }
 };
 exports.TenantInterceptor = TenantInterceptor;
-exports.TenantInterceptor = TenantInterceptor = __decorate([
+exports.TenantInterceptor = TenantInterceptor = __decorate(
+  [
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [tenant_resolver_1.TenantResolver])
-], TenantInterceptor);
+    __metadata('design:paramtypes', [tenant_resolver_1.TenantResolver]),
+  ],
+  TenantInterceptor,
+);
