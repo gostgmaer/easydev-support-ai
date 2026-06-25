@@ -118,8 +118,10 @@ export class EmailChannelDraftService {
         context,
         lastCustomerMsg?.content || '',
       );
-      aiDraftBody = aiResponse.draftBody || aiResponse.suggestedResponse || '';
-      subject = aiResponse.subject || subject;
+      // The real AI platform's generation_workflow only returns
+      // {content, word_count, metadata} - no draftBody/suggestedResponse/
+      // subject fields exist (verified against its output_schema).
+      aiDraftBody = aiResponse.content || '';
     } catch (aiError: any) {
       this.logger.warn(
         `AI draft generation failed: ${aiError.message}. Using template.`,

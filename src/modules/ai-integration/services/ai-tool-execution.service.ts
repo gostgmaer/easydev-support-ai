@@ -36,6 +36,12 @@ export class AiToolExecutionService {
     tenantId: string,
     workflowId: string,
     requestId: string,
+    // The AI platform's provide_tool_result endpoint matches this against
+    // the workflow's own pending_tool_name and 409s on a mismatch - it
+    // must be the actual tool name (e.g. "order_lookup"), not a request/
+    // correlation id. requestId is still tracked separately below for the
+    // retry job and connector-level idempotency.
+    toolName: string,
     payload: any,
     status: 'SUCCESS' | 'FAILED',
   ): Promise<void> {
@@ -43,7 +49,7 @@ export class AiToolExecutionService {
       await this.aiClient.submitToolResult(
         tenantId,
         workflowId,
-        requestId,
+        toolName,
         payload,
         status,
       );
@@ -54,7 +60,7 @@ export class AiToolExecutionService {
       await this.queueService.addJob(
         'ai-queue',
         'ai-tool-result-submission-job',
-        { tenantId, workflowId, requestId, payload, status },
+        { tenantId, workflowId, requestId, toolName, payload, status },
       );
     }
   }
@@ -136,6 +142,7 @@ export class AiToolExecutionService {
         tenantId,
         workflowId,
         requestId,
+        toolName,
         responsePayload,
         'SUCCESS',
       );
@@ -170,6 +177,7 @@ export class AiToolExecutionService {
         tenantId,
         workflowId,
         requestId,
+        toolName,
         { error: error.message },
         'FAILED',
       );

@@ -216,11 +216,18 @@ export class AiResponseService {
       );
 
       const replyText =
-        generateResult.text ||
+        generateResult.content ||
         'I am sorry, I could not process your request at this time.';
-      const confidence = generateResult.confidence || 0.9;
-      const tokensUsed = generateResult.tokensUsed || 100;
-      const cost = generateResult.cost || 0.002;
+      // KNOWN GAP: the real AI platform's generation_workflow output_schema
+      // is {content, word_count, metadata} - no confidence/token/cost
+      // fields exist anywhere in that API. These are now permanently the
+      // fallback defaults, not a real signal - the auto-escalation check
+      // just below this never actually fires on a real low-confidence
+      // response anymore. Revisit if/when the platform exposes a real
+      // confidence score (e.g. via metadata).
+      const confidence = 0.9;
+      const tokensUsed = 100;
+      const cost = 0.002;
 
       // Confidence was computed and logged but never compared against
       // anything - a low-confidence/hallucination-risk reply went straight
@@ -400,11 +407,13 @@ export class AiResponseService {
     );
 
     const replyText =
-      generateResult.text ||
+      generateResult.content ||
       'I am sorry, I could not generate a suggestion at this time.';
-    const confidence = generateResult.confidence || 0.9;
-    const tokensUsed = generateResult.tokensUsed || 100;
-    const cost = generateResult.cost || 0.002;
+    // See identical comment above in generateAutoResponse() - the real AI
+    // platform's generation output has no confidence/token/cost fields.
+    const confidence = 0.9;
+    const tokensUsed = 100;
+    const cost = 0.002;
     const maskedText = this.maskSensitiveData(replyText);
 
     // Previously this returned content with no persisted draft behind it -

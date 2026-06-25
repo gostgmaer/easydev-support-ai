@@ -125,9 +125,7 @@ export class OrderLookupService {
         orderData,
         { conversationId },
       );
-      reply =
-        interpretation?.humanReadableSummary ||
-        this.buildDefaultReply(orderData);
+      reply = interpretation?.content || this.buildDefaultReply(orderData);
     } catch (aiError: any) {
       this.logger.warn(
         `AI interpretation failed: ${aiError.message}. Falling back to default reply.`,

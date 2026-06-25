@@ -130,9 +130,35 @@ export class AiOperatingPlatformClient extends BaseClient {
   }
 
   /**
+   * The server re-derives the expected signature by parsing
+   * X-Signature-Timestamp back into a Python datetime and calling
+   * `.isoformat()` on it again (signing.py's verify() passes the *parsed*
+   * timestamp into sign(), not the raw header string) - so the timestamp
+   * embedded in the canonical payload must already be in Python's
+   * isoformat shape (`+00:00`, not `Z`; microseconds omitted only when
+   * exactly zero) or the round-trip changes the string and every
+   * signature fails to verify even with the correct secret. JS's
+   * `Date.toISOString()` (`Z` suffix, fixed 3-digit milliseconds) does not
+   * match that shape, so it's built by hand here instead.
+   * Concretely cross-checked against the real signing.py (not just
+   * reasoned through): generated a signature with this exact function,
+   * fed it to RequestSigner.verify() from that repo directly, confirmed
+   * it verifies.
+   */
+  private pythonIsoformatUtcNow(): string {
+    const now = new Date();
+    const pad = (n: number, w: number) => String(n).padStart(w, '0');
+    const datePart = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1, 2)}-${pad(now.getUTCDate(), 2)}`;
+    const timePart = `${pad(now.getUTCHours(), 2)}:${pad(now.getUTCMinutes(), 2)}:${pad(now.getUTCSeconds(), 2)}`;
+    const micros = now.getUTCMilliseconds() * 1000;
+    const fractional = micros > 0 ? `.${String(micros).padStart(6, '0')}` : '';
+    return `${datePart}T${timePart}${fractional}+00:00`;
+  }
+
+  /**
    * Signs per app/security/signing.py exactly - canonical payload is
-   * `${METHOD}\n${path}\n${isoTimestampWithTZ}\n${sha256hex(body)}`, HMAC-
-   * SHA256, base64url (no padding). The signature string is always
+   * `${METHOD}\n${path}\n${pythonIsoformatTimestamp}\n${sha256hex(body)}`,
+   * HMAC-SHA256, base64url (no padding). The signature string is always
    * literally prefixed `v1=` (a fixed signature-FORMAT marker - confirmed
    * directly in signing.py's sign(), `f"v1={_encode(digest)}"` does not
    * interpolate key_version) - the actual key version travels separately
@@ -153,7 +179,7 @@ export class AiOperatingPlatformClient extends BaseClient {
     if (!this.signingSecret) return {};
     const bodyStr = body === undefined ? '' : JSON.stringify(body);
     const sha256hex = createHash('sha256').update(bodyStr).digest('hex');
-    const timestamp = new Date().toISOString();
+    const timestamp = this.pythonIsoformatUtcNow();
     const canonical = [method.toUpperCase(), path, timestamp, sha256hex].join(
       '\n',
     );
@@ -456,10 +482,11 @@ export class AiOperatingPlatformClient extends BaseClient {
   async recallMemory(
     tenantId: string,
     query: string,
+    sessionId?: string,
   ): Promise<{ count: number; memories: MemoryEntry[] }> {
     const data = await this.post<{ count: number; memories: MemoryEntry[] }>(
       '/v1/memory/recall',
-      { tenant_id: tenantId, query },
+      { tenant_id: tenantId, query, session_id: sessionId },
       tenantId,
     );
     return { count: data.count, memories: data.memories };

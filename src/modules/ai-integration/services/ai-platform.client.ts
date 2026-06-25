@@ -1,11 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
+import {
+  AiOperatingPlatformClient,
+  GenerationResult,
+} from '@easydev/shared-clients';
 
+/**
+ * Thin wrapper around AiOperatingPlatformClient (packages/shared-clients) -
+ * see that file's docstring for the full verification trail against the
+ * real platform (multi-tennet-ai-agent). Kept as a NestJS-injectable
+ * service so existing callers' constructor injection didn't need to
+ * change.
+ */
 @Injectable()
 export class AIPlatformClient {
   private readonly logger = new Logger(AIPlatformClient.name);
-  private readonly baseUrl: string;
-  private readonly apiKey: string;
+  private readonly client: AiOperatingPlatformClient;
 
   constructor() {
     if (!process.env.EASYDEV_AI_URL) {
@@ -18,8 +27,18 @@ export class AIPlatformClient {
         'EASYDEV_AI_API_KEY must be set - refusing to start with no configured AI Platform API key',
       );
     }
-    this.baseUrl = process.env.EASYDEV_AI_URL;
-    this.apiKey = process.env.EASYDEV_AI_API_KEY;
+    this.client = new AiOperatingPlatformClient(
+      process.env.EASYDEV_AI_URL,
+      // EASYDEV_AI_API_KEY doubles as the request-signing secret here -
+      // the platform's own request_signing.py is disabled by default
+      // (AI_PLATFORM_REQUEST_SIGNING_ENABLED=false), so this is a no-op
+      // until/unless a real deployment turns signing on, at which point
+      // this same value (shared with whatever secret that deployment's
+      // AI_PLATFORM_REQUEST_SIGNING_SECRETS__<version> holds) makes every
+      // call below start signing automatically, no code change needed.
+      process.env.EASYDEV_AI_API_KEY,
+      process.env.EASYDEV_AI_SIGNING_KEY_VERSION || 'v1',
+    );
   }
 
   public async runWorkflow(
@@ -32,28 +51,16 @@ export class AIPlatformClient {
       `Triggering AI platform workflow ${workflowId} for conversation ${conversationId}`,
     );
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/workflows/run`,
-        {
-          tenantId,
-          workflowId,
-          conversationId,
-          variables,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 45000,
-        },
+      return await this.client.runWorkflow(
+        tenantId,
+        workflowId,
+        'run_workflow',
+        variables,
+        { conversationId },
       );
-      return response.data;
     } catch (error: any) {
       this.logger.error(`Failed to run workflow: ${error.message}`);
-      throw new Error(
-        `AI Platform workflow failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform workflow failed: ${error.message}`);
     }
   }
 
@@ -62,85 +69,30 @@ export class AIPlatformClient {
     prompt: string,
     systemPrompt?: string,
     config: Record<string, any> = {},
-  ): Promise<any> {
+  ): Promise<GenerationResult> {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/generate`,
-        {
-          tenantId,
-          prompt,
-          systemPrompt,
-          config,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 30000,
-        },
-      );
-      return response.data;
+      return await this.client.generate(tenantId, prompt, systemPrompt, config);
     } catch (error: any) {
       this.logger.error(`Generate call failed: ${error.message}`);
-      throw new Error(
-        `AI Platform generate failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform generate failed: ${error.message}`);
     }
   }
 
-  public async classify(
-    tenantId: string,
-    text: string,
-    classes: string[],
-  ): Promise<any> {
+  public async classify(tenantId: string, text: string, classes: string[]) {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/classify`,
-        {
-          tenantId,
-          text,
-          classes,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 15000,
-        },
-      );
-      return response.data;
+      return await this.client.classify(tenantId, text, classes);
     } catch (error: any) {
       this.logger.error(`Classify call failed: ${error.message}`);
-      throw new Error(
-        `AI Platform classify failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform classify failed: ${error.message}`);
     }
   }
 
-  public async embed(tenantId: string, texts: string[]): Promise<any> {
+  public async embed(tenantId: string, texts: string[]) {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/embed`,
-        {
-          tenantId,
-          texts,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 20000,
-        },
-      );
-      return response.data;
+      return await this.client.embed(tenantId, texts);
     } catch (error: any) {
       this.logger.error(`Embed call failed: ${error.message}`);
-      throw new Error(
-        `AI Platform embed failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform embed failed: ${error.message}`);
     }
   }
 
@@ -149,87 +101,47 @@ export class AIPlatformClient {
     query: string,
     documents: string[],
     topK = 5,
-  ): Promise<any> {
+  ) {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/rerank`,
-        {
-          tenantId,
-          query,
-          documents,
-          topK,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 20000,
-        },
-      );
-      return response.data;
+      return await this.client.rerank(tenantId, query, documents, topK);
     } catch (error: any) {
       this.logger.error(`Rerank call failed: ${error.message}`);
-      throw new Error(
-        `AI Platform rerank failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform rerank failed: ${error.message}`);
     }
   }
 
-  public async recallMemory(
-    tenantId: string,
-    query: string,
-    key?: string,
-  ): Promise<any> {
+  /**
+   * KNOWN GAP: no dedicated memory endpoint maps cleanly to "recall by
+   * query" the way the old (broken) /v1/memory/recall call assumed -
+   * the real endpoint exists and is wired correctly now via the shared
+   * client; returning the raw memories list rather than inventing a
+   * narrower shape.
+   */
+  public async recallMemory(tenantId: string, query: string, key?: string) {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/memory/recall`,
-        {
-          tenantId,
-          query,
-          key,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 15000,
-        },
+      const { memories } = await this.client.recallMemory(
+        tenantId,
+        query,
+        key,
       );
-      return response.data;
+      return memories;
     } catch (error: any) {
       this.logger.error(`Memory recall failed: ${error.message}`);
-      throw new Error(
-        `AI Platform recall failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform recall failed: ${error.message}`);
     }
   }
 
-  public async getConversationContext(
-    tenantId: string,
-    conversationId: string,
-  ): Promise<any> {
+  public async getConversationContext(tenantId: string, conversationId: string) {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/memory/conversation`,
-        {
-          tenantId,
-          conversationId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 15000,
-        },
+      const { messages } = await this.client.getConversationHistory(
+        tenantId,
+        conversationId,
       );
-      return response.data;
+      return messages;
     } catch (error: any) {
       this.logger.error(`Get conversation context failed: ${error.message}`);
       throw new Error(
-        `AI Platform conversation memory failed: ${error.response?.data?.message || error.message}`,
+        `AI Platform conversation memory failed: ${error.message}`,
       );
     }
   }
@@ -239,29 +151,18 @@ export class AIPlatformClient {
     connectorType: string,
     resultData: any,
     context: Record<string, any> = {},
-  ): Promise<any> {
+  ): Promise<GenerationResult> {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/connectors/interpret`,
-        {
-          tenantId,
-          connectorType,
-          resultData,
-          context,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 20000,
-        },
+      return await this.client.interpretConnectorResult(
+        tenantId,
+        connectorType,
+        resultData,
+        context,
       );
-      return response.data;
     } catch (error: any) {
       this.logger.error(`Interpret connector result failed: ${error.message}`);
       throw new Error(
-        `AI Platform interpret connector result failed: ${error.response?.data?.message || error.message}`,
+        `AI Platform interpret connector result failed: ${error.message}`,
       );
     }
   }
@@ -270,28 +171,17 @@ export class AIPlatformClient {
     tenantId: string,
     context: Array<{ role: string; content: string }>,
     lastCustomerMessage: string,
-  ): Promise<any> {
+  ): Promise<GenerationResult> {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/v1/email/draft`,
-        {
-          tenantId,
-          context,
-          lastCustomerMessage,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 30000,
-        },
+      return await this.client.generateEmailDraft(
+        tenantId,
+        context,
+        lastCustomerMessage,
       );
-      return response.data;
     } catch (error: any) {
       this.logger.error(`Generate email draft failed: ${error.message}`);
       throw new Error(
-        `AI Platform generate email draft failed: ${error.response?.data?.message || error.message}`,
+        `AI Platform generate email draft failed: ${error.message}`,
       );
     }
   }
@@ -299,36 +189,23 @@ export class AIPlatformClient {
   public async submitToolResult(
     tenantId: string,
     workflowId: string,
-    toolRequestId: string,
+    toolName: string,
     response: any,
-    status: string,
+    _status: string,
   ): Promise<any> {
     this.logger.log(
-      `Submitting tool results for workflow ${workflowId}, request ${toolRequestId}`,
+      `Submitting tool result for workflow ${workflowId}, tool ${toolName}`,
     );
     try {
-      const apiResponse = await axios.post(
-        `${this.baseUrl}/v1/workflows/${workflowId}/tool-results`,
-        {
-          tenantId,
-          toolRequestId,
-          response,
-          status,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 20000,
-        },
+      return await this.client.submitToolResult(
+        tenantId,
+        workflowId,
+        toolName,
+        response,
       );
-      return apiResponse.data;
     } catch (error: any) {
       this.logger.error(`Submit tool result failed: ${error.message}`);
-      throw new Error(
-        `AI Platform submit tool result failed: ${error.response?.data?.message || error.message}`,
-      );
+      throw new Error(`AI Platform submit tool result failed: ${error.message}`);
     }
   }
 }
