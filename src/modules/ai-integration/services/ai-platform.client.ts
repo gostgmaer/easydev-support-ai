@@ -119,11 +119,7 @@ export class AIPlatformClient {
    */
   public async recallMemory(tenantId: string, query: string, key?: string) {
     try {
-      const { memories } = await this.client.recallMemory(
-        tenantId,
-        query,
-        key,
-      );
+      const { memories } = await this.client.recallMemory(tenantId, query, key);
       return memories;
     } catch (error: any) {
       this.logger.error(`Memory recall failed: ${error.message}`);
@@ -131,7 +127,10 @@ export class AIPlatformClient {
     }
   }
 
-  public async getConversationContext(tenantId: string, conversationId: string) {
+  public async getConversationContext(
+    tenantId: string,
+    conversationId: string,
+  ) {
     try {
       const { messages } = await this.client.getConversationHistory(
         tenantId,
@@ -205,7 +204,9 @@ export class AIPlatformClient {
       );
     } catch (error: any) {
       this.logger.error(`Submit tool result failed: ${error.message}`);
-      throw new Error(`AI Platform submit tool result failed: ${error.message}`);
+      throw new Error(
+        `AI Platform submit tool result failed: ${error.message}`,
+      );
     }
   }
 }

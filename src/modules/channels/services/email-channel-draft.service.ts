@@ -111,7 +111,7 @@ export class EmailChannelDraftService {
 
     // Call AI Platform for draft
     let aiDraftBody: string;
-    let subject = 'Re: Your support request';
+    const subject = 'Re: Your support request';
     try {
       const aiResponse = await this.aiClient.generateEmailDraft(
         tenantId,
