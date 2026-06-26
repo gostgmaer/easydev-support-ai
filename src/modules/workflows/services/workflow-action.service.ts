@@ -204,10 +204,10 @@ export class WorkflowActionService {
   private interpolate(text: string, context: Record<string, any>): string {
     return text.replace(/\{\{([^{}]+)\}\}/g, (match, key) => {
       const parts = key.trim().split('.');
-      let val = context;
+      let val: any = context;
       for (const part of parts) {
         if (val === undefined || val === null) return match;
-        val = val[part];
+        val = (val as Record<string, any>)[part];
       }
       return val !== undefined ? String(val) : match;
     });
