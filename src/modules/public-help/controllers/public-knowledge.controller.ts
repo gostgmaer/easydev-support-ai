@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { KnowledgeCategoryService } from '../../knowledge-base/services/knowledge-category.service';
 import { KnowledgeDocumentService } from '../../knowledge-base/services/knowledge-document.service';
 import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
+import { KnowledgePermissionService } from '../../knowledge-base/services/knowledge-permission.service';
 import { DocumentStatusEnum } from '../../knowledge-base/domain/value-objects';
 import { SearchQueryDto } from '../../knowledge-base/dtos/knowledge.dto';
 import { PublicSearchDto } from '../dtos/public-help.dto';
@@ -30,6 +31,7 @@ export class PublicKnowledgeController {
     private readonly categoryService: KnowledgeCategoryService,
     private readonly documentService: KnowledgeDocumentService,
     private readonly searchService: KnowledgeSearchService,
+    private readonly permissionService: KnowledgePermissionService,
   ) {}
 
   private requireTenant(tenantId: string): void {
@@ -62,7 +64,23 @@ export class PublicKnowledgeController {
     const docs = documentType
       ? result.data.filter((d: any) => d.documentType === documentType)
       : result.data;
-    return docs.map((d: any) => d.toJSON());
+    // Anonymous visitors have no team/role - checkAccess(..., undefined,
+    // undefined, 'READ') only passes for docs with zero ACL rows or an
+    // explicit public grant, so any team/role-restricted doc is excluded.
+    const accessFlags = await Promise.all(
+      docs.map((d: any) =>
+        this.permissionService.checkAccess(
+          tenantId,
+          d.id,
+          undefined,
+          undefined,
+          'READ',
+        ),
+      ),
+    );
+    return docs
+      .filter((_: any, i: number) => accessFlags[i])
+      .map((d: any) => d.toJSON());
   }
 
   @ApiOperation({ summary: 'Get a published article by slug (public)' })
@@ -75,6 +93,19 @@ export class PublicKnowledgeController {
     const doc = await this.documentService.getDocumentBySlug(tenantId, slug);
     if (doc.status.value !== DocumentStatusEnum.ACTIVE) {
       // Don't reveal draft/archived content exists at all to public visitors.
+      throw new NotFoundException(`Article "${slug}" not found`);
+    }
+    const hasAccess = await this.permissionService.checkAccess(
+      tenantId,
+      doc.id,
+      undefined,
+      undefined,
+      'READ',
+    );
+    if (!hasAccess) {
+      // Same not-found framing as the draft/archived case above - a
+      // team/role-restricted article must not be distinguishable from one
+      // that doesn't exist to an anonymous visitor.
       throw new NotFoundException(`Article "${slug}" not found`);
     }
     const content = await this.documentService.getDocumentContent(
@@ -97,6 +128,12 @@ export class PublicKnowledgeController {
       categoryId: dto.categoryId,
       status: DocumentStatusEnum.ACTIVE,
     };
-    return this.searchService.search(tenantId, searchDto);
+    return this.searchService.search(
+      tenantId,
+      searchDto,
+      undefined,
+      undefined,
+      undefined,
+    );
   }
 }

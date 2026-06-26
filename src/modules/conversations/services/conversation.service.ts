@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type {
   IConversationRepository,
@@ -29,6 +29,8 @@ import { UsageLimitService } from '../../settings/services/usage-limit.service';
 
 @Injectable()
 export class ConversationService {
+  private readonly logger = new Logger(ConversationService.name);
+
   constructor(
     @Inject('IConversationRepository')
     private readonly conversationRepo: IConversationRepository,
@@ -181,6 +183,53 @@ export class ConversationService {
       details: `Closed conversation ${id}`,
     });
     return conversation;
+  }
+
+  // Mirrors InboxAssignmentService.bulkAssign()'s pattern: per-item dispatch
+  // through the same guarded single-conversation method, not a raw bulk
+  // SQL update - so a bulk action can never skip the same checks/side
+  // effects (events, SLA, notifications) a one-at-a-time request gets.
+  async bulkResolve(
+    tenantId: string,
+    conversationIds: string[],
+    userId?: string,
+  ): Promise<{ resolved: number; failed: string[] }> {
+    let resolved = 0;
+    const failed: string[] = [];
+    for (const id of conversationIds) {
+      try {
+        await this.resolve(tenantId, id, userId);
+        resolved += 1;
+      } catch (err) {
+        this.logger.warn(
+          `Bulk resolve skipped ${id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        failed.push(id);
+      }
+    }
+    return { resolved, failed };
+  }
+
+  async bulkClose(
+    tenantId: string,
+    conversationIds: string[],
+    reason?: string,
+    userId?: string,
+  ): Promise<{ closed: number; failed: string[] }> {
+    let closed = 0;
+    const failed: string[] = [];
+    for (const id of conversationIds) {
+      try {
+        await this.close(tenantId, id, reason, userId);
+        closed += 1;
+      } catch (err) {
+        this.logger.warn(
+          `Bulk close skipped ${id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        failed.push(id);
+      }
+    }
+    return { closed, failed };
   }
 
   async archive(

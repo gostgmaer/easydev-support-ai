@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:packages": "tsc -b packages/shared-kernel packages/shared-contracts packages/database packages/shared-events packages/shared-queues packages/shared-clients packages/shared-testing packages/observability packages/security",
+    "build:packages": "tsc -b packages/shared-kernel packages/shared-contracts packages/database packages/shared-events packages/shared-queues packages/shared-clients packages/shared-testing packages/observability",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -15,9 +15,12 @@
     "start:prod": "node dist/main",
     "start:worker": "nest start",
     "start:worker:prod": "node dist/main",
+    "local:up": "bash deployment/local-up.sh",
+    "local:down": "docker compose -f docker-compose.local.yml stop",
+    "local:reset": "docker compose -f docker-compose.local.yml down -v && bash deployment/local-up.sh",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
-    "lint:fix": "eslint --fix src/",
+    "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -26,7 +29,6 @@
   "dependencies": {
     "@easydev/database": "workspace:*",
     "@easydev/observability": "workspace:*",
-    "@easydev/security": "workspace:*",
     "@easydev/shared-clients": "workspace:*",
     "@easydev/shared-contracts": "workspace:*",
     "@easydev/shared-events": "workspace:*",
@@ -49,6 +51,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "drizzle-orm": "^0.45.2",
+    "helmet": "^8.2.0",
     "ioredis": "^5.10.1",
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
@@ -122,8 +125,7 @@
       "^@easydev/shared-clients$": "<rootDir>/packages/shared-clients/src/index.ts",
       "^@easydev/shared-queues$": "<rootDir>/packages/shared-queues/src/index.ts",
       "^@easydev/shared-testing$": "<rootDir>/packages/shared-testing/src/index.ts",
-      "^@easydev/observability$": "<rootDir>/packages/observability/src/index.ts",
-      "^@easydev/security$": "<rootDir>/packages/security/src/index.ts"
+      "^@easydev/observability$": "<rootDir>/packages/observability/src/index.ts"
     }
   }
 }

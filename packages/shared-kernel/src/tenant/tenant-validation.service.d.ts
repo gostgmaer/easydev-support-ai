@@ -1,3 +1,3 @@
 export declare class TenantValidationService {
-    validateTenant(tenantId: string): Promise<boolean>;
+  validateTenant(tenantId: string): Promise<boolean>;
 }

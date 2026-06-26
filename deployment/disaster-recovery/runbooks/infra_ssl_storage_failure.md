@@ -88,7 +88,7 @@ LATEST_REDIS=$(ls -t /backups/redis_raw_*.enc | head -n 1)
 ./deployment/disaster-recovery/scripts/restore-redis.sh "$LATEST_REDIS"
 
 # Bootstrap application services
-docker compose -f docker-compose.production.yml up -d api worker webhook nginx
+docker compose -f docker-compose.production.yml up -d api worker-conversation worker-workflow worker-analytics worker-connector worker-notification webhook nginx
 ```
 Verify site status:
 ```bash

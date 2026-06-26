@@ -36,7 +36,7 @@ COPY --from=builder /usr/src/app/ecosystem.config.js ./
 # Install only production dependencies
 RUN pnpm install --prod --frozen-lockfile
 
-EXPOSE 3000
+EXPOSE 3100
 
 ENV NODE_ENV=production
 

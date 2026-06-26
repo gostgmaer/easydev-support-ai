@@ -30,6 +30,8 @@ import { DrizzleWidgetRepository } from './repositories/drizzle-widget-repositor
 
 // Jobs
 import { WidgetQueueProcessor } from './jobs/widget-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -61,7 +63,7 @@ import { WidgetQueueProcessor } from './jobs/widget-queue.processor';
     WidgetRealtimeService,
     WidgetRealtimeGateway,
     WidgetEventPublisher,
-    WidgetQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.WIDGET) ? [WidgetQueueProcessor] : []),
     WidgetSessionGuard,
   ],
   exports: [

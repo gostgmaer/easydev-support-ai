@@ -1,6 +1,10 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
+import {
+  BaseWorker,
+  QueueService,
+  WORKER_OPTIONS,
+} from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { WorkflowEngineService } from '../services/workflow-engine.service';
 import { WorkflowScheduleService } from '../services/workflow-schedule.service';
@@ -25,9 +29,7 @@ export class WorkflowQueueProcessor extends BaseWorker {
 
     switch (job.name) {
       case 'workflow-approval-timeout-job': {
-        this.logger.log(
-          `Processing workflow-approval-timeout-job ${job.id}`,
-        );
+        this.logger.log(`Processing workflow-approval-timeout-job ${job.id}`);
         return this.approvalService.sweepExpiredApprovals(job.data.tenantId);
       }
 

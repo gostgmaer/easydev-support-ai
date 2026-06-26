@@ -161,6 +161,7 @@ export class ChannelWebhookService {
 
     // Dispatch to incoming queue for async processing
     await this.queueService.addJob('channel-queue', 'incoming-message-job', {
+      tenantId,
       channelId,
       payload,
       headers,

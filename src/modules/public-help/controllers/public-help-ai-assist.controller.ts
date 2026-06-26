@@ -205,8 +205,11 @@ export class PublicHelpAiAssistController {
         systemPrompt,
       );
 
-      aiAnswer = generateResult.text || '';
-      confidence = (generateResult.confidence || 0) >= 0.6 ? 'MEDIUM' : 'LOW';
+      aiAnswer = generateResult.content || '';
+      // KNOWN GAP: the real AI platform's generation output has no
+      // confidence field (verified against its output_schema) - always
+      // MEDIUM when generation succeeded at all, rather than a real signal.
+      confidence = aiAnswer ? 'MEDIUM' : 'LOW';
     } catch {
       // Non-fatal: fall through to escalation prompt
       aiAnswer = '';

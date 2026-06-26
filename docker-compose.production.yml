@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # 1. API Gateways (Scalable REST APIs / Socket.io)
   api:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-api:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.api
@@ -14,7 +14,7 @@ services:
         max_attempts: 3
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3100
       - DB_HOST=postgres
       - DB_PORT=5432
       - REDIS_HOST=redis
@@ -22,6 +22,18 @@ services:
       - ENABLE_OTEL=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
       - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - CORS_ALLOWED_ORIGINS=https://admin.easydev.in,https://app.easydev.in,https://widget.easydev.in,https://help.easydev.in
+      # validateProductionEnv() (src/config/validate-env.ts) refuses to boot
+      # without these - they were missing from every service below, so
+      # api/webhook/worker-* all process.exit(1)'d immediately on start.
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - frontend-network
       - backend-network
@@ -34,7 +46,7 @@ services:
 
   # 2. Webhook Dispatcher
   webhook:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-webhook:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.webhook
@@ -44,9 +56,17 @@ services:
         condition: on-failure
     environment:
       - NODE_ENV=production
-      - RUN_WEBHOOKS=true
+      - PROCESS_QUEUE=admin-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -58,7 +78,7 @@ services:
 
   # 3. Independent Workers
   worker-conversation:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -66,9 +86,17 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=conversation-queue
+      - PROCESS_QUEUE=conversation-queue,message-queue,inbox-queue,channel-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -79,7 +107,7 @@ services:
         condition: service_healthy
 
   worker-workflow:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -87,9 +115,17 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=workflow-queue
+      - PROCESS_QUEUE=workflow-queue,ticket-queue,settings-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -100,7 +136,7 @@ services:
         condition: service_healthy
 
   worker-analytics:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -108,9 +144,17 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=analytics-queue
+      - PROCESS_QUEUE=analytics-queue,knowledge-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -121,7 +165,7 @@ services:
         condition: service_healthy
 
   worker-connector:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -129,9 +173,17 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=connector-queue
+      - PROCESS_QUEUE=connector-queue,ai-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -142,7 +194,7 @@ services:
         condition: service_healthy
 
   worker-notification:
-    image: ghcr.io/easydev/easydev-support-ai:prod-latest
+    image: ghcr.io/easydev/easydev-support-ai-worker:prod-latest
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -150,9 +202,17 @@ services:
       replicas: 2
     environment:
       - NODE_ENV=production
-      - PROCESS_QUEUE=notification-queue
+      - PROCESS_QUEUE=notification-queue,team-queue,customer-queue,widget-queue
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      - DATABASE_URL=postgresql://support_ai_prod:${DB_PASSWORD:?DB_PASSWORD must be set in the environment}@postgres:5432/easydev_support_ai_prod?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in the environment}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in the environment}
+      - CONNECTOR_ENCRYPTION_KEY=${CONNECTOR_ENCRYPTION_KEY:?CONNECTOR_ENCRYPTION_KEY must be set in the environment}
+      - WIDGET_JWT_SECRET=${WIDGET_JWT_SECRET:?WIDGET_JWT_SECRET must be set in the environment}
+      - EASYDEV_AI_URL=${EASYDEV_AI_URL:?EASYDEV_AI_URL must be set in the environment}
+      - EASYDEV_AI_API_KEY=${EASYDEV_AI_API_KEY:?EASYDEV_AI_API_KEY must be set in the environment}
+      - IAM_SERVICE_URL=${IAM_SERVICE_URL:?IAM_SERVICE_URL must be set in the environment}
     networks:
       - backend-network
       - database-network
@@ -165,12 +225,48 @@ services:
   # 4. PostgreSQL 17 Database
   postgres:
     image: postgres:17-alpine
+    # deployment/disaster-recovery/scripts/*.sh hardcode this name to find
+    # the container via `docker ps`/`docker exec` - without it, every DR
+    # script silently fell through to a "local psql on this host" fallback
+    # that doesn't apply to this topology.
+    container_name: support-ai-postgres
     environment:
       - POSTGRES_USER=support_ai_prod
-      - POSTGRES_PASSWORD=prod_db_pass_extremely_secure_991823
+      # Was a literal password committed to git - the same placeholder
+      # string also used as the DR scripts' fallback default, making it a
+      # real, guessable production credential rather than a per-deploy
+      # secret. DB_PASSWORD must now be supplied via the environment (.env,
+      # secrets manager, etc.); compose refuses to start without it.
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in the environment}
       - POSTGRES_DB=easydev_support_ai_prod
+    # WAL archiving for point-in-time recovery - settings match
+    # deployment/disaster-recovery/configs/postgresql-pitr.conf, which
+    # existed but was never actually applied to any Postgres container.
+    # archive_command writes into /backups/postgres/wal, bind-mounted below
+    # so the host-run backup/restore scripts see the exact same files.
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=test ! -f /backups/postgres/wal/%f && cp %p /backups/postgres/wal/%f
+      - -c
+      - archive_timeout=60
+      - -c
+      - max_wal_senders=10
+      - -c
+      - wal_keep_size=4096MB
+      - -c
+      - hot_standby=on
+      - -c
+      - hot_standby_feedback=on
+      - -c
+      - wal_compression=on
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./backups:/backups
     networks:
       - database-network
     healthcheck:
@@ -182,6 +278,8 @@ services:
   # 5. Redis 8 Cache / Queue Store
   redis:
     image: redis:7-alpine
+    # See postgres container_name comment above - same DR-script dependency.
+    container_name: support-ai-redis
     command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy noeviction
     volumes:
       - redis-data:/data
@@ -196,14 +294,26 @@ services:
   # 6. Nginx Load Balancer
   nginx:
     image: nginx:1.25-alpine
-    ports:
-      - "80:80"
+    # No direct host port exposure - Traefik (in the separate infra/ stack)
+    # is the sole public entrypoint and TLS terminator, reached via the
+    # external `edge` network. Previously this was the only thing bound to
+    # the host's port 80 at all, with no TLS anywhere in front of it.
     volumes:
       - ./deployment/nginx-blue-green.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - frontend-network
+      - edge
     depends_on:
       - api
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=edge
+      - traefik.http.routers.easydev-support-ai.entrypoints=websecure
+      - "traefik.http.routers.easydev-support-ai.rule=Host(`api.easydev.in`)"
+      - traefik.http.routers.easydev-support-ai.tls=true
+      - traefik.http.routers.easydev-support-ai.tls.certresolver=le
+      - traefik.http.routers.easydev-support-ai.middlewares=security-headers@file
+      - traefik.http.services.easydev-support-ai.loadbalancer.server.port=80
 
   # 7. Monitoring Setup
   prometheus:
@@ -255,3 +365,10 @@ networks:
   backend-network:
   database-network:
   internal-network:
+  # Created by the separate infra/ repo's docker-compose.yml (Traefik +
+  # Portainer edge stack) - external:true means this compose file joins it
+  # rather than trying to create it. Requires the infra stack to be up
+  # first, and TRAEFIK_NETWORK_NAME=edge in infra/.env (the documented
+  # default in infra/.env.example).
+  edge:
+    external: true

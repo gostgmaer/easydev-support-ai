@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Headers, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { TenantOnlyGuard } from '../../common/guards/tenant-only.guard';
@@ -47,7 +55,10 @@ export class AnalyticsController {
   ) {
     const events = body?.events ?? [];
     for (const event of events) {
-      const eventName = event.type === 'event' && typeof event.name === 'string' ? event.name : event.type;
+      const eventName =
+        event.type === 'event' && typeof event.name === 'string'
+          ? event.name
+          : event.type;
       await this.eventService.trackEvent(
         tenantId,
         eventName,

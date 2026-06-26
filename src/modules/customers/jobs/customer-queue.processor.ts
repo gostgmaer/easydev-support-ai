@@ -1,6 +1,11 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
+import {
+  BaseWorker,
+  QueueService,
+  QUEUES,
+  WORKER_OPTIONS,
+} from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { CustomerService } from '../services/customer.service';
 import { CustomerSegmentService } from '../services/customer-segment.service';

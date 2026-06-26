@@ -1,7 +1,12 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Optional } from '@nestjs/common';
-import { BaseWorker, QueueService, QUEUES, WORKER_OPTIONS } from '@easydev/shared-queues';
+import {
+  BaseWorker,
+  QueueService,
+  QUEUES,
+  WORKER_OPTIONS,
+} from '@easydev/shared-queues';
 import { AdminHealthService } from '../services/admin-health.service';
 import { AdminWebhookService } from '../services/admin-webhook.service';
 import { AdminIncidentService } from '../services/admin-incident.service';

@@ -20,6 +20,8 @@ import {
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { FeatureFlagGuard } from '../../../common/guards/feature-flag.guard';
+import { RequireFeature } from '../../../common/decorators/feature-flag.decorator';
 import { AnalyticsReportService } from '../services/analytics-report.service';
 import { AnalyticsScheduleService } from '../services/analytics-schedule.service';
 import {
@@ -47,6 +49,8 @@ export class AnalyticsReportController {
   // ------------ Reports CRUD ------------
   @Post()
   @Roles('tenant_admin', 'manager')
+  @RequireFeature('analytics.advanced')
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({ summary: 'Create a new analytics report definition' })
   @ApiResponse({ status: 201, description: 'Report successfully created.' })
   async createReport(
@@ -110,6 +114,8 @@ export class AnalyticsReportController {
   // ------------ Schedules CRUD ------------
   @Post('schedules')
   @Roles('tenant_admin', 'manager')
+  @RequireFeature('analytics.advanced')
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({ summary: 'Create new report delivery schedule' })
   @ApiResponse({ status: 201, description: 'Schedule created.' })
   async createSchedule(

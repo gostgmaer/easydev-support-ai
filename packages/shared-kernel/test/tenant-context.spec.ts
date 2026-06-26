@@ -11,6 +11,8 @@ describe('TenantContext', () => {
 
   it('should throw an error if required tenant ID is accessed outside run block', () => {
     expect(TenantContext.getTenantId()).toBeUndefined();
-    expect(() => TenantContext.getRequiredTenantId()).toThrow('Tenant context is missing or not set');
+    expect(() => TenantContext.getRequiredTenantId()).toThrow(
+      'Tenant context is missing or not set',
+    );
   });
 });

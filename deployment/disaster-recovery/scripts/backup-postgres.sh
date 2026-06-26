@@ -31,6 +31,64 @@ run_query() {
 
 echo "[BACKUP-PG] Starting PostgreSQL '${BACKUP_TYPE}' backup procedure..."
 
+# 0. Physical base backup - the actual input PITR restore needs. pg_dump
+# (below) is a logical export that can only be restored to the moment it was
+# taken; PITR replays WAL on top of a physical base backup to reach any
+# point in time. Produces basebackup_<timestamp>.tar.gz next to the WAL
+# archive, which restore-postgres.sh's PITR branch consumes.
+if [ "${BACKUP_TYPE}" = "base" ]; then
+    # pg_basebackup -Ft produces base.tar.gz AND pg_wal.tar.gz (the WAL
+    # segments needed to make the base backup consistent) - both are
+    # required for restore, so bundle the whole output directory rather
+    # than copying base.tar.gz alone.
+    BASEBACKUP_FILE="${BACKUP_DIR}/basebackup_${TIMESTAMP}.tar.gz"
+    echo "[BACKUP-PG] Taking physical base backup (pg_basebackup)..."
+    if docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+        docker exec -i "${DB_CONTAINER}" mkdir -p /tmp/basebackup_${TIMESTAMP}
+        if ! docker exec -i "${DB_CONTAINER}" pg_basebackup -U "${DB_USER}" -D /tmp/basebackup_${TIMESTAMP} -Ft -z -X fetch; then
+            echo "[BACKUP-PG] [ERROR] pg_basebackup failed inside container."
+            docker exec -i "${DB_CONTAINER}" rm -rf /tmp/basebackup_${TIMESTAMP} || true
+            exit 1
+        fi
+        rm -rf "/tmp/basebackup_bundle_${TIMESTAMP}"
+        mkdir -p "/tmp/basebackup_bundle_${TIMESTAMP}"
+        docker cp "${DB_CONTAINER}:/tmp/basebackup_${TIMESTAMP}/." "/tmp/basebackup_bundle_${TIMESTAMP}/"
+        docker exec -i "${DB_CONTAINER}" rm -rf /tmp/basebackup_${TIMESTAMP}
+        tar -czf "${BASEBACKUP_FILE}" -C "/tmp/basebackup_bundle_${TIMESTAMP}" .
+        rm -rf "/tmp/basebackup_bundle_${TIMESTAMP}"
+    else
+        TMP_BASE_DIR="/tmp/basebackup_${TIMESTAMP}"
+        mkdir -p "${TMP_BASE_DIR}"
+        if ! pg_basebackup -U "${DB_USER}" -h localhost -D "${TMP_BASE_DIR}" -Ft -z -X fetch; then
+            echo "[BACKUP-PG] [ERROR] Local pg_basebackup failed."
+            rm -rf "${TMP_BASE_DIR}"
+            exit 1
+        fi
+        tar -czf "${BASEBACKUP_FILE}" -C "${TMP_BASE_DIR}" .
+        rm -rf "${TMP_BASE_DIR}"
+    fi
+
+    echo "[BACKUP-PG] Encrypting base backup using AES-256..."
+    ENC_BASEBACKUP_FILE="${BASEBACKUP_FILE}.enc"
+    if ! openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:"${BACKUP_PASSPHRASE}" -in "${BASEBACKUP_FILE}" -out "${ENC_BASEBACKUP_FILE}"; then
+        echo "[BACKUP-PG] [ERROR] Base backup encryption failed."
+        rm -f "${BASEBACKUP_FILE}"
+        exit 1
+    fi
+    rm -f "${BASEBACKUP_FILE}"
+
+    BASE_CHECKSUM=$(sha256sum "${ENC_BASEBACKUP_FILE}" | cut -d' ' -f1)
+    BASE_SIZE=$(stat -c%s "${ENC_BASEBACKUP_FILE}")
+    echo "[BACKUP-PG] Base backup complete. Size: ${BASE_SIZE} bytes. Checksum: ${BASE_CHECKSUM}"
+    run_query "INSERT INTO ai_support_agent.dr_audit_logs (action_type, component, target_identifier, status, checksum, size_bytes, executed_by) VALUES ('BACKUP_CREATED', 'postgres_basebackup', '$(basename "${ENC_BASEBACKUP_FILE}")', 'SUCCESS', '${BASE_CHECKSUM}', ${BASE_SIZE}, 'backup-postgres.sh');"
+
+    if [ -f "./object-storage-sync.sh" ]; then
+        ./object-storage-sync.sh "${ENC_BASEBACKUP_FILE}"
+    fi
+    echo "[BACKUP-PG] Base backup process finished successfully."
+    exit 0
+fi
+
 # 1. Action Trigger
 if [ "${BACKUP_TYPE}" = "hourly" ]; then
     # Hourly is incremental: trigger WAL segment switch

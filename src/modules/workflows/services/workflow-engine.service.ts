@@ -4,9 +4,30 @@ import { WorkflowExecutionService } from './workflow-execution.service';
 import { WorkflowActionService } from './workflow-action.service';
 import { WorkflowAuditService } from './workflow-audit.service';
 import { WorkflowTemplateService } from './workflow-template.service';
-import { TriggerTypeEnum, WorkflowStatusEnum } from '../domain/value-objects';
+import {
+  ActionTypeEnum,
+  TriggerTypeEnum,
+  WorkflowStatusEnum,
+} from '../domain/value-objects';
 import { WorkflowCondition, WorkflowTemplate } from '../domain';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
+
+// RR-16: action types whose effects are naturally idempotent under retry (a
+// repeat call converges to the same state - doesn't create or send anything
+// new). Side-effecting types that could duplicate a real-world action on
+// retry (SEND_*, CREATE_TICKET, CALL_CONNECTOR - pending RR-18's own
+// connector-level idempotency-key fix, TRIGGER_AI_WORKFLOW, CUSTOM_ACTION)
+// are deliberately excluded and keep today's single-attempt, fail-fast
+// behavior.
+const RETRYABLE_ACTION_TYPES = new Set<ActionTypeEnum>([
+  ActionTypeEnum.UPDATE_TICKET,
+  ActionTypeEnum.ASSIGN_TICKET,
+  ActionTypeEnum.ESCALATE_TICKET,
+  ActionTypeEnum.UPDATE_CUSTOMER,
+  ActionTypeEnum.ADD_TAG,
+  ActionTypeEnum.REMOVE_TAG,
+]);
+const ACTION_RETRY_BACKOFF_MS = [500, 1500, 3000];
 
 @Injectable()
 export class WorkflowEngineService {
@@ -269,6 +290,62 @@ export class WorkflowEngineService {
     );
   }
 
+  // RR-16: previously any thrown error from a single action failed the
+  // entire execution outright - a transient failure (a momentary DB hiccup,
+  // a flaky downstream call) in a single idempotent step required full
+  // manual re-triggering of the whole workflow. Retries only the action
+  // types in RETRYABLE_ACTION_TYPES; everything else keeps today's single-
+  // attempt behavior unchanged.
+  private async executeActionWithRetry(
+    tenantId: string,
+    action: any,
+    context: Record<string, any>,
+    executionId: string,
+    templateId: string,
+  ): Promise<any> {
+    if (!RETRYABLE_ACTION_TYPES.has(action.actionType)) {
+      return this.actionService.executeAction(
+        tenantId,
+        action,
+        context,
+        executionId,
+      );
+    }
+
+    let lastError: any;
+    for (
+      let attempt = 0;
+      attempt <= ACTION_RETRY_BACKOFF_MS.length;
+      attempt++
+    ) {
+      try {
+        return await this.actionService.executeAction(
+          tenantId,
+          action,
+          context,
+          executionId,
+        );
+      } catch (error: any) {
+        lastError = error;
+        if (attempt === ACTION_RETRY_BACKOFF_MS.length) break;
+
+        const delayMs = ACTION_RETRY_BACKOFF_MS[attempt];
+        this.logger.warn(
+          `Action ${action.actionType} failed on attempt ${attempt + 1}/${ACTION_RETRY_BACKOFF_MS.length + 1} for execution ${executionId}: ${error.message}. Retrying in ${delayMs}ms.`,
+        );
+        await this.auditService.logAudit(
+          tenantId,
+          templateId,
+          executionId,
+          'ACTION_RETRY',
+          `Action ${action.actionType} failed (attempt ${attempt + 1}), retrying in ${delayMs}ms: ${error.message}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   private async executeActionsList(
     tenantId: string,
     actionsList: any[],
@@ -279,11 +356,12 @@ export class WorkflowEngineService {
     const results: Record<string, any> = {};
 
     for (const action of actionsList) {
-      const actionResult = await this.actionService.executeAction(
+      const actionResult = await this.executeActionWithRetry(
         tenantId,
         action,
         context,
         executionId,
+        templateId,
       );
 
       results[action.id || action.sequenceOrder] = actionResult;

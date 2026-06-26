@@ -8,8 +8,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "High API HTTP 5xx error rate detected on tenant {{ $labels.tenant_id }}"
-          description: "API HTTP 5xx error rate is {{ $value | printf \"%.2f\" }}% over the last 5 minutes."
+          summary: 'High API HTTP 5xx error rate detected on tenant {{ $labels.tenant_id }}'
+          description: 'API HTTP 5xx error rate is {{ $value | printf "%.2f" }}% over the last 5 minutes.'
 
       # 2. Queue Backlog Alert
       - alert: QueueBacklogHigh
@@ -18,8 +18,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "BullMQ queue backlog is too high"
-          description: "Queue {{ $labels.queue_name }} has {{ $value }} pending jobs waiting for workers."
+          summary: 'BullMQ queue backlog is too high'
+          description: 'Queue {{ $labels.queue_name }} has {{ $value }} pending jobs waiting for workers.'
 
       # 3. Dead Letter Queue Growth
       - alert: DeadLetterQueueGrowth
@@ -28,8 +28,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Failed jobs routed to Dead Letter Queue (DLQ)"
-          description: "Queue {{ $labels.queue_name }} is experiencing job failures routed to terminal DLQ."
+          summary: 'Failed jobs routed to Dead Letter Queue (DLQ)'
+          description: 'Queue {{ $labels.queue_name }} is experiencing job failures routed to terminal DLQ.'
 
       # 4. Workflow Failures Alert
       - alert: WorkflowFailuresHigh
@@ -38,8 +38,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High workflow execution failure rate"
-          description: "Workflows failing at a rate of {{ $value }} failures per minute."
+          summary: 'High workflow execution failure rate'
+          description: 'Workflows failing at a rate of {{ $value }} failures per minute.'
 
       # 5. AI Platform Failures
       - alert: AiPlatformFailuresHigh
@@ -48,8 +48,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "AI platform generation failures are high"
-          description: "AI generation calls for tenant {{ $labels.tenant_id }} are failing at rate {{ $value }}/sec."
+          summary: 'AI platform generation failures are high'
+          description: 'AI generation calls for tenant {{ $labels.tenant_id }} are failing at rate {{ $value }}/sec.'
 
       # 6. Connector Failures
       - alert: ConnectorFailuresHigh
@@ -58,8 +58,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High connector delivery failure rate"
-          description: "Connector {{ $labels.connector_type }} has high failure rates of {{ $value }}/sec."
+          summary: 'High connector delivery failure rate'
+          description: 'Connector {{ $labels.connector_type }} has high failure rates of {{ $value }}/sec.'
 
       # 7. Database Latency
       - alert: DatabaseLatencyHigh
@@ -68,8 +68,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High database query latency detected"
-          description: "95% of queries exceed 500ms latency (current: {{ $value }}s)."
+          summary: 'High database query latency detected'
+          description: '95% of queries exceed 500ms latency (current: {{ $value }}s).'
 
       # 8. Redis Latency
       - alert: RedisLatencyHigh
@@ -78,8 +78,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High Redis cache response delay"
-          description: "Redis latency exceeds target response limit."
+          summary: 'High Redis cache response delay'
+          description: 'Redis latency exceeds target response limit.'
 
       # 9. High Memory Usage
       - alert: HighMemoryUsage
@@ -88,8 +88,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High memory utilization on app node"
-          description: "Node memory usage has reached {{ $value }} bytes."
+          summary: 'High memory utilization on app node'
+          description: 'Node memory usage has reached {{ $value }} bytes.'
 
       # 10. High CPU Usage
       - alert: HighCpuUsage
@@ -98,5 +98,5 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High CPU utilization on app node"
-          description: "Node CPU usage is {{ $value }}%."
+          summary: 'High CPU utilization on app node'
+          description: 'Node CPU usage is {{ $value }}%.'

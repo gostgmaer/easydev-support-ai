@@ -36,6 +36,8 @@ import { DrizzleKnowledgeRepository } from './repositories/drizzle-knowledge.rep
 
 // Queue
 import { KnowledgeQueueProcessor } from './jobs/knowledge-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -80,7 +82,7 @@ import { KnowledgeQueueProcessor } from './jobs/knowledge-queue.processor';
     KnowledgeSearchService,
 
     // Queue Processor
-    KnowledgeQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.KNOWLEDGE) ? [KnowledgeQueueProcessor] : []),
   ],
   exports: [
     KnowledgeSourceService,

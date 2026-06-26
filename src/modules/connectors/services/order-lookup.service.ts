@@ -125,9 +125,7 @@ export class OrderLookupService {
         orderData,
         { conversationId },
       );
-      reply =
-        interpretation?.humanReadableSummary ||
-        this.buildDefaultReply(orderData);
+      reply = interpretation?.content || this.buildDefaultReply(orderData);
     } catch (aiError: any) {
       this.logger.warn(
         `AI interpretation failed: ${aiError.message}. Falling back to default reply.`,
@@ -191,8 +189,8 @@ export class OrderLookupService {
         content,
         senderType: 'BOT',
         senderId: 'system-order-lookup',
-        direction: MessageDirectionEnum.OUTBOUND as any,
-        messageType: MessageTypeEnum.TEXT as any,
+        direction: MessageDirectionEnum.OUTBOUND,
+        messageType: MessageTypeEnum.TEXT,
       });
     } catch (err: any) {
       this.logger.warn(`Failed to persist bot message: ${err.message}`);

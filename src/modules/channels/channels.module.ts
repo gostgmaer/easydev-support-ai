@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 
@@ -43,6 +43,13 @@ import {
 
 // Queue jobs
 import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
+
+// External Modules
+import { SettingsModule } from '../settings/settings.module';
+import { CustomersModule } from '../customers/customers.module';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
@@ -50,6 +57,9 @@ import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
     BullModule.registerQueue({
       name: 'channel-queue',
     }),
+    SettingsModule,
+    forwardRef(() => CustomersModule),
+    forwardRef(() => MessagesModule),
   ],
   controllers: [
     ChannelController,
@@ -117,7 +127,7 @@ import { ChannelQueueProcessor } from './jobs/channel-queue.processor';
     ChannelConnectorRegistry,
 
     // Queue Processor
-    ChannelQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.CHANNEL) ? [ChannelQueueProcessor] : []),
   ],
   exports: [
     ChannelService,

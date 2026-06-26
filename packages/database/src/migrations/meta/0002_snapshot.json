@@ -152,12 +152,8 @@
           "tableFrom": "agent_availability",
           "tableTo": "agent_profiles",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "agent_profile_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agent_profile_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -508,12 +504,8 @@
           "tableFrom": "assignment_rules",
           "tableTo": "teams",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -803,12 +795,8 @@
           "tableFrom": "customer_metrics",
           "tableTo": "customers",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1025,12 +1013,8 @@
           "tableFrom": "customer_profiles",
           "tableTo": "customers",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1160,12 +1144,8 @@
           "tableFrom": "customer_segment_members",
           "tableTo": "customers",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1174,12 +1154,8 @@
           "tableFrom": "customer_segment_members",
           "tableTo": "customer_segments",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "segment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["segment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1671,12 +1647,8 @@
           "tableFrom": "team_members",
           "tableTo": "teams",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1685,12 +1657,8 @@
           "tableFrom": "team_members",
           "tableTo": "agent_profiles",
           "schemaTo": "ai_support_agent",
-          "columnsFrom": [
-            "agent_profile_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agent_profile_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

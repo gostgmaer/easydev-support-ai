@@ -42,7 +42,9 @@ describe('BaseClient', () => {
       .mockRejectedValue({ response: { status: 400 }, message: 'bad request' });
     client.setRequestImpl(impl);
 
-    await expect(client.call({ url: '/x', method: 'GET' }, 3)).rejects.toBeDefined();
+    await expect(
+      client.call({ url: '/x', method: 'GET' }, 3),
+    ).rejects.toBeDefined();
     expect(impl).toHaveBeenCalledTimes(1);
   });
 
@@ -50,12 +52,17 @@ describe('BaseClient', () => {
     const client = new TestClient();
     const impl = jest
       .fn()
-      .mockRejectedValue({ response: { status: 500 }, message: 'server error' });
+      .mockRejectedValue({
+        response: { status: 500 },
+        message: 'server error',
+      });
     client.setRequestImpl(impl);
 
     // Five consecutive failed requests trip the breaker (threshold = 5).
     for (let i = 0; i < 5; i++) {
-      await expect(client.call({ url: '/x', method: 'GET' }, 0)).rejects.toBeDefined();
+      await expect(
+        client.call({ url: '/x', method: 'GET' }, 0),
+      ).rejects.toBeDefined();
     }
 
     impl.mockClear();

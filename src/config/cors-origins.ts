@@ -4,6 +4,6 @@
 export function getAllowedOrigins(): string[] {
   return (
     process.env.CORS_ALLOWED_ORIGINS ??
-    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3005'
+    'http://localhost:3011,http://localhost:3012,http://localhost:3013,http://localhost:3014'
   ).split(',');
 }

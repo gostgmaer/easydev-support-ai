@@ -26,6 +26,55 @@ export class AgentAssignmentService {
     private readonly auditService: AuditService,
   ) {}
 
+  /**
+   * Managers had no way to see who on a team is currently overloaded - the
+   * data (currentLoad/activeConversations/activeTickets vs each agent's
+   * configured capacity) already existed in AgentAvailability/AgentProfile,
+   * nothing surfaced it as a team-wide view.
+   */
+  async getTeamWorkload(tenantId: string, teamId: string) {
+    const team = await this.teamRepo.findById(teamId, tenantId);
+    if (!team) {
+      throw new NotFoundException(`Team ${teamId} not found`);
+    }
+
+    const members = await this.teamRepo.findTeamMembers(teamId, tenantId);
+
+    return Promise.all(
+      members.map(async (member) => {
+        const profile = await this.profileRepo.findById(
+          member.agentProfileId,
+          tenantId,
+        );
+        const availability = await this.availabilityRepo.findByAgentProfileId(
+          member.agentProfileId,
+          tenantId,
+        );
+
+        const maxConcurrentConversations =
+          profile?.capacity.maxConcurrentConversations ?? null;
+        const maxOpenTickets = profile?.capacity.maxOpenTickets ?? null;
+        const activeConversations = availability?.activeConversations ?? 0;
+        const activeTickets = availability?.activeTickets ?? 0;
+
+        return {
+          agentProfileId: member.agentProfileId,
+          displayName: profile?.displayName ?? null,
+          status: availability?.status ?? 'OFFLINE',
+          currentLoad: availability?.currentLoad ?? 0,
+          activeConversations,
+          activeTickets,
+          maxConcurrentConversations,
+          maxOpenTickets,
+          isOverloaded:
+            (maxConcurrentConversations !== null &&
+              activeConversations >= maxConcurrentConversations) ||
+            (maxOpenTickets !== null && activeTickets >= maxOpenTickets),
+        };
+      }),
+    );
+  }
+
   async assignEntity(
     tenantId: string,
     teamId: string,

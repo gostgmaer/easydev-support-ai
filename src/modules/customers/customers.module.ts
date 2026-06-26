@@ -16,6 +16,8 @@ import {
 import { DrizzleCustomerRepository } from './repositories/drizzle-customer.repository';
 import { DrizzleCustomerSegmentRepository } from './repositories/drizzle-customer-segment.repository';
 import { CustomerQueueProcessor } from './jobs/customer-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // TypeORM Entities for compatibility
 import { Customer } from './entities/customer.entity';
@@ -44,7 +46,7 @@ import { CustomerSegment } from './entities/customer-segment.entity';
     CustomerSearchService,
     CustomerTimelineService,
     CustomerEventPublisher,
-    CustomerQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.CUSTOMER) ? [CustomerQueueProcessor] : []),
     {
       provide: 'ICustomerRepository',
       useClass: DrizzleCustomerRepository,

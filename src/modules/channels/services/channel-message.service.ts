@@ -1,6 +1,7 @@
 import {
   Injectable,
   Inject,
+  forwardRef,
   NotFoundException,
   BadRequestException,
   Logger,
@@ -18,6 +19,8 @@ import {
   MessageSentEvent,
   MessageFailedEvent,
 } from '@easydev/shared-events';
+import { CustomerService } from '../../customers/services/customer.service';
+import { MessageInboundService } from '../../messages/services/message-inbound.service';
 
 @Injectable()
 export class ChannelMessageService {
@@ -30,6 +33,9 @@ export class ChannelMessageService {
     private readonly eventPublisher: ChannelEventPublisher,
     private readonly queueService: QueueService,
     private readonly auditService: AuditService,
+    private readonly customerService: CustomerService,
+    @Inject(forwardRef(() => MessageInboundService))
+    private readonly messageInboundService: MessageInboundService,
   ) {}
 
   async processIncomingWebhook(
@@ -80,32 +86,56 @@ export class ChannelMessageService {
       return; // Drop message silently or flag it
     }
 
-    // 4. Publish Event
-    const messageId = normalized.externalMessageId || randomUUID();
-    await this.eventPublisher.publish(
-      new MessageReceivedEvent(
-        tenantId,
-        messageId,
-        randomUUID(),
-        normalized.content,
-        'CUSTOMER',
-      ),
-    );
-    await this.eventPublisher.publish(
-      new MessageNormalizedEvent(
-        tenantId,
-        messageId,
-        channelId,
-        payload,
-        normalized,
-      ),
+    // 4. Resolve the sending customer and persist the message into a real
+    // conversation. Without this step the message was normalized and then
+    // dropped - validated and analyzed, but never actually delivered to an
+    // agent or to AI.
+    const customer = await this.customerService.findOrCreateByExternalId(
+      tenantId,
+      channelId,
+      normalized.senderId,
+      channel.type.value,
     );
 
-    // 5. Audit Logging
+    const ingestResult = await this.messageInboundService.ingest(tenantId, {
+      channelId,
+      customerId: customer.id,
+      externalMessageId: normalized.externalMessageId,
+      content: normalized.content,
+      metadata: { rawPayload: normalized.rawPayload },
+    });
+
+    // 5. Publish Event - only for genuinely new messages, so a redelivered
+    // webhook doesn't double-count in analytics.
+    if (!ingestResult.deduplicated) {
+      const messageId = ingestResult.message?.id || randomUUID();
+      const conversationId =
+        ingestResult.message?.conversationId || randomUUID();
+      await this.eventPublisher.publish(
+        new MessageReceivedEvent(
+          tenantId,
+          messageId,
+          conversationId,
+          normalized.content,
+          'CUSTOMER',
+        ),
+      );
+      await this.eventPublisher.publish(
+        new MessageNormalizedEvent(
+          tenantId,
+          messageId,
+          channelId,
+          payload,
+          normalized,
+        ),
+      );
+    }
+
+    // 6. Audit Logging
     await this.auditService.log({
       tenantId,
       action: 'MESSAGE_RECEIVE',
-      details: `Received message ${messageId} on channel ${channelId}`,
+      details: `Received message on channel ${channelId} (deduplicated=${ingestResult.deduplicated})`,
     });
   }
 
@@ -141,6 +171,7 @@ export class ChannelMessageService {
 
     // Push to outgoing queue
     await this.queueService.addJob('channel-queue', 'outgoing-message-job', {
+      tenantId,
       channelId,
       recipientId,
       content: finalContent,

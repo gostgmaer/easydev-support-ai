@@ -15,8 +15,20 @@ export interface TenantSettings {
 }
 
 // Conversation Contracts
-export type ConversationStatus = 'OPEN' | 'PENDING' | 'ASSIGNED' | 'RESOLVED' | 'CLOSED';
-export type MessageType = 'TEXT' | 'IMAGE' | 'AUDIO' | 'VIDEO' | 'DOCUMENT' | 'LOCATION' | 'SYSTEM';
+export type ConversationStatus =
+  | 'OPEN'
+  | 'PENDING'
+  | 'ASSIGNED'
+  | 'RESOLVED'
+  | 'CLOSED';
+export type MessageType =
+  | 'TEXT'
+  | 'IMAGE'
+  | 'AUDIO'
+  | 'VIDEO'
+  | 'DOCUMENT'
+  | 'LOCATION'
+  | 'SYSTEM';
 
 export interface MessageContract {
   id: string;
@@ -39,7 +51,13 @@ export interface ConversationContract {
 }
 
 // Ticket Contracts
-export type TicketStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'WAITING_CUSTOMER' | 'RESOLVED' | 'CLOSED';
+export type TicketStatus =
+  | 'OPEN'
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'WAITING_CUSTOMER'
+  | 'RESOLVED'
+  | 'CLOSED';
 export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 export interface TicketContract {

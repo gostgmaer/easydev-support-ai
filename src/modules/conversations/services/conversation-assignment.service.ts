@@ -201,9 +201,8 @@ export class ConversationAssignmentService {
   async reassignFromOfflineAgents(
     tenantId?: string,
   ): Promise<{ reassigned: number; skipped: number }> {
-    const offlineAgents = await this.availabilityRepo.findOfflineAgents(
-      tenantId,
-    );
+    const offlineAgents =
+      await this.availabilityRepo.findOfflineAgents(tenantId);
     let reassigned = 0;
     let skipped = 0;
 
@@ -214,9 +213,7 @@ export class ConversationAssignmentService {
       );
 
       for (const conversation of assigned) {
-        if (
-          !ACTIVE_CONVERSATION_STATUSES.includes(conversation.status.value)
-        ) {
+        if (!ACTIVE_CONVERSATION_STATUSES.includes(conversation.status.value)) {
           continue;
         }
         if (!conversation.assignedTeamId) {

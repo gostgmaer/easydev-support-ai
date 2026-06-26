@@ -11,7 +11,7 @@ module.exports = {
       listen_timeout: 5000,
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 3100,
       },
     },
     {
@@ -24,7 +24,11 @@ module.exports = {
       kill_timeout: 15000, // Allow 15s to finish active queue jobs
       env: {
         NODE_ENV: 'production',
-        RUN_WORKERS: 'true',
+        // shouldRunProcessor() in src/config/queue-role.ts gates every
+        // @Processor() on this var - RUN_WORKERS was never read anywhere,
+        // so this app previously ran zero queue processors.
+        PROCESS_QUEUE:
+          'conversation-queue,message-queue,ticket-queue,knowledge-queue,connector-queue,workflow-queue,analytics-queue,notification-queue,customer-queue,team-queue,channel-queue,settings-queue,inbox-queue,admin-queue,widget-queue,ai-queue',
         PORT: 4000,
       },
     },

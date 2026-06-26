@@ -1,6 +1,11 @@
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { BaseWorker, QueueService, WORKER_OPTIONS } from '@easydev/shared-queues';
+import {
+  BaseWorker,
+  QueueService,
+  QUEUES,
+  WORKER_OPTIONS,
+} from '@easydev/shared-queues';
 import { Injectable, Optional } from '@nestjs/common';
 import { AiResponseService } from '../services/ai-response.service';
 import { AiToolExecutionService } from '../services/ai-tool-execution.service';
@@ -21,7 +26,7 @@ export class AiQueueProcessor extends BaseWorker {
     private readonly aiClient: AIPlatformClient,
     @Optional() queueService?: QueueService,
   ) {
-    super('AiQueueProcessor', 'ai-queue' as any, queueService);
+    super('AiQueueProcessor', QUEUES.AI, queueService);
   }
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
@@ -46,6 +51,10 @@ export class AiQueueProcessor extends BaseWorker {
           job.data.toolName,
           job.data.capability,
           job.data.payload || {},
+          // RR-18: stable across a BullMQ-level retry of this same job and
+          // across the AI Platform redispatching the same logical tool call
+          // - the connector-level idempotency key, not just an id for logging.
+          job.data.toolRequestId,
         );
 
       case 'ai-tool-result-submission-job':

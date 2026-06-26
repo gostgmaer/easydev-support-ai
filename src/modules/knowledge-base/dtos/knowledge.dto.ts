@@ -86,6 +86,19 @@ export class CreateDocumentDto {
   @IsNotEmpty()
   language: string;
 
+  // Required for file-backed document types (PDF/DOCX/CSV/TXT) - the
+  // reference returned by the File Upload Service's upload flow. The server
+  // resolves the verified storage reference from this via finalizeUpload()
+  // rather than trusting caller-supplied fileUrl/fileSize/mimeType directly
+  // (see KnowledgeDocumentService.createDocument).
+  @IsString()
+  @IsOptional()
+  uploadReference?: string;
+
+  // Only meaningful for non-file-backed types (WEBPAGE/crawled content,
+  // MARKDOWN/FAQ/HTML/MANUAL authored content) where there is no uploaded
+  // file to verify - e.g. the webpage URL itself. Ignored for file-backed
+  // types in favor of the verified value from finalizeUpload().
   @IsString()
   @IsOptional()
   fileUrl?: string;

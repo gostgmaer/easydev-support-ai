@@ -116,7 +116,7 @@ export class TicketService {
         tenantId,
         ticket.customerId,
       );
-      if (customer?.email?.value) {
+      if (customer?.email?.value && !customer.metadata?.syntheticEmail) {
         await this.queueService.addJob(QUEUES.NOTIFICATION, jobName, {
           tenantId,
           customerEmail: customer.email.value,
@@ -451,24 +451,68 @@ export class TicketService {
     return target;
   }
 
+  /**
+   * Previously called ticketRepo.bulkUpdateStatus() directly - a raw
+   * UPDATE ... WHERE id IN (...) with no state-machine check, no domain
+   * events, no SLA recalculation, and no customer notification. That
+   * completely bypassed canTransitionTo() (double-close, reopen-from-closed,
+   * etc. were all blocked everywhere else in this codebase but wide open
+   * here) and skipped every side effect resolve/close/reopen/cancel already
+   * trigger. Now dispatches each ticket through the same guarded path a
+   * single-ticket request would use - slower than one SQL statement, but a
+   * bulk action must obey the exact same rules as doing it one at a time.
+   */
   async bulkUpdateStatus(
     tenantId: string,
     ticketIds: string[],
     status: TicketStatusEnum,
     userId?: string,
-  ): Promise<{ updated: number }> {
-    const updated = await this.ticketRepo.bulkUpdateStatus(
-      tenantId,
-      ticketIds,
-      status,
-    );
+  ): Promise<{
+    updated: number;
+    failed: number;
+    errors: Record<string, string>;
+  }> {
+    let updatedCount = 0;
+    const errors: Record<string, string> = {};
+
+    for (const id of ticketIds) {
+      try {
+        switch (status) {
+          case TicketStatusEnum.RESOLVED:
+            await this.resolve(tenantId, id, undefined, userId);
+            break;
+          case TicketStatusEnum.CLOSED:
+            await this.close(tenantId, id, userId);
+            break;
+          case TicketStatusEnum.CANCELLED:
+            await this.cancel(tenantId, id, userId);
+            break;
+          case TicketStatusEnum.REOPENED:
+            await this.reopen(tenantId, id, userId);
+            break;
+          default:
+            await this.update(tenantId, id, { status }, userId);
+        }
+        updatedCount += 1;
+      } catch (err: any) {
+        errors[id] = err.message;
+      }
+    }
+
     await this.auditService.log({
       tenantId,
       userId,
       action: 'TICKET_BULK_UPDATE',
-      details: `Bulk set status ${status} on ${updated} tickets`,
+      details: `Bulk set status ${status}: ${updatedCount} succeeded, ${
+        ticketIds.length - updatedCount
+      } failed`,
     });
-    return { updated };
+
+    return {
+      updated: updatedCount,
+      failed: ticketIds.length - updatedCount,
+      errors,
+    };
   }
 
   async findById(tenantId: string, id: string): Promise<Ticket> {

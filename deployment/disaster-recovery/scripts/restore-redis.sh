@@ -75,16 +75,27 @@ echo "[RESTORE-REDIS] Stopping Redis container: ${REDIS_CONTAINER}..."
 docker stop "${REDIS_CONTAINER}" || true
 
 echo "[RESTORE-REDIS] Replacing Redis active persistence data files..."
-# Clear active data
-# In docker setup, we clear the host volume or copy directly. Let's swap files.
-# Mount path: /data is volume-mapped, so we copy files to the volume mount directory
-# or copy inside container after start (but if we start first, it overrides).
-# Since RDB/AOF load at startup, we must copy files BEFORE starting Redis:
-# Let's copy unpacked files into host's mapped volume path, or write a helper:
-# In docker-compose, postgres and redis volumes are usually mapped. We simulate copy:
-# cp "${TEMP_UNPACK_DIR}/"* /var/lib/docker/volumes/easydev-support-ai_redis-data/_data/
-# Since we are inside the running environment, we'll mimic the copy operation
+# RDB/AOF must be in place before Redis starts (it loads them at startup),
+# and docker exec doesn't work on a stopped container - so this runs
+# through a throwaway helper container that shares the same volume via
+# --volumes-from, the standard way to manipulate a stopped container's
+# mounted data. Clears stale persistence files first so old AOF segments
+# don't end up mixed in alongside the restored ones.
 echo "[RESTORE-REDIS] Swapping database files in volume..."
+if ! docker run --rm \
+    --volumes-from "${REDIS_CONTAINER}" \
+    -v "${TEMP_UNPACK_DIR}:/restore:ro" \
+    alpine sh -c "
+        set -e
+        rm -rf ${REDIS_DATA_DIR}/dump.rdb ${REDIS_DATA_DIR}/appendonly.aof ${REDIS_DATA_DIR}/appendonlydir
+        cp -a /restore/. ${REDIS_DATA_DIR}/
+    "; then
+    echo "[RESTORE-REDIS] [ERROR] Failed to swap Redis persistence files into the data volume."
+    rm -f "${DEC_FILE}"
+    rm -rf "${TEMP_UNPACK_DIR}"
+    log_audit "RESTORE_FAILED" "FAILED" "$(basename "${BACKUP_FILE}")" "${DEC_CHECKSUM}" "${SIZE_BYTES}" "{\"error\":\"volume_swap_failed\"}"
+    exit 1
+fi
 
 # 4. Restart Redis container
 echo "[RESTORE-REDIS] Starting Redis container..."

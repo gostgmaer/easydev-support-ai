@@ -75,8 +75,7 @@ export class TicketSLAService {
       : matrix.resolutionMinutes;
 
     const responseMinutes = dto.responseMinutes ?? defaultResponseMinutes;
-    const resolutionMinutes =
-      dto.resolutionMinutes ?? defaultResolutionMinutes;
+    const resolutionMinutes = dto.resolutionMinutes ?? defaultResolutionMinutes;
     const businessHours = dto.businessHours ?? tenantSla.businessHoursOnly;
     const base = ticket.openedAt;
 

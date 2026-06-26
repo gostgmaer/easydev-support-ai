@@ -30,6 +30,8 @@ import { DrizzleMessageRepository } from './repositories/drizzle-message.reposit
 import { DrizzleMessageTemplateRepository } from './repositories/drizzle-message-template.repository';
 import { DrizzleMessageDraftRepository } from './repositories/drizzle-message-draft.repository';
 import { MessageQueueProcessor } from './jobs/message-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
@@ -58,7 +60,7 @@ import { MessageQueueProcessor } from './jobs/message-queue.processor';
     MessageInboundService,
     MessageReadModelService,
     MessageEventPublisher,
-    MessageQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.MESSAGE) ? [MessageQueueProcessor] : []),
     {
       provide: 'IMessageRepository',
       useClass: DrizzleMessageRepository,

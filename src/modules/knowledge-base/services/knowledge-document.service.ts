@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import type { IKnowledgeRepository } from '../repositories/knowledge-repository.interface';
 import { KnowledgeDocument } from '../domain/knowledge-document.aggregate';
 import { KnowledgeVersion } from '../domain/knowledge-version.entity';
@@ -11,11 +16,23 @@ import {
   DocumentStatus,
   DocumentStatusEnum,
   DocumentLanguage,
+  DocumentTypeEnum,
   SyncStatusEnum,
   IngestionStatusEnum,
   EmbeddingStatusEnum,
 } from '../domain/value-objects';
 import { KnowledgeEventPublisher } from './knowledge-event.publisher';
+import { FileUploadIntegrationService } from '../../../integration/file-upload/file-upload.service';
+
+// Document types backed by an actual uploaded file (vs. WEBPAGE/MARKDOWN/
+// FAQ/HTML/MANUAL, which are crawled or directly-authored content with no
+// uploaded bytes to verify).
+const FILE_BACKED_DOCUMENT_TYPES = new Set([
+  DocumentTypeEnum.PDF,
+  DocumentTypeEnum.DOCX,
+  DocumentTypeEnum.CSV,
+  DocumentTypeEnum.TXT,
+]);
 
 @Injectable()
 export class KnowledgeDocumentService {
@@ -23,12 +40,53 @@ export class KnowledgeDocumentService {
     @Inject('IKnowledgeRepository')
     private readonly repository: IKnowledgeRepository,
     private readonly eventPublisher: KnowledgeEventPublisher,
+    private readonly fileUpload: FileUploadIntegrationService,
   ) {}
 
   public async createDocument(
     tenantId: string,
     dto: CreateDocumentDto,
   ): Promise<KnowledgeDocument> {
+    // File-backed types (PDF/DOCX/CSV/TXT) must reference a file that was
+    // actually uploaded and server-verified by the File Upload Service -
+    // fileUrl/fileSize/mimeType/checksum are never trusted from the caller
+    // directly, the same pattern message/ticket attachments already use
+    // (MessageAttachmentService.register -> finalizeUpload). Other types
+    // (WEBPAGE/MARKDOWN/FAQ/HTML/MANUAL) have no uploaded file to verify -
+    // fileUrl there is a webpage URL or authored-content reference, not a
+    // storage pointer - so they keep accepting the caller-supplied fields.
+    let fileFields: Pick<
+      CreateDocumentDto,
+      'fileUrl' | 'storageProvider' | 'fileSize' | 'mimeType' | 'checksum'
+    >;
+
+    if (FILE_BACKED_DOCUMENT_TYPES.has(dto.documentType)) {
+      if (!dto.uploadReference) {
+        throw new BadRequestException(
+          `uploadReference is required for document type ${dto.documentType}`,
+        );
+      }
+      const storageRef = await this.fileUpload.finalizeUpload(
+        tenantId,
+        dto.uploadReference,
+      );
+      fileFields = {
+        fileUrl: storageRef.publicUrl,
+        storageProvider: storageRef.storageProvider,
+        fileSize: storageRef.fileSize,
+        mimeType: storageRef.contentType,
+        checksum: storageRef.checksum,
+      };
+    } else {
+      fileFields = {
+        fileUrl: dto.fileUrl,
+        storageProvider: dto.storageProvider,
+        fileSize: dto.fileSize,
+        mimeType: dto.mimeType,
+        checksum: dto.checksum,
+      };
+    }
+
     const documentId = crypto.randomUUID();
     const doc = KnowledgeDocument.create(documentId, {
       tenantId,
@@ -43,11 +101,7 @@ export class KnowledgeDocumentService {
       syncStatus: SyncStatusEnum.PENDING,
       ingestionStatus: IngestionStatusEnum.PENDING,
       embeddingStatus: EmbeddingStatusEnum.PENDING,
-      fileUrl: dto.fileUrl,
-      storageProvider: dto.storageProvider,
-      fileSize: dto.fileSize,
-      mimeType: dto.mimeType,
-      checksum: dto.checksum,
+      ...fileFields,
       tags: dto.tags,
       metadata: dto.metadata,
     });

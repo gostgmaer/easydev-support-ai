@@ -39,11 +39,6 @@ export interface ITicketRepository extends ITenantRepository<Ticket, string> {
     options: TicketQueryOptions,
   ): Promise<PaginatedResult<Ticket>>;
   search(tenantId: string, query: string, limit?: number): Promise<Ticket[]>;
-  bulkUpdateStatus(
-    tenantId: string,
-    ticketIds: string[],
-    status: string,
-  ): Promise<number>;
 
   // Comments
   addComment(comment: TicketComment, tenantId: string): Promise<void>;

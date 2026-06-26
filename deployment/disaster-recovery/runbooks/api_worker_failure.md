@@ -33,11 +33,25 @@ Scale worker instances to absorb load spikes:
 docker compose -f docker-compose.production.yml up -d --scale worker-conversation=4 --scale worker-workflow=4
 ```
 
-### Step 3: Purge Stuck Jobs & Release Locks
-If a toxic job blocks the queue processing:
+### Step 3: Check for Dropped Jobs & Replay Them
+Do **not** run `DEL bull:<queue>:stalled` - that key is BullMQ's own bookkeeping
+set for detecting in-flight jobs eligible for stall-checking, not a queue of
+stuck jobs. Deleting it doesn't unstick or free anything; it only suppresses
+BullMQ's own automatic stalled-job recovery for whatever happens to be
+in-flight at that moment.
+
+A job whose worker dies repeatedly mid-processing (OOM, crash loop) is retried
+up to `maxStalledCount` (2) times by BullMQ automatically, then is routed to
+this app's dead-letter queue rather than being silently dropped. Inspect and
+replay any such job via the Operations Center API instead:
 ```bash
-# Execute job failure clear commands via Redis cli
-docker exec -it support-ai-redis redis-cli -c "DEL bull:conversation-queue:stalled"
+# List dead-letter jobs (requires an authenticated admin/ops session + tenant header)
+curl -s -H "Authorization: Bearer <token>" -H "x-tenant-id: <tenantId>" \
+  https://<api-host>/v1/admin/health/dead-letter
+
+# Replay a specific job back onto its source queue
+curl -s -X POST -H "Authorization: Bearer <token>" -H "x-tenant-id: <tenantId>" \
+  https://<api-host>/v1/admin/health/dead-letter/<jobId>/replay
 ```
 Restart workers to pick up refreshed locks:
 ```bash

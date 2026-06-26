@@ -20,9 +20,9 @@ export const QUEUES = {
   INBOX: 'inbox-queue',
   ADMIN: 'admin-queue',
   WIDGET: 'widget-queue',
+  AI: 'ai-queue',
   DEAD_LETTER: 'dead-letter-queue',
 } as const;
-
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 

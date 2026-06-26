@@ -9,9 +9,12 @@ pnpm --filter @easydev/database exec drizzle-kit check || {
   exit 1
 }
 
-# 2. Run schema migration execution
-echo "[MIGRATION] Applying migrations to active database instance..."
-pnpm --filter @easydev/database exec drizzle-kit push || {
+# 2. Apply committed migration files (journal + tracking table), not a live
+# schema push - push diffs schema.ts directly against the database and skips
+# the reviewed migrations/ folder entirely, which is how this environment's
+# schema silently drifted out of sync with what local dev and CI saw.
+echo "[MIGRATION] Applying committed migrations to active database instance..."
+pnpm --filter @easydev/database exec drizzle-kit migrate || {
   echo "[MIGRATION] Database schema migration execution failed. Attempting cleanup."
   exit 1
 }

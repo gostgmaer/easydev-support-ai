@@ -9,6 +9,7 @@ import { AiUsageService } from './ai-usage.service';
 import { AIPlatformClient } from './ai-platform.client';
 import { KnowledgeSearchService } from '../../knowledge-base/services/knowledge-search.service';
 import { KnowledgeChunkService } from '../../knowledge-base/services/knowledge-chunk.service';
+import { KnowledgePermissionService } from '../../knowledge-base/services/knowledge-permission.service';
 import { InboxService } from '../../inbox/services/inbox.service';
 import { MessageDraftService } from '../../messages/services/message-draft.service';
 import { AiSettingsService } from '../../settings/services/ai-settings.service';
@@ -37,6 +38,7 @@ export class AiResponseService {
     private readonly aiClient: AIPlatformClient,
     private readonly knowledgeSearchService: KnowledgeSearchService,
     private readonly knowledgeChunkService: KnowledgeChunkService,
+    private readonly knowledgePermissionService: KnowledgePermissionService,
     private readonly inboxService: InboxService,
     private readonly draftService: MessageDraftService,
     private readonly aiSettingsService: AiSettingsService,
@@ -214,16 +216,26 @@ export class AiResponseService {
       );
 
       const replyText =
-        generateResult.text ||
+        generateResult.content ||
         'I am sorry, I could not process your request at this time.';
-      const confidence = generateResult.confidence || 0.9;
-      const tokensUsed = generateResult.tokensUsed || 100;
-      const cost = generateResult.cost || 0.002;
+      // KNOWN GAP: the real AI platform's generation_workflow output_schema
+      // is {content, word_count, metadata} - no confidence/token/cost
+      // fields exist anywhere in that API. These are now permanently the
+      // fallback defaults, not a real signal - the auto-escalation check
+      // just below this never actually fires on a real low-confidence
+      // response anymore. Revisit if/when the platform exposes a real
+      // confidence score (e.g. via metadata).
+      const confidence = 0.9;
+      const tokensUsed = 100;
+      const cost = 0.002;
 
       // Confidence was computed and logged but never compared against
       // anything - a low-confidence/hallucination-risk reply went straight
       // to the customer exactly like a fully-confident one.
-      if (aiSettings.autoEscalationEnabled && confidence < aiSettings.escalationThreshold) {
+      if (
+        aiSettings.autoEscalationEnabled &&
+        confidence < aiSettings.escalationThreshold
+      ) {
         this.logger.log(
           `AI response confidence ${confidence} below escalation threshold ${aiSettings.escalationThreshold} for conversation ${conversationId}; escalating instead of auto-sending.`,
         );
@@ -395,11 +407,13 @@ export class AiResponseService {
     );
 
     const replyText =
-      generateResult.text ||
+      generateResult.content ||
       'I am sorry, I could not generate a suggestion at this time.';
-    const confidence = generateResult.confidence || 0.9;
-    const tokensUsed = generateResult.tokensUsed || 100;
-    const cost = generateResult.cost || 0.002;
+    // See identical comment above in generateAutoResponse() - the real AI
+    // platform's generation output has no confidence/token/cost fields.
+    const confidence = 0.9;
+    const tokensUsed = 100;
+    const cost = 0.002;
     const maskedText = this.maskSensitiveData(replyText);
 
     // Previously this returned content with no persisted draft behind it -
@@ -440,31 +454,49 @@ export class AiResponseService {
     query: string,
   ): Promise<string> {
     try {
+      // Over-fetch candidates: AI has no team/role identity, so
+      // checkAccess(tenantId, documentId) below - called with neither -
+      // naturally resolves to "only documents with no restrictive
+      // KnowledgePermission rows, or explicitly public ones" (its existing,
+      // already-correct semantics for an identity-less caller). Some
+      // candidates may get filtered out, so fetch extra headroom rather than
+      // searching for exactly the final count and losing context whenever a
+      // tenant uses document permissions.
       const results = await this.knowledgeSearchService.search(tenantId, {
         query,
-        limit: KNOWLEDGE_CONTEXT_DOC_LIMIT,
+        limit: KNOWLEDGE_CONTEXT_DOC_LIMIT * 3,
       });
 
       if (!results || results.length === 0) {
         return '';
       }
 
+      const permitted: any[] = [];
+      for (const result of results) {
+        if (permitted.length >= KNOWLEDGE_CONTEXT_DOC_LIMIT) break;
+        const hasAccess = await this.knowledgePermissionService.checkAccess(
+          tenantId,
+          result.document.id,
+        );
+        if (hasAccess) {
+          permitted.push(result);
+        }
+      }
+
       const excerpts = await Promise.all(
-        results
-          .slice(0, KNOWLEDGE_CONTEXT_DOC_LIMIT)
-          .map(async (result: any) => {
-            const chunks = await this.knowledgeChunkService.getChunks(
-              tenantId,
-              result.document.id,
-            );
-            const content =
-              chunks[0]?.content?.slice(0, KNOWLEDGE_CONTEXT_EXCERPT_LENGTH) ||
-              '';
-            if (!content) {
-              return '';
-            }
-            return `[${result.document.title}]\n${content}`;
-          }),
+        permitted.map(async (result: any) => {
+          const chunks = await this.knowledgeChunkService.getChunks(
+            tenantId,
+            result.document.id,
+          );
+          const content =
+            chunks[0]?.content?.slice(0, KNOWLEDGE_CONTEXT_EXCERPT_LENGTH) ||
+            '';
+          if (!content) {
+            return '';
+          }
+          return `[${result.document.title}]\n${content}`;
+        }),
       );
 
       return excerpts.filter((excerpt) => excerpt.length > 0).join('\n\n');

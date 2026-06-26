@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 // Controllers
 import { TenantSettingsController } from './controllers/tenant-settings.controller';
@@ -39,12 +40,15 @@ import { DrizzleSettingsRepository } from './repositories/drizzle-settings-repos
 
 // Jobs
 import { SettingsQueueProcessor } from './jobs/settings-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'settings-queue',
     }),
+    forwardRef(() => NotificationsModule),
   ],
   controllers: [
     TenantSettingsController,
@@ -80,7 +84,7 @@ import { SettingsQueueProcessor } from './jobs/settings-queue.processor';
     SettingsEventPublisher,
     FeatureFlagEngine,
     BusinessHoursEngine,
-    SettingsQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.SETTINGS) ? [SettingsQueueProcessor] : []),
   ],
   exports: [
     TenantSettingsService,

@@ -73,10 +73,24 @@ export class KnowledgeDocumentController {
   public async findDocuments(
     @Headers('x-tenant-id') tenantId: string,
     @Query() query: any,
+    @Headers('x-user-role') role?: string,
+    @Headers('x-user-team-id') teamId?: string,
   ) {
     const result = await this.documentService.findDocuments(tenantId, query);
+    const accessFlags = await Promise.all(
+      result.data.map((d) =>
+        this.permissionService.checkAccess(
+          tenantId,
+          d.id,
+          teamId,
+          role,
+          'READ',
+        ),
+      ),
+    );
+    const allowed = result.data.filter((_, i) => accessFlags[i]);
     return {
-      data: result.data.map((d) => d.toJSON()),
+      data: allowed.map((d) => d.toJSON()),
       total: result.total,
     };
   }

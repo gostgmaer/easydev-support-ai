@@ -12,7 +12,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total[5m]))", "legendFormat": "Requests/sec", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Requests/sec",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -21,7 +25,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P95 Latency", "refId": "A" }
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95 Latency",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -30,7 +38,11 @@
         "type": "stat",
         "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 },
         "targets": [
-          { "expr": "sum(websocket_connections_active)", "legendFormat": "Connections", "refId": "A" }
+          {
+            "expr": "sum(websocket_connections_active)",
+            "legendFormat": "Connections",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -39,7 +51,11 @@
         "type": "stat",
         "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 },
         "targets": [
-          { "expr": "sum(queue_backlog_total)", "legendFormat": "Backlog Jobs", "refId": "A" }
+          {
+            "expr": "sum(queue_backlog_total)",
+            "legendFormat": "Backlog Jobs",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -48,7 +64,11 @@
         "type": "gauge",
         "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
         "targets": [
-          { "expr": "system_memory_usage_bytes", "legendFormat": "Bytes Used", "refId": "A" }
+          {
+            "expr": "system_memory_usage_bytes",
+            "legendFormat": "Bytes Used",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -66,7 +86,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total[5m])) by (method, route)", "legendFormat": "{{method}} {{route}}", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (method, route)",
+            "legendFormat": "{{method}} {{route}}",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -75,7 +99,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100", "legendFormat": "Error Rate %", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "Error Rate %",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -84,9 +112,21 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
         "targets": [
-          { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P50 Latency", "refId": "A" },
-          { "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P90 Latency", "refId": "B" },
-          { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99 Latency", "refId": "C" }
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50 Latency",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P90 Latency",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P99 Latency",
+            "refId": "C"
+          }
         ]
       }
     ]
@@ -104,7 +144,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "queue_backlog_total", "legendFormat": "{{queue_name}} backlog", "refId": "A" }
+          {
+            "expr": "queue_backlog_total",
+            "legendFormat": "{{queue_name}} backlog",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -113,7 +157,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(queue_throughput_total[5m])) by (queue_name, status)", "legendFormat": "{{queue_name}} ({{status}})", "refId": "A" }
+          {
+            "expr": "sum(rate(queue_throughput_total[5m])) by (queue_name, status)",
+            "legendFormat": "{{queue_name}} ({{status}})",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -122,7 +170,11 @@
         "type": "stat",
         "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
         "targets": [
-          { "expr": "sum(queue_failures_total)", "legendFormat": "Total Failed Jobs", "refId": "A" }
+          {
+            "expr": "sum(queue_failures_total)",
+            "legendFormat": "Total Failed Jobs",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -140,7 +192,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(queue_throughput_total{job_name=\"workflow-execution-job\"}[5m]))", "legendFormat": "Workflows/sec", "refId": "A" }
+          {
+            "expr": "sum(rate(queue_throughput_total{job_name=\"workflow-execution-job\"}[5m]))",
+            "legendFormat": "Workflows/sec",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -149,7 +205,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(queue_failures_total{job_name=\"workflow-execution-job\"})", "legendFormat": "Failed Workflows", "refId": "A" }
+          {
+            "expr": "sum(queue_failures_total{job_name=\"workflow-execution-job\"})",
+            "legendFormat": "Failed Workflows",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -167,7 +227,11 @@
         "type": "stat",
         "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(ai_cost_dollars_total)", "legendFormat": "Cost", "refId": "A" }
+          {
+            "expr": "sum(ai_cost_dollars_total)",
+            "legendFormat": "Cost",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -176,7 +240,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 16, "x": 8, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(ai_failures_total[5m])) by (model_name, error_type)", "legendFormat": "{{model_name}} ({{error_type}})", "refId": "A" }
+          {
+            "expr": "sum(rate(ai_failures_total[5m])) by (model_name, error_type)",
+            "legendFormat": "{{model_name}} ({{error_type}})",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -185,7 +253,11 @@
         "type": "barplot",
         "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
         "targets": [
-          { "expr": "sum(ai_cost_dollars_total) by (tenant_id)", "legendFormat": "Tenant {{tenant_id}}", "refId": "A" }
+          {
+            "expr": "sum(ai_cost_dollars_total) by (tenant_id)",
+            "legendFormat": "Tenant {{tenant_id}}",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -203,7 +275,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "histogram_quantile(0.95, sum(rate(connector_execution_duration_seconds_bucket[5m])) by (le, connector_type))", "legendFormat": "{{connector_type}} P95", "refId": "A" }
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(connector_execution_duration_seconds_bucket[5m])) by (le, connector_type))",
+            "legendFormat": "{{connector_type}} P95",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -212,7 +288,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(connector_failures_total[5m])) by (connector_type)", "legendFormat": "{{connector_type}} Failures", "refId": "A" }
+          {
+            "expr": "sum(rate(connector_failures_total[5m])) by (connector_type)",
+            "legendFormat": "{{connector_type}} Failures",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -230,7 +310,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total{route=~\"/conversations.*\"}[5m]))", "legendFormat": "Operations/sec", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total{route=~\"/conversations.*\"}[5m]))",
+            "legendFormat": "Operations/sec",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -239,7 +323,11 @@
         "type": "stat",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(http_requests_total{route=~\"/conversations.*\"}) by (tenant_id)", "legendFormat": "Tenant {{tenant_id}}", "refId": "A" }
+          {
+            "expr": "sum(http_requests_total{route=~\"/conversations.*\"}) by (tenant_id)",
+            "legendFormat": "Tenant {{tenant_id}}",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -257,7 +345,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total{route=~\"/messages.*\", method=\"POST\"}[5m]))", "legendFormat": "Messages Sent/sec", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total{route=~\"/messages.*\", method=\"POST\"}[5m]))",
+            "legendFormat": "Messages Sent/sec",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -266,7 +358,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total{route=~\"/messages.*\", status_code=~\"[45]..\"}[5m]))", "legendFormat": "Errors/sec", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total{route=~\"/messages.*\", status_code=~\"[45]..\"}[5m]))",
+            "legendFormat": "Errors/sec",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -284,7 +380,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(http_requests_total[5m])) by (tenant_id)", "legendFormat": "Tenant {{tenant_id}}", "refId": "A" }
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (tenant_id)",
+            "legendFormat": "Tenant {{tenant_id}}",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -293,7 +393,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "sum(rate(cache_hits_total[5m])) by (tenant_id) / (sum(rate(cache_hits_total[5m])) by (tenant_id) + sum(rate(cache_misses_total[5m])) by (tenant_id)) * 100", "legendFormat": "Tenant {{tenant_id}} Hit Ratio", "refId": "A" }
+          {
+            "expr": "sum(rate(cache_hits_total[5m])) by (tenant_id) / (sum(rate(cache_hits_total[5m])) by (tenant_id) + sum(rate(cache_misses_total[5m])) by (tenant_id)) * 100",
+            "legendFormat": "Tenant {{tenant_id}} Hit Ratio",
+            "refId": "A"
+          }
         ]
       }
     ]
@@ -311,7 +415,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
         "targets": [
-          { "expr": "system_cpu_usage_percentage", "legendFormat": "CPU %", "refId": "A" }
+          {
+            "expr": "system_cpu_usage_percentage",
+            "legendFormat": "CPU %",
+            "refId": "A"
+          }
         ]
       },
       {
@@ -320,7 +428,11 @@
         "type": "timeseries",
         "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
         "targets": [
-          { "expr": "system_memory_usage_bytes", "legendFormat": "Memory Bytes", "refId": "A" }
+          {
+            "expr": "system_memory_usage_bytes",
+            "legendFormat": "Memory Bytes",
+            "refId": "A"
+          }
         ]
       }
     ]

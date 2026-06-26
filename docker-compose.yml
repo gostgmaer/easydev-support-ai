@@ -10,10 +10,10 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:3000"
+      - "3100:3100"
     environment:
       - NODE_ENV=development
-      - PORT=3000
+      - PORT=3100
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
@@ -27,10 +27,14 @@ services:
       - REDIS_PORT=6379
       - IAM_SERVICE_URL=http://host.docker.internal:3304
       - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
-      - AI_PLATFORM_URL=http://host.docker.internal:8000
-      - AI_PLATFORM_INTERNAL_URL=http://host.docker.internal:8000
+      # EASYDEV_AI_URL is what the code actually reads (ai-platform.client.ts) -
+      # AI_PLATFORM_URL/AI_PLATFORM_INTERNAL_URL were dead names; overriding
+      # them here left EASYDEV_AI_URL on .env's localhost:8000 value, which
+      # doesn't resolve to the host machine from inside a container.
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - ENABLE_OTEL=false
+      - CORS_ALLOWED_ORIGINS=http://localhost:3011,http://localhost:3012,http://localhost:3013,http://localhost:3014
     depends_on:
       - postgres
       - redis
@@ -57,28 +61,35 @@ services:
       - REDIS_PORT=6379
       - IAM_SERVICE_URL=http://host.docker.internal:3304
       - IAM_SERVICE_INTERNAL_URL=http://host.docker.internal:3304
-      - AI_PLATFORM_URL=http://host.docker.internal:8000
-      - AI_PLATFORM_INTERNAL_URL=http://host.docker.internal:8000
+      # EASYDEV_AI_URL is what the code actually reads (ai-platform.client.ts) -
+      # AI_PLATFORM_URL/AI_PLATFORM_INTERNAL_URL were dead names; overriding
+      # them here left EASYDEV_AI_URL on .env's localhost:8000 value, which
+      # doesn't resolve to the host machine from inside a container.
+      - EASYDEV_AI_URL=http://host.docker.internal:8000
       - PAYMENT_SERVICE_URL=http://host.docker.internal:3302
       - ENABLE_OTEL=false
+      # shouldRunProcessor() (src/config/queue-role.ts) gates every
+      # @Processor() on this var - without it this service ran zero queue
+      # processors despite being labelled the dedicated worker node.
+      - PROCESS_QUEUE=conversation-queue,message-queue,ticket-queue,knowledge-queue,connector-queue,workflow-queue,analytics-queue,notification-queue,customer-queue,team-queue,channel-queue,settings-queue,inbox-queue,admin-queue,widget-queue,ai-queue
     depends_on:
       - postgres
       - redis
     networks:
       - easydev-net
-      
+
   # 3. Next.js Frontend Operations Center
   # Disabled: UI repo (../../UI/easydev-support-ai-web) is a pnpm monorepo without a Dockerfile.
-  # Run on host instead: `pnpm dev:agent-workspace` (port 3000) or `pnpm dev:help-center` (port 3001)
+  # Run on host instead: `pnpm dev:agent-workspace` (port 3012) or `pnpm dev:help-center` (port 3014)
   # from C:\Users\kisho\WorkSpace\UI\easydev-support-ai-web.
   # frontend:
   #   build:
   #     context: ../../UI/easydev-support-ai-web
   #     dockerfile: Dockerfile
   #   ports:
-  #     - "3005:3005"
+  #     - "3012:3012"
   #   environment:
-  #     - NEXT_PUBLIC_API_URL=http://localhost:3000
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3100
   #   networks:
   #     - easydev-net
 
@@ -114,6 +125,20 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./packages/observability/src/alerts/alert-rules.yml:/etc/prometheus/alert-rules.yml
+    depends_on:
+      - alertmanager
+    networks:
+      - easydev-net
+
+  # 6b. Alertmanager - alert-rules.yml's rules were evaluated by Prometheus
+  # but had nowhere to be routed/notified; a firing alert previously only
+  # showed up if someone happened to check the Prometheus UI.
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
     networks:
       - easydev-net
 

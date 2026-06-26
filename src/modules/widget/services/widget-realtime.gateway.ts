@@ -185,9 +185,13 @@ export class WidgetRealtimeGateway
 
     // Fetch messages since last sync timestamp, across every conversation
     // linked to this session, capped to the most recent 50.
-    const conditions = [inArray(schema.messages.conversationId, conversationIds)];
+    const conditions = [
+      inArray(schema.messages.conversationId, conversationIds),
+    ];
     if (body.lastSyncedAt) {
-      conditions.push(gt(schema.messages.createdAt, new Date(body.lastSyncedAt)));
+      conditions.push(
+        gt(schema.messages.createdAt, new Date(body.lastSyncedAt)),
+      );
     }
 
     const messages = await db

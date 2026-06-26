@@ -412,9 +412,9 @@ export class IamGatewayService {
   private extractBranding(
     settings?: Record<string, unknown> | null,
   ): TenantBrandingConfig | undefined {
-    const branding = settings && (settings as Record<string, unknown>).branding;
+    const branding = settings && settings.branding;
     if (!branding || typeof branding !== 'object') return undefined;
-    return branding as TenantBrandingConfig;
+    return branding;
   }
 
   private buildUser(me: UpstreamMe): User {

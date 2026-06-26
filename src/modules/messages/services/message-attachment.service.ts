@@ -78,7 +78,13 @@ export class MessageAttachmentService {
   async registerLocal(
     tenantId: string,
     messageId: string,
-    file: { fileName: string; fileType?: string; fileSize?: number; storagePath: string; publicUrl: string },
+    file: {
+      fileName: string;
+      fileType?: string;
+      fileSize?: number;
+      storagePath: string;
+      publicUrl: string;
+    },
     userId?: string,
   ): Promise<MessageAttachment> {
     const message = await this.messageRepo.findById(messageId, tenantId);
@@ -163,12 +169,17 @@ export class MessageAttachmentService {
 
     const fileType = attachment.fileType || '';
     if (MEDIA_THUMBNAIL_TYPES.some((prefix) => fileType.startsWith(prefix))) {
+      // The real File Upload Service has no thumbnail generation capability
+      // (see FileUploadIntegrationService.requestThumbnail) - this always
+      // resolves to undefined today, skip persisting a no-op.
       const { thumbnailUrl } = await this.fileUpload.requestThumbnail(
         tenantId,
         attachment.storagePath,
       );
-      attachment.attachThumbnail(thumbnailUrl);
-      await this.messageRepo.saveAttachment(attachment, tenantId);
+      if (thumbnailUrl) {
+        attachment.attachThumbnail(thumbnailUrl);
+        await this.messageRepo.saveAttachment(attachment, tenantId);
+      }
     }
   }
 
@@ -196,10 +207,18 @@ export class MessageAttachmentService {
     if (attachment.storageProvider === 'LOCAL') {
       return { url: attachment.publicUrl! };
     }
+    // The real File Upload Service signs with its own fixed server-side
+    // expiry (no per-request override exists) - a caller asking for
+    // something other than the default gets a clear log instead of a
+    // silently-ignored value.
+    if (expiresInSeconds !== 900) {
+      this.logger.warn(
+        `Requested expiresInSeconds=${expiresInSeconds} for attachment ${attachmentId} is ignored - File Upload Service uses its own fixed expiry`,
+      );
+    }
     const url = await this.fileUpload.generateSignedUrl(
       tenantId,
       attachment.storagePath,
-      expiresInSeconds,
     );
     return { url };
   }

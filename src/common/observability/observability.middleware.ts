@@ -45,8 +45,7 @@ export class ObservabilityMiddleware implements NestMiddleware {
       const routeLabel = req.route
         ? `${req.baseUrl}${req.route.path}`
         : 'unmatched';
-      const durationSeconds =
-        Number(process.hrtime.bigint() - startTime) / 1e9;
+      const durationSeconds = Number(process.hrtime.bigint() - startTime) / 1e9;
       this.metricsService.recordHttpRequest(
         tenantId,
         req.method,

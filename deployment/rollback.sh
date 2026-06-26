@@ -11,11 +11,11 @@ echo "[ROLLBACK] Initiating system rollback sequence..."
 if docker ps --format '{{.Names}}' | grep -q "support-ai-blue"; then
   ACTIVE_COLOR="blue"
   ROLLBACK_COLOR="green"
-  ROLLBACK_PORT=3002
+  ROLLBACK_PORT=3102
 else
   ACTIVE_COLOR="green"
   ROLLBACK_COLOR="blue"
-  ROLLBACK_PORT=3000
+  ROLLBACK_PORT=3100
 fi
 
 echo "[ROLLBACK] Active color: $ACTIVE_COLOR. Rollback target color: $ROLLBACK_COLOR on port $ROLLBACK_PORT"
@@ -27,9 +27,9 @@ if ! docker ps --format '{{.Names}}' | grep -q "support-ai-${ROLLBACK_COLOR}"; t
   docker run -d \
     --name "support-ai-${ROLLBACK_COLOR}" \
     --network "easydev-net" \
-    -p "${ROLLBACK_PORT}:3000" \
+    -p "${ROLLBACK_PORT}:3100" \
     --env-file "./deployment/environments/${ENV}.env" \
-    -e "PORT=3000" \
+    -e "PORT=3100" \
     "${IMAGE_NAME}:${ENV}-latest"
 fi
 

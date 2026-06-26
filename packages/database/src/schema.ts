@@ -3522,4 +3522,3 @@ export const outboxEvents = supportAgentSchema.table(
     statusIdx: index('idx_outbox_status').on(table.tenantId, table.status),
   }),
 );
-

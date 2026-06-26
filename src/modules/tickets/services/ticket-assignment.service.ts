@@ -190,9 +190,8 @@ export class TicketAssignmentService {
   async reassignFromOfflineAgents(
     tenantId?: string,
   ): Promise<{ reassigned: number; skipped: number }> {
-    const offlineAgents = await this.availabilityRepo.findOfflineAgents(
-      tenantId,
-    );
+    const offlineAgents =
+      await this.availabilityRepo.findOfflineAgents(tenantId);
     let reassigned = 0;
     let skipped = 0;
 
@@ -214,7 +213,11 @@ export class TicketAssignmentService {
           continue;
         }
         try {
-          await this.autoAssign(agent.tenantId, ticket.id, ticket.assignedTeamId);
+          await this.autoAssign(
+            agent.tenantId,
+            ticket.id,
+            ticket.assignedTeamId,
+          );
           reassigned += 1;
         } catch (err: any) {
           this.logger.warn(

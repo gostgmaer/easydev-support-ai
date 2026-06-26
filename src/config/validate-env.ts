@@ -25,16 +25,23 @@ export function validateProductionEnv(): void {
   if (!process.env.CONNECTOR_ENCRYPTION_KEY) {
     missing.push('CONNECTOR_ENCRYPTION_KEY');
   }
+  if (!process.env.EASYDEV_AI_URL) {
+    missing.push('EASYDEV_AI_URL');
+  }
+  if (!process.env.EASYDEV_AI_API_KEY) {
+    missing.push('EASYDEV_AI_API_KEY');
+  }
   if (
     !process.env.EASYDEV_IAM_URL &&
     !process.env.IAM_SERVICE_INTERNAL_URL &&
     !process.env.IAM_SERVICE_URL
   ) {
-    missing.push('EASYDEV_IAM_URL (or IAM_SERVICE_INTERNAL_URL / IAM_SERVICE_URL)');
+    missing.push(
+      'EASYDEV_IAM_URL (or IAM_SERVICE_INTERNAL_URL / IAM_SERVICE_URL)',
+    );
   }
 
   if (missing.length > 0) {
-    // eslint-disable-next-line no-console
     console.error(
       `Refusing to start in production: missing required environment variable(s):\n${missing
         .map((name) => `  - ${name}`)

@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
@@ -28,7 +29,21 @@ import {
   ConfigureOAuthDto,
   ConfigureApiKeyDto,
 } from '../dtos/connector.dto';
-import { AuthTypeEnum } from '../domain/value-objects';
+import { AuthTypeEnum, ConnectorTypeEnum } from '../domain/value-objects';
+import { FeatureFlagService } from '../../settings/services/feature-flag.service';
+
+// Pre-built SaaS integrations every plan already gets - the actual
+// "connector.custom" upsell is building your own REST/GraphQL/webhook
+// connector, not connecting to a catalog integration.
+const BUILT_IN_CONNECTOR_TYPES = new Set([
+  ConnectorTypeEnum.SHOPIFY,
+  ConnectorTypeEnum.WOOCOMMERCE,
+  ConnectorTypeEnum.MAGENTO,
+  ConnectorTypeEnum.HUBSPOT,
+  ConnectorTypeEnum.SALESFORCE,
+  ConnectorTypeEnum.ZOHO,
+  ConnectorTypeEnum.JIRA,
+]);
 
 @Controller('v1/connectors')
 @UseGuards(TenantGuard, RbacGuard)
@@ -38,6 +53,7 @@ export class ConnectorsController {
     private readonly credentialService: ConnectorCredentialService,
     private readonly healthService: ConnectorHealthService,
     private readonly importService: ConnectorImportService,
+    private readonly featureFlagService: FeatureFlagService,
   ) {}
 
   @Post('install')
@@ -46,6 +62,18 @@ export class ConnectorsController {
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: InstallConnectorDto,
   ) {
+    if (!BUILT_IN_CONNECTOR_TYPES.has(dto.connectorType)) {
+      const enabled = await this.featureFlagService.resolveFlag(
+        tenantId,
+        'connector.custom',
+      );
+      if (!enabled) {
+        throw new ForbiddenException(
+          `Installing a ${dto.connectorType} connector requires the connector.custom feature. Your current plan only includes built-in catalog connectors - upgrade your plan or contact billing to build custom connectors.`,
+        );
+      }
+    }
+
     const connector = await this.connectorService.installConnector(
       tenantId,
       dto,

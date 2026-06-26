@@ -10,12 +10,14 @@ DB_CONTAINER="support-ai-postgres"
 DB_USER=${DB_USER:-"support_ai_prod"}
 DB_PASSWORD=${DB_PASSWORD:-"prod_db_pass_extremely_secure_991823"}
 BACKUP_PASSPHRASE=${BACKUP_PASSPHRASE:-"extremely_secure_passphrase_key_ring_9921"}
+WAL_DIR="/backups/postgres/wal"
 
 export PGPASSWORD="${DB_PASSWORD}"
 
 if [ -z "${BACKUP_FILE}" ]; then
     echo "[RESTORE-PG] [ERROR] Backup encrypted file path must be specified."
     echo "Usage: $0 /backups/postgres/db_daily_timestamp.sql.gz.enc [PITR_TIME] [DB_NAME]"
+    echo "       $0 /backups/postgres/basebackup_timestamp.tar.gz.enc \"2026-06-21 02:00:00\" [DB_NAME]"
     exit 1
 fi
 
@@ -24,8 +26,14 @@ if [ ! -f "${BACKUP_FILE}" ]; then
     exit 1
 fi
 
+if [ -n "${PITR_TARGET_TIME}" ] && [ ! -d "${WAL_DIR}" ]; then
+    echo "[RESTORE-PG] [ERROR] PITR requested but WAL archive directory not found: ${WAL_DIR}"
+    echo "  archive_command must be configured and have run for some time before PITR is possible."
+    exit 1
+fi
+
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-DEC_FILE="/tmp/restoring_${TIMESTAMP}.sql.gz"
+DEC_FILE="/tmp/restoring_${TIMESTAMP}.dec"
 
 echo "[RESTORE-PG] Starting database restore procedure..."
 # Audit Log: Restore Started
@@ -52,34 +60,94 @@ echo "[RESTORE-PG] Decryption complete. Decrypted SHA-256 Hash: ${DEC_CHECKSUM}"
 if [ -n "${PITR_TARGET_TIME}" ]; then
     # Point In Time Recovery Mode
     echo "[RESTORE-PG] [PITR] Initializing Point-In-Time Recovery to target: ${PITR_TARGET_TIME}..."
-    
+
+    # 3.0 DEC_FILE must be a pg_basebackup bundle (base.tar.gz + pg_wal.tar.gz,
+    # see backup-postgres.sh's "base" mode), not a pg_dump - fail loudly
+    # instead of proceeding against the wrong artifact type.
+    EXTRACT_DIR="/tmp/pitr_extract_${TIMESTAMP}"
+    mkdir -p "${EXTRACT_DIR}"
+    if ! tar -tzf "${DEC_FILE}" &>/dev/null || ! tar -xzf "${DEC_FILE}" -C "${EXTRACT_DIR}"; then
+        echo "[RESTORE-PG] [ERROR] PITR backup file is not a valid base-backup tarball: ${BACKUP_FILE}"
+        rm -f "${DEC_FILE}"
+        rm -rf "${EXTRACT_DIR}"
+        exit 1
+    fi
+    if [ ! -f "${EXTRACT_DIR}/base.tar.gz" ]; then
+        echo "[RESTORE-PG] [ERROR] base.tar.gz not found inside backup bundle - this is not a pg_basebackup output, PITR cannot proceed."
+        rm -f "${DEC_FILE}"
+        rm -rf "${EXTRACT_DIR}"
+        exit 1
+    fi
+
     # 3.1 Shutdown Postgres Container/Service
     echo "[RESTORE-PG] Stopping PostgreSQL container for physical files restoration..."
     docker stop "${DB_CONTAINER}" || true
-    
-    # 3.2 Physical files restore steps (representing physical hot backup)
-    # Delete active cluster data (safeguarding configs and logs)
+
+    # 3.2 Physical files restore: clear the existing data directory and
+    # untar the base backup (+ WAL segments included in it) in its place.
+    # docker exec doesn't work on a stopped container, so this runs through
+    # a throwaway helper container sharing the same volume via
+    # --volumes-from - the standard way to manipulate a stopped container's
+    # mounted data without starting it first.
     echo "[RESTORE-PG] Swapping PostgreSQL physical data cluster..."
-    # In production, we'd untar the physical basebackup here:
-    # tar -xzf basebackup.tar.gz -C /var/lib/postgresql/data
-    
-    # 3.3 Set recovery target settings
+    docker run --rm \
+        --volumes-from "${DB_CONTAINER}" \
+        -v "${EXTRACT_DIR}:/restore:ro" \
+        postgres:17-alpine sh -c "
+            set -e
+            rm -rf /var/lib/postgresql/data/*
+            tar -xzf /restore/base.tar.gz -C /var/lib/postgresql/data
+            if [ -f /restore/pg_wal.tar.gz ]; then
+                mkdir -p /var/lib/postgresql/data/pg_wal
+                tar -xzf /restore/pg_wal.tar.gz -C /var/lib/postgresql/data/pg_wal
+            fi
+            chown -R postgres:postgres /var/lib/postgresql/data
+            chmod 700 /var/lib/postgresql/data
+        "
+
+    # 3.3 Set recovery target settings. recovery_target_action=promote so
+    # the cluster comes back read-write automatically once it reaches the
+    # target, instead of pausing in read-only recovery (Postgres's own
+    # default) and waiting for someone to call pg_promote() by hand during
+    # an incident.
     echo "[RESTORE-PG] Creating recovery.signal trigger and setting recovery configurations..."
-    # In PostgreSQL 12+, create a recovery.signal file
-    # and configure recovery target parameters in postgresql.conf
-    # We simulate this trigger setup:
-    # touch /var/lib/postgresql/data/recovery.signal
-    # echo "restore_command = 'cp /backups/postgres/wal/%f %p'" >> /var/lib/postgresql/data/postgresql.auto.conf
-    # echo "recovery_target_time = '${PITR_TARGET_TIME}'" >> /var/lib/postgresql/data/postgresql.auto.conf
-    
+    docker run --rm \
+        --volumes-from "${DB_CONTAINER}" \
+        postgres:17-alpine sh -c "
+            set -e
+            touch /var/lib/postgresql/data/recovery.signal
+            cat >> /var/lib/postgresql/data/postgresql.auto.conf <<EOF
+restore_command = 'cp ${WAL_DIR}/%f %p'
+recovery_target_time = '${PITR_TARGET_TIME}'
+recovery_target_action = 'promote'
+EOF
+            chown postgres:postgres /var/lib/postgresql/data/recovery.signal /var/lib/postgresql/data/postgresql.auto.conf
+        "
+    rm -rf "${EXTRACT_DIR}"
+
     # 3.4 Start Database service
     echo "[RESTORE-PG] Restarting PostgreSQL container in recovery state..."
     docker start "${DB_CONTAINER}"
-    
-    # Wait for container startup and recovery process Completion
-    sleep 10
-    
-    STATUS="SUCCESS"
+
+    # Poll for recovery to finish replaying WAL up to the target time and
+    # promote, rather than a fixed sleep - PITR replay duration depends on
+    # how much WAL there is to replay.
+    echo "[RESTORE-PG] Waiting for WAL replay to reach target and promote (up to 5 minutes)..."
+    STATUS="FAILED"
+    for i in $(seq 1 60); do
+        sleep 5
+        if docker exec -i "${DB_CONTAINER}" pg_isready -U "${DB_USER}" &>/dev/null; then
+            IN_RECOVERY=$(docker exec -i "${DB_CONTAINER}" psql -U "${DB_USER}" -d postgres -t -A -c "SELECT pg_is_in_recovery();" 2>/dev/null || echo "")
+            if [ "${IN_RECOVERY}" = "f" ]; then
+                echo "[RESTORE-PG] [PITR] Recovery complete, cluster promoted to read-write."
+                STATUS="SUCCESS"
+                break
+            fi
+        fi
+    done
+    if [ "${STATUS}" != "SUCCESS" ]; then
+        echo "[RESTORE-PG] [ERROR] PITR did not reach a promoted, ready state within the timeout - check container logs (docker logs ${DB_CONTAINER})."
+    fi
 else
     # Standard SQL Dump restore
     echo "[RESTORE-PG] Performing database swap..."

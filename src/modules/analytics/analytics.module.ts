@@ -33,10 +33,13 @@ import { AnalyticsEventConsumer } from './consumers/analytics-event.consumer';
 
 // Jobs
 import { AnalyticsQueueProcessor } from './jobs/analytics-queue.processor';
+import { QUEUES } from '@easydev/shared-queues';
+import { shouldRunProcessor } from '../../config/queue-role';
 
 // External Modules
 import { NotificationsModule } from '../notifications/notifications.module';
 import { IntegrationModule } from '../../integration/integration.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -46,6 +49,7 @@ import { IntegrationModule } from '../../integration/integration.module';
     }),
     NotificationsModule,
     IntegrationModule,
+    SettingsModule,
   ],
   controllers: [
     AnalyticsController,
@@ -69,7 +73,7 @@ import { IntegrationModule } from '../../integration/integration.module';
     AnalyticsRealtimeService,
     AnalyticsCronService,
     AnalyticsEventConsumer,
-    AnalyticsQueueProcessor,
+    ...(shouldRunProcessor(QUEUES.ANALYTICS) ? [AnalyticsQueueProcessor] : []),
     CsatSurveyService,
   ],
   exports: [

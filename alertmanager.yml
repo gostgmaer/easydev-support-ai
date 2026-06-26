@@ -1,0 +1,36 @@
+# Alertmanager config for easydev-support-ai's Prometheus alert rules
+# (packages/observability/src/alerts/alert-rules.yml).
+#
+# REQUIRED before this is useful in production: replace the `default-receiver`
+# below with a real notification channel (Slack/PagerDuty/email/etc.) -
+# without this, alerts are evaluated and routed but never actually notify a
+# human. This file intentionally ships with no real webhook URL/API key
+# baked in (a fake-looking placeholder credential here would be worse than
+# an honestly empty one - see RR-43/RR-46 in reports/launch-readiness/).
+#
+# Example Slack receiver (uncomment and fill in SLACK_WEBHOOK_URL):
+#   - name: 'slack-critical'
+#     slack_configs:
+#       - api_url: 'https://hooks.slack.com/services/REPLACE/WITH/REAL_URL'
+#         channel: '#alerts-critical'
+#         send_resolved: true
+
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - match:
+        severity: critical
+      receiver: 'default-receiver'
+      repeat_interval: 1h
+
+receivers:
+  - name: 'default-receiver'
+    # No-op until a real receiver (slack_configs/email_configs/
+    # pagerduty_configs/webhook_configs) is configured above. Alertmanager
+    # still records and groups firing alerts (visible at :9093) even with no
+    # real channel wired - this is what makes the config valid/bootable
+    # without a fabricated credential, not a silent failure.

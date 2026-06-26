@@ -7,6 +7,8 @@ import {
   IsEnum,
   IsBoolean,
   IsInt,
+  IsArray,
+  ArrayMaxSize,
   Min,
   Max,
 } from 'class-validator';
@@ -243,6 +245,44 @@ export class TagConversationDto {
   @IsBoolean()
   @IsOptional()
   isSystemTag?: boolean;
+}
+
+export class BulkResolveDto {
+  @ApiProperty({ type: [String], format: 'uuid' })
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @ArrayMaxSize(500)
+  conversationIds!: string[];
+}
+
+export class BulkCloseDto {
+  @ApiProperty({ type: [String], format: 'uuid' })
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @ArrayMaxSize(500)
+  conversationIds!: string[];
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  reason?: string;
+}
+
+export class BulkTagDto {
+  @ApiProperty({ type: [String], format: 'uuid' })
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @ArrayMaxSize(500)
+  conversationIds!: string[];
+
+  @ApiProperty()
+  @IsString()
+  tag!: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  color?: string;
 }
 
 export class AddNoteDto {

@@ -36,6 +36,12 @@ export class AiToolExecutionService {
     tenantId: string,
     workflowId: string,
     requestId: string,
+    // The AI platform's provide_tool_result endpoint matches this against
+    // the workflow's own pending_tool_name and 409s on a mismatch - it
+    // must be the actual tool name (e.g. "order_lookup"), not a request/
+    // correlation id. requestId is still tracked separately below for the
+    // retry job and connector-level idempotency.
+    toolName: string,
     payload: any,
     status: 'SUCCESS' | 'FAILED',
   ): Promise<void> {
@@ -43,7 +49,7 @@ export class AiToolExecutionService {
       await this.aiClient.submitToolResult(
         tenantId,
         workflowId,
-        requestId,
+        toolName,
         payload,
         status,
       );
@@ -52,9 +58,9 @@ export class AiToolExecutionService {
         `Failed to submit tool ${status} status to AI platform directly; queuing for retry: ${err.message}`,
       );
       await this.queueService.addJob(
-        'ai-queue' as any,
+        'ai-queue',
         'ai-tool-result-submission-job',
-        { tenantId, workflowId, requestId, payload, status },
+        { tenantId, workflowId, requestId, toolName, payload, status },
       );
     }
   }
@@ -66,8 +72,20 @@ export class AiToolExecutionService {
     toolName: string,
     capability: string,
     payload: Record<string, any>,
+    // RR-18: the AI Platform's own stable id for this tool call, when it
+    // supplies one (e.g. job.data.toolRequestId from a BullMQ retry, or a
+    // redispatch after the platform timed out waiting for a result it
+    // never got because the process crashed between the connector call
+    // succeeding and submitToolResult being reached). Used as the
+    // connector-level idempotency key so a second invocation of the SAME
+    // logical tool call - not just a second attempt at submitting its
+    // result - returns the already-recorded outcome instead of re-running
+    // a side-effecting action like a refund. Falls back to a fresh internal
+    // id for callers that don't supply one (unchanged behavior for those).
+    externalRequestId?: string,
   ): Promise<any> {
     const requestId = crypto.randomUUID();
+    const idempotencyKey = externalRequestId || requestId;
     const request = new AiToolRequest(requestId, {
       tenantId,
       workflowExecutionId,
@@ -100,6 +118,7 @@ export class AiToolExecutionService {
         payload,
         {
           workflowId: workflowExecutionId,
+          idempotencyKey,
         },
       );
 
@@ -123,6 +142,7 @@ export class AiToolExecutionService {
         tenantId,
         workflowId,
         requestId,
+        toolName,
         responsePayload,
         'SUCCESS',
       );
@@ -157,6 +177,7 @@ export class AiToolExecutionService {
         tenantId,
         workflowId,
         requestId,
+        toolName,
         { error: error.message },
         'FAILED',
       );

@@ -1,6 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { AnalyticsReportService } from './analytics-report.service';
 import { NotificationService } from '../../notifications/notification.service';
+import { TenantSettingsService } from '../../settings/services/tenant-settings.service';
 import { ExportReportDto } from '../dtos/analytics.dto';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AnalyticsExportService {
   constructor(
     private readonly reportService: AnalyticsReportService,
     private readonly notificationService: NotificationService,
+    private readonly tenantSettingsService: TenantSettingsService,
   ) {}
 
   async generateExport(
@@ -61,17 +63,35 @@ export class AnalyticsExportService {
     return { buffer, mimeType, filename };
   }
 
-  async triggerExport(tenantId: string, dto: ExportReportDto): Promise<void> {
-    const { buffer, filename } = await this.generateExport(
+  async triggerExport(
+    tenantId: string,
+    dto: ExportReportDto,
+  ): Promise<{ filename: string; downloadUrl: string }> {
+    const { filename } = await this.generateExport(
       tenantId,
       dto.reportId,
       dto.format,
     );
 
+    // The download endpoint regenerates the export from the live report data
+    // rather than re-serving these exact bytes - nothing persists the buffer
+    // between trigger and download, so reportId must travel with the link.
+    const downloadUrl = `https://api.easydev.ai/v1/analytics/exports/download/${filename}?reportId=${dto.reportId}`;
+
     const recipients = dto.recipients || [];
     this.logger.log(
       `Triggering export delivery for ${filename} to ${recipients.length} recipients`,
     );
+
+    let tenantName: string | undefined;
+    try {
+      tenantName = (await this.tenantSettingsService.getSettings(tenantId))
+        .tenantName;
+    } catch (err: any) {
+      this.logger.warn(
+        `Failed to resolve tenant name for ${tenantId}: ${err.message}`,
+      );
+    }
 
     for (const recipient of recipients) {
       await this.notificationService.sendEmail(
@@ -81,11 +101,14 @@ export class AnalyticsExportService {
         {
           reportName: filename,
           exportFormat: dto.format,
-          downloadUrl: `https://api.easydev.ai/v1/analytics/exports/download/${filename}`,
+          downloadUrl,
           exportedAt: new Date().toISOString(),
         },
+        tenantName,
       );
     }
+
+    return { filename, downloadUrl };
   }
 
   private convertToCsv(data: Record<string, any>): string {

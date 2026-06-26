@@ -131,19 +131,50 @@ export class MetricsService {
       help: 'Host machine Memory utilization bytes',
     });
 
-    // Populate system stats periodically
+    // Populate system stats periodically. CPU is a real delta-sampled
+    // percentage (process.cpuUsage() between ticks), not the placeholder
+    // `Math.random() * 100` this used to report - the HighCpuUsage alert in
+    // alert-rules.yml was firing/not-firing on random noise, never real load.
+    let lastCpuUsage = process.cpuUsage();
+    let lastSampleAt = Date.now();
+    const SAMPLE_INTERVAL_MS = 15000;
     setInterval(() => {
       const memory = process.memoryUsage();
       this.memoryUsageGauge.set(memory.heapUsed);
-      // Simulate CPU calculation hook
-      this.cpuUsageGauge.set(Math.random() * 100);
-    }, 15000);
+
+      const currentCpuUsage = process.cpuUsage();
+      const now = Date.now();
+      const elapsedMs = now - lastSampleAt;
+      const cpuTimeUsedMicros =
+        currentCpuUsage.user -
+        lastCpuUsage.user +
+        (currentCpuUsage.system - lastCpuUsage.system);
+      // cpuTimeUsedMicros is split across all CPU cores under load; clamp to
+      // 100% per-core-normalized rather than letting a multi-core busy process
+      // report >100%, which would otherwise be a confusing gauge value.
+      const cpuPercent =
+        elapsedMs > 0
+          ? Math.min(100, (cpuTimeUsedMicros / 1000 / elapsedMs) * 100)
+          : 0;
+      this.cpuUsageGauge.set(cpuPercent);
+
+      lastCpuUsage = currentCpuUsage;
+      lastSampleAt = now;
+    }, SAMPLE_INTERVAL_MS);
   }
 
   // --- API request tracking ---
-  recordHttpRequest(tenantId: string, method: string, route: string, statusCode: string, durationSeconds: number) {
+  recordHttpRequest(
+    tenantId: string,
+    method: string,
+    route: string,
+    statusCode: string,
+    durationSeconds: number,
+  ) {
     this.httpRequestCounter.labels(method, route, statusCode, tenantId).inc();
-    this.httpRequestDuration.labels(method, route, statusCode, tenantId).observe(durationSeconds);
+    this.httpRequestDuration
+      .labels(method, route, statusCode, tenantId)
+      .observe(durationSeconds);
   }
 
   // --- Queue backlog monitoring ---
@@ -151,7 +182,11 @@ export class MetricsService {
     this.queueBacklogGauge.labels(queueName).set(backlogCount);
   }
 
-  recordQueueJob(queueName: string, jobName: string, status: 'completed' | 'failed') {
+  recordQueueJob(
+    queueName: string,
+    jobName: string,
+    status: 'completed' | 'failed',
+  ) {
     this.queueThroughputCounter.labels(queueName, jobName, status).inc();
     if (status === 'failed') {
       this.queueFailureCounter.labels(queueName, jobName).inc();
@@ -159,8 +194,14 @@ export class MetricsService {
   }
 
   // --- Database query latency tracking ---
-  recordDbQuery(tableName: string, operationType: string, durationSeconds: number) {
-    this.dbQueryDuration.labels(tableName, operationType).observe(durationSeconds);
+  recordDbQuery(
+    tableName: string,
+    operationType: string,
+    durationSeconds: number,
+  ) {
+    this.dbQueryDuration
+      .labels(tableName, operationType)
+      .observe(durationSeconds);
   }
 
   // --- Cache operations ---
@@ -173,17 +214,32 @@ export class MetricsService {
   }
 
   // --- Cost controls & AI ---
-  recordAiCall(tenantId: string, modelName: string, cost: number, success: boolean, errorType?: string) {
+  recordAiCall(
+    tenantId: string,
+    modelName: string,
+    cost: number,
+    success: boolean,
+    errorType?: string,
+  ) {
     if (success) {
       this.aiCostCounter.labels(tenantId, modelName).inc(cost);
     } else {
-      this.aiFailureCounter.labels(tenantId, modelName, errorType || 'unknown').inc();
+      this.aiFailureCounter
+        .labels(tenantId, modelName, errorType || 'unknown')
+        .inc();
     }
   }
 
   // --- Webhook / Connector metrics ---
-  recordConnectorExecution(tenantId: string, connectorType: string, durationSeconds: number, success: boolean) {
-    this.connectorExecutionDuration.labels(tenantId, connectorType).observe(durationSeconds);
+  recordConnectorExecution(
+    tenantId: string,
+    connectorType: string,
+    durationSeconds: number,
+    success: boolean,
+  ) {
+    this.connectorExecutionDuration
+      .labels(tenantId, connectorType)
+      .observe(durationSeconds);
     if (!success) {
       this.connectorFailureCounter.labels(tenantId, connectorType).inc();
     }

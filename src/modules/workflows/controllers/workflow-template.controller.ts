@@ -13,6 +13,8 @@ import {
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { FeatureFlagGuard } from '../../../common/guards/feature-flag.guard';
+import { RequireFeature } from '../../../common/decorators/feature-flag.decorator';
 import { WorkflowTemplateService } from '../services/workflow-template.service';
 import { CreateTemplateDto, UpdateTemplateDto } from '../dtos/workflow.dto';
 
@@ -23,6 +25,8 @@ export class WorkflowTemplateController {
 
   @Post()
   @Roles('tenant_admin')
+  @RequireFeature('workflow.automation')
+  @UseGuards(FeatureFlagGuard)
   public async createTemplate(
     @Headers('x-tenant-id') tenantId: string,
     @Body() dto: CreateTemplateDto,

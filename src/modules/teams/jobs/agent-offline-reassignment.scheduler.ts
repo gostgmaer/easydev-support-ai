@@ -30,7 +30,9 @@ export class AgentOfflineReassignmentScheduler {
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`Failed to enqueue agent-offline reassignment sweep: ${message}`);
+      this.logger.error(
+        `Failed to enqueue agent-offline reassignment sweep: ${message}`,
+      );
     }
   }
 }

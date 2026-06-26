@@ -1,7 +1,10 @@
-// @ts-nocheck
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { MessageService } from '../../messages/services/message.service';
+import {
+  MessageDirectionEnum,
+  MessageTypeEnum,
+} from '../../messages/domain/value-objects';
 import { TicketService } from '../../tickets/services/ticket.service';
 import { NotificationService } from '../../notifications/notification.service';
 import { CustomerService } from '../../customers/services/customer.service';
@@ -84,8 +87,8 @@ export class ConversationResolutionService {
         content: options.closingMessage,
         senderType: 'AGENT',
         senderId: agentId,
-        direction: MessageDirectionEnum.OUTBOUND as any,
-        messageType: MessageTypeEnum.TEXT as any,
+        direction: MessageDirectionEnum.OUTBOUND,
+        messageType: MessageTypeEnum.TEXT,
       });
     }
 
@@ -102,8 +105,8 @@ export class ConversationResolutionService {
         await this.ticketService.resolve(
           tenantId,
           options.linkedTicketId,
+          options.summary,
           agentId,
-          { summary: options.summary } as any,
         );
         this.logger.log(
           `Linked ticket ${options.linkedTicketId} resolved alongside conversation.`,
@@ -120,7 +123,7 @@ export class ConversationResolutionService {
         tenantId,
         conversation.customerId,
       );
-      customerEmail = customer?.email || '';
+      customerEmail = customer?.email?.value || '';
     } catch (err: any) {
       this.logger.warn(
         `Could not load customer for notification: ${err.message}`,

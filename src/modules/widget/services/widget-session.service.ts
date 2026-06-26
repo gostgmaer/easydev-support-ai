@@ -25,16 +25,21 @@ import * as crypto from 'crypto';
 @Injectable()
 export class WidgetSessionService {
   private readonly logger = new Logger(WidgetSessionService.name);
-  private readonly tokenSecret =
-    process.env.WIDGET_JWT_SECRET ||
-    'easydev-widget-fallback-secret-key-123456';
+  private readonly tokenSecret: string;
 
   constructor(
     @Inject('IWidgetRepository')
     private readonly widgetRepo: IWidgetRepository,
     private readonly visitorService: WidgetVisitorService,
     private readonly eventPublisher: WidgetEventPublisher,
-  ) {}
+  ) {
+    if (!process.env.WIDGET_JWT_SECRET) {
+      throw new Error(
+        'WIDGET_JWT_SECRET must be set - refusing to sign widget session tokens with no configured secret',
+      );
+    }
+    this.tokenSecret = process.env.WIDGET_JWT_SECRET;
+  }
 
   async startSession(
     tenantId: string,
