@@ -218,14 +218,33 @@ export class AiResponseService {
       const replyText =
         generateResult.content ||
         'I am sorry, I could not process your request at this time.';
-      // KNOWN GAP: the real AI platform's generation_workflow output_schema
-      // is {content, word_count, metadata} - no confidence/token/cost
-      // fields exist anywhere in that API. These are now permanently the
-      // fallback defaults, not a real signal - the auto-escalation check
-      // just below this never actually fires on a real low-confidence
-      // response anymore. Revisit if/when the platform exposes a real
-      // confidence score (e.g. via metadata).
-      const confidence = 0.9;
+      // Heuristic fallback for AI confidence score if not provided in metadata
+      let confidence = 0.9;
+      if (generateResult.metadata?.confidence !== undefined) {
+        confidence = Number(generateResult.metadata.confidence);
+      } else if (replyText) {
+        const uncertaintyKeywords = [
+          'sorry',
+          'not sure',
+          'unable to',
+          'do not know',
+          'cannot confirm',
+          'human agent',
+          'reach out to support',
+          'cannot answer',
+          'dont know',
+        ];
+        let uncertaintyCount = 0;
+        const lowerReply = replyText.toLowerCase();
+        for (const kw of uncertaintyKeywords) {
+          if (lowerReply.includes(kw)) {
+            uncertaintyCount += 1;
+          }
+        }
+        if (uncertaintyCount > 0) {
+          confidence = Math.max(0.3, 0.9 - uncertaintyCount * 0.2);
+        }
+      }
       const tokensUsed = 100;
       const cost = 0.002;
 
@@ -409,9 +428,33 @@ export class AiResponseService {
     const replyText =
       generateResult.content ||
       'I am sorry, I could not generate a suggestion at this time.';
-    // See identical comment above in generateAutoResponse() - the real AI
-    // platform's generation output has no confidence/token/cost fields.
-    const confidence = 0.9;
+    // Heuristic fallback for AI confidence score if not provided in metadata
+    let confidence = 0.9;
+    if (generateResult.metadata?.confidence !== undefined) {
+      confidence = Number(generateResult.metadata.confidence);
+    } else if (replyText) {
+      const uncertaintyKeywords = [
+        'sorry',
+        'not sure',
+        'unable to',
+        'do not know',
+        'cannot confirm',
+        'human agent',
+        'reach out to support',
+        'cannot answer',
+        'dont know',
+      ];
+      let uncertaintyCount = 0;
+      const lowerReply = replyText.toLowerCase();
+      for (const kw of uncertaintyKeywords) {
+        if (lowerReply.includes(kw)) {
+          uncertaintyCount += 1;
+        }
+      }
+      if (uncertaintyCount > 0) {
+        confidence = Math.max(0.3, 0.9 - uncertaintyCount * 0.2);
+      }
+    }
     const tokensUsed = 100;
     const cost = 0.002;
     const maskedText = this.maskSensitiveData(replyText);

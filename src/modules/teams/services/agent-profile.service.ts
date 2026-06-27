@@ -14,6 +14,7 @@ import { randomUUID } from 'crypto';
 import { AuditService } from '../../audit/audit.service';
 import { TeamEventPublisher } from './team-event.publisher';
 import { AgentCreatedEvent, AgentUpdatedEvent } from '@easydev/shared-events';
+import { UsageLimitService } from '../../settings/services/usage-limit.service';
 
 @Injectable()
 export class AgentProfileService {
@@ -24,6 +25,7 @@ export class AgentProfileService {
     private readonly availabilityRepo: IAgentAvailabilityRepository,
     private readonly eventPublisher: TeamEventPublisher,
     private readonly auditService: AuditService,
+    private readonly usageLimitService: UsageLimitService,
   ) {}
 
   async create(
@@ -31,6 +33,9 @@ export class AgentProfileService {
     dto: AgentProfileDto,
     userId?: string,
   ): Promise<AgentProfile> {
+    const paginated = await this.profileRepo.findPaginated(tenantId, { limit: 1 });
+    await this.usageLimitService.enforceLimit(tenantId, 'agents', paginated.total);
+
     const existing = await this.profileRepo.findByUserId(dto.userId, tenantId);
     if (existing) {
       throw new ConflictException(

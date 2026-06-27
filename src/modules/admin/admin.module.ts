@@ -9,6 +9,7 @@ import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
 import { SettingsModule } from '../settings/settings.module';
 import { CustomersModule } from '../customers/customers.module';
 import { InboxModule } from '../inbox/inbox.module';
+import { TeamsModule } from '../teams/teams.module';
 
 import {
   AdminDashboardController,
@@ -54,6 +55,7 @@ import { shouldRunProcessor } from '../../config/queue-role';
     SettingsModule,
     CustomersModule,
     InboxModule,
+    TeamsModule,
   ],
   controllers: [
     AdminDashboardController,

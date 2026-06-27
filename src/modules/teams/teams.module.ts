@@ -4,6 +4,7 @@ import { TeamController } from './controllers/team.controller';
 import { AgentProfileController } from './controllers/agent-profile.controller';
 import { AvailabilityController } from './controllers/availability.controller';
 import { AssignmentController } from './controllers/assignment.controller';
+import { SettingsModule } from '../settings/settings.module';
 import {
   TeamService,
   AgentProfileService,
@@ -25,7 +26,7 @@ import { Team } from './entities/team.entity';
 import { AgentProfile } from './entities/agent-profile.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Team, AgentProfile])],
+  imports: [TypeOrmModule.forFeature([Team, AgentProfile]), SettingsModule],
   controllers: [
     TeamController,
     AgentProfileController,

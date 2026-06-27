@@ -23,6 +23,7 @@ import {
 } from '../domain/value-objects';
 import { KnowledgeEventPublisher } from './knowledge-event.publisher';
 import { FileUploadIntegrationService } from '../../../integration/file-upload/file-upload.service';
+import { UsageLimitService } from '../../settings/services/usage-limit.service';
 
 // Document types backed by an actual uploaded file (vs. WEBPAGE/MARKDOWN/
 // FAQ/HTML/MANUAL, which are crawled or directly-authored content with no
@@ -32,7 +33,7 @@ const FILE_BACKED_DOCUMENT_TYPES = new Set([
   DocumentTypeEnum.DOCX,
   DocumentTypeEnum.CSV,
   DocumentTypeEnum.TXT,
-]);
+ ]);
 
 @Injectable()
 export class KnowledgeDocumentService {
@@ -41,12 +42,16 @@ export class KnowledgeDocumentService {
     private readonly repository: IKnowledgeRepository,
     private readonly eventPublisher: KnowledgeEventPublisher,
     private readonly fileUpload: FileUploadIntegrationService,
+    private readonly usageLimitService: UsageLimitService,
   ) {}
 
   public async createDocument(
     tenantId: string,
     dto: CreateDocumentDto,
   ): Promise<KnowledgeDocument> {
+    const paginated = await this.repository.findDocuments(tenantId, { limit: 1 });
+    await this.usageLimitService.enforceLimit(tenantId, 'documents', paginated.total);
+
     // File-backed types (PDF/DOCX/CSV/TXT) must reference a file that was
     // actually uploaded and server-verified by the File Upload Service -
     // fileUrl/fileSize/mimeType/checksum are never trusted from the caller

@@ -9,6 +9,7 @@ import { MessageService } from '../../messages/services/message.service';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { AiWorkflowService } from '../../ai-integration/services/ai-workflow.service';
 import { CustomerService } from '../../customers/services/customer.service';
+import { NotificationService } from '../../notifications/notification.service';
 
 @Injectable()
 export class WorkflowActionService {
@@ -30,6 +31,7 @@ export class WorkflowActionService {
     private readonly aiWorkflowService: AiWorkflowService,
     @Inject(forwardRef(() => CustomerService))
     private readonly customerService: CustomerService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   public async executeAction(
@@ -137,13 +139,27 @@ export class WorkflowActionService {
         return { messageId: msg.id, status: 'sent' };
 
       case ActionTypeEnum.SEND_EMAIL:
-        this.logger.log(`Email sent to ${config.to}: ${config.subject}`);
+        const emailTo = this.interpolate(config.to || context.customerEmail || 'customer@easydev', context);
+        await this.notificationService.sendEmail(
+          tenantId,
+          emailTo,
+          config.templateId || 'generic-template',
+          {
+            subject: this.interpolate(config.subject || 'Workflow Alert', context),
+            body: this.interpolate(config.body || config.content || '', context),
+          },
+        );
         return { status: 'email_sent' };
 
       case ActionTypeEnum.SEND_NOTIFICATION:
-        this.logger.log(
-          `Notification dispatched to user ${config.userId}: ${config.message}`,
-        );
+        const notifyUser = config.userId || context.userId || context.customerId || '';
+        if (notifyUser) {
+          await this.notificationService.sendPushNotification(
+            tenantId,
+            notifyUser,
+            this.interpolate(config.message || '', context),
+          );
+        }
         return { status: 'notified' };
 
       case ActionTypeEnum.CALL_CONNECTOR:
@@ -186,10 +202,22 @@ export class WorkflowActionService {
         return { status: 'waited' };
 
       case ActionTypeEnum.ADD_TAG:
+        const ticketIdToAdd = context.ticketId || config.ticketId;
+        if (ticketIdToAdd) {
+          await this.ticketService.addTag(tenantId, ticketIdToAdd, {
+            tag: config.tag,
+          });
+          return { tagAdded: config.tag, status: 'tag_added' };
+        }
         this.logger.log(`Added tag ${config.tag} to workflow scope`);
         return { tagAdded: config.tag };
 
       case ActionTypeEnum.REMOVE_TAG:
+        const ticketIdToRemove = context.ticketId || config.ticketId;
+        if (ticketIdToRemove) {
+          await this.ticketService.removeTag(tenantId, ticketIdToRemove, config.tag);
+          return { tagRemoved: config.tag, status: 'tag_removed' };
+        }
         this.logger.log(`Removed tag ${config.tag} from workflow scope`);
         return { tagRemoved: config.tag };
 

@@ -33,6 +33,7 @@ import {
   TicketQueryDto,
   TagTicketDto,
   WatchTicketDto,
+  SplitTicketDto,
 } from '../dtos';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { TicketSLAService } from './ticket-sla.service';
@@ -449,6 +450,56 @@ export class TicketService {
       details: `Merged ticket ${sourceId} into ${targetId}`,
     });
     return target;
+  }
+
+  async split(
+    tenantId: string,
+    id: string,
+    dto: SplitTicketDto,
+    userId?: string,
+  ): Promise<Ticket> {
+    const parent = await this.getOrThrow(tenantId, id);
+
+    const sequence = await this.ticketRepo.nextSequence(tenantId);
+    const splitId = randomUUID();
+    const splitTicket = Ticket.create(splitId, {
+      tenantId,
+      ticketNumber: TicketNumber.generate(sequence),
+      customerId: parent.customerId,
+      conversationId: randomUUID(),
+      assignedAgentId: parent.assignedAgentId,
+      assignedTeamId: parent.assignedTeamId,
+      categoryId: parent.categoryId,
+      priority: parent.priority,
+      status: TicketStatus.create(TicketStatusEnum.OPEN),
+      source: TicketSource.create(parent.source.value),
+      subject: dto.newSubject || `Split: ${parent.subject}`,
+      description: `Split off from ticket ${parent.ticketNumber.value} on message ${dto.messageId}`,
+      metadata: {
+        splitFromTicketId: id,
+        splitFromMessageId: dto.messageId,
+      },
+    });
+
+    const parentMetadata = parent.metadata || {};
+    const splitTickets = (parentMetadata.splitTicketIds as string[]) || [];
+    parent.setMetadata({
+      ...parentMetadata,
+      splitTicketIds: [...splitTickets, splitId],
+    });
+
+    await this.persist(splitTicket, tenantId);
+    await this.persist(parent, tenantId);
+    await this.slaService.configureForTicket(tenantId, splitTicket);
+
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_SPLIT',
+      details: `Split ticket ${splitId} from parent ticket ${id}`,
+    });
+
+    return splitTicket;
   }
 
   /**
