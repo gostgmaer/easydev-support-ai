@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
+import { SettingsModule } from '../settings/settings.module';
 
 // TypeORM entities registered for AppModule compatibility
 import { KnowledgeDocument as TypeOrmKnowledgeDocument } from './entities/knowledge-document.entity';
@@ -49,6 +50,7 @@ import { shouldRunProcessor } from '../../config/queue-role';
     BullModule.registerQueue({
       name: 'knowledge-queue',
     }),
+    SettingsModule,
   ],
   controllers: [
     KnowledgeSourceController,

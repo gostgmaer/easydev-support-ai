@@ -13,6 +13,14 @@ import {
   TenantSuspendedEvent,
   TenantReactivatedEvent,
 } from '@easydev/shared-events';
+import { TeamService } from '../../teams/services/team.service';
+import { AiAgentService } from '../../ai-integration/services/ai-agent.service';
+import { ConnectorService } from '../../connectors/services/connector.service';
+import {
+  ConnectorTypeEnum,
+  AuthTypeEnum,
+} from '../../connectors/domain/value-objects';
+import { AgentTypeEnum } from '../../ai-integration/domain/value-objects';
 
 export interface ProvisionTenantDto {
   name: string;
@@ -58,6 +66,9 @@ export class TenantProvisioningService {
     private readonly featureFlagService: FeatureFlagService,
     private readonly queueService: QueueService,
     private readonly auditService: AuditService,
+    private readonly teamService: TeamService,
+    private readonly aiAgentService: AiAgentService,
+    private readonly connectorService: ConnectorService,
   ) {}
 
   /**
@@ -159,6 +170,52 @@ export class TenantProvisioningService {
       action: 'TENANT_PROVISIONED',
       details: `Tenant ${tenantId} provisioned (plan=${dto.plan}, adminEmail=${dto.adminEmail})`,
     });
+
+    // ─── 9. Seed default support team, AI agent, and Web widget ────────────
+    try {
+      const defaultTeam = await this.teamService.create(
+        tenantId,
+        {
+          name: 'Default Support Team',
+          description: 'Primary customer support agent queue',
+          department: 'Customer Support',
+          priority: 1,
+          isActive: true,
+        },
+        actorUserId,
+      );
+
+      const defaultAiAgent = await this.aiAgentService.createAgent(tenantId, {
+        name: 'General Support Assistant',
+        description:
+          'Auto-replies to general customer queries using the knowledge base',
+        agentType: AgentTypeEnum.CUSTOMER_SUPPORT,
+        configuration: {
+          temperature: 0.2,
+          autoEscalationEnabled: true,
+          escalationThreshold: 0.7,
+        },
+      });
+
+      await this.connectorService.installConnector(tenantId, {
+        name: 'Webchat Widget',
+        slug: 'webchat-widget',
+        connectorType: ConnectorTypeEnum.CUSTOM,
+        description: 'Embedded chat widget for customer support',
+        baseUrl: 'https://easydev-support.ai/widget',
+        authType: AuthTypeEnum.NONE,
+        config: {
+          themeColor: dto.primaryColor || '#6366f1',
+          autoResponseEnabled: true,
+          defaultAiAgentId: defaultAiAgent.id,
+          routingTeamId: defaultTeam.id,
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `Default resources seeding failed (non-fatal): ${err.message}`,
+      );
+    }
 
     this.logger.log(`Tenant ${tenantId} provisioned successfully`);
 

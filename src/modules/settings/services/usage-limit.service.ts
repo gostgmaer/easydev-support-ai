@@ -227,7 +227,13 @@ export class UsageLimitService {
    */
   async enforceLimit(
     tenantId: string,
-    resource: 'conversations' | 'connectors' | 'aiRequests',
+    resource:
+      | 'conversations'
+      | 'connectors'
+      | 'aiRequests'
+      | 'agents'
+      | 'workflows'
+      | 'documents',
     currentUsage: number,
   ): Promise<void> {
     const limits = await this.getUsageLimits(tenantId);
@@ -235,6 +241,9 @@ export class UsageLimitService {
       conversations: limits.maxConversations,
       connectors: limits.maxConnectors,
       aiRequests: limits.maxAiRequests,
+      agents: limits.maxAgents,
+      workflows: limits.maxWorkflows,
+      documents: limits.maxDocuments,
     };
     const limit = limitByResource[resource];
 

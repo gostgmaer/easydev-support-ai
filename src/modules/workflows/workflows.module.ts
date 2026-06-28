@@ -55,10 +55,12 @@ import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
 import { InboxModule } from '../inbox/inbox.module';
 import { CustomersModule } from '../customers/customers.module';
 import { SettingsModule } from '../settings/settings.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     SettingsModule,
+    NotificationsModule,
     TypeOrmModule.forFeature([
       WorkflowTemplate,
       WorkflowVersion,

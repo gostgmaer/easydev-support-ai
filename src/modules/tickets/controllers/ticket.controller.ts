@@ -38,6 +38,7 @@ import {
   WatchTicketDto,
   BulkTicketStatusDto,
   MergeTicketsDto,
+  SplitTicketDto,
 } from '../dtos';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
@@ -154,6 +155,25 @@ export class TicketController {
       req.user?.id,
     );
     return target.toJSON();
+  }
+
+  @Post(':id/split')
+  @Roles('tenant_admin', 'support_agent')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @ApiOperation({ summary: 'Split a ticket into two' })
+  async split(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: SplitTicketDto,
+    @Req() req: any,
+  ) {
+    const splitOff = await this.ticketService.split(
+      tenantId,
+      id,
+      dto,
+      req.user?.id,
+    );
+    return splitOff.toJSON();
   }
 
   @Get(':id')

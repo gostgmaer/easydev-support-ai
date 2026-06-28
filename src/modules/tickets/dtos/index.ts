@@ -382,3 +382,14 @@ export class ConfigureSlaDto {
   @IsOptional()
   businessHours?: boolean;
 }
+
+export class SplitTicketDto {
+  @ApiProperty({ description: 'The ID of the conversation message / comment from which to split the ticket' })
+  @IsUUID()
+  messageId!: string;
+
+  @ApiPropertyOptional({ description: 'Optional new subject for the split-off ticket' })
+  @IsString()
+  @IsOptional()
+  newSubject?: string;
+}

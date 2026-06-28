@@ -27,6 +27,7 @@ import {
   WorkflowPausedEvent,
 } from '@easydev/shared-events';
 import * as crypto from 'crypto';
+import { UsageLimitService } from '../../settings/services/usage-limit.service';
 
 @Injectable()
 export class WorkflowTemplateService implements OnApplicationBootstrap {
@@ -36,6 +37,7 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     @Inject('IWorkflowRepository')
     private readonly repository: IWorkflowRepository,
     private readonly eventPublisher: WorkflowEventPublisher,
+    private readonly usageLimitService: UsageLimitService,
   ) {}
 
   public async onApplicationBootstrap() {
@@ -280,6 +282,14 @@ export class WorkflowTemplateService implements OnApplicationBootstrap {
     tenantId: string,
     dto: CreateTemplateDto,
   ): Promise<WorkflowTemplate> {
+    const existing = await this.repository.findTemplates(tenantId);
+    const customCount = existing.filter((t) => !t.isSystem).length;
+    await this.usageLimitService.enforceLimit(
+      tenantId,
+      'workflows',
+      customCount,
+    );
+
     const templateId = crypto.randomUUID();
 
     const triggers = (dto.triggers || []).map(
