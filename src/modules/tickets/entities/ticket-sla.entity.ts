@@ -23,6 +23,12 @@ export class TicketSla extends BaseTenantEntity {
   @Column({ type: 'timestamp', name: 'resolved_at', nullable: true })
   resolvedAt: Date;
 
+  @Column({ type: 'timestamp', name: 'paused_at', nullable: true })
+  pausedAt: Date;
+
+  @Column({ type: 'bigint', name: 'total_paused_duration_ms', default: 0 })
+  totalPausedDurationMs: number;
+
   @Column({ type: 'boolean', name: 'is_response_breached', default: false })
   isResponseBreached: boolean;
 
