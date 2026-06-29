@@ -108,6 +108,7 @@ export class TicketQueueProcessor extends BaseWorker {
           ticketId: job.data.ticketId,
           eventName: job.data.eventName,
           tenantId,
+          payload: job.data.payload,
         });
         return { forwarded: true, ticketId: job.data.ticketId };
       }

@@ -307,6 +307,40 @@ export class TicketController {
     return ticket.toJSON();
   }
 
+  @Post(':id/pending')
+  @Roles('tenant_admin', 'support_agent')
+  @ApiOperation({
+    summary: 'Mark a ticket as waiting for customer (pauses SLA)',
+  })
+  async pending(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const ticket = await this.ticketService.waitForCustomer(
+      tenantId,
+      id,
+      req.user?.id,
+    );
+    return ticket.toJSON();
+  }
+
+  @Post(':id/resume-sla')
+  @Roles('tenant_admin', 'support_agent')
+  @ApiOperation({ summary: 'Resume SLA clock when customer has replied' })
+  async resumeSla(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const ticket = await this.ticketService.resumeFromWaiting(
+      tenantId,
+      id,
+      req.user?.id,
+    );
+    return ticket.toJSON();
+  }
+
   @Post(':id/resolve')
   @Roles('tenant_admin', 'support_agent')
   @ApiOperation({ summary: 'Resolve a ticket' })

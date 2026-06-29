@@ -33,7 +33,7 @@ const FILE_BACKED_DOCUMENT_TYPES = new Set([
   DocumentTypeEnum.DOCX,
   DocumentTypeEnum.CSV,
   DocumentTypeEnum.TXT,
- ]);
+]);
 
 @Injectable()
 export class KnowledgeDocumentService {
@@ -49,8 +49,14 @@ export class KnowledgeDocumentService {
     tenantId: string,
     dto: CreateDocumentDto,
   ): Promise<KnowledgeDocument> {
-    const paginated = await this.repository.findDocuments(tenantId, { limit: 1 });
-    await this.usageLimitService.enforceLimit(tenantId, 'documents', paginated.total);
+    const paginated = await this.repository.findDocuments(tenantId, {
+      limit: 1,
+    });
+    await this.usageLimitService.enforceLimit(
+      tenantId,
+      'documents',
+      paginated.total,
+    );
 
     // File-backed types (PDF/DOCX/CSV/TXT) must reference a file that was
     // actually uploaded and server-verified by the File Upload Service -

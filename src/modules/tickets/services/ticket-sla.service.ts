@@ -9,8 +9,13 @@ import { TicketPriorityEnum } from '../domain/value-objects';
 import { ConfigureSlaDto } from '../dtos';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
-import { addBusinessMinutes, addCalendarMinutes } from './business-hours';
+import {
+  addBusinessMinutes,
+  addCalendarMinutes,
+  DEFAULT_BUSINESS_CALENDAR,
+} from './business-hours';
 import { SlaSettingsService } from '../../settings/services/sla-settings.service';
+import { HolidayService } from '../../settings/services/holiday.service';
 
 interface SlaTarget {
   responseMinutes: number;
@@ -45,6 +50,7 @@ export class TicketSLAService {
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
     private readonly slaSettingsService: SlaSettingsService,
+    private readonly holidayService: HolidayService,
   ) {}
 
   /**
@@ -79,11 +85,25 @@ export class TicketSLAService {
     const businessHours = dto.businessHours ?? tenantSla.businessHoursOnly;
     const base = ticket.openedAt;
 
+    let calendar = DEFAULT_BUSINESS_CALENDAR;
+    if (businessHours) {
+      const dbHolidays = await this.holidayService.getHolidays(tenantId);
+      if (dbHolidays.length > 0) {
+        calendar = {
+          ...DEFAULT_BUSINESS_CALENDAR,
+          holidays: new Set([
+            ...DEFAULT_BUSINESS_CALENDAR.holidays,
+            ...dbHolidays.map((h) => h.holidayDate.toISOString().slice(0, 10)),
+          ]),
+        };
+      }
+    }
+
     const responseDueAt = businessHours
-      ? addBusinessMinutes(base, responseMinutes)
+      ? addBusinessMinutes(base, responseMinutes, calendar)
       : addCalendarMinutes(base, responseMinutes);
     const resolutionDueAt = businessHours
-      ? addBusinessMinutes(base, resolutionMinutes)
+      ? addBusinessMinutes(base, resolutionMinutes, calendar)
       : addCalendarMinutes(base, resolutionMinutes);
 
     const existing = await this.ticketRepo.getSla(tenantId, ticket.id);
@@ -95,6 +115,8 @@ export class TicketSLAService {
       resolutionDueAt,
       breached: existing?.breached ?? false,
       breachedAt: existing?.breachedAt,
+      pausedAt: existing?.pausedAt,
+      pausedSeconds: existing?.pausedSeconds ?? 0,
       createdAt: existing?.createdAt,
     });
     sla.recalculateRemaining();
@@ -116,6 +138,33 @@ export class TicketSLAService {
     if (!sla || sla.breached) return;
     sla.recalculateRemaining();
     await this.ticketRepo.upsertSla(sla, tenantId);
+  }
+
+  /**
+   * Pauses the SLA clock for a ticket. Called when a ticket enters a state
+   * where the agent is waiting (e.g. WAITING_CUSTOMER, APPROVAL_PENDING).
+   * Safe to call when already paused — the entity no-ops it.
+   */
+  async pauseSlaForTicket(tenantId: string, ticketId: string): Promise<void> {
+    const sla = await this.ticketRepo.getSla(tenantId, ticketId);
+    if (!sla || sla.breached) return;
+    sla.pause();
+    await this.ticketRepo.upsertSla(sla, tenantId);
+    this.logger.log(`SLA paused for ticket ${ticketId}`);
+  }
+
+  /**
+   * Resumes the SLA clock for a ticket. Called when a ticket transitions back
+   * to an active state from a waiting state. Shifts deadlines forward by the
+   * elapsed pause window so agents aren't penalised.
+   */
+  async resumeSlaForTicket(tenantId: string, ticketId: string): Promise<void> {
+    const sla = await this.ticketRepo.getSla(tenantId, ticketId);
+    if (!sla || sla.breached) return;
+    sla.resume();
+    sla.recalculateRemaining();
+    await this.ticketRepo.upsertSla(sla, tenantId);
+    this.logger.log(`SLA resumed for ticket ${ticketId}`);
   }
 
   /**

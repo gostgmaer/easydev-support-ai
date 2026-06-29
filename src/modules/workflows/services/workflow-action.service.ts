@@ -139,20 +139,30 @@ export class WorkflowActionService {
         return { messageId: msg.id, status: 'sent' };
 
       case ActionTypeEnum.SEND_EMAIL:
-        const emailTo = this.interpolate(config.to || context.customerEmail || 'customer@easydev', context);
+        const emailTo = this.interpolate(
+          config.to || context.customerEmail || 'customer@easydev',
+          context,
+        );
         await this.notificationService.sendEmail(
           tenantId,
           emailTo,
           config.templateId || 'generic-template',
           {
-            subject: this.interpolate(config.subject || 'Workflow Alert', context),
-            body: this.interpolate(config.body || config.content || '', context),
+            subject: this.interpolate(
+              config.subject || 'Workflow Alert',
+              context,
+            ),
+            body: this.interpolate(
+              config.body || config.content || '',
+              context,
+            ),
           },
         );
         return { status: 'email_sent' };
 
       case ActionTypeEnum.SEND_NOTIFICATION:
-        const notifyUser = config.userId || context.userId || context.customerId || '';
+        const notifyUser =
+          config.userId || context.userId || context.customerId || '';
         if (notifyUser) {
           await this.notificationService.sendPushNotification(
             tenantId,
@@ -215,7 +225,11 @@ export class WorkflowActionService {
       case ActionTypeEnum.REMOVE_TAG:
         const ticketIdToRemove = context.ticketId || config.ticketId;
         if (ticketIdToRemove) {
-          await this.ticketService.removeTag(tenantId, ticketIdToRemove, config.tag);
+          await this.ticketService.removeTag(
+            tenantId,
+            ticketIdToRemove,
+            config.tag,
+          );
           return { tagRemoved: config.tag, status: 'tag_removed' };
         }
         this.logger.log(`Removed tag ${config.tag} from workflow scope`);

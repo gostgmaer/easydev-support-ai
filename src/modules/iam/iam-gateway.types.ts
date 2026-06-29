@@ -197,3 +197,10 @@ export interface UpstreamTenant {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ProvisionUserPayload {
+  email: string;
+  password?: string;
+  name: string;
+}
+

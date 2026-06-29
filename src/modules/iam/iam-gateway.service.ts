@@ -32,7 +32,9 @@ import type {
   User,
   UserProfile,
   UserProfileUpdate,
+  ProvisionUserPayload,
 } from './iam-gateway.types';
+import { randomUUID } from 'crypto';
 
 /** Best-effort map for the permission strings IamRegistrationService registers with the
  * real IAM service (see iam-registration.service.ts). The two services evolved independently:

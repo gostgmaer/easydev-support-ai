@@ -1168,6 +1168,10 @@ export const ticketSla = supportAgentSchema.table(
     breached: boolean('breached').default(false).notNull(),
     breachedAt: timestamp('breached_at'),
     remainingSeconds: integer('remaining_seconds'),
+    /** Timestamp when the SLA clock was most recently paused (null = running). */
+    pausedAt: timestamp('paused_at'),
+    /** Total cumulative seconds paused across all pause windows. */
+    pausedSeconds: integer('paused_seconds').default(0).notNull(),
   },
   (table) => {
     return {

@@ -384,11 +384,16 @@ export class ConfigureSlaDto {
 }
 
 export class SplitTicketDto {
-  @ApiProperty({ description: 'The ID of the conversation message / comment from which to split the ticket' })
+  @ApiProperty({
+    description:
+      'The ID of the conversation message / comment from which to split the ticket',
+  })
   @IsUUID()
   messageId!: string;
 
-  @ApiPropertyOptional({ description: 'Optional new subject for the split-off ticket' })
+  @ApiPropertyOptional({
+    description: 'Optional new subject for the split-off ticket',
+  })
   @IsString()
   @IsOptional()
   newSubject?: string;

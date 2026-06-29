@@ -33,8 +33,14 @@ export class AgentProfileService {
     dto: AgentProfileDto,
     userId?: string,
   ): Promise<AgentProfile> {
-    const paginated = await this.profileRepo.findPaginated(tenantId, { limit: 1 });
-    await this.usageLimitService.enforceLimit(tenantId, 'agents', paginated.total);
+    const paginated = await this.profileRepo.findPaginated(tenantId, {
+      limit: 1,
+    });
+    await this.usageLimitService.enforceLimit(
+      tenantId,
+      'agents',
+      paginated.total,
+    );
 
     const existing = await this.profileRepo.findByUserId(dto.userId, tenantId);
     if (existing) {

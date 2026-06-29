@@ -268,6 +268,9 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public resolve(resolutionSummary?: string, resolvedBy?: string): void {
+    if (this.props.approvals && this.props.approvals.some((a) => a.isPending)) {
+      throw new Error('Cannot resolve ticket with pending approvals');
+    }
     this.status.assertCanTransitionTo(TicketStatusEnum.RESOLVED);
     this.props.status = TicketStatus.create(TicketStatusEnum.RESOLVED);
     this.props.resolvedAt = new Date();
@@ -279,6 +282,9 @@ export class Ticket extends AggregateRoot<string> {
   }
 
   public close(closedBy?: string): void {
+    if (this.props.approvals && this.props.approvals.some((a) => a.isPending)) {
+      throw new Error('Cannot close ticket with pending approvals');
+    }
     this.status.assertCanTransitionTo(TicketStatusEnum.CLOSED);
     this.props.status = TicketStatus.create(TicketStatusEnum.CLOSED);
     this.props.closedAt = new Date();
