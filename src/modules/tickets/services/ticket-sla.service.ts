@@ -111,6 +111,8 @@ export class TicketSLAService {
       resolutionDueAt,
       breached: existing?.breached ?? false,
       breachedAt: existing?.breachedAt,
+      pausedAt: existing?.pausedAt,
+      pausedSeconds: existing?.pausedSeconds ?? 0,
       createdAt: existing?.createdAt,
     });
     sla.recalculateRemaining();
@@ -132,6 +134,33 @@ export class TicketSLAService {
     if (!sla || sla.breached) return;
     sla.recalculateRemaining();
     await this.ticketRepo.upsertSla(sla, tenantId);
+  }
+
+  /**
+   * Pauses the SLA clock for a ticket. Called when a ticket enters a state
+   * where the agent is waiting (e.g. WAITING_CUSTOMER, APPROVAL_PENDING).
+   * Safe to call when already paused — the entity no-ops it.
+   */
+  async pauseSlaForTicket(tenantId: string, ticketId: string): Promise<void> {
+    const sla = await this.ticketRepo.getSla(tenantId, ticketId);
+    if (!sla || sla.breached) return;
+    sla.pause();
+    await this.ticketRepo.upsertSla(sla, tenantId);
+    this.logger.log(`SLA paused for ticket ${ticketId}`);
+  }
+
+  /**
+   * Resumes the SLA clock for a ticket. Called when a ticket transitions back
+   * to an active state from a waiting state. Shifts deadlines forward by the
+   * elapsed pause window so agents aren't penalised.
+   */
+  async resumeSlaForTicket(tenantId: string, ticketId: string): Promise<void> {
+    const sla = await this.ticketRepo.getSla(tenantId, ticketId);
+    if (!sla || sla.breached) return;
+    sla.resume();
+    sla.recalculateRemaining();
+    await this.ticketRepo.upsertSla(sla, tenantId);
+    this.logger.log(`SLA resumed for ticket ${ticketId}`);
   }
 
   /**

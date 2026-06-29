@@ -71,6 +71,8 @@ export class TicketMapper {
       breached: !!raw.breached,
       breachedAt: raw.breachedAt || undefined,
       remainingSeconds: raw.remainingSeconds ?? undefined,
+      pausedAt: raw.pausedAt || undefined,
+      pausedSeconds: raw.pausedSeconds ?? 0,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });

@@ -245,6 +245,25 @@ export class TicketService {
       await this.slaService.configureForTicket(tenantId, ticket);
     }
 
+    // SLA clock management on status transitions:
+    //   WAITING_CUSTOMER / APPROVAL_PENDING → pause the clock
+    //   anything active (IN_PROGRESS, ASSIGNED, REOPENED) ← resume
+    const SLA_PAUSE_STATUSES = new Set([
+      TicketStatusEnum.WAITING_CUSTOMER,
+      TicketStatusEnum.WAITING_INTERNAL,
+      TicketStatusEnum.APPROVAL_PENDING,
+    ]);
+    const SLA_RESUME_STATUSES = new Set([
+      TicketStatusEnum.IN_PROGRESS,
+      TicketStatusEnum.ASSIGNED,
+      TicketStatusEnum.REOPENED,
+    ]);
+    if (dto.status && SLA_PAUSE_STATUSES.has(dto.status as TicketStatusEnum)) {
+      await this.slaService.pauseSlaForTicket(tenantId, id);
+    } else if (dto.status && SLA_RESUME_STATUSES.has(dto.status as TicketStatusEnum)) {
+      await this.slaService.resumeSlaForTicket(tenantId, id);
+    }
+
     await this.auditService.log({
       tenantId,
       userId,
@@ -279,6 +298,51 @@ export class TicketService {
       userId,
       action: 'TICKET_START',
       details: `Started work on ticket ${id}`,
+    });
+    return ticket;
+  }
+
+  /**
+   * Moves a ticket to WAITING_CUSTOMER and pauses the SLA clock.
+   * Called when an agent is waiting for the customer to reply before
+   * progressing further.
+   */
+  async waitForCustomer(tenantId: string, id: string, userId?: string): Promise<Ticket> {
+    const ticket = await this.getOrThrow(tenantId, id);
+    this.runTransition(() =>
+      ticket.update({
+        status: TicketStatus.create(TicketStatusEnum.WAITING_CUSTOMER),
+      }),
+    );
+    await this.persist(ticket, tenantId);
+    await this.slaService.pauseSlaForTicket(tenantId, id);
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_WAITING_CUSTOMER',
+      details: `Ticket ${id} marked as waiting for customer — SLA clock paused`,
+    });
+    return ticket;
+  }
+
+  /**
+   * Resumes a ticket from WAITING_CUSTOMER/WAITING_INTERNAL back to IN_PROGRESS
+   * and resumes the SLA clock, shifting deadlines forward by the elapsed wait.
+   */
+  async resumeFromWaiting(tenantId: string, id: string, userId?: string): Promise<Ticket> {
+    const ticket = await this.getOrThrow(tenantId, id);
+    this.runTransition(() =>
+      ticket.update({
+        status: TicketStatus.create(TicketStatusEnum.IN_PROGRESS),
+      }),
+    );
+    await this.persist(ticket, tenantId);
+    await this.slaService.resumeSlaForTicket(tenantId, id);
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_RESUME_FROM_WAITING',
+      details: `Ticket ${id} resumed from waiting — SLA clock resumed`,
     });
     return ticket;
   }

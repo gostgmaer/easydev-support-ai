@@ -495,6 +495,8 @@ export class DrizzleTicketRepository implements ITicketRepository {
       breached: sla.breached,
       breachedAt: sla.breachedAt || null,
       remainingSeconds: sla.remainingSeconds ?? null,
+      pausedAt: sla.pausedAt || null,
+      pausedSeconds: sla.pausedSeconds,
       updatedAt: new Date(),
     };
 
