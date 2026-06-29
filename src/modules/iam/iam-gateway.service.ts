@@ -150,6 +150,13 @@ export class IamGatewayService {
     );
   }
 
+  async provisionUser(payload: ProvisionUserPayload): Promise<void> {
+    const { status, json } = await this.call('POST', '/auth/provision', {
+      body: payload,
+    });
+    if (status !== 200 && status !== 201) this.throwFromUpstream(status, json);
+  }
+
   async refresh(refreshToken: string): Promise<AuthTokens> {
     if (!refreshToken) throw new UnauthorizedException('No refresh token');
     const { status, json } = await this.call('POST', '/auth/refresh', {

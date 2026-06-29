@@ -120,6 +120,26 @@ export class TicketApprovalService {
     return approval;
   }
 
+  async cancel(
+    tenantId: string,
+    approvalId: string,
+    userId?: string,
+  ): Promise<TicketApproval> {
+    const approval = await this.getApprovalOrThrow(tenantId, approvalId);
+    approval.cancel();
+    await this.ticketRepo.saveApproval(approval, tenantId);
+
+    await this.resumeTicket(tenantId, approval.ticketId);
+
+    await this.auditService.log({
+      tenantId,
+      userId,
+      action: 'TICKET_APPROVAL_CANCELLED',
+      details: `Cancelled approval ${approval.id} on ticket ${approval.ticketId}`,
+    });
+    return approval;
+  }
+
   async listApprovals(tenantId: string, ticketId: string) {
     return this.ticketRepo.findApprovals(tenantId, ticketId);
   }

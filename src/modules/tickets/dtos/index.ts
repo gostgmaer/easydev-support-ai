@@ -207,9 +207,20 @@ export class AutoAssignTicketDto {
 }
 
 export class TransferTicketDto {
-  @ApiProperty({ format: 'uuid' })
+  @ApiPropertyOptional({ format: 'uuid' })
   @IsUUID()
-  toAgentId!: string;
+  @IsOptional()
+  toAgentId?: string;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsUUID()
+  @IsOptional()
+  toTeamId?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  note?: string;
 }
 
 export class EscalateTicketDto {

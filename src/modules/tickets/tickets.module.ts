@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CustomersModule } from '../customers/customers.module';
 import { TeamsModule } from '../teams/teams.module';
 import { InboxModule } from '../inbox/inbox.module';
+import { ConversationsModule } from '../conversations/conversations.module';
 import { WorkflowsModule } from '../workflows/workflows.module';
 import { SettingsModule } from '../settings/settings.module';
 
@@ -38,6 +39,7 @@ import { shouldRunProcessor } from '../../config/queue-role';
     forwardRef(() => CustomersModule),
     TeamsModule,
     InboxModule,
+    ConversationsModule,
     forwardRef(() => WorkflowsModule),
     forwardRef(() => SettingsModule),
   ],
