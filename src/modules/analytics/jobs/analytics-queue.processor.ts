@@ -102,7 +102,7 @@ export class AnalyticsQueueProcessor extends BaseWorker {
           aggregateType: 'Ticket',
           aggregateId: job.data.ticketId,
           timestamp: new Date().toISOString(),
-          payload: {},
+          payload: job.data.payload || {},
         });
         return { success: true };
 
@@ -116,7 +116,7 @@ export class AnalyticsQueueProcessor extends BaseWorker {
           aggregateType: 'Conversation',
           aggregateId: job.data.conversationId,
           timestamp: new Date().toISOString(),
-          payload: {},
+          payload: job.data.payload || {},
         });
         return { success: true };
 

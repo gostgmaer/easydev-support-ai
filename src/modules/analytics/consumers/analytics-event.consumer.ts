@@ -8,6 +8,9 @@ import {
   MessageReceivedEvent,
   TicketCreatedEvent,
   TicketClosedEvent,
+  TicketResolvedEvent,
+  TicketAssignedEvent,
+  SlaBreachedEvent,
   AiWorkflowCompletedEvent,
   ConnectorExecutedEvent,
   WorkflowCompletedEvent,
@@ -133,6 +136,47 @@ export class AnalyticsEventConsumer {
       timestamp: new Date().toISOString(),
       payload: {
         closedBy: event.closedBy,
+      },
+    });
+  }
+
+  async onTicketResolved(event: TicketResolvedEvent): Promise<void> {
+    await this.handleEvent({
+      tenantId: event.tenantId,
+      eventName: 'ticket.resolved',
+      aggregateType: 'Ticket',
+      aggregateId: event.ticketId,
+      timestamp: new Date().toISOString(),
+      payload: {
+        resolvedBy: event.resolvedBy,
+      },
+    });
+  }
+
+  async onTicketAssigned(event: TicketAssignedEvent): Promise<void> {
+    await this.handleEvent({
+      tenantId: event.tenantId,
+      eventName: 'ticket.assigned',
+      aggregateType: 'Ticket',
+      aggregateId: event.ticketId,
+      timestamp: new Date().toISOString(),
+      payload: {
+        agentId: event.agentId,
+        teamId: event.teamId,
+      },
+    });
+  }
+
+  async onSlaBreached(event: SlaBreachedEvent): Promise<void> {
+    await this.handleEvent({
+      tenantId: event.tenantId,
+      eventName: 'sla.breached',
+      aggregateType: 'TicketSla',
+      aggregateId: event.slaId,
+      timestamp: new Date().toISOString(),
+      payload: {
+        ticketId: event.ticketId,
+        breachType: event.breachType,
       },
     });
   }

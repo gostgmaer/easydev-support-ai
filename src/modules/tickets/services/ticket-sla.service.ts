@@ -9,8 +9,9 @@ import { TicketPriorityEnum } from '../domain/value-objects';
 import { ConfigureSlaDto } from '../dtos';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
-import { addBusinessMinutes, addCalendarMinutes } from './business-hours';
+import { addBusinessMinutes, addCalendarMinutes, DEFAULT_BUSINESS_CALENDAR } from './business-hours';
 import { SlaSettingsService } from '../../settings/services/sla-settings.service';
+import { HolidayService } from '../../settings/services/holiday.service';
 
 interface SlaTarget {
   responseMinutes: number;
@@ -45,6 +46,7 @@ export class TicketSLAService {
     private readonly eventPublisher: TicketEventPublisher,
     private readonly auditService: AuditService,
     private readonly slaSettingsService: SlaSettingsService,
+    private readonly holidayService: HolidayService,
   ) {}
 
   /**
@@ -79,11 +81,25 @@ export class TicketSLAService {
     const businessHours = dto.businessHours ?? tenantSla.businessHoursOnly;
     const base = ticket.openedAt;
 
+    let calendar = DEFAULT_BUSINESS_CALENDAR;
+    if (businessHours) {
+      const dbHolidays = await this.holidayService.getHolidays(tenantId);
+      if (dbHolidays.length > 0) {
+        calendar = {
+          ...DEFAULT_BUSINESS_CALENDAR,
+          holidays: new Set([
+            ...DEFAULT_BUSINESS_CALENDAR.holidays,
+            ...dbHolidays.map((h) => h.holidayDate.toISOString().slice(0, 10)),
+          ]),
+        };
+      }
+    }
+
     const responseDueAt = businessHours
-      ? addBusinessMinutes(base, responseMinutes)
+      ? addBusinessMinutes(base, responseMinutes, calendar)
       : addCalendarMinutes(base, responseMinutes);
     const resolutionDueAt = businessHours
-      ? addBusinessMinutes(base, resolutionMinutes)
+      ? addBusinessMinutes(base, resolutionMinutes, calendar)
       : addCalendarMinutes(base, resolutionMinutes);
 
     const existing = await this.ticketRepo.getSla(tenantId, ticket.id);
