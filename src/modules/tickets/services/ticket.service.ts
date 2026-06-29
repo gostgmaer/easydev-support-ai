@@ -258,9 +258,9 @@ export class TicketService {
       TicketStatusEnum.ASSIGNED,
       TicketStatusEnum.REOPENED,
     ]);
-    if (dto.status && SLA_PAUSE_STATUSES.has(dto.status as TicketStatusEnum)) {
+    if (dto.status && SLA_PAUSE_STATUSES.has(dto.status)) {
       await this.slaService.pauseSlaForTicket(tenantId, id);
-    } else if (dto.status && SLA_RESUME_STATUSES.has(dto.status as TicketStatusEnum)) {
+    } else if (dto.status && SLA_RESUME_STATUSES.has(dto.status)) {
       await this.slaService.resumeSlaForTicket(tenantId, id);
     }
 
@@ -307,7 +307,11 @@ export class TicketService {
    * Called when an agent is waiting for the customer to reply before
    * progressing further.
    */
-  async waitForCustomer(tenantId: string, id: string, userId?: string): Promise<Ticket> {
+  async waitForCustomer(
+    tenantId: string,
+    id: string,
+    userId?: string,
+  ): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
     this.runTransition(() =>
       ticket.update({
@@ -329,7 +333,11 @@ export class TicketService {
    * Resumes a ticket from WAITING_CUSTOMER/WAITING_INTERNAL back to IN_PROGRESS
    * and resumes the SLA clock, shifting deadlines forward by the elapsed wait.
    */
-  async resumeFromWaiting(tenantId: string, id: string, userId?: string): Promise<Ticket> {
+  async resumeFromWaiting(
+    tenantId: string,
+    id: string,
+    userId?: string,
+  ): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, id);
     this.runTransition(() =>
       ticket.update({

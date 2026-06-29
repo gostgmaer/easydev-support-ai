@@ -309,13 +309,19 @@ export class TicketController {
 
   @Post(':id/pending')
   @Roles('tenant_admin', 'support_agent')
-  @ApiOperation({ summary: 'Mark a ticket as waiting for customer (pauses SLA)' })
+  @ApiOperation({
+    summary: 'Mark a ticket as waiting for customer (pauses SLA)',
+  })
   async pending(
     @Headers('x-tenant-id') tenantId: string,
     @Param('id') id: string,
     @Req() req: any,
   ) {
-    const ticket = await this.ticketService.waitForCustomer(tenantId, id, req.user?.id);
+    const ticket = await this.ticketService.waitForCustomer(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return ticket.toJSON();
   }
 
@@ -327,7 +333,11 @@ export class TicketController {
     @Param('id') id: string,
     @Req() req: any,
   ) {
-    const ticket = await this.ticketService.resumeFromWaiting(tenantId, id, req.user?.id);
+    const ticket = await this.ticketService.resumeFromWaiting(
+      tenantId,
+      id,
+      req.user?.id,
+    );
     return ticket.toJSON();
   }
 

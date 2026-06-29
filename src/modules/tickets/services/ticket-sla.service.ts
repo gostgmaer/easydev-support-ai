@@ -9,7 +9,11 @@ import { TicketPriorityEnum } from '../domain/value-objects';
 import { ConfigureSlaDto } from '../dtos';
 import { TicketEventPublisher } from './ticket-event.publisher';
 import { AuditService } from '../../audit/audit.service';
-import { addBusinessMinutes, addCalendarMinutes, DEFAULT_BUSINESS_CALENDAR } from './business-hours';
+import {
+  addBusinessMinutes,
+  addCalendarMinutes,
+  DEFAULT_BUSINESS_CALENDAR,
+} from './business-hours';
 import { SlaSettingsService } from '../../settings/services/sla-settings.service';
 import { HolidayService } from '../../settings/services/holiday.service';
 

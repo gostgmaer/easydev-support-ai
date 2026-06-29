@@ -408,4 +408,3 @@ export class Ticket extends AggregateRoot<string> {
     };
   }
 }
- 
