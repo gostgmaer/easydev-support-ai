@@ -18,6 +18,7 @@ import type {
   PasswordChangePayload,
   ResetPasswordPayload,
   UserProfileUpdate,
+  ProvisionUserPayload,
 } from '../iam-gateway.types';
 
 const REFRESH_COOKIE_NAME = 'refresh_token';
@@ -43,6 +44,11 @@ export class IamProxyController {
     const session = await this.gateway.login(credentials);
     this.setRefreshCookie(res, session.tokens.refreshToken);
     return session;
+  }
+
+  @Post('auth/provision')
+  async provision(@Body() payload: ProvisionUserPayload) {
+    return this.gateway.provisionUser(payload);
   }
 
   @Post('auth/logout')
