@@ -40,6 +40,7 @@ import { TicketSLAService } from './ticket-sla.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { AuditService } from '../../audit/audit.service';
 import { InboxRealtimeService } from '../../inbox/services/inbox-realtime.service';
+import { ConversationService } from '../../conversations/services/conversation.service';
 
 @Injectable()
 export class TicketService {
@@ -56,6 +57,7 @@ export class TicketService {
     private readonly realtime: InboxRealtimeService,
     @Inject(forwardRef(() => WorkflowEngineService))
     private readonly workflowEngineService: WorkflowEngineService,
+    private readonly conversationService: ConversationService,
   ) {}
 
   private async evaluateWorkflowTriggers(
@@ -532,13 +534,19 @@ export class TicketService {
   ): Promise<Ticket> {
     const parent = await this.getOrThrow(tenantId, id);
 
+    const splitConversation = await this.conversationService.split(
+      tenantId,
+      parent.conversationId!,
+      userId,
+    );
+
     const sequence = await this.ticketRepo.nextSequence(tenantId);
     const splitId = randomUUID();
     const splitTicket = Ticket.create(splitId, {
       tenantId,
       ticketNumber: TicketNumber.generate(sequence),
       customerId: parent.customerId,
-      conversationId: randomUUID(),
+      conversationId: splitConversation.id,
       assignedAgentId: parent.assignedAgentId,
       assignedTeamId: parent.assignedTeamId,
       categoryId: parent.categoryId,
@@ -570,6 +578,22 @@ export class TicketService {
       action: 'TICKET_SPLIT',
       details: `Split ticket ${splitId} from parent ticket ${id}`,
     });
+
+    await this.evaluateWorkflowTriggers(
+      tenantId,
+      TriggerTypeEnum.TICKET_CREATED,
+      {
+        id: splitTicket.id,
+        ticketId: splitTicket.id,
+        ticketNumber: splitTicket.ticketNumber.value,
+        status: splitTicket.status.value,
+        priority: splitTicket.priority.value,
+        customerId: splitTicket.customerId,
+        conversationId: splitTicket.conversationId,
+        categoryId: splitTicket.categoryId,
+        source: splitTicket.source.value,
+      },
+    );
 
     return splitTicket;
   }

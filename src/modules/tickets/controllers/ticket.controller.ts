@@ -256,6 +256,7 @@ export class TicketController {
       tenantId,
       id,
       dto.toAgentId,
+      dto.toTeamId,
       req.user?.id,
     );
     return ticket.toJSON();

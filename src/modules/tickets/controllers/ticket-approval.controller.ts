@@ -108,4 +108,20 @@ export class TicketApprovalController {
     );
     return approval.toJSON();
   }
+
+  @Post('approvals/:approvalId/cancel')
+  @Roles('tenant_admin', 'support_agent')
+  @ApiOperation({ summary: 'Cancel a pending approval' })
+  async cancel(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('approvalId') approvalId: string,
+    @Req() req: any,
+  ) {
+    const approval = await this.approvalService.cancel(
+      tenantId,
+      approvalId,
+      req.user?.id,
+    );
+    return approval.toJSON();
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { ITicketRepository } from '../repositories/ticket-repository.interface';
 import { Ticket } from '../domain/ticket.aggregate';
@@ -150,9 +150,17 @@ export class TicketAssignmentService {
   async transfer(
     tenantId: string,
     ticketId: string,
-    toAgentId: string,
+    toAgentId?: string,
+    toTeamId?: string,
     userId?: string,
   ): Promise<Ticket> {
+    if (!toAgentId && toTeamId) {
+      return this.autoAssign(tenantId, ticketId, toTeamId, userId);
+    }
+    if (!toAgentId) {
+      throw new BadRequestException('Either toAgentId or toTeamId is required');
+    }
+
     const ticket = await this.getOrThrow(tenantId, ticketId);
     ticket.transfer(toAgentId, userId);
 

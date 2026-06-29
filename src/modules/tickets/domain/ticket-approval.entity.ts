@@ -4,6 +4,7 @@ export enum ApprovalStatusEnum {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum ApprovalTypeEnum {
@@ -87,6 +88,14 @@ export class TicketApproval extends Entity<string> {
     this.props.status = ApprovalStatusEnum.REJECTED;
     this.props.comments = comments ?? this.props.comments;
     this.props.approvedAt = new Date();
+    this.props.updatedAt = new Date();
+  }
+
+  public cancel(): void {
+    if (!this.isPending) {
+      throw new Error(`Approval ${this.id} is already ${this.props.status}`);
+    }
+    this.props.status = ApprovalStatusEnum.CANCELLED;
     this.props.updatedAt = new Date();
   }
 
