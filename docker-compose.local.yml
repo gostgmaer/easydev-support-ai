@@ -2,6 +2,24 @@ version: '3.8'
 name: easydev-support-ai-local
 
 services:
+  migrate:
+    image: easydev-support-ai-api:local
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command:
+      - sh
+      - -c
+      - node_modules/.bin/drizzle-kit migrate --config packages/database/drizzle.config.ts
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/easydev_support_ai
+    networks:
+      - database-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
   api:
     image: easydev-support-ai-api:local
     build:
@@ -41,6 +59,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker-conversation:
     image: easydev-support-ai-worker:local
@@ -76,6 +96,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker-workflow:
     image: easydev-support-ai-worker:local
@@ -111,6 +133,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker-analytics:
     image: easydev-support-ai-worker:local
@@ -146,6 +170,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker-connector:
     image: easydev-support-ai-worker:local
@@ -181,6 +207,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker-notification:
     image: easydev-support-ai-worker:local
@@ -216,6 +244,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   webhook:
     image: easydev-support-ai-webhook:local
@@ -251,6 +281,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   postgres:
     image: postgres:17-alpine
