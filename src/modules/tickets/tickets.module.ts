@@ -39,7 +39,7 @@ import { shouldRunProcessor } from '../../config/queue-role';
     forwardRef(() => CustomersModule),
     TeamsModule,
     InboxModule,
-    ConversationsModule,
+    forwardRef(() => ConversationsModule),
     forwardRef(() => WorkflowsModule),
     forwardRef(() => SettingsModule),
   ],
