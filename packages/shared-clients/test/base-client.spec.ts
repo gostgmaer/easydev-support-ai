@@ -50,12 +50,10 @@ describe('BaseClient', () => {
 
   it('opens the circuit breaker after the failure threshold', async () => {
     const client = new TestClient();
-    const impl = jest
-      .fn()
-      .mockRejectedValue({
-        response: { status: 500 },
-        message: 'server error',
-      });
+    const impl = jest.fn().mockRejectedValue({
+      response: { status: 500 },
+      message: 'server error',
+    });
     client.setRequestImpl(impl);
 
     // Five consecutive failed requests trip the breaker (threshold = 5).
