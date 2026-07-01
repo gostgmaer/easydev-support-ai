@@ -14,6 +14,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/development' }}
+
 jobs:
   filter:
     name: Detect Changed Components
@@ -103,6 +107,7 @@ jobs:
         run: pnpm audit --audit-level=high
 
       - name: Security Scanning - Secrets Scan
+        if: github.event_name == 'push'
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
