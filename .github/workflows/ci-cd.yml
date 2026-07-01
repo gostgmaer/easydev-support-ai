@@ -52,29 +52,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
+      # Must run before Setup Node.js — actions/setup-node's cache:'pnpm'
+      # option below shells out to `pnpm store path` itself to compute the
+      # cache directory, so pnpm has to already be on PATH when it runs.
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 10
           run_install: false
 
-      - name: Get pnpm Store Directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --default)" >> $GITHUB_ENV
-
-      - name: Cache pnpm Files
-        uses: actions/cache@v5
+      # Replaces a manual `pnpm store path --default` + actions/cache@v5
+      # combo that was producing an empty path (actions/cache errored with
+      # "Input required and not supplied: path") — never caught before
+      # because this workflow's trigger branches didn't match this repo's
+      # real branches, so it had never actually run.
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: 22
+          cache: 'pnpm'
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
