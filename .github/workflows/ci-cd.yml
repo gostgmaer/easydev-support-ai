@@ -3,12 +3,12 @@ name: Support AI CI/CD Pipeline
 on:
   push:
     branches:
-      - main
-      - development
+      - master
+      - development-branch
   pull_request:
     branches:
-      - main
-      - development
+      - master
+      - development-branch
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/development' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' && github.ref != 'refs/heads/development-branch' }}
 
 jobs:
   filter:
@@ -120,11 +120,16 @@ jobs:
   # unconditionally on every push to main/development, auto-deploying
   # straight to production with no human in the loop — removed to match the
   # rest of this platform's build-only-CI convention.
+  #
+  # NOTE: this repo's actual branches are `master` (default) and
+  # `development-branch`, not `main`/`development` — the workflow's own
+  # trigger config above was pointed at branch names that don't exist here,
+  # so it had never fired on a push at all. Fixed alongside this change.
   cd:
     name: Continuous Delivery (build & push only)
     runs-on: ubuntu-latest
     needs: [filter, ci]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
