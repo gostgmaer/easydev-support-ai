@@ -9,7 +9,6 @@ import {
   desc,
   asc,
   gt,
-  lt,
   lte,
   isNull,
 } from 'drizzle-orm';

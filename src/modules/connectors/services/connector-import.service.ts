@@ -37,7 +37,7 @@ export class ConnectorImportService {
     const securitySchemes =
       spec.components?.securitySchemes || spec.securityDefinitions || {};
 
-    for (const [key, value] of Object.entries<any>(securitySchemes)) {
+    for (const value of Object.values<any>(securitySchemes)) {
       const type = value.type?.toLowerCase();
       const scheme = value.scheme?.toLowerCase();
 
@@ -83,7 +83,6 @@ export class ConnectorImportService {
         }
 
         const summary = operation.summary || '';
-        const description = operation.description || '';
         const operationId = operation.operationId || '';
 
         // Auto Map Capability Type

@@ -81,7 +81,6 @@ export class AnalyticsAggregationService {
       case 'message.received': {
         const channelId = event.payload.channelId || uuidv4();
         const channelType = event.payload.channelType || 'WEB';
-        const isReceived = event.eventName === 'message.received';
 
         // Update Tenant Metrics
         await this.repository.saveTenantMetrics({

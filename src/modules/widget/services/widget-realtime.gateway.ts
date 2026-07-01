@@ -93,7 +93,7 @@ export class WidgetRealtimeGateway
   }
 
   @SubscribeMessage('typing')
-  async handleTyping(
+  handleTyping(
     @ConnectedSocket() client: Socket,
     @MessageBody() body: { isTyping: boolean; conversationId?: string },
   ) {

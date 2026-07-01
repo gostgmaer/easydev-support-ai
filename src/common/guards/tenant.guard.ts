@@ -46,7 +46,7 @@ export class TenantGuard implements CanActivate {
       };
 
       return true;
-    } catch (e) {
+    } catch {
       throw new UnauthorizedException(
         'Invalid IAM Token or cross-tenant access attempt',
       );

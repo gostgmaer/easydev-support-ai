@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { ITicketRepository } from '../repositories/ticket-repository.interface';
 import { Ticket } from '../domain/ticket.aggregate';
@@ -102,7 +108,7 @@ export class TicketAssignmentService {
     userId?: string,
   ): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, ticketId);
-    ticket.assign(agentId, teamId, userId);
+    ticket.assign(agentId, teamId);
 
     await this.persist(ticket, tenantId);
     await this.recordAssignment(
@@ -162,7 +168,7 @@ export class TicketAssignmentService {
     }
 
     const ticket = await this.getOrThrow(tenantId, ticketId);
-    ticket.transfer(toAgentId, userId);
+    ticket.transfer(toAgentId);
 
     await this.persist(ticket, tenantId);
     await this.recordAssignment(

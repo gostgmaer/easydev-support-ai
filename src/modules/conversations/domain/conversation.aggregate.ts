@@ -3,10 +3,8 @@ import {
   ConversationStatus,
   ConversationStatusEnum,
   ConversationPriority,
-  ConversationPriorityEnum,
   ConversationLanguage,
   ConversationSentiment,
-  ConversationSentimentEnum,
   ConversationSource,
 } from './value-objects';
 import { ConversationTag } from './conversation-tag.entity';
@@ -203,11 +201,7 @@ export class Conversation extends AggregateRoot<string> {
     }
   }
 
-  public assignAgent(
-    agentProfileId: string,
-    teamId: string | undefined,
-    assignedBy?: string,
-  ): void {
+  public assignAgent(agentProfileId: string, teamId: string | undefined): void {
     this.props.assignedAgentId = agentProfileId;
     if (teamId) this.props.assignedTeamId = teamId;
     this.props.status = ConversationStatus.create(
@@ -219,7 +213,7 @@ export class Conversation extends AggregateRoot<string> {
     );
   }
 
-  public transfer(toAgentProfileId: string, assignedBy?: string): void {
+  public transfer(toAgentProfileId: string): void {
     const fromAgentId = this.props.assignedAgentId;
     this.props.assignedAgentId = toAgentProfileId;
     this.props.status = ConversationStatus.create(

@@ -8,7 +8,6 @@ import {
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
 import {
   WidgetSession,
-  WidgetVisitor,
   WidgetAuthToken,
   WidgetConversation,
 } from '../domain/entities';
@@ -211,7 +210,7 @@ export class WidgetSessionService {
       await this.widgetRepo.saveAuthToken(dbToken);
 
       return { visitorId: payload.visitorId, sessionId: payload.sessionId };
-    } catch (e) {
+    } catch {
       throw new UnauthorizedException('Token validation failed');
     }
   }

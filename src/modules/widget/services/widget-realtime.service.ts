@@ -7,7 +7,7 @@ export class WidgetRealtimeService {
 
   constructor(private readonly gateway: WidgetRealtimeGateway) {}
 
-  async sendNewMessage(
+  sendNewMessage(
     tenantId: string,
     sessionId: string,
     messagePayload: any,
@@ -19,9 +19,10 @@ export class WidgetRealtimeService {
       'newMessage',
       messagePayload,
     );
+    return Promise.resolve();
   }
 
-  async sendPresenceUpdate(
+  sendPresenceUpdate(
     tenantId: string,
     sessionId: string,
     presencePayload: any,
@@ -32,9 +33,10 @@ export class WidgetRealtimeService {
       'presence.update',
       presencePayload,
     );
+    return Promise.resolve();
   }
 
-  async sendTypingIndicator(
+  sendTypingIndicator(
     tenantId: string,
     sessionId: string,
     typingPayload: { isTyping: boolean },
@@ -45,5 +47,6 @@ export class WidgetRealtimeService {
       'typing.indicator',
       typingPayload,
     );
+    return Promise.resolve();
   }
 }

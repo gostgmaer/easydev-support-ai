@@ -193,7 +193,7 @@ export class AiWorkflowExecution extends Entity<string> {
     this.props.updatedAt = new Date();
   }
 
-  public fail(reason: string): void {
+  public fail(): void {
     this.props.status = WorkflowStatusEnum.FAILED;
     this.props.completedAt = new Date();
     if (this.props.startedAt) {

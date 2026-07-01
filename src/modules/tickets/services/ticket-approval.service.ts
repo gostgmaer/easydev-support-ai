@@ -9,6 +9,7 @@ import { Ticket } from '../domain/ticket.aggregate';
 import {
   TicketApproval,
   ApprovalTypeEnum,
+  ApprovalStatusEnum,
 } from '../domain/ticket-approval.entity';
 import { TicketStatus, TicketStatusEnum } from '../domain/value-objects';
 import { RequestApprovalDto, DecideApprovalDto } from '../dtos';
@@ -43,7 +44,7 @@ export class TicketApprovalService {
       tenantId,
       ticketId,
       approverId: dto.approverId,
-      status: 'PENDING',
+      status: ApprovalStatusEnum.PENDING,
       type: dto.type || ApprovalTypeEnum.CUSTOM,
       comments: dto.comments,
     });

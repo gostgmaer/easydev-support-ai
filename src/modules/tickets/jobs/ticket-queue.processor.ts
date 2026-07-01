@@ -11,7 +11,6 @@ import { TicketService } from '../services/ticket.service';
 import { TicketAssignmentService } from '../services/ticket-assignment.service';
 import { TicketEscalationService } from '../services/ticket-escalation.service';
 import { TicketSLAService } from '../services/ticket-sla.service';
-import { CreateTicketDto } from '../dtos';
 
 @Processor('ticket-queue', WORKER_OPTIONS)
 @Injectable()

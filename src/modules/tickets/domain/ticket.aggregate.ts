@@ -4,7 +4,6 @@ import {
   TicketStatus,
   TicketStatusEnum,
   TicketPriority,
-  TicketPriorityEnum,
   TicketSource,
 } from './value-objects';
 import { TicketComment } from './ticket-comment.entity';
@@ -216,11 +215,7 @@ export class Ticket extends AggregateRoot<string> {
     }
   }
 
-  public assign(
-    agentId: string,
-    teamId: string | undefined,
-    assignedBy?: string,
-  ): void {
+  public assign(agentId: string, teamId: string | undefined): void {
     this.props.assignedAgentId = agentId;
     if (teamId) this.props.assignedTeamId = teamId;
     if (!this.status.isTerminal()) {
@@ -232,7 +227,7 @@ export class Ticket extends AggregateRoot<string> {
     );
   }
 
-  public transfer(toAgentId: string, assignedBy?: string): void {
+  public transfer(toAgentId: string): void {
     const fromAgentId = this.props.assignedAgentId;
     this.props.assignedAgentId = toAgentId;
     this.props.status = TicketStatus.create(TicketStatusEnum.ASSIGNED);

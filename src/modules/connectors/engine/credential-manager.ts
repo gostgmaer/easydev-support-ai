@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import axios from 'axios';
 import { ConnectorCredential } from '../domain/connector-credential.entity';
 import { IConnectorRepository } from '../repositories/connector-repository.interface';
+import { AuthTypeEnum } from '../domain/value-objects';
 
 // Legacy ciphertext (encrypted before the AES-256-GCM migration): iv:ciphertext.
 const LEGACY_CIPHERTEXT_SHAPE = /^[0-9a-f]+:[0-9a-f]+$/i;
@@ -117,7 +118,7 @@ export class CredentialManager {
   ): Promise<ConnectorCredential> {
     const dec = this.decrypt<any>(credential.encryptedData);
     if (
-      credential.authType !== 'OAUTH2' ||
+      credential.authType !== AuthTypeEnum.OAUTH2 ||
       !dec.refreshToken ||
       !dec.tokenUrl
     ) {
@@ -156,7 +157,7 @@ export class CredentialManager {
       const expiresAt = expires_in
         ? new Date(Date.now() + expires_in * 1000)
         : undefined;
-      credential.rotate(encryptedData, expiresAt);
+      credential.rotate(encryptedData, expiresAt, keyId);
 
       await repository.saveCredential(credential, tenantId);
 

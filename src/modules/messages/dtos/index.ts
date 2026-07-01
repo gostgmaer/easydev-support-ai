@@ -13,7 +13,6 @@ import {
   Min,
   Max,
   ArrayMaxSize,
-  ValidateNested,
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';

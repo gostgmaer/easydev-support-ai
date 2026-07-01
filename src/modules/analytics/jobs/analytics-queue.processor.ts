@@ -38,7 +38,7 @@ export class AnalyticsQueueProcessor extends BaseWorker {
         await this.eventConsumer.handleEvent(job.data);
         return { success: true };
 
-      case 'analytics-aggregation-job':
+      case 'analytics-aggregation-job': {
         this.logger.log(`Processing analytics-aggregation-job ${job.id}`);
         const timestamp = job.data.timestamp
           ? new Date(job.data.timestamp)
@@ -55,6 +55,7 @@ export class AnalyticsQueueProcessor extends BaseWorker {
           await this.aggregationService.aggregateMonthly(tenantId, timestamp);
         }
         return { success: true, type };
+      }
 
       case 'analytics-report-job':
         this.logger.log(
@@ -120,7 +121,7 @@ export class AnalyticsQueueProcessor extends BaseWorker {
         });
         return { success: true };
 
-      case 'analytics-cleanup-job':
+      case 'analytics-cleanup-job': {
         this.logger.log(`Processing analytics-cleanup-job ${job.id}`);
         const retentionDays = job.data.retentionDays || 30;
         const cutoff = new Date();
@@ -130,6 +131,7 @@ export class AnalyticsQueueProcessor extends BaseWorker {
           .delete(schema.analyticsEvents)
           .where(lte(schema.analyticsEvents.timestamp, cutoff));
         return { success: true, deletedBefore: cutoff.toISOString() };
+      }
 
       default:
         // Many independent publishers feed this queue (tickets, conversations,

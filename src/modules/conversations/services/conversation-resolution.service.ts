@@ -93,11 +93,7 @@ export class ConversationResolutionService {
     }
 
     // ─── 4. Resolve the conversation aggregate ────────────────────────────
-    const resolved = await this.conversationService.resolve(
-      tenantId,
-      conversationId,
-      agentId,
-    );
+    await this.conversationService.resolve(tenantId, conversationId, agentId);
 
     // ─── 5. Also resolve any linked ticket ───────────────────────────────
     if (options.linkedTicketId) {

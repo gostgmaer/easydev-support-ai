@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AnalyticsReportService } from './analytics-report.service';
 import { NotificationService } from '../../notifications/notification.service';
 import { TenantSettingsService } from '../../settings/services/tenant-settings.service';

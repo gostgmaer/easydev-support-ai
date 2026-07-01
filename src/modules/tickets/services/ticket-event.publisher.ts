@@ -36,7 +36,9 @@ export class TicketEventPublisher {
       if (ANALYTICS_EVENTS.has(eventName)) {
         // Strip out non-serializable stuff or just pass event.
         // It's a DomainEvent, so it should be JSON serializable.
-        const { tenantId, id, ...payload } = event as any;
+        const payload = { ...(event as any) };
+        delete payload.tenantId;
+        delete payload.id;
         await this.queueService.addJob(QUEUES.TICKET, 'ticket-analytics-job', {
           ticketId: event.getAggregateId(),
           eventName,

@@ -85,9 +85,12 @@ export class ConnectorCredential extends Entity<string> {
     );
   }
 
-  public rotate(encryptedData: string, expiresAt?: Date): void {
+  public rotate(encryptedData: string, expiresAt?: Date, keyId?: string): void {
     this.props.encryptedData = encryptedData;
     this.props.expiresAt = expiresAt;
+    if (keyId !== undefined) {
+      this.props.keyId = keyId;
+    }
     this.props.rotatedAt = new Date();
     this.props.status = CredentialStatusEnum.ACTIVE;
     this.props.updatedAt = new Date();

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { db, schema } from '@easydev/database';
-import { eq, and, or, ilike, sql, desc, asc, isNull } from 'drizzle-orm';
+import { eq, and, or, ilike, desc, asc, isNull } from 'drizzle-orm';
 import {
   IKnowledgeRepository,
   DocumentQueryOptions,
@@ -91,7 +91,6 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
 
   async findSources(
     tenantId: string,
-    options?: any,
   ): Promise<PaginatedResult<KnowledgeSource>> {
     const rows = await db
       .select()
@@ -600,10 +599,7 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
   }
 
   // ------------------ Versions ------------------
-  async saveVersion(
-    version: KnowledgeVersion,
-    tenantId: string,
-  ): Promise<KnowledgeVersion> {
+  async saveVersion(version: KnowledgeVersion): Promise<KnowledgeVersion> {
     const raw = {
       id: version.id,
       tenantId: version.tenantId,
@@ -851,7 +847,7 @@ export class DrizzleKnowledgeRepository implements IKnowledgeRepository {
   }
 
   // ------------------ Search Logs ------------------
-  async addSearchLog(log: KnowledgeSearchLog, tenantId: string): Promise<void> {
+  async addSearchLog(log: KnowledgeSearchLog): Promise<void> {
     const raw = {
       id: log.id,
       tenantId: log.tenantId,

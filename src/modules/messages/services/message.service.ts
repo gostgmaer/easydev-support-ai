@@ -7,10 +7,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type {
-  IMessageRepository,
-  MessageQueryOptions,
-} from '../repositories/message-repository.interface';
+import type { IMessageRepository } from '../repositories/message-repository.interface';
 import { Message } from '../domain/message.aggregate';
 import { MessageReaction } from '../domain/message-reaction.entity';
 import { MessageMention } from '../domain/message-mention.entity';

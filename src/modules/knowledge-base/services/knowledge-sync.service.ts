@@ -10,7 +10,6 @@ import { CrawlerService } from './crawler.service';
 import { KnowledgeDocumentService } from './knowledge-document.service';
 import { KnowledgeChunkService } from './knowledge-chunk.service';
 import { KnowledgeSyncJob } from '../domain/knowledge-sync-job.entity';
-import { DocumentStatusEnum, SyncStatusEnum } from '../domain/value-objects';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 
 @Injectable()

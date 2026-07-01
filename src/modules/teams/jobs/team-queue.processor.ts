@@ -42,7 +42,7 @@ export class TeamQueueProcessor extends BaseWorker {
           job.data.options,
         );
 
-      case 'availability-sync-job':
+      case 'availability-sync-job': {
         this.logger.log(`Running availability sync job ${job.id}`);
         const availability = await this.availabilityService.getAvailability(
           tenantId,
@@ -60,8 +60,9 @@ export class TeamQueueProcessor extends BaseWorker {
           );
         }
         return { status: 'synced' };
+      }
 
-      case 'load-balancer-job':
+      case 'load-balancer-job': {
         this.logger.log(
           `Running load-balancer job ${job.id} for agent ${job.data.agentProfileId}`,
         );
@@ -78,8 +79,9 @@ export class TeamQueueProcessor extends BaseWorker {
           );
         }
         return { actualLoad };
+      }
 
-      case 'capacity-calculation-job':
+      case 'capacity-calculation-job': {
         this.logger.log(`Running capacity recalculation job ${job.id}`);
         const profile = await this.profileService.findById(
           tenantId,
@@ -89,6 +91,7 @@ export class TeamQueueProcessor extends BaseWorker {
           capacity: job.data.newCapacity || profile.capacity.capacity,
         });
         return { status: 'success' };
+      }
 
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

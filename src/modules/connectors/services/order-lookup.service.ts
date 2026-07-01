@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConnectorExecutionService } from '../../connectors/services/connector-execution.service';
 import { AIPlatformClient } from '../../ai-integration/services/ai-platform.client';
 import { MessageService } from '../../messages/services/message.service';
@@ -50,7 +50,6 @@ export class OrderLookupService {
     conversationId: string,
     orderId: string,
     customerEmail?: string,
-    messageId?: string,
   ): Promise<{ reply: string; escalated: boolean; orderData?: any }> {
     this.logger.log(
       `Order lookup initiated: orderId=${orderId} conversation=${conversationId} tenant=${tenantId}`,

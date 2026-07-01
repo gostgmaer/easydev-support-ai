@@ -8,13 +8,13 @@ import { ThrottlerGuard } from '@nestjs/throttler';
  */
 @Injectable()
 export class TenantThrottlerGuard extends ThrottlerGuard {
-  protected async getTracker(req: Record<string, any>): Promise<string> {
+  protected getTracker(req: Record<string, any>): Promise<string> {
     const tenantId =
       (req.headers?.['x-tenant-id'] as string | undefined) ??
       (req.tenantId as string | undefined) ??
       'public';
     const ip: string =
       Array.isArray(req.ips) && req.ips.length > 0 ? req.ips[0] : req.ip;
-    return `${tenantId}:${ip}`;
+    return Promise.resolve(`${tenantId}:${ip}`);
   }
 }

@@ -95,7 +95,7 @@ export interface IWorkflowRepository {
     },
     tenantId: string,
   ): Promise<void>;
-  getActiveVersion(templateId: string, tenantId: string): Promise<any | null>;
+  getActiveVersion(templateId: string, tenantId: string): Promise<any>;
 
   // Workflow Variables
   saveVariable(

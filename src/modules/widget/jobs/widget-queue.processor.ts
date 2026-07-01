@@ -5,12 +5,12 @@ import {
   QueueService,
   WORKER_OPTIONS,
 } from '@easydev/shared-queues';
-import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
+import { Injectable, Optional, Inject } from '@nestjs/common';
 import Redis from 'ioredis';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
 import { AuditService } from '../../audit/audit.service';
 import { db, schema } from '@easydev/database';
-import { and, eq, lt } from 'drizzle-orm';
+import { lt } from 'drizzle-orm';
 
 @Processor('widget-queue', WORKER_OPTIONS)
 @Injectable()
@@ -80,7 +80,7 @@ export class WidgetQueueProcessor extends BaseWorker {
         }
         return { success: true };
 
-      case 'widget-cleanup-job':
+      case 'widget-cleanup-job': {
         this.logger.log(`Processing widget-cleanup-job ${job.id}`);
         // Clean up expired widget auth tokens older than current time
         const now = new Date();
@@ -88,6 +88,7 @@ export class WidgetQueueProcessor extends BaseWorker {
           .delete(schema.widgetAuthTokens)
           .where(lt(schema.widgetAuthTokens.expiresAt, now));
         return { success: true };
+      }
 
       case 'widget-installation-job':
         this.logger.log(

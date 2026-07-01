@@ -1,6 +1,4 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { db, schema } from '@easydev/database';
-import { and, eq } from 'drizzle-orm';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -137,7 +135,7 @@ export class CostTrackerService {
     const costLimit = 50.0;
     if (totalDailyCost > costLimit) {
       this.logger.warn(
-        `Tenant ${tenantId} has breached the daily cost budget: $${totalDailyCost.toFixed(2)} / $${costLimit}`,
+        `Tenant ${tenantId} has breached the daily cost budget (triggered by ${category} usage): $${totalDailyCost.toFixed(2)} / $${costLimit}`,
       );
       throw new HttpException(
         `Quota breached. Total daily cost is $${totalDailyCost.toFixed(2)} which exceeds the quota of $${costLimit}`,

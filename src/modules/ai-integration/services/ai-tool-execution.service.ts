@@ -51,7 +51,6 @@ export class AiToolExecutionService {
         workflowId,
         toolName,
         payload,
-        status,
       );
     } catch (err: any) {
       this.logger.warn(

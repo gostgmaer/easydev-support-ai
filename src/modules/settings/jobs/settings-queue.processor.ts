@@ -5,7 +5,7 @@ import {
   QueueService,
   WORKER_OPTIONS,
 } from '@easydev/shared-queues';
-import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
+import { Injectable, Optional, Inject } from '@nestjs/common';
 import Redis from 'ioredis';
 import type { ISettingsRepository } from '../repositories/settings-repository.interface';
 import { AuditService } from '../../audit/audit.service';
@@ -45,7 +45,7 @@ export class SettingsQueueProcessor extends BaseWorker {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
 
     switch (job.name) {
-      case 'settings-sync-job':
+      case 'settings-sync-job': {
         this.logger.log(
           `Processing settings-sync-job ${job.id} for Tenant: ${tenantId}`,
         );
@@ -60,6 +60,7 @@ export class SettingsQueueProcessor extends BaseWorker {
           ); // 1 hour cache
         }
         return { success: true };
+      }
 
       case 'feature-flag-refresh-job':
         this.logger.log(
@@ -71,7 +72,7 @@ export class SettingsQueueProcessor extends BaseWorker {
         }
         return { success: true };
 
-      case 'usage-limit-job':
+      case 'usage-limit-job': {
         this.logger.log(
           `Processing usage-limit-job ${job.id} for Tenant: ${tenantId}`,
         );
@@ -86,6 +87,7 @@ export class SettingsQueueProcessor extends BaseWorker {
           );
         }
         return { success: true };
+      }
 
       case 'settings-audit-job':
         this.logger.log(

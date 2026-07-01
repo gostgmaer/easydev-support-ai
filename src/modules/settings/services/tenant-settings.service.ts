@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { ISettingsRepository } from '../repositories/settings-repository.interface';
 import { TenantSettings } from '../domain/entities';
 import {

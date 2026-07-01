@@ -47,7 +47,7 @@ export class WorkflowActionService {
     const config = action.configuration || {};
 
     switch (action.actionType) {
-      case ActionTypeEnum.CREATE_TICKET:
+      case ActionTypeEnum.CREATE_TICKET: {
         const ticket = await this.ticketService.create(tenantId, {
           subject: this.interpolate(
             config.subject || 'Workflow Ticket',
@@ -61,6 +61,7 @@ export class WorkflowActionService {
           priority: config.priority || 'MEDIUM',
         });
         return { ticketId: ticket.id, status: 'created' };
+      }
 
       case ActionTypeEnum.UPDATE_TICKET:
         if (context.ticketId || config.ticketId) {
@@ -114,7 +115,7 @@ export class WorkflowActionService {
           'Ticket ID missing in context or configuration for escalate action',
         );
 
-      case ActionTypeEnum.UPDATE_CUSTOMER:
+      case ActionTypeEnum.UPDATE_CUSTOMER: {
         const custId = context.customerId || config.customerId;
         if (custId) {
           await this.customerService.update(
@@ -127,8 +128,9 @@ export class WorkflowActionService {
         throw new Error(
           'Customer ID missing in context or configuration for update_customer action',
         );
+      }
 
-      case ActionTypeEnum.SEND_MESSAGE:
+      case ActionTypeEnum.SEND_MESSAGE: {
         const msg = await this.messageService.create(tenantId, {
           conversationId: context.conversationId || config.conversationId,
           direction: 'OUTBOUND' as any,
@@ -137,8 +139,9 @@ export class WorkflowActionService {
           senderType: 'SYSTEM',
         });
         return { messageId: msg.id, status: 'sent' };
+      }
 
-      case ActionTypeEnum.SEND_EMAIL:
+      case ActionTypeEnum.SEND_EMAIL: {
         const emailTo = this.interpolate(
           config.to || context.customerEmail || 'customer@easydev',
           context,
@@ -159,8 +162,9 @@ export class WorkflowActionService {
           },
         );
         return { status: 'email_sent' };
+      }
 
-      case ActionTypeEnum.SEND_NOTIFICATION:
+      case ActionTypeEnum.SEND_NOTIFICATION: {
         const notifyUser =
           config.userId || context.userId || context.customerId || '';
         if (notifyUser) {
@@ -171,8 +175,9 @@ export class WorkflowActionService {
           );
         }
         return { status: 'notified' };
+      }
 
-      case ActionTypeEnum.CALL_CONNECTOR:
+      case ActionTypeEnum.CALL_CONNECTOR: {
         const connectorResult = await this.connectorService.executeCapability(
           tenantId,
           config.capability,
@@ -180,8 +185,9 @@ export class WorkflowActionService {
           { workflowId: executionId },
         );
         return { result: connectorResult, status: 'connector_executed' };
+      }
 
-      case ActionTypeEnum.TRIGGER_AI_WORKFLOW:
+      case ActionTypeEnum.TRIGGER_AI_WORKFLOW: {
         const aiExecution = await this.aiWorkflowService.triggerWorkflow(
           tenantId,
           config.workflowId,
@@ -192,8 +198,9 @@ export class WorkflowActionService {
           aiWorkflowExecutionId: aiExecution.id,
           status: 'ai_triggered',
         };
+      }
 
-      case ActionTypeEnum.APPROVAL:
+      case ActionTypeEnum.APPROVAL: {
         const approval = await this.approvalService.createApproval(
           tenantId,
           executionId,
@@ -205,13 +212,15 @@ export class WorkflowActionService {
           status: 'approval_requested',
           paused: true,
         };
+      }
 
-      case ActionTypeEnum.WAIT:
+      case ActionTypeEnum.WAIT: {
         const waitMs = (config.durationSeconds || 10) * 1000;
         await new Promise((resolve) => setTimeout(resolve, waitMs));
         return { status: 'waited' };
+      }
 
-      case ActionTypeEnum.ADD_TAG:
+      case ActionTypeEnum.ADD_TAG: {
         const ticketIdToAdd = context.ticketId || config.ticketId;
         if (ticketIdToAdd) {
           await this.ticketService.addTag(tenantId, ticketIdToAdd, {
@@ -221,8 +230,9 @@ export class WorkflowActionService {
         }
         this.logger.log(`Added tag ${config.tag} to workflow scope`);
         return { tagAdded: config.tag };
+      }
 
-      case ActionTypeEnum.REMOVE_TAG:
+      case ActionTypeEnum.REMOVE_TAG: {
         const ticketIdToRemove = context.ticketId || config.ticketId;
         if (ticketIdToRemove) {
           await this.ticketService.removeTag(
@@ -234,6 +244,7 @@ export class WorkflowActionService {
         }
         this.logger.log(`Removed tag ${config.tag} from workflow scope`);
         return { tagRemoved: config.tag };
+      }
 
       default:
         this.logger.warn(

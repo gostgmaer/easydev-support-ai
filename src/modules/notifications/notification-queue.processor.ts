@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Injectable, Optional, Logger } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import {
   BaseWorker,
   QueueService,

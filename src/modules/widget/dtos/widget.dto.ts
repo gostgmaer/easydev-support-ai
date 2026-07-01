@@ -8,7 +8,6 @@ import {
   IsObject,
   IsNumber,
   IsUUID,
-  IsUrl,
 } from 'class-validator';
 
 export class CreateWidgetConfigDto {

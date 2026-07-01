@@ -110,7 +110,7 @@ export class ConnectorFactory {
     }
 
     switch (authType) {
-      case AuthTypeEnum.API_KEY:
+      case AuthTypeEnum.API_KEY: {
         const headerName = data.headerName || 'x-api-key';
         const apiKey = data.apiKey || data.apiKeyValue;
         if (data.in === 'query') {
@@ -119,13 +119,15 @@ export class ConnectorFactory {
           headers[headerName] = apiKey;
         }
         break;
+      }
 
-      case AuthTypeEnum.BEARER:
+      case AuthTypeEnum.BEARER: {
         const token = data.token || data.accessToken;
         headers['Authorization'] = `Bearer ${token}`;
         break;
+      }
 
-      case AuthTypeEnum.BASIC:
+      case AuthTypeEnum.BASIC: {
         const username = data.username || '';
         const password = data.password || '';
         const base64Creds = Buffer.from(`${username}:${password}`).toString(
@@ -133,12 +135,13 @@ export class ConnectorFactory {
         );
         headers['Authorization'] = `Basic ${base64Creds}`;
         break;
+      }
 
       case AuthTypeEnum.OAUTH2:
         headers['Authorization'] = `Bearer ${data.accessToken}`;
         break;
 
-      case AuthTypeEnum.HMAC:
+      case AuthTypeEnum.HMAC: {
         // HMAC logic, typically involves signing the body
         const secret = data.clientSecret || data.secret;
         headers[data.signatureHeader || 'x-signature'] = this.calculateHmac(
@@ -146,6 +149,7 @@ export class ConnectorFactory {
           queryParams,
         );
         break;
+      }
     }
   }
 

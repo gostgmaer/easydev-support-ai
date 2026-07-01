@@ -42,7 +42,6 @@ export class ChannelMessageService {
     tenantId: string,
     channelId: string,
     payload: any,
-    headers: Record<string, any>,
   ): Promise<void> {
     const channel = await this.channelRepo.findById(channelId, tenantId);
     if (!channel) throw new NotFoundException(`Channel ${channelId} not found`);

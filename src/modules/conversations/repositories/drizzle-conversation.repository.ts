@@ -11,7 +11,6 @@ import {
   gt,
   lt,
   isNull,
-  isNotNull,
 } from 'drizzle-orm';
 import { Conversation } from '../domain/conversation.aggregate';
 import { ConversationAssignment } from '../domain/conversation-assignment.entity';

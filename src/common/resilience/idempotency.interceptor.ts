@@ -87,22 +87,28 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(
-        async (response) => {
-          if (this.redisClient) {
-            // Save response cache for 24 hours
-            await this.redisClient.set(
-              cacheKey,
-              JSON.stringify(response),
-              'EX',
-              86400,
-            );
-            await this.redisClient.del(lockKey); // Release lock
-          }
+        (response) => {
+          // tap()'s callback is void-returning by contract (rxjs doesn't await
+          // it), so this async work is intentionally fire-and-forget here.
+          void (async () => {
+            if (this.redisClient) {
+              // Save response cache for 24 hours
+              await this.redisClient.set(
+                cacheKey,
+                JSON.stringify(response),
+                'EX',
+                86400,
+              );
+              await this.redisClient.del(lockKey); // Release lock
+            }
+          })();
         },
-        async () => {
-          if (this.redisClient) {
-            await this.redisClient.del(lockKey); // Release lock on error to allow retries
-          }
+        () => {
+          void (async () => {
+            if (this.redisClient) {
+              await this.redisClient.del(lockKey); // Release lock on error to allow retries
+            }
+          })();
         },
       ),
     );

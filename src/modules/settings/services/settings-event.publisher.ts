@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { QueueService, QUEUES } from '@easydev/shared-queues';
+import { QueueService } from '@easydev/shared-queues';
 
 @Injectable()
 export class SettingsEventPublisher {

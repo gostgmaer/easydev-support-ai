@@ -1,9 +1,7 @@
 import { AggregateRoot } from '@easydev/shared-kernel';
 import {
   MessageType,
-  MessageTypeEnum,
   MessageDirection,
-  MessageDirectionEnum,
   MessageStatus,
   MessageStatusEnum,
 } from './value-objects';

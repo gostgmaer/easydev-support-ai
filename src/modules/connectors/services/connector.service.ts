@@ -15,7 +15,6 @@ import {
   ConnectorType,
   ConnectorStatus,
   ConnectorStatusEnum,
-  AuthTypeEnum,
   CapabilityType,
   HealthStatusEnum,
 } from '../domain/value-objects';

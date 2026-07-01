@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { IAnalyticsRepository } from '../repositories/analytics-repository.interface';
 import { AnalyticsEvent } from '../domain/entities';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
-import { uuid } from 'drizzle-orm/pg-core';
 import { v4 as uuidv4 } from 'uuid';
 import { Inject } from '@nestjs/common';
 
