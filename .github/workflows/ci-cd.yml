@@ -51,6 +51,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          # gitleaks-action below diffs the push's before^..after commit
+          # range; a shallow (default) clone doesn't have `before^`,
+          # causing "ambiguous argument ... unknown revision".
+          fetch-depth: 0
 
       # Must run before Setup Node.js — actions/setup-node's cache:'pnpm'
       # option below shells out to `pnpm store path` itself to compute the
