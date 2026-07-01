@@ -36,7 +36,6 @@ export class ChannelQueueProcessor extends BaseWorker {
           tenantId,
           job.data.channelId,
           job.data.payload,
-          job.data.headers,
         );
 
       case 'outgoing-message-job':

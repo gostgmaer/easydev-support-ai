@@ -1,17 +1,9 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
 import { WidgetConfig } from '../domain/entities';
 import { WidgetEventPublisher } from './widget-event.publisher';
 import { WidgetUpdatedEvent } from '@easydev/shared-events';
-import {
-  CreateWidgetConfigDto,
-  UpdateWidgetConfigDto,
-} from '../dtos/widget.dto';
+import { UpdateWidgetConfigDto } from '../dtos/widget.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 

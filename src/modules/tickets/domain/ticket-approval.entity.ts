@@ -18,8 +18,8 @@ export interface TicketApprovalProps {
   tenantId: string;
   ticketId: string;
   approverId: string;
-  status: string;
-  type: string;
+  status: ApprovalStatusEnum;
+  type: ApprovalTypeEnum;
   comments?: string;
   approvedAt?: Date;
   createdAt?: Date;
@@ -49,10 +49,10 @@ export class TicketApproval extends Entity<string> {
   get approverId(): string {
     return this.props.approverId;
   }
-  get status(): string {
+  get status(): ApprovalStatusEnum {
     return this.props.status;
   }
-  get type(): string {
+  get type(): ApprovalTypeEnum {
     return this.props.type;
   }
   get comments(): string | undefined {

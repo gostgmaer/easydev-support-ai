@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { db, schema } from '@easydev/database';
-import { eq, and, or, ilike, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, ilike, sql, desc, asc } from 'drizzle-orm';
 import { Team } from '../domain/team.aggregate';
 import { TeamMember } from '../domain/team-member.entity';
 import { AssignmentRule } from '../domain/assignment-rule.entity';
 import { ITeamRepository, TeamQueryOptions } from './team-repository.interface';
 import { AssignmentStrategyEnum } from '../domain/value-objects';
-import { randomUUID } from 'crypto';
 
 class TeamMapper {
   public static toDomain(

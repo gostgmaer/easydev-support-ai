@@ -78,7 +78,7 @@ export class AnalyticsRealtimeService
         client.handshake.headers['authorization'];
       if (!token) throw new Error('Unauthorized');
 
-      const { tenantId, userId } =
+      const { tenantId } =
         await this.iamService.validateTokenAndGetTenant(token);
 
       client.join(`tenant_${tenantId}`);

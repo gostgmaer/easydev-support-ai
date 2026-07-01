@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Injectable,
   Logger,
@@ -20,6 +19,10 @@ import {
   EmailReplySentEvent,
 } from '@easydev/shared-events';
 import { ConversationEventPublisher } from '../../conversations/services/conversation-event.publisher';
+import {
+  MessageTypeEnum,
+  MessageDirectionEnum,
+} from '../../messages/domain/value-objects';
 
 export interface EmailDraft {
   id: string;
@@ -96,15 +99,16 @@ export class EmailChannelDraftService {
     const messages = await this.messageService.findByConversation(
       tenantId,
       conversationId,
+      { limit: 100 },
     );
 
-    const lastCustomerMsg = [...messages]
+    const lastCustomerMsg = [...messages.data]
       .reverse()
       .find(
         (m: any) => m.senderType === 'CUSTOMER' || m.direction === 'INBOUND',
       );
 
-    const context = messages.map((m: any) => ({
+    const context = messages.data.map((m: any) => ({
       role: m.senderType === 'CUSTOMER' ? 'user' : 'assistant',
       content: m.content || m.body || '',
     }));
@@ -222,8 +226,8 @@ export class EmailChannelDraftService {
       content: finalBody,
       senderType: 'AGENT',
       senderId: agentId,
-      direction: 'OUTBOUND',
-      messageType: MessageTypeEnum.TEXT as any,
+      direction: MessageDirectionEnum.OUTBOUND,
+      messageType: MessageTypeEnum.TEXT,
       metadata: { draftId, emailSubject: draft.subject },
     });
 

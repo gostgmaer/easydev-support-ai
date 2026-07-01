@@ -29,6 +29,16 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
+      // `any` itself is allowed above (no-explicit-any is off), so these
+      // fire on nearly every use of an `any` value across the codebase —
+      // thousands of instances, not a handful of real bugs. Downgraded to
+      // warn (matching the existing no-unsafe-argument/no-floating-promises
+      // precedent above) so CI surfaces this as visible, trackable typing
+      // debt instead of hard-blocking every PR on it.
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },

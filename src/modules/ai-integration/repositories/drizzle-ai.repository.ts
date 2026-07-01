@@ -182,7 +182,7 @@ export class DrizzleAiRepository implements IAiRepository {
     return AiMapper.agentToDomain(raw, profile, modelConfig);
   }
 
-  public async findAgents(tenantId: string, options?: any): Promise<AiAgent[]> {
+  public async findAgents(tenantId: string): Promise<AiAgent[]> {
     const rows = await db
       .select()
       .from(schema.aiAgents)

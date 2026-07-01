@@ -190,7 +190,6 @@ export class AIPlatformClient {
     workflowId: string,
     toolName: string,
     response: any,
-    _status: string,
   ): Promise<any> {
     this.logger.log(
       `Submitting tool result for workflow ${workflowId}, tool ${toolName}`,

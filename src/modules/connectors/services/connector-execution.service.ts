@@ -48,7 +48,7 @@ export class ConnectorExecutionService {
         tenantId,
         options.idempotencyKey,
       );
-      if (existing && existing.status === 'SUCCESS') {
+      if (existing && existing.status === ExecutionStatusEnum.SUCCESS) {
         return existing.responsePayload;
       }
     }

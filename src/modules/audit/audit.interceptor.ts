@@ -38,18 +38,22 @@ export class AuditInterceptor implements NestInterceptor {
     const userAgent = request.headers['user-agent'];
 
     return next.handle().pipe(
-      tap(async () => {
-        if (tenantId) {
-          await this.auditService.log({
-            tenantId,
-            userId,
-            action,
-            details: `Successfully completed ${action} request on path ${request.url}`,
-            ipAddress,
-            userAgent,
-            createdBy: userId,
-          });
-        }
+      tap(() => {
+        // tap()'s callback is void-returning by contract (rxjs doesn't await
+        // it), so this audit write is intentionally fire-and-forget here.
+        void (async () => {
+          if (tenantId) {
+            await this.auditService.log({
+              tenantId,
+              userId,
+              action,
+              details: `Successfully completed ${action} request on path ${request.url}`,
+              ipAddress,
+              userAgent,
+              createdBy: userId,
+            });
+          }
+        })();
       }),
     );
   }

@@ -108,7 +108,7 @@ export class TicketAssignmentService {
     userId?: string,
   ): Promise<Ticket> {
     const ticket = await this.getOrThrow(tenantId, ticketId);
-    ticket.assign(agentId, teamId, userId);
+    ticket.assign(agentId, teamId);
 
     await this.persist(ticket, tenantId);
     await this.recordAssignment(
@@ -168,7 +168,7 @@ export class TicketAssignmentService {
     }
 
     const ticket = await this.getOrThrow(tenantId, ticketId);
-    ticket.transfer(toAgentId, userId);
+    ticket.transfer(toAgentId);
 
     await this.persist(ticket, tenantId);
     await this.recordAssignment(

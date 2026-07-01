@@ -5,6 +5,7 @@ import {
   ConnectorStatusEnum,
   AuthTypeEnum,
   HealthStatusEnum,
+  CapabilityTypeEnum,
 } from './value-objects';
 import { ConnectorCapability } from './connector-capability.entity';
 import {
@@ -189,7 +190,7 @@ export class Connector extends AggregateRoot<string> {
     this.touch();
   }
 
-  public removeCapability(capabilityType: string): void {
+  public removeCapability(capabilityType: CapabilityTypeEnum): void {
     this.props.capabilities = this.props.capabilities!.filter(
       (c) => c.capabilityType.value !== capabilityType,
     );

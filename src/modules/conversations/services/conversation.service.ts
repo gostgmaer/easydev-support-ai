@@ -1,9 +1,6 @@
 import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type {
-  IConversationRepository,
-  ConversationQueryOptions,
-} from '../repositories/conversation-repository.interface';
+import type { IConversationRepository } from '../repositories/conversation-repository.interface';
 import { Conversation } from '../domain/conversation.aggregate';
 import { ConversationParticipant } from '../domain/conversation-participant.entity';
 import {

@@ -10,10 +10,7 @@ import { randomUUID } from 'crypto';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { WorkflowEngineService } from '../../workflows/services/workflow-engine.service';
 import { TriggerTypeEnum } from '../../workflows/domain/value-objects';
-import type {
-  ITicketRepository,
-  TicketQueryOptions,
-} from '../repositories/ticket-repository.interface';
+import type { ITicketRepository } from '../repositories/ticket-repository.interface';
 import { Ticket } from '../domain/ticket.aggregate';
 import { TicketTag } from '../domain/ticket-tag.entity';
 import { TicketWatcher } from '../domain/ticket-watcher.entity';

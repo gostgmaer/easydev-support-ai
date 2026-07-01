@@ -149,7 +149,7 @@ export class AiResponseService {
     }
 
     // 3. Load/Create Conversation Session
-    const session = await this.conversationServiceAi.getOrCreateSession(
+    await this.conversationServiceAi.getOrCreateSession(
       tenantId,
       conversationId,
       conversation.customerId,
@@ -552,7 +552,7 @@ export class AiResponseService {
   private maskSensitiveData(text: string): string {
     // Mask emails
     let masked = text.replace(
-      /([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/gi,
+      /([a-zA-Z0-9_.-]+)@([a-zA-Z0-9_.-]+)\.([a-zA-Z]{2,5})/gi,
       '[EMAIL_HIDDEN]',
     );
     // Mask 16-digit credit cards

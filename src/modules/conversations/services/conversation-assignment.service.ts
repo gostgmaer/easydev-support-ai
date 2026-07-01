@@ -101,7 +101,7 @@ export class ConversationAssignmentService {
     userId?: string,
   ): Promise<Conversation> {
     const conversation = await this.getOrThrow(tenantId, conversationId);
-    conversation.assignAgent(agentProfileId, teamId, userId);
+    conversation.assignAgent(agentProfileId, teamId);
 
     await this.persist(conversation, tenantId);
     await this.recordAssignment(
@@ -163,7 +163,7 @@ export class ConversationAssignmentService {
     userId?: string,
   ): Promise<Conversation> {
     const conversation = await this.getOrThrow(tenantId, conversationId);
-    conversation.transfer(toAgentProfileId, userId);
+    conversation.transfer(toAgentProfileId);
 
     await this.persist(conversation, tenantId);
     await this.recordAssignment(

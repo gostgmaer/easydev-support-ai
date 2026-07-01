@@ -205,7 +205,7 @@ export class WorkflowEngineService {
 
     // Find the index of the approval action step to resume from next step
     const approvalActionIndex = template.actions.findIndex(
-      (a) => a.actionType === 'APPROVAL', // Resume after approval
+      (a) => a.actionType === ActionTypeEnum.APPROVAL, // Resume after approval
     );
 
     const remainingActions =

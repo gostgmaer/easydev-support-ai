@@ -171,7 +171,7 @@ export class AgentAssignmentService {
         selectedAgent = onlineAgents[0];
         break;
 
-      case AssignmentStrategyEnum.SKILL_BASED:
+      case AssignmentStrategyEnum.SKILL_BASED: {
         const requiredSkill = options?.requiredSkill || 0;
         const skilledAgents = onlineAgents.filter(
           (a) => a.profile.skillScore >= requiredSkill,
@@ -181,6 +181,7 @@ export class AgentAssignmentService {
         candidates.sort((a, b) => b.profile.skillScore - a.profile.skillScore);
         selectedAgent = candidates[0];
         break;
+      }
 
       case AssignmentStrategyEnum.PRIORITY_BASED:
         onlineAgents.sort((a, b) => {

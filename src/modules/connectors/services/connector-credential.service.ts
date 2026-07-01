@@ -32,7 +32,7 @@ export class ConnectorCredentialService {
     );
 
     if (credential) {
-      credential.rotate(encryptedData, options.expiresAt);
+      credential.rotate(encryptedData, options.expiresAt, keyId);
     } else {
       credential = new ConnectorCredential(crypto.randomUUID(), {
         tenantId,
@@ -55,7 +55,7 @@ export class ConnectorCredentialService {
     tenantId: string,
     connectorId: string,
     instanceId?: string,
-  ): Promise<any | null> {
+  ): Promise<any> {
     const credential = await this.repository.getActiveCredential(
       tenantId,
       connectorId,
@@ -82,8 +82,8 @@ export class ConnectorCredentialService {
       );
     }
 
-    const { encryptedData } = this.credentialManager.encrypt(newData);
-    credential.rotate(encryptedData);
+    const { encryptedData, keyId } = this.credentialManager.encrypt(newData);
+    credential.rotate(encryptedData, undefined, keyId);
     await this.repository.saveCredential(credential, tenantId);
     return credential;
   }

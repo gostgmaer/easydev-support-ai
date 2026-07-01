@@ -1,8 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import type {
-  IConversationRepository,
-  ConversationQueryOptions,
-} from '../repositories/conversation-repository.interface';
+import type { IConversationRepository } from '../repositories/conversation-repository.interface';
 import { Conversation } from '../domain/conversation.aggregate';
 import { ConversationQueryDto } from '../dtos';
 

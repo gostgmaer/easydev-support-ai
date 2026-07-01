@@ -19,7 +19,7 @@ export class FeatureFlagEngine implements OnModuleInit, OnModuleDestroy {
     private readonly settingsRepo: ISettingsRepository,
   ) {}
 
-  async onModuleInit() {
+  onModuleInit() {
     try {
       const redisOptions = {
         host: process.env.REDIS_HOST || 'localhost',

@@ -40,7 +40,7 @@ export class WorkflowQueueProcessor extends BaseWorker {
         // Handle background execution tracking or heartbeat
         return { success: true };
 
-      case 'workflow-approval-job':
+      case 'workflow-approval-job': {
         this.logger.log(
           `Processing workflow-approval-job ${job.id} for approval ${job.data.approvalId}`,
         );
@@ -73,8 +73,9 @@ export class WorkflowQueueProcessor extends BaseWorker {
           return { status: 'expired_rejected' };
         }
         return { status: 'checked_active' };
+      }
 
-      case 'workflow-schedule-job':
+      case 'workflow-schedule-job': {
         this.logger.log(
           `Processing workflow-schedule-job ${job.id} for schedule ${job.data.scheduleId}`,
         );
@@ -97,12 +98,13 @@ export class WorkflowQueueProcessor extends BaseWorker {
           return { executionId, status: 'triggered' };
         }
         return { status: 'skipped_inactive' };
+      }
 
-      case 'workflow-retry-job':
+      case 'workflow-retry-job': {
         this.logger.log(
           `Processing workflow-retry-job ${job.id} for execution ${job.data.executionId}`,
         );
-        const execution = await this.engineService.resumeExecution(
+        await this.engineService.resumeExecution(
           tenantId,
           job.data.executionId,
           true,
@@ -110,6 +112,7 @@ export class WorkflowQueueProcessor extends BaseWorker {
           'Retrying execution step',
         );
         return { success: true };
+      }
 
       case 'workflow-cleanup-job':
         this.logger.log(`Processing workflow-cleanup-job ${job.id}`);

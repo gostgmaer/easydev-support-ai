@@ -54,13 +54,14 @@ export class EncryptionService {
     if (!text) return '';
 
     switch (type) {
-      case 'email':
+      case 'email': {
         const parts = text.split('@');
         if (parts.length !== 2) return '***';
         const name = parts[0];
         const domain = parts[1];
         if (name.length <= 2) return `*@${domain}`;
         return `${name[0]}***${name[name.length - 1]}@${domain}`;
+      }
 
       case 'phone':
         if (text.length < 5) return '***';

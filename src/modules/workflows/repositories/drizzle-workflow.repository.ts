@@ -7,9 +7,6 @@ import {
   WorkflowExecution,
   WorkflowApproval,
   WorkflowSchedule,
-  WorkflowTrigger,
-  WorkflowCondition,
-  WorkflowAction,
 } from '../domain';
 import { WorkflowMapper } from './workflow.mapper';
 
@@ -764,7 +761,7 @@ export class DrizzleWorkflowRepository implements IWorkflowRepository {
   public async getActiveVersion(
     templateId: string,
     tenantId: string,
-  ): Promise<any | null> {
+  ): Promise<any> {
     const [row] = await db
       .select()
       .from(schema.workflowVersions)

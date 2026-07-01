@@ -9,11 +9,7 @@ import {
   IsNumber,
   IsUUID,
 } from 'class-validator';
-import {
-  SourceTypeEnum,
-  DocumentTypeEnum,
-  DocumentStatusEnum,
-} from '../domain/value-objects';
+import { SourceTypeEnum, DocumentTypeEnum } from '../domain/value-objects';
 
 export class CreateSourceDto {
   @IsString()

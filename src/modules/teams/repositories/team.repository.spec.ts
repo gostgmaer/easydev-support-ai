@@ -10,6 +10,19 @@ import { AgentCapacity, AssignmentStrategyEnum } from '../domain/value-objects';
 import { AssignmentRule } from '../domain/assignment-rule.entity';
 import { randomUUID } from 'crypto';
 
+// `db`'s real (drizzle) type exposes select/insert/update/delete as bound
+// methods, which trips @typescript-eslint/unbound-method whenever a test
+// references them unapplied (e.g. `expect(db.update).toHaveBeenCalled()`).
+// They're jest.fn() mocks at runtime (see jest.mock() below) with no `this`
+// dependency, so re-typing the reference through this plain-property shape
+// is a type-only fix with no behavioral change.
+const mockDb = db as unknown as {
+  select: jest.Mock;
+  insert: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+};
+
 let mockResults: any[] = [];
 
 const queryBuilder: any = {
@@ -223,7 +236,7 @@ describe('Team Module Repositories', () => {
 
       const result = await teamRepo.delete(teamId, tenantId);
       expect(result).toBe(true);
-      expect(db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
     });
 
     it('should return false when deleting non-existent team', async () => {
@@ -244,12 +257,12 @@ describe('Team Module Repositories', () => {
       mockResults.push([]); // not existing
 
       await teamRepo.addMember(member, tenantId);
-      expect(db.insert).toHaveBeenCalled();
+      expect(mockDb.insert).toHaveBeenCalled();
     });
 
     it('should remove team member', async () => {
       await teamRepo.removeMember(teamId, 'a1', tenantId);
-      expect(db.delete).toHaveBeenCalled();
+      expect(mockDb.delete).toHaveBeenCalled();
     });
 
     it('should findTeamMembers', async () => {
@@ -281,12 +294,12 @@ describe('Team Module Repositories', () => {
       // test insert
       mockResults.push([]);
       await teamRepo.saveRule(rule, tenantId);
-      expect(db.insert).toHaveBeenCalled();
+      expect(mockDb.insert).toHaveBeenCalled();
 
       // test update
       mockResults.push([{ id: rule.id }]);
       await teamRepo.saveRule(rule, tenantId);
-      expect(db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
     });
 
     it('should findRules and deleteRule', async () => {
@@ -306,7 +319,7 @@ describe('Team Module Repositories', () => {
       expect(rules[0].ruleType).toBe('ROUND_ROBIN');
 
       await teamRepo.deleteRule('r1', tenantId);
-      expect(db.delete).toHaveBeenCalled();
+      expect(mockDb.delete).toHaveBeenCalled();
     });
   });
 
@@ -398,11 +411,11 @@ describe('Team Module Repositories', () => {
 
       mockResults.push([]); // select existing -> empty
       await profileRepo.save(profile, tenantId);
-      expect(db.insert).toHaveBeenCalled();
+      expect(mockDb.insert).toHaveBeenCalled();
 
       mockResults.push([{ id: profileId }]); // select existing -> found
       await profileRepo.save(profile, tenantId);
-      expect(db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
     });
 
     it('should soft delete agent profile', async () => {
@@ -478,11 +491,11 @@ describe('Team Module Repositories', () => {
 
       mockResults.push([]); // not existing
       await availabilityRepo.save(availability, tenantId);
-      expect(db.insert).toHaveBeenCalled();
+      expect(mockDb.insert).toHaveBeenCalled();
 
       mockResults.push([{ id: availabilityId }]); // existing
       await availabilityRepo.save(availability, tenantId);
-      expect(db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
     });
 
     it('should delete availability', async () => {
@@ -497,10 +510,10 @@ describe('Team Module Repositories', () => {
 
     it('should update load and update counters', async () => {
       await availabilityRepo.updateLoad(profileId, 5, tenantId);
-      expect(db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
 
       await availabilityRepo.updateCounters(profileId, 2, 1, tenantId);
-      expect(db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
     });
   });
 });

@@ -58,11 +58,6 @@ export class DrizzleAnalyticsRepository implements IAnalyticsRepository {
     startTime?: Date,
     endTime?: Date,
   ): Promise<AnalyticsEvent[]> {
-    const query = db
-      .select()
-      .from(schema.analyticsEvents)
-      .where(eq(schema.analyticsEvents.tenantId, tenantId));
-
     const conditions = [eq(schema.analyticsEvents.tenantId, tenantId)];
 
     if (eventName) {
@@ -205,7 +200,7 @@ export class DrizzleAnalyticsRepository implements IAnalyticsRepository {
   }
 
   async deleteReport(id: string, tenantId: string): Promise<boolean> {
-    const res = await db
+    await db
       .delete(schema.analyticsReports)
       .where(
         and(

@@ -40,13 +40,14 @@ export class CustomerQueueProcessor extends BaseWorker {
           job.data.userId,
         );
 
-      case 'customer-export-job':
+      case 'customer-export-job': {
         this.logger.log(`Running customer export job ${job.id}`);
         const csv = await this.customerService.export(
           tenantId,
           job.data.format || 'CSV',
         );
         return { length: csv.length };
+      }
 
       case 'customer-metrics-job':
         this.logger.log(
@@ -57,7 +58,7 @@ export class CustomerQueueProcessor extends BaseWorker {
           job.data.customerId,
         );
 
-      case 'customer-segmentation-job':
+      case 'customer-segmentation-job': {
         this.logger.log(
           `Running customer segmentation check for customer ${job.data.customerId}`,
         );
@@ -72,6 +73,7 @@ export class CustomerQueueProcessor extends BaseWorker {
           }
         }
         return { status: 'success' };
+      }
 
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

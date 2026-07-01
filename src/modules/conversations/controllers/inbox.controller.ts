@@ -16,7 +16,6 @@ import {
 } from '@nestjs/swagger';
 import { InboxService } from '../services/inbox.service';
 import { InboxQueryDto } from '../dtos';
-import type { InboxQueryOptions } from '../repositories/conversation-repository.interface';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
 import { RbacGuard } from '../../../common/guards/rbac.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';

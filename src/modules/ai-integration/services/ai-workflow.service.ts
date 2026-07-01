@@ -74,7 +74,7 @@ export class AiWorkflowService {
 
       return execution;
     } catch (error: any) {
-      execution.fail(error.message);
+      execution.fail();
       await this.repository.saveWorkflowExecution(execution, tenantId);
       await this.eventPublisher.publish(
         new AiWorkflowFailedEvent(

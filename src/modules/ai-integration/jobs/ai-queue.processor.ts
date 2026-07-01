@@ -66,7 +66,6 @@ export class AiQueueProcessor extends BaseWorker {
           job.data.workflowId,
           job.data.requestId,
           job.data.payload,
-          job.data.status,
         );
         return { submitted: true, requestId: job.data.requestId };
 

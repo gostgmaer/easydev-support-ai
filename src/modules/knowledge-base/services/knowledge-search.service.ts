@@ -4,7 +4,6 @@ import { AIPlatformClient } from './ai-platform.client';
 import { KnowledgePermissionService } from './knowledge-permission.service';
 import { KnowledgeSearchLog } from '../domain/knowledge-search-log.entity';
 import { SearchQueryDto } from '../dtos/knowledge.dto';
-import { KnowledgeDocument } from '../domain/knowledge-document.aggregate';
 
 @Injectable()
 export class KnowledgeSearchService {

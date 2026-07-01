@@ -97,8 +97,8 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        ...configService.get('database'),
+      useFactory: (configService: ConfigService) => ({
+        ...configService.get<Record<string, unknown>>('database'),
         entities: [
           Customer,
           CustomerSegment,
@@ -142,7 +142,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
     }),
     BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: async () => ({
+      useFactory: () => ({
         connection: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT || '6380', 10),

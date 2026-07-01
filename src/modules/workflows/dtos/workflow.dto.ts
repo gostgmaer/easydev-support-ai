@@ -2,13 +2,10 @@ import {
   IsString,
   IsOptional,
   IsEnum,
-  IsBoolean,
   IsArray,
   IsNumber,
   IsObject,
   ValidateNested,
-  IsDateString,
-  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -16,7 +13,6 @@ import {
   WorkflowStatusEnum,
   TriggerTypeEnum,
   ActionTypeEnum,
-  ApprovalStatusEnum,
 } from '../domain/value-objects';
 
 export class TriggerConfigDto {

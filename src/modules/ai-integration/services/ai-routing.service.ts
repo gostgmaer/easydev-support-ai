@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { IAiRepository } from '../repositories/ai-repository.interface';
 import { AiAgent } from '../domain/ai-agent.aggregate';
-import { AgentTypeEnum } from '../domain/value-objects';
+import { AgentTypeEnum, AgentStatusEnum } from '../domain/value-objects';
 
 @Injectable()
 export class AiRoutingService {
@@ -47,7 +47,8 @@ export class AiRoutingService {
       const typeStr = options.category.toUpperCase();
       const matchedType = agents.find(
         (a) =>
-          a.agentType === typeStr || a.name.toUpperCase().includes(typeStr),
+          a.agentType === (typeStr as AgentTypeEnum) ||
+          a.name.toUpperCase().includes(typeStr),
       );
       if (matchedType) return matchedType;
     }
@@ -59,7 +60,7 @@ export class AiRoutingService {
     if (supportAgent) return supportAgent;
 
     // Fallback: return the first active agent
-    const activeAgent = agents.find((a) => a.status === 'ACTIVE');
+    const activeAgent = agents.find((a) => a.status === AgentStatusEnum.ACTIVE);
     return activeAgent || agents[0];
   }
 

@@ -48,7 +48,7 @@ export class HardeningController {
   @UseGuards(TenantGuard, RbacGuard)
   @Roles('tenant_admin')
   @Get('cache/metrics')
-  async getCacheMetrics() {
+  getCacheMetrics() {
     return this.cacheManager.getCacheMetrics();
   }
 

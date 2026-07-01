@@ -203,7 +203,7 @@ export class MessageDeliveryService {
     delivery.recordAttempt(status, providerMessageId, failureReason);
     await this.messageRepo.saveDeliveryStatus(delivery, tenantId);
 
-    switch (status) {
+    switch (status as MessageStatusEnum) {
       case MessageStatusEnum.DELIVERED:
         message.markDelivered(message.metadata?.provider);
         break;

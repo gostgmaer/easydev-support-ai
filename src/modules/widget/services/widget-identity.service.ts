@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { IWidgetRepository } from '../repositories/widget-repository.interface';
-import { WidgetIdentity, WidgetVisitor } from '../domain/entities';
+import { WidgetIdentity } from '../domain/entities';
 import { WidgetConfigService } from './widget-config.service';
 import { IdentifyVisitorDto } from '../dtos/widget.dto';
 import * as crypto from 'crypto';

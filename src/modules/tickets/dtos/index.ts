@@ -18,10 +18,7 @@ import {
   TicketPriorityEnum,
   TicketSourceEnum,
 } from '../domain/value-objects';
-import {
-  ApprovalStatusEnum,
-  ApprovalTypeEnum,
-} from '../domain/ticket-approval.entity';
+import { ApprovalTypeEnum } from '../domain/ticket-approval.entity';
 
 export class CreateTicketDto {
   @ApiProperty()

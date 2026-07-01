@@ -2,10 +2,7 @@ import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { QueueService, QUEUES } from '@easydev/shared-queues';
 import { InboxViewCreatedEvent } from '@easydev/shared-events';
-import type {
-  IInboxRepository,
-  InboxQueryOptions,
-} from '../repositories/inbox-repository.interface';
+import type { IInboxRepository } from '../repositories/inbox-repository.interface';
 import { InboxView } from '../domain/inbox-view.aggregate';
 import { InboxFilter } from '../domain/inbox-filter.entity';
 import { SavedView } from '../domain/saved-view.entity';

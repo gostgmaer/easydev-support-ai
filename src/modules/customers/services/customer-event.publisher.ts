@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DomainEvent } from '@easydev/shared-kernel';
-import { QueueService, QUEUES } from '@easydev/shared-queues';
+import { QueueService } from '@easydev/shared-queues';
 
 @Injectable()
 export class CustomerEventPublisher {
