@@ -31,6 +31,13 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/packages ./packages
 COPY scripts/health-check.js ./dist/health-check.js
 
+# drizzle-kit is a devDependency of packages/database (CLI-only, run in CI /
+# manually via `drizzle-kit generate|migrate` — never imported by app source)
+# but the hoisted node_modules layout above pulls it in wholesale. It bundles
+# its own compiled esbuild binary with several HIGH/CRITICAL Go stdlib CVEs,
+# which fails the Trivy scan below. Self-contained directory, safe to strip.
+RUN rm -rf node_modules/drizzle-kit
+
 # uploads/ is created and served (main.ts useStaticAssets) and written to at
 # runtime (widget attachment uploads) by the unprivileged node user below -
 # without this it's root-owned and every write fails with EACCES.
