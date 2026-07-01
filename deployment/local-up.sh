@@ -6,10 +6,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Pass --no-cache to skip Docker layer cache: npm run local:up -- --no-cache
+BUILD_FLAGS=""
+for arg in "$@"; do
+  case "$arg" in
+    --no-cache) BUILD_FLAGS="--no-cache" ;;
+  esac
+done
+
 COMPOSE="docker compose -f docker-compose.local.yml"
 
-echo "[1/4] Building api/webhook/worker images..."
-$COMPOSE build
+echo "[1/4] Building api/webhook/worker images${BUILD_FLAGS:+ (no cache)}..."
+$COMPOSE build $BUILD_FLAGS
 
 echo "[2/4] Starting postgres and redis..."
 $COMPOSE up -d postgres redis
