@@ -67,7 +67,11 @@
       "esbuild",
       "msgpackr-extract",
       "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+      "multer@>=1.0.0 <2.2.0": ">=2.2.0",
+      "multer@>=2.0.0-alpha.1 <2.2.0": ">=2.2.0"
+    }
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
