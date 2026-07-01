@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { ITicketRepository } from '../repositories/ticket-repository.interface';
 import { Ticket } from '../domain/ticket.aggregate';
