@@ -127,6 +127,13 @@
       "when": 1782025200000,
       "tag": "0017_sla_pause",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1782925824371,
+      "tag": "0018_ci_drift_check_tmp",
+      "breakpoints": true
     }
   ]
 }
