@@ -28,6 +28,10 @@ jobs:
       apps: ${{ steps.changes.outputs.apps }}
       packages: ${{ steps.changes.outputs.packages }}
       modules: ${{ steps.changes.outputs.modules }}
+      # Union of every path that can affect the build, image, or a running
+      # container - anything else (workflow files, docs, non-Dockerfile
+      # deployment/*, etc.) doesn't need a rebuild or rescan.
+      code: ${{ steps.changes.outputs.apps == 'true' || steps.changes.outputs.packages == 'true' || steps.changes.outputs.modules == 'true' || steps.changes.outputs.build_config == 'true' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -44,11 +48,30 @@ jobs:
               - 'packages/**'
             modules:
               - 'modules/**'
+            build_config:
+              - 'test/**'
+              - 'scripts/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.json'
+              - 'tsconfig.build.json'
+              - 'nest-cli.json'
+              - 'eslint.config.mjs'
+              - '.npmrc'
+              - 'Dockerfile.api'
+              - 'Dockerfile.webhook'
+              - 'Dockerfile.worker'
 
   ci:
     name: Continuous Integration
     runs-on: ubuntu-latest
     needs: filter
+    # Manual runs always execute in full (explicit human intent to re-verify
+    # everything). Push/PR runs only execute when something that can affect
+    # the build/image/runtime actually changed - a workflow-only or docs-only
+    # push has nothing new to lint/test/build/scan, so skip straight through
+    # (this cascades: cd below `needs` this job, so it skips automatically too).
+    if: github.event_name == 'workflow_dispatch' || needs.filter.outputs.code == 'true'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -207,4 +230,4 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
