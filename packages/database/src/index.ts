@@ -1,3 +1,4 @@
 export * from './db';
 export * from './schema';
 export * from './tenant-filter';
+export * from './migrate';

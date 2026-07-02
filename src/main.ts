@@ -9,9 +9,20 @@ import { validateProductionEnv } from './config/validate-env';
 import { getAllowedOrigins } from './config/cors-origins';
 import { StructuredLogger } from './common/observability/logger.service';
 import { HealthService } from '@easydev/observability';
+import { runMigrations } from '@easydev/database';
 
 async function bootstrap() {
   validateProductionEnv();
+
+  // Only the api container sets RUN_MIGRATIONS_ON_BOOT (see
+  // easydev-infra's stacks/support-ai/docker-compose.production.yml) - one
+  // designated runner avoids api/webhook/worker racing each other to apply
+  // the same migrations concurrently on a fresh deploy. Runs before the Nest
+  // app is even constructed so nothing serves traffic against an unmigrated
+  // schema.
+  if (process.env.RUN_MIGRATIONS_ON_BOOT === 'true') {
+    await runMigrations();
+  }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
