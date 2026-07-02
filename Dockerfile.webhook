@@ -30,7 +30,12 @@ COPY scripts/health-check.js ./dist/health-check.js
 # but the hoisted node_modules layout pulls it in wholesale. It bundles its
 # own compiled esbuild binary with several HIGH/CRITICAL Go stdlib CVEs,
 # which fails the Trivy scan below. Self-contained directory, safe to strip.
-RUN rm -rf node_modules/drizzle-kit
+# esbuild/tsx are separate hoisted top-level copies of the same devDependency
+# chain (drizzle-kit -> @esbuild-kit/esm-loader / tsx -> its own vendored
+# esbuild) - `pnpm why esbuild` confirms every instance traces only to
+# drizzle-kit, so they leak the same CVEs even after drizzle-kit itself is
+# gone and need stripping too.
+RUN rm -rf node_modules/drizzle-kit node_modules/esbuild node_modules/@esbuild node_modules/tsx
 
 # uploads/ is created and served (main.ts useStaticAssets) and written to at
 # runtime (widget attachment uploads) by the unprivileged node user below -
