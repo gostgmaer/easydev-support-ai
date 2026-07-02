@@ -164,7 +164,16 @@ jobs:
   # so it had never fired on a push at all. Fixed alongside this change.
   cd:
     name: Continuous Delivery (build & push only)
-    runs-on: ubuntu-latest
+    # Native arm64 runner, matching the deploy target's architecture
+    # (easydev-infra's Oracle server). Building on amd64 with QEMU emulation
+    # (the previous setup) worked but was 3-10x slower for every step below
+    # (pnpm install, tsc -b, nest build all ran emulated) - building natively
+    # here removes emulation entirely instead of just working around it.
+    # `platforms: linux/arm64` on each build step is still explicit below
+    # even though it now matches this runner's native arch by default, for
+    # clarity and so nothing silently reverts to amd64 if the runner label
+    # ever changes.
+    runs-on: ubuntu-24.04-arm
     needs: [filter, ci]
     if: github.ref == 'refs/heads/master'
     permissions:
@@ -173,16 +182,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
-
-      # The deploy target (easydev-infra's Oracle server) is arm64, but this
-      # job runs on an amd64 GitHub-hosted runner. Without QEMU + an explicit
-      # `platforms:` on each build step below, buildx just builds for the
-      # runner's native amd64 and the resulting image has no arm64 manifest
-      # entry at all - `docker compose pull` on the server then fails with
-      # "no matching manifest for linux/arm64/v8". Matches how auth-service/
-      # payment-service already build for this same server.
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       # The default `docker` buildx driver can't export/import the `type=gha`
       # cache used below ("Cache export is not supported for the docker
