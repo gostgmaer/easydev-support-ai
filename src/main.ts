@@ -92,6 +92,25 @@ async function bootstrap() {
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'bearer',
     )
+    // Direct login from the Authorize dialog: exchanges username+password
+    // at IAM's OAuth2 password-grant endpoint (auth/oauth/token) instead
+    // of requiring a manually pasted token. Cross-origin fetch: IAM's
+    // CORS_ORIGINS must include this docs origin. Override the tokenUrl
+    // for non-local setups via SWAGGER_IAM_TOKEN_URL.
+    .addOAuth2(
+      {
+        type: 'oauth2',
+        flows: {
+          password: {
+            tokenUrl:
+              process.env.SWAGGER_IAM_TOKEN_URL ||
+              'http://localhost:3304/api/v1/iam/auth/oauth/token',
+            scopes: {},
+          },
+        },
+      },
+      'password-login',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
