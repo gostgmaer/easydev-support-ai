@@ -237,6 +237,15 @@ jobs:
 
       - name: Run Trivy Security Vulnerability Scan (api image)
         uses: aquasecurity/trivy-action@master
+        env:
+          # The pushed image's manifest list now only has a linux/arm64 entry
+          # (see platforms: linux/arm64 above, matching the deploy target's
+          # architecture) - without this, Trivy's "remote" pull falls back to
+          # matching its own host platform (amd64, since this job runs on an
+          # amd64 GitHub-hosted runner) and fails with "no child with
+          # platform linux/amd64 in index". TRIVY_PLATFORM is the documented
+          # env-var form of trivy's --platform flag.
+          TRIVY_PLATFORM: linux/arm64
         with:
           image-ref: 'ghcr.io/${{ secrets.GHCR_ORG }}/easydev-support-ai-api:latest'
           format: 'table'
