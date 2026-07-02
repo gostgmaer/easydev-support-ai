@@ -13,7 +13,20 @@ COPY .npmrc ./
 COPY packages ./packages
 COPY src ./src
 
-RUN pnpm install --frozen-lockfile
+# --ignore-scripts: this stage cross-builds for arm64 under QEMU emulation
+# (the deploy target's architecture, different from the amd64 CI runner).
+# pnpm's onlyBuiltDependencies allowlist above (esbuild, msgpackr-extract,
+# unrs-resolver, @scarf/scarf) are the only packages in the tree allowed to
+# run install scripts, and one of them reliably SIGILLs under qemu-user's
+# arm64 emulation ("Illegal instruction - core dumped") while downloading/
+# verifying its native binary. None of the four need their script to have
+# actually run: esbuild is CLI-only and gets stripped from the runtime image
+# below anyway, unrs-resolver is a Jest-only devDependency, @scarf/scarf is
+# telemetry, and msgpackr-extract (bullmq's optional serialization
+# accelerator) has an explicit try/catch fallback to pure JS in
+# msgpackr/node-index.js when its native module is absent - confirmed by
+# reading that source, not assumed.
+RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm run build:packages
 RUN pnpm run build
 
