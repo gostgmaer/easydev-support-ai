@@ -174,6 +174,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
 
+      # The deploy target (easydev-infra's Oracle server) is arm64, but this
+      # job runs on an amd64 GitHub-hosted runner. Without QEMU + an explicit
+      # `platforms:` on each build step below, buildx just builds for the
+      # runner's native amd64 and the resulting image has no arm64 manifest
+      # entry at all - `docker compose pull` on the server then fails with
+      # "no matching manifest for linux/arm64/v8". Matches how auth-service/
+      # payment-service already build for this same server.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       # The default `docker` buildx driver can't export/import the `type=gha`
       # cache used below ("Cache export is not supported for the docker
       # driver") - this switches to the `docker-container` driver, which can.
@@ -197,6 +207,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.api
+          platforms: linux/arm64
           push: true
           tags: ghcr.io/${{ secrets.GHCR_ORG }}/easydev-support-ai-api:latest
           cache-from: type=gha,scope=support-ai-api
@@ -207,6 +218,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.webhook
+          platforms: linux/arm64
           push: true
           tags: ghcr.io/${{ secrets.GHCR_ORG }}/easydev-support-ai-webhook:latest
           cache-from: type=gha,scope=support-ai-webhook
@@ -217,6 +229,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.worker
+          platforms: linux/arm64
           push: true
           tags: ghcr.io/${{ secrets.GHCR_ORG }}/easydev-support-ai-worker:latest
           cache-from: type=gha,scope=support-ai-worker
