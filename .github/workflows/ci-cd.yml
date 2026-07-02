@@ -173,7 +173,7 @@ jobs:
     # even though it now matches this runner's native arch by default, for
     # clarity and so nothing silently reverts to amd64 if the runner label
     # ever changes.
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04-arm # arch-switch:cd-runner (managed by scripts/set-build-arch.sh)
     needs: [filter, ci]
     if: github.ref == 'refs/heads/master'
     permissions:
