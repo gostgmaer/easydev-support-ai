@@ -63,6 +63,7 @@ export class HealthService {
       const redis = new Redis({
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6380', 10),
+        password: process.env.REDIS_PASSWORD,
         maxRetriesPerRequest: 1,
       });
       const response = await redis.ping();
