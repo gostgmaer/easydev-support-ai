@@ -83,9 +83,20 @@ async function bootstrap() {
     .setTitle('EasyDev Support AI API')
     .setDescription('The EasyDev Support AI API documentation')
     .setVersion('1.0')
+    // Every other service in this platform exposes the Swagger "Authorize"
+    // button; this one didn't, so permission-gated endpoints couldn't be
+    // exercised from the docs UI at all. Paste an IAM access token once
+    // (persistAuthorization keeps it across page reloads) and every request
+    // carries it.
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'bearer',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
   await app.listen(process.env.PORT ?? 3100);
 
