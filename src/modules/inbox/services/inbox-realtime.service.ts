@@ -56,6 +56,7 @@ export class InboxRealtimeService
       const redisOptions = {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6380', 10),
+        password: process.env.REDIS_PASSWORD,
       };
       this.pubClient = new Redis(redisOptions);
       this.subClient = new Redis(redisOptions);

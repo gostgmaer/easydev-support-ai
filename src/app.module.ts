@@ -146,6 +146,7 @@ import { AuditLog } from './modules/iam/entities/audit-log.entity';
         connection: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT || '6380', 10),
+          password: process.env.REDIS_PASSWORD,
           // BullMQ's documented requirement: without this, a transient Redis
           // hiccup can throw "max retries per request" errors out of
           // blocking commands instead of the client just waiting/retrying,

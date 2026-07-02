@@ -22,6 +22,7 @@ export class CacheManagerService implements OnModuleInit, OnModuleDestroy {
       this.redisClient = new Redis({
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6380', 10),
+        password: process.env.REDIS_PASSWORD,
         maxRetriesPerRequest: 2,
       });
 
