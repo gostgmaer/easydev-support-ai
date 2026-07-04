@@ -26,7 +26,6 @@ import {
 
 import { DrizzleConversationRepository } from './repositories/drizzle-conversation.repository';
 import { ConversationQueueProcessor } from './jobs/conversation-queue.processor';
-import { ConversationsGateway } from './conversations.gateway';
 import { QUEUES } from '@easydev/shared-queues';
 import { shouldRunProcessor } from '../../config/queue-role';
 
@@ -71,7 +70,6 @@ import { Attachment } from './entities/attachment.entity';
     ...(shouldRunProcessor(QUEUES.CONVERSATION)
       ? [ConversationQueueProcessor]
       : []),
-    ConversationsGateway,
     {
       provide: 'IConversationRepository',
       useClass: DrizzleConversationRepository,
@@ -82,7 +80,6 @@ import { Attachment } from './entities/attachment.entity';
     ConversationAssignmentService,
     ConversationSummaryService,
     InboxService,
-    ConversationsGateway,
     'IConversationRepository',
   ],
 })
