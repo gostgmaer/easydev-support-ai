@@ -28,6 +28,13 @@ import { TenantInterceptor } from '@easydev/shared-kernel';
   required: true,
   description: 'Tenant Identifier',
 })
+// Canonical owner of GET v1/inbox (root) plus mine/unassigned/unread/team/
+// priority - agent-workspace and admin-portal both call these literally.
+// src/modules/inbox/controllers/inbox.controller.ts owns the rest of the
+// v1/inbox surface (counters/filters/saved-views/etc.) and must not
+// redeclare a root @Get() here - it would be an exact-path collision, and
+// since ConversationsModule loads before InboxModule in app.module.ts this
+// controller's handler is the one that would actually run either way.
 @UseGuards(TenantGuard, RbacGuard)
 @UseInterceptors(TenantInterceptor)
 @Controller('v1/inbox')
