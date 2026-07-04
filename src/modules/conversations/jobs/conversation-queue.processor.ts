@@ -11,7 +11,6 @@ import { ConversationService } from '../services/conversation.service';
 import { ConversationAssignmentService } from '../services/conversation-assignment.service';
 import { ConversationSummaryService } from '../services/conversation-summary.service';
 import { InboxService } from '../services/inbox.service';
-import { ConversationsGateway } from '../conversations.gateway';
 import { AiResponseService } from '../../ai-integration/services/ai-response.service';
 
 @Processor('conversation-queue', WORKER_OPTIONS)
@@ -23,7 +22,6 @@ export class ConversationQueueProcessor extends BaseWorker {
     private readonly summaryService: ConversationSummaryService,
     private readonly inboxService: InboxService,
     private readonly aiResponseService: AiResponseService,
-    @Optional() private readonly gateway?: ConversationsGateway,
     @Optional() queueService?: QueueService,
   ) {
     super('ConversationQueueProcessor', QUEUES.CONVERSATION, queueService);
@@ -59,9 +57,6 @@ export class ConversationQueueProcessor extends BaseWorker {
           job.data.conversationId,
         );
         await this.inboxService.invalidate(tenantId);
-        if (summary) {
-          this.gateway?.broadcastInboxUpdate(tenantId, summary.toJSON());
-        }
         return { rebuilt: !!summary, conversationId: job.data.conversationId };
       }
 
