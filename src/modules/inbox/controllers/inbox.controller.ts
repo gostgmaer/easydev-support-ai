@@ -5,7 +5,6 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   Headers,
   UseGuards,
   UseInterceptors,
@@ -22,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { InboxService } from '../services/inbox.service';
 import {
-  InboxQueryDto,
   CreateFilterDto,
   CreateSavedViewDto,
   ReplayWorkflowDto,
@@ -54,15 +52,14 @@ export class InboxController {
     return userId;
   }
 
-  @Get()
-  @Roles('tenant_admin', 'support_agent')
-  @ApiOperation({ summary: 'List inbox conversations (projection)' })
-  async list(
-    @Headers('x-tenant-id') tenantId: string,
-    @Query() query: InboxQueryDto,
-  ) {
-    return this.inboxService.list(tenantId, query);
-  }
+  // GET /v1/inbox (root listing) is intentionally NOT declared here even
+  // though this controller owns the rest of the v1/inbox surface: it collided
+  // with ConversationsModule's InboxController (src/modules/conversations/
+  // controllers/inbox.controller.ts), which registers first in app.module.ts
+  // and is what agent-workspace/admin-portal actually depend on for
+  // list/mine/unassigned/unread/team/priority. The duplicate handler here was
+  // permanently unreachable and has been removed - see that controller for
+  // the real root listing.
 
   @Get('counters')
   @Roles('tenant_admin', 'support_agent')

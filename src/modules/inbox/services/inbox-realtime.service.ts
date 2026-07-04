@@ -188,12 +188,13 @@ export class InboxRealtimeService
   @SubscribeMessage('read-receipt')
   handleReadReceipt(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { conversationId: string },
+    @MessageBody() data: { conversationId: string; messageId: string },
   ): void {
     const tenantId = client.data.tenantId;
     if (!tenantId) return;
     client.to(`tenant_${tenantId}`).emit('inbox.read-receipt', {
       conversationId: data.conversationId,
+      messageId: data.messageId,
       userId: client.data.userId,
       readAt: new Date().toISOString(),
     });

@@ -10,7 +10,7 @@ import { InboxEventPublisher } from './inbox-event.publisher';
 import { InboxActivityService } from './inbox-activity.service';
 import { InboxRealtimeService } from './inbox-realtime.service';
 import { AuditService } from '../../audit/audit.service';
-import { CreateFilterDto, CreateSavedViewDto, InboxQueryDto } from '../dtos';
+import { CreateFilterDto, CreateSavedViewDto } from '../dtos';
 import { MessageDraftService } from '../../messages/services/message-draft.service';
 
 @Injectable()
@@ -42,15 +42,6 @@ export class InboxService {
       );
     }
     return view;
-  }
-
-  async list(tenantId: string, query: InboxQueryDto) {
-    const result = await this.inboxRepo.listViews(tenantId, query);
-    return {
-      data: result.data.map((v) => v.toJSON()),
-      total: result.total,
-      nextCursor: result.nextCursor,
-    };
   }
 
   async getCounters(tenantId: string, userId: string) {
