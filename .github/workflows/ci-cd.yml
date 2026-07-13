@@ -1,14 +1,14 @@
 name: Support AI CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - master
-      - development-branch
-  pull_request:
-    branches:
-      - master
-      - development-branch
+  # push:
+  # branches:
+  # - master
+  # - development-branch
+  # pull_request:
+  # branches:
+  # - master
+  # - development-branch
   workflow_dispatch: {}
 
 permissions:
