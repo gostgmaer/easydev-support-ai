@@ -127,6 +127,13 @@
       "when": 1782025200000,
       "tag": "0017_sla_pause",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1783922456495,
+      "tag": "0018_add_audit_logs_indexes",
+      "breakpoints": true
     }
   ]
 }

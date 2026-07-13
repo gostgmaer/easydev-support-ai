@@ -30,14 +30,38 @@ const commonColumns = {
 };
 
 // 1. Audit Logs Table
-export const auditLogs = supportAgentSchema.table('audit_logs', {
-  ...commonColumns,
-  userId: uuid('user_id'),
-  action: varchar('action', { length: 100 }).notNull(), // CREATE, UPDATE, DELETE, ASSIGN, TRANSFER, LOGIN, WORKFLOW, CONNECTOR
-  details: text('details'),
-  ipAddress: varchar('ip_address', { length: 45 }),
-  userAgent: varchar('user_agent', { length: 255 }),
-});
+export const auditLogs = supportAgentSchema.table(
+  'audit_logs',
+  {
+    ...commonColumns,
+    userId: uuid('user_id'),
+    action: varchar('action', { length: 100 }).notNull(), // CREATE, UPDATE, DELETE, ASSIGN, TRANSFER, LOGIN, WORKFLOW, CONNECTOR
+    details: text('details'),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: varchar('user_agent', { length: 255 }),
+  },
+  (table) => {
+    return {
+      tenantIdIdx: index('idx_audit_logs_tenant').on(table.tenantId),
+      // Backs AuditRepository.findPaginated(): always tenant-scoped,
+      // sorted by createdAt desc, optionally filtered by action/userId.
+      recentIdx: index('idx_audit_logs_recent').on(
+        table.tenantId,
+        table.createdAt,
+      ),
+      actionIdx: index('idx_audit_logs_action').on(
+        table.tenantId,
+        table.action,
+        table.createdAt,
+      ),
+      userIdx: index('idx_audit_logs_user').on(
+        table.tenantId,
+        table.userId,
+        table.createdAt,
+      ),
+    };
+  },
+);
 
 // 2. Tenant Usage Table
 export const tenantUsage = supportAgentSchema.table('tenant_usage', {
