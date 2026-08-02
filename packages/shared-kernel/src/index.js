@@ -39,7 +39,6 @@ __exportStar(require('./base/audit.entity'), exports);
 __exportStar(require('./base/tenant.entity'), exports);
 __exportStar(require('./tenant/tenant-context'), exports);
 __exportStar(require('./tenant/tenant-resolver'), exports);
-__exportStar(require('./tenant/tenant-guard'), exports);
 __exportStar(require('./tenant/tenant-interceptor'), exports);
 __exportStar(require('./tenant/tenant-repository.interface'), exports);
 __exportStar(require('./tenant/tenant-validation.service'), exports);

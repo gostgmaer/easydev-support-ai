@@ -29,9 +29,15 @@ export class ConversationQueueProcessor extends BaseWorker {
 
   async handleJob(job: Job<any, any, string>): Promise<any> {
     const tenantId = job.data._tenantContext?.tenantId || job.data.tenantId;
+    // Every job type here except the offline-reassignment sweep (genuinely
+    // cross-tenant by design) operates on tenant-scoped data -- a warning
+    // alone let the job proceed with tenantId=undefined into a downstream
+    // repository query, which could silently drop its tenant filter instead
+    // of failing loudly. Throw so BullMQ marks the job failed/retryable
+    // instead of quietly executing with unknown tenant scope.
     if (!tenantId && job.name !== 'agent-offline-reassignment-job') {
-      this.logger.warn(
-        `Job ${job.id} [${job.name}] ran without tenantId context`,
+      throw new Error(
+        `Job ${job.id} [${job.name}] has no tenantId context -- refusing to process`,
       );
     }
 
