@@ -16,19 +16,9 @@ export interface TenantSettings {
 
 // Conversation Contracts
 export type ConversationStatus =
-  | 'OPEN'
-  | 'PENDING'
-  | 'ASSIGNED'
-  | 'RESOLVED'
-  | 'CLOSED';
+  'OPEN' | 'PENDING' | 'ASSIGNED' | 'RESOLVED' | 'CLOSED';
 export type MessageType =
-  | 'TEXT'
-  | 'IMAGE'
-  | 'AUDIO'
-  | 'VIDEO'
-  | 'DOCUMENT'
-  | 'LOCATION'
-  | 'SYSTEM';
+  'TEXT' | 'IMAGE' | 'AUDIO' | 'VIDEO' | 'DOCUMENT' | 'LOCATION' | 'SYSTEM';
 
 export interface MessageContract {
   id: string;
