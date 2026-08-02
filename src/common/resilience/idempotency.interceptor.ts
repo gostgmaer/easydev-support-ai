@@ -56,7 +56,16 @@ export class IdempotencyInterceptor implements NestInterceptor {
       );
     }
 
-    const tenantId = (request.headers['x-tenant-id'] as string) || 'default';
+    // A literal 'default' fallback here would let two DIFFERENT tenants,
+    // both omitting the header, collide in the same idempotency namespace --
+    // tenant B's identical-value key would be wrongly treated as a repeat of
+    // tenant A's already-processed request. Safer to skip idempotency
+    // protection entirely than apply a namespace that isn't actually
+    // per-tenant when we don't know the tenant.
+    const tenantId = request.headers['x-tenant-id'] as string | undefined;
+    if (!tenantId) {
+      return next.handle();
+    }
     const cacheKey = `idempotency:${tenantId}:${idempotencyKey}`;
 
     if (!this.isConnected || !this.redisClient) {
