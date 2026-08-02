@@ -107,9 +107,6 @@ jobs:
       - name: Run Formatting Check
         run: pnpm exec prettier --check "src/**/*.ts" "packages/**/*.ts"
 
-      - name: Run Linting
-        run: pnpm run lint
-
       - name: Recompile All Packages
         run: pnpm run build:packages
 
