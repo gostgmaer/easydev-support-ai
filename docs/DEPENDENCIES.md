@@ -83,7 +83,7 @@ Start in this order (Git Bash; Docker Desktop must be running). Steps marked **(
 - PAYMENT_SERVICE_URL/_API_KEY
 - NOTIFICATION_SERVICE_URL/_API_KEY, FILE_UPLOAD_SERVICE_URL/_HMAC_SECRET
 - ENCRYPTION_KEY, COOKIE_SECRET, CONNECTOR_ENCRYPTION_KEY, WIDGET_JWT_SECRET, ADMIN_WEBHOOK_ENCRYPTION_KEY, ADMIN_API_KEY_HASH_SECRET
-- **The shipped examples point NOTIFICATION_SERVICE_URL and FILE_UPLOAD_SERVICE_URL at hosted Vercel/Render services - change them for a local run.**
+- NOTIFICATION_SERVICE_URL=http://notification-service:4000/v1 and FILE_UPLOAD_SERVICE_URL=http://file-upload-service:3000 (inside Docker), or http://localhost:4004/v1 and http://localhost:4005 when run from source - the local services, not the old hosted ones
 
 Full variable documentation for the RAG-related services: `ENVIRONMENT.md` in the RAG repo. Never commit real values; only `*.example` files are tracked.
 
